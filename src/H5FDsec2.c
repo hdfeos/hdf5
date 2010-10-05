@@ -63,6 +63,8 @@ typedef enum {
  * to zero, `pos' will be set to H5F_ADDR_UNDEF (as it is when an error
  * occurs), and `op' will be set to H5F_OP_UNKNOWN.
  */
+#define PAGE_SIZE       16384
+#define NPAGES          16
 typedef struct H5FD_sec2_t {
     H5FD_t	pub;			/*public stuff, must be first	*/
     int		fd;			/*the unix file			*/
@@ -99,6 +101,11 @@ typedef struct H5FD_sec2_t {
     /* Information from properties set by 'h5repart' tool */
     hbool_t     fam_to_sec2;    /* Whether to eliminate the family driver info
                                  * and convert this file to a single file */
+
+    /* Page buffering information */
+    unsigned char *pages[NPAGES];
+    haddr_t page_addr[NPAGES];
+    hsize_t nhits, nmisses, nbypasses;
 } H5FD_sec2_t;
 
 
@@ -391,6 +398,19 @@ H5FD_sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     HDstrncpy(file->filename, name, sizeof(file->filename));
     file->filename[sizeof(file->filename) - 1] = '\0';
 
+/* Set up page buffering information */
+{
+    unsigned u;
+
+    for(u = 0; u < NPAGES; u++) {
+        file->pages[u] = (unsigned char *)H5MM_malloc((size_t)PAGE_SIZE);
+        file->page_addr[u] = HADDR_UNDEF;
+    } /* end for */
+    file->nhits = 0;
+    file->nmisses = 0;
+    file->nbypasses = 0;
+}
+
     /* Check for non-default FAPL */
     if(H5P_FILE_ACCESS_DEFAULT != fapl_id) {
         H5P_genplist_t      *plist;      /* Property list pointer */
@@ -448,6 +468,15 @@ H5FD_sec2_close(H5FD_t *_file)
 
     /* Sanity check */
     HDassert(file);
+
+/* Release page buffering information */
+{
+    unsigned u;
+
+    for(u = 0; u < NPAGES; u++)
+        H5MM_xfree(file->pages[u]);
+HDfprintf(stderr, "%s: file->nhits = %Hu, file->nmisses = %Hu, file->nbypasses = %Hu\n", FUNC, file->nhits, file->nmisses, file->nbypasses);
+}
 
     /* Close the underlying file */
     if(HDclose(file->fd) < 0)
@@ -738,6 +767,137 @@ H5FD_sec2_read(H5FD_t *_file, H5FD_mem_t UNUSED type, hid_t UNUSED dxpl_id,
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addr = %llu", (unsigned long long)addr)
     if((addr + size) > file->eoa)
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow, addr = %llu", (unsigned long long)addr)
+
+/* Fill request from page buffers */
+if(size <= PAGE_SIZE) {
+    unsigned char *my_buf = (unsigned char *)buf;
+    unsigned u;
+
+    /* Fill request from page buffers */
+    while(size > 0) {
+        size_t page_off;        /* Offset within the page */
+        size_t page_amt;        /* Amount to copy from page */
+        hbool_t found_page = FALSE;
+
+        /* Look for page that overlaps with start of buffer */
+        for(u = 0; u < NPAGES; u++) {
+            /* Does current page overlap with [current] beginning of buffer */
+            if(H5F_addr_le(file->page_addr[u], addr) && H5F_addr_lt(addr, (file->page_addr[u] + PAGE_SIZE))) {
+                found_page = TRUE;
+                break;
+            } /* end if */
+        } /* end for */
+
+        /* Did we find a page that fulfills [part of] request? */
+        if(found_page) {    /* Yes - fulfill request */
+            /* Sanity check */
+            HDassert(u < NPAGES);
+
+            /* Move the page forward in the "cache", if it's not already at the front */
+            if(u > 0) {
+#ifdef PAGE_AT_END
+                unsigned char *tmp_page = file->pages[u - 1];
+                haddr_t tmp_off = file->page_addr[u - 1];
+                file->pages[u - 1] = file->pages[u];
+                file->page_addr[u - 1] = file->page_addr[u];
+                file->pages[u] = tmp_page;
+                file->page_addr[u] = tmp_off;
+                u--;
+#else /* PAGE_AT_END */
+                unsigned char *tmp_page = file->pages[u];
+                haddr_t tmp_off = file->page_addr[u];
+
+                /* Move existing pages down in LRU scheme */
+                HDmemmove(&file->pages[1], &file->pages[0], (u * sizeof(char *)));
+                HDmemmove(&file->page_addr[1], &file->page_addr[0], (u * sizeof(haddr_t)));
+                file->pages[0] = tmp_page;
+                file->page_addr[0] = tmp_off;
+                u = 0;
+#endif /* PAGE_AT_END */
+            } /* end if */
+
+            /* Increment # of hits */
+            file->nhits++;
+        } /* end if */
+        else {      /* No - bring new page into memory */
+#ifdef PAGE_AT_END
+            /* Set page location */
+            u = NPAGES - 1;
+#else /* PAGE_AT_END */
+            unsigned char *tmp_page = file->pages[NPAGES - 1];
+            haddr_t tmp_off = file->page_addr[NPAGES - 1];
+
+            /* Move existing pages down in LRU scheme */
+            HDmemmove(&file->pages[1], &file->pages[0], (NPAGES - 1) * sizeof(char *));
+            HDmemmove(&file->page_addr[1], &file->page_addr[0], (NPAGES - 1) * sizeof(haddr_t));
+            file->pages[0] = tmp_page;
+            file->page_addr[0] = tmp_off;
+
+            /* Set page location */
+            u = 0;
+#endif /* PAGE_AT_END */
+
+            /* Compute address of new page */
+            file->page_addr[u] = (addr / PAGE_SIZE) * PAGE_SIZE;
+
+            {
+                size_t page_size = PAGE_SIZE;
+                unsigned char *page_buf = file->pages[u];
+                haddr_t page_addr = file->page_addr[u];
+
+                /*
+                 * Read data, being careful of interrupted system calls, partial results,
+                 * and the end of the file.
+                 */
+                while(page_size > 0) {
+                    do {
+                        nbytes = pread(file->fd, page_buf, page_size, page_addr);
+                    } while(-1 == nbytes && EINTR == errno);
+                    if(-1 == nbytes) /* error */
+                        HSYS_GOTO_ERROR(H5E_IO, H5E_READERROR, FAIL, "file read failed")
+                    if(0 == nbytes) {
+                        /* end of file but not end of format address space */
+                        HDmemset(page_buf, 0, page_size);
+                        break;
+                    } /* end if */
+                    HDassert(nbytes >= 0);
+                    HDassert((size_t)nbytes <= page_size);
+                    H5_CHECK_OVERFLOW(nbytes, ssize_t, size_t);
+                    page_size -= (size_t)nbytes;
+                    H5_CHECK_OVERFLOW(nbytes, ssize_t, haddr_t);
+                    page_addr += (haddr_t)nbytes;
+                    page_buf = (unsigned char *)page_buf + nbytes;
+                } /* end while */
+            }
+
+            /* Increment # of misses */
+            file->nmisses++;
+        } /* end else */
+
+        /* Compute offset of info within page */
+        page_off = (size_t)(addr - file->page_addr[u]);
+
+        /* Compute amount to copy */
+        if(size < (PAGE_SIZE - page_off))
+            page_amt = size;
+        else
+            page_amt = (PAGE_SIZE - page_off);
+
+        /* Copy data from page into buffer */
+        HDmemcpy(my_buf, (file->pages[u] + page_off), page_amt);
+
+        /* Increment buffer counter & decrement amount left */
+        my_buf += page_amt;
+        size -= page_amt;
+        addr += page_amt;
+    } /* end while */
+
+    /* Leave now, since we've retrieved the data */
+    HGOTO_DONE(SUCCEED)
+} /* end if */
+
+/* Increment # of page buffer bypasses */
+file->nbypasses++;
 
     /* Seek to the correct location */
     if((addr != file->pos || OP_READ != file->op) &&
