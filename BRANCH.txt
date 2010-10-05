@@ -1,0 +1,4 @@
+This branch is for work on a page buffering algorithm to replace the metadata
+accumulator.  Currently, as of r19514, all the changes are in src/H5FDsec2.c.
+
+-QAK, 2010-10-05
