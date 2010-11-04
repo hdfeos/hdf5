@@ -96,6 +96,7 @@
 ./config/i686-pc-cygwin
 ./config/ia64-linux-gnu
 ./config/ibm-aix
+./config/ibm-aix6.x
 ./config/ibm-flags
 ./config/intel-fflags
 ./config/intel-flags
@@ -805,6 +806,7 @@
 ./test/H5srcdir_str.h.in
 ./test/Makefile.am
 ./test/Makefile.in
+./test/accum.c
 ./test/app_ref.c
 ./test/be_data.h5
 ./test/be_extlink1.h5
@@ -1632,6 +1634,7 @@
 ./tools/h5diff/testfiles/h5diff_516.txt
 ./tools/h5diff/testfiles/h5diff_517.txt
 ./tools/h5diff/testfiles/h5diff_518.txt
+./tools/h5diff/testfiles/h5diff_530.txt
 
 ./tools/h5diff/testfiles/h5diff_attr1.h5
 ./tools/h5diff/testfiles/h5diff_attr2.h5
@@ -1663,6 +1666,7 @@
 ./tools/h5diff/testfiles/h5diff_exclude1-2.h5
 ./tools/h5diff/testfiles/h5diff_exclude2-1.h5
 ./tools/h5diff/testfiles/h5diff_exclude2-2.h5
+./tools/h5diff/testfiles/h5diff_comp_vl_strs.h5
 
 
 #test files for h5repack
@@ -1716,6 +1720,7 @@
 ./tools/h5copy/testfiles/h5copy_extlinks_src.h5
 ./tools/h5copy/testfiles/h5copy_extlinks_trg.h5
 ./tools/h5copy/testfiles/h5copy_extlinks_src.out.ls
+./tools/h5copy/testfiles/h5copy_misc1.out
 
 # test files for h5mkgrp
 ./tools/testfiles/h5mkgrp_help.ls
@@ -1945,7 +1950,7 @@
 ./config/cmake/grepTest.cmake
 ./config/cmake/runTest.cmake
 ./config/cmake/vfdTest.cmake
-./config/cmake/CTestCustom.ctest
+./config/cmake/CTestCustom.cmake
 ./config/cmake/ConfigureChecks.cmake
 ./CMakeLists.txt
 ./CTestConfig.cmake

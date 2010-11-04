@@ -1,4 +1,4 @@
-HDF5 version 1.9.76 currently under development
+HDF5 version 1.9.79 currently under development
 ================================================================================
 
 
@@ -240,6 +240,7 @@ New Features
 
 Support for new platforms, languages and compilers.
 =======================================
+    - Intel V11.1 uses now -O3 optimization in production mode (EIP - 2010/10/08)
     - PathScale compilers are recognized and can build the HDF5 library
       properly. AKC - 2009/7/28 -
 
@@ -473,6 +474,13 @@ Bug Fixes since HDF5-1.8.0 release
 
     Tools
     -----
+        - Fixed h5diff to handle variable-length strings in a compound dataset 
+          correctly. (also variable-length string array in a compound dataset)
+          Garbage values were displayed when h5diff compared multiple 
+          variable-length strings in a compound type dataset. 
+          Bug#1989 (JKM 2010/10/28)
+        - Fixed h5copy to fail gracefully when copying object to non-exist
+          group without -p option. Bug#2040 (JKM 2010/10/18)
         - Fixed to compare member objects and groups recursively when two 
           files or groups are specified to be compared. Bug#1975
           (JKM 2010/9/16)
@@ -640,15 +648,22 @@ Platforms Tested
                                   Intel(R) C++ Version 8.1
                                   Intel(R) Fortran Compiler Version 8.1
 				  mpich-gm-1.2.5..10-intel-r2
+    
+    Windows XP                    Visual Studio 2008 w/ Intel Fortran 11.1
+                                  Visual Studio 2010
+                                  Cygwin(1.7.7 native gcc(4.3.4) compiler and gfortran)
 				  
-    Windows XP                    Visual Studio 2008 w/ Intel Fortran 10.1
-                                  Cygwin(1.7.5 native gcc compiler and gfortran)
+    Windows XP x64                Visual Studio 2008 w/ Intel Fortran 11.1
+                                  Visual Studio 2010
+                                  Cygwin(1.7.7 native gcc(4.3.4) compiler and gfortran)
 
-    Windows XP x64                Visual Studio 2008 w/ Intel Fortran 10.1
+    Windows Vista                 Visual Studio 2008 w/ Intel Fortran 11.1
 
-    Windows Vista                 Visual Studio 2008 w/ Intel Fortran 10.1
+    Windows Vista x64             Visual Studio 2008 w/ Intel Fortran 11.1
 
-    Windows Vista x64             Visual Studio 2008 w/ Intel Fortran 10.1
+    Windows 7                     Visual Studio 2010
+
+    Windows 7 x64                 Visual Studio 2010
 
     MAC OS  10.5 (Intel)          gcc i686-apple-darwin8-gcc-4.0.1 (GCC) 4.0.1 
                                   G95 (GCC 4.0.3 (g95 0.91!) Nov 21 2006)
@@ -708,8 +723,8 @@ Cray XT3 (not tested
           for this release)         n        n         n         x        n
 Windows XP                          y        y(3)      y         y        n
 Windows XP x64                      y        y(3)      y         y        n
-Windows Vista                       y        y(3)      y         y        n
-Windows Vista x64                   y        y(3)      y         y        n
+Windows Vista                       y        y(3)      y         y        y
+Windows Vista x64                   y        y(3)      y         y        y
 Mac OS X 10.5 Intel                 y        y         y         x        n
 FreeBSD 6.2 32-bit                  y        y         y         x        n
 FreeBSD 6.2 64-bit                  y        y         y         x        n

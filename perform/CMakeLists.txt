@@ -11,6 +11,21 @@ INCLUDE_DIRECTORIES (${HDF5_TOOLS_SRC_DIR}/lib )
 # Add Tests
 #-----------------------------------------------------------------------------
 
+# Remove any output file left over from previous test run
+ADD_TEST (
+    NAME h5perform-clear-objects
+    COMMAND    ${CMAKE_COMMAND}
+        -E remove 
+        chunk.h5
+        iopipe.h5
+        iopipe.raw
+        x-diag-rd.dat
+        x-diag-wr.dat
+        x-rowmaj-rd.dat
+        x-rowmaj-wr.dat
+        x-gnuplot
+)
+
 #-- Adding test for h5perf_serial
 SET (h5perf_serial_SRCS
     ${HDF5_PERFORM_SOURCE_DIR}/sio_timer.c
@@ -88,7 +103,7 @@ IF (H5_HAVE_PARALLEL)
   )
   ADD_EXECUTABLE (h5perf ${h5perf_SRCS})
   H5_NAMING (h5perf)
-  TARGET_WIN_PROPERTIESS (h5perf)
+  TARGET_WIN_PROPERTIES (h5perf)
   TARGET_LINK_LIBRARIES (h5perf ${HDF5_LIB_TARGET} ${HDF5_TOOLS_LIB_TARGET} ${HDF5_TEST_LIB_TARGET})
 
   ADD_TEST (NAME h5perf COMMAND ${MPIEXEC} ${MPIEXEC_PREFLAGS} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_POSTFLAGS} $<TARGET_FILE:h5perf>)

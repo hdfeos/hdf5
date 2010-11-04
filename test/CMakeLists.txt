@@ -22,11 +22,9 @@ CONFIGURE_FILE (${HDF5_TEST_SOURCE_DIR}/H5srcdir_str.h.in H5srcdir_str.h  @ONLY)
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR})
 
 ADD_LIBRARY (${HDF5_TEST_LIB_TARGET} ${LIB_TYPE} ${TEST_LIB_SRCS} ${TEST_LIB_HEADERS})
-IF (BUILD_SHARED_LIBS)
-  IF (MSVC)
-    TARGET_LINK_LIBRARIES (${HDF5_TEST_LIB_TARGET} "ws2_32.lib")
-  ENDIF (MSVC)
-ENDIF (BUILD_SHARED_LIBS)
+IF (MSVC)
+  TARGET_LINK_LIBRARIES (${HDF5_TEST_LIB_TARGET} "ws2_32.lib")
+ENDIF (MSVC)
 TARGET_LINK_LIBRARIES (${HDF5_TEST_LIB_TARGET} ${HDF5_LIB_TARGET})
 SET_GLOBAL_VARIABLE (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_TEST_LIB_TARGET}")
 H5_SET_LIB_OPTIONS (${HDF5_TEST_LIB_TARGET} ${HDF5_TEST_LIB_NAME} ${LIB_TYPE})
@@ -168,7 +166,80 @@ MACRO (ADD_H5_TEST file)
   ADD_TEST (NAME ${file} COMMAND $<TARGET_FILE:${file}>)
 ENDMACRO (ADD_H5_TEST file)
 
+# Remove any output file left over from previous test run
+ADD_TEST (
+    NAME h5test-clear-objects
+    COMMAND    ${CMAKE_COMMAND}
+        -E remove 
+        cache_test.h5
+        coord.h5
+        dt_arith1.h5
+        dt_arith2.h5
+        dtransform.h5
+        dtypes4.h5
+        dtypes5.h5
+        extlinks16A00000.h5
+        extlinks16A00001.h5
+        extlinks16A00002.h5
+        extlinks16B-b.h5
+        extlinks16B-g.h5
+        extlinks16B-l.h5
+        extlinks16B-r.h5
+        extlinks16B-s.h5
+        extlinks19B00000.h5
+        extlinks19B00001.h5
+        extlinks19B00002.h5
+        extlinks19B00003.h5
+        extlinks19B00004.h5
+        extlinks19B00005.h5
+        extlinks19B00006.h5
+        extlinks19B00007.h5
+        extlinks19B00008.h5
+        extlinks19B00009.h5
+        extlinks19B00010.h5
+        extlinks19B00011.h5
+        extlinks19B00012.h5
+        extlinks19B00013.h5
+        extlinks19B00014.h5
+        extlinks19B00015.h5
+        extlinks19B00016.h5
+        extlinks19B00017.h5
+        extlinks19B00018.h5
+        extlinks19B00019.h5
+        extlinks19B00020.h5
+        extlinks19B00021.h5
+        extlinks19B00022.h5
+        extlinks19B00023.h5
+        extlinks19B00024.h5
+        extlinks19B00025.h5
+        extlinks19B00026.h5
+        extlinks19B00027.h5
+        extlinks19B00028.h5
+        fheap.h5
+        objcopy_ext.h5
+        sys_file1
+        tattr.h5
+        testmeta.h5
+        tfile1.h5
+        tfile2.h5
+        tfile3.h5
+        tfile4.h5
+        tfile5.h5
+        th5o_file
+        th5s1.h5
+        th5s2.h5
+        th5s3.h5
+        tnullspace.h5
+        tselect.h5
+        tsohm.h5
+        tsohm_dst.h5
+        tsohm_src.h5
+        tstint1.h5
+        tstint2.h5
+)
+
 SET (H5_TESTS
+    accum
     lheap
     ohdr
     stab
@@ -221,11 +292,6 @@ SET (H5_TESTS
 FOREACH (test ${H5_TESTS})
     ADD_H5_TEST(${test})
 ENDFOREACH (test ${H5_TESTS})
-
-#-- Allow extra time for fheap to complete 30min
-IF (WIN32)
-  SET_TESTS_PROPERTIES (fheap PROPERTIES TIMEOUT 2500)
-ENDIF (WIN32)
 
 
 ##############################################################################
@@ -281,13 +347,65 @@ IF (HDF5_TEST_VFD)
       multi
       family
   )
+
+  SET (H5_VFD_TESTS
+      testhdf5
+      accum
+      lheap
+      ohdr
+      stab
+      gheap
+      cache
+      cache_api
+      cache_tagging
+      pool
+      hyperslab
+      istore
+      bittests
+      dt_arith
+      dtypes
+      cmpd_dset
+      filter_fail
+      extend
+      external
+      objcopy
+      links
+      unlink
+      big
+      mtime
+      fillval
+      mount
+      flush1
+      flush2
+      app_ref
+      enum
+      set_extent
+      ttsafe
+      getname
+      vfd
+      ntypes
+      dangle
+      dtransform
+      reserved
+      cross_read
+      freespace
+      mf
+      farray
+      earray
+      btree2
+      #fheap
+      error_test
+      err_compat
+      tcheck_version
+      testmeta
+)
   
   IF (DIRECT_VFD)
     SET (VFD_LIST ${VFD_LIST} direct)
   ENDIF (DIRECT_VFD)
 
   MACRO (ADD_VFD_TEST vfdname resultcode)
-    FOREACH (test ${H5_TESTS})
+    FOREACH (test ${H5_VFD_TESTS})
       ADD_TEST (
         NAME VFD-${vfdname}-${test} 
         COMMAND "${CMAKE_COMMAND}"
@@ -295,10 +413,24 @@ IF (HDF5_TEST_VFD)
             -D "TEST_ARGS:STRING="
             -D "TEST_VFD:STRING=${vfdname}"
             -D "TEST_EXPECT=${resultcode}"
+            -D "TEST_OUTPUT=${test}"
             -D "TEST_FOLDER=${PROJECT_BINARY_DIR}"
             -P "${HDF5_RESOURCES_DIR}/vfdTest.cmake"
       )
-    ENDFOREACH (test ${H5_TESTS})
+    ENDFOREACH (test ${H5_VFD_TESTS})
+    IF (HDF5_TEST_FHEAP_VFD)
+      ADD_TEST (
+        NAME VFD-${vfdname}-fheap 
+        COMMAND "${CMAKE_COMMAND}"
+            -D "TEST_PROGRAM=$<TARGET_FILE:fheap>"
+            -D "TEST_ARGS:STRING="
+            -D "TEST_VFD:STRING=${vfdname}"
+            -D "TEST_EXPECT=${resultcode}"
+            -D "TEST_OUTPUT=fheap"
+            -D "TEST_FOLDER=${PROJECT_BINARY_DIR}"
+            -P "${HDF5_RESOURCES_DIR}/vfdTest.cmake"
+      )
+    ENDIF (HDF5_TEST_FHEAP_VFD)
   ENDMACRO (ADD_VFD_TEST)
   
   # Run test with different Virtual File Driver
