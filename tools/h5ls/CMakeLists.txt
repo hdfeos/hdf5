@@ -72,6 +72,9 @@ IF (BUILD_TESTING)
       thlink-1.ls
       tloop-1.ls
       tnestcomp-1.ls
+      tnestcomp-2.ls
+      tnestcomp-3.ls
+      tnestcomp-4.ls
       tsaf.ls
       tslink-1.ls
       tstr-1.ls
@@ -240,6 +243,12 @@ IF (BUILD_TESTING)
           tloop-1.out.err
           tnestcomp-1.out
           tnestcomp-1.out.err
+          tnestcomp-2.out
+          tnestcomp-2.out.err
+          tnestcomp-3.out
+          tnestcomp-3.out.err
+          tnestcomp-4.out
+          tnestcomp-4.out.err
           tsaf.out
           tsaf.out.err
           tslink-1.out
@@ -255,6 +264,13 @@ IF (BUILD_TESTING)
           tvldtypes2be.out
           tvldtypes2be.out.err
   )
+
+  # If using memchecker add tests without using scripts
+  IF (HDF5_ENABLE_USING_MEMCHECKER)
+    ADD_TEST (NAME H5LS-help COMMAND h5ls -w80 -h)
+    ADD_TEST (NAME H5LS-tall COMMAND h5ls -w80 tall.h5)
+    ADD_TEST (NAME H5LS-tsoftlinks COMMAND h5ls --follow-symlinks tsoftlinks.h5)
+  ENDIF (HDF5_ENABLE_USING_MEMCHECKER)
 
   # test the help syntax
   ADD_H5_TEST (help-1 0 -w80 -h)
@@ -324,6 +340,12 @@ IF (BUILD_TESTING)
 
   #test for the nested compound type
   ADD_H5_TEST (tnestcomp-1 0 -w80 -r -d tnestedcomp.h5)
+
+  ADD_H5_TEST (tnestcomp-2 0 -w80 -r -d -S tnestedcomp.h5)
+
+  ADD_H5_TEST (tnestcomp-3 0 -w80 -r -d -l tnestedcomp.h5)
+
+  ADD_H5_TEST (tnestcomp-4 0 -w80 -r -d -l -S tnestedcomp.h5)
 
   # test for loop detection
   ADD_H5_TEST (tloop-1 0 -w80 -r -d tloop.h5)

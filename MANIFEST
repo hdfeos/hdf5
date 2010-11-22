@@ -834,6 +834,7 @@
 ./test/external.c
 ./test/error_test.c
 ./test/err_compat.c
+./test/links_env.c
 ./test/family_v16_00000.h5
 ./test/family_v16_00001.h5
 ./test/family_v16_00002.h5
@@ -905,6 +906,7 @@
 ./test/tcoords.c
 ./test/testcheck_version.sh.in
 ./test/testerror.sh.in
+./test/testlinks_env.sh.in
 ./test/testframe.c
 ./test/testhdf5.c
 ./test/testhdf5.h
@@ -952,6 +954,7 @@
 ./test/testfiles/err_compat_2
 ./test/testfiles/error_test_1
 ./test/testfiles/error_test_2
+./test/testfiles/links_env.out
 
 ./testpar/COPYING
 ./testpar/Makefile.am
@@ -1113,6 +1116,8 @@
 ./tools/misc/testh5mkgrp.sh
 ./tools/misc/testh5repart.sh.in
 ./tools/misc/talign.c
+./tools/misc/testfiles/h5mkgrp_help.txt
+./tools/misc/testfiles/h5mkgrp_version.txt.in
 
 # h5stat sources
 ./tools/h5stat/Makefile.am
@@ -1380,6 +1385,9 @@
 ./tools/testfiles/tgroup.ls
 ./tools/testfiles/tloop-1.ls
 ./tools/testfiles/tnestcomp-1.ls
+./tools/testfiles/tnestcomp-2.ls
+./tools/testfiles/tnestcomp-3.ls
+./tools/testfiles/tnestcomp-4.ls
 ./tools/testfiles/tsaf.ls
 ./tools/testfiles/tstr-1.ls
 ./tools/testfiles/tattr2.ls

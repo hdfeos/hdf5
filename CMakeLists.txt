@@ -165,7 +165,8 @@ SET (HDF5_PACKAGE_NAME "HDF5")
 SET (HDF5_PACKAGE_VERSION "${H5_VERS_MAJOR}.${H5_VERS_MINOR}.${H5_VERS_RELEASE}")
 SET (HDF5_PACKAGE_VERSION_MAJOR "${H5_VERS_MAJOR}.${H5_VERS_MINOR}")
 SET (HDF5_PACKAGE_VERSION_MINOR "${H5_VERS_RELEASE}")
-SET (HDF5_PACKAGE_STRING "${HDF5_PACKAGE_NAME} ${HDF5_PACKAGE_VERSION}")
+SET (HDF5_PACKAGE_VERSION_STRING "${HDF5_PACKAGE_VERSION}")
+SET (HDF5_PACKAGE_STRING "${HDF5_PACKAGE_NAME} ${HDF5_PACKAGE_VERSION_STRING}")
 SET (HDF5_PACKAGE_TARNAME "hdf5")
 SET (HDF5_PACKAGE_URL "http://www.hdfgroup.org")
 SET (HDF5_PACKAGE_BUGREPORT "help@hdfgroup.org")
@@ -270,9 +271,9 @@ ENDIF (BUILD_SHARED_LIBS)
 #-----------------------------------------------------------------------------
 OPTION (HDF5_ENABLE_COVERAGE "Enable code coverage for Libraries and Programs" OFF)
 IF (HDF5_ENABLE_COVERAGE)
-    SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
-    SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
-    SET (LDFLAGS "${LDFLAGS} -fprofile-arcs -ftest-coverage")   
+  SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+  SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+  SET (LDFLAGS "${LDFLAGS} -fprofile-arcs -ftest-coverage")   
 ENDIF (HDF5_ENABLE_COVERAGE)
 
 #-----------------------------------------------------------------------------
@@ -280,8 +281,18 @@ ENDIF (HDF5_ENABLE_COVERAGE)
 #-----------------------------------------------------------------------------
 OPTION (HDF5_ENABLE_USING_MEMCHECKER "Indicate that a memory checker is used" OFF)
 IF (HDF5_ENABLE_USING_MEMCHECKER)
-    SET (H5_USING_MEMCHECKER 1)   
+  SET (H5_USING_MEMCHECKER 1)   
 ENDIF (HDF5_ENABLE_USING_MEMCHECKER)
+
+#-----------------------------------------------------------------------------
+# Option to use deprecated public API symbols
+#-----------------------------------------------------------------------------
+OPTION (HDF5_ENABLE_DEPRECATED_SYMBOLS "Enable deprecated public API symbols" ON)
+IF (HDF5_ENABLE_DEPRECATED_SYMBOLS)
+  SET (H5_NO_DEPRECATED_SYMBOLS 0)   
+ELSE (HDF5_ENABLE_DEPRECATED_SYMBOLS)
+  SET (H5_NO_DEPRECATED_SYMBOLS 1)   
+ENDIF (HDF5_ENABLE_DEPRECATED_SYMBOLS)
 
 #-----------------------------------------------------------------------------
 # When building utility executables that generate other (source) files :
@@ -648,6 +659,10 @@ ENDIF (WIN32 AND NOT CYGWIN)
 IF (WIN32 AND NOT CYGWIN)
   OPTION (HDF5_ENABLE_THREADSAFE "Enable Threadsafety" OFF)
   IF (HDF5_ENABLE_THREADSAFE)
+    # check for unsupported options
+    IF (HDF5_ENABLE_PARALLEL)
+      MESSAGE (FATAL " **** Parallel and Threadsafe options are mutually exclusive **** ")
+    ENDIF (HDF5_ENABLE_PARALLEL)
     SET (H5_HAVE_WIN_THREADS 1)
     SET (H5_HAVE_THREADSAFE 1)
   ENDIF (HDF5_ENABLE_THREADSAFE)
@@ -758,6 +773,10 @@ ENDIF (EXISTS "${HDF5_SOURCE_DIR}/examples" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}
 IF (EXISTS "${HDF5_SOURCE_DIR}/c++" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/c++")
   OPTION (HDF5_BUILD_CPP_LIB  "Build HDF5 C++ Library" OFF)
   IF (HDF5_BUILD_CPP_LIB)
+    # check for unsupported options
+    IF (HDF5_ENABLE_PARALLEL)
+      MESSAGE (FATAL " **** Parallel and C++ options are mutually exclusive **** ")
+    ENDIF (HDF5_ENABLE_PARALLEL)
     ADD_SUBDIRECTORY (${HDF5_SOURCE_DIR}/c++ ${PROJECT_BINARY_DIR}/c++)
   ENDIF (HDF5_BUILD_CPP_LIB)
 ENDIF (EXISTS "${HDF5_SOURCE_DIR}/c++" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/c++")

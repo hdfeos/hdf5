@@ -235,7 +235,7 @@
   #define H5_FCDLLVAR extern
 #endif /* H5_FCDLL */
 
-#if defined(hdf5_f90Ctest_EXPORTS)
+#if defined(hdf5_test_f90cstub_EXPORTS)
   #if defined (_MSC_VER)  /* MSVC Compiler Case */
     #define H5_FCTESTDLL __declspec(dllexport)
     #define H5_FCTESTDLLVAR extern __declspec(dllexport)
@@ -284,7 +284,7 @@
 #else
 /* This is the original HDFGroup defined preprocessor code which should still work
  * with the VS projects that are maintained by "The HDF Group"
- * This will be removed after the next release.
+ * The Visual Studio project files will not be supported in the next major release of 1.10.
  */
 
 #if defined(_WIN32)

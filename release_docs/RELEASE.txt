@@ -1,4 +1,4 @@
-HDF5 version 1.9.79 currently under development
+HDF5 version 1.9.80 currently under development
 ================================================================================
 
 
@@ -39,6 +39,12 @@ New Features
 
     Configuration:
     -------------
+    - Added a new configure option, "--enable-unsupported", which can
+      be used to stop configure from preventing the use of unsupported
+      configure option combinations, such as c++ in parallel or parallel
+      HDF5 with threadsafe. Use at your own risk, as it may result in a 
+      library that won't compile or run as expected! 
+      (MAM - 2010/11/17 - Bug 2061)
     - PHDF5 changed to use "mpiexec", instead of mpirun, as the default MPI
       applications startup command as defined in the MPI-2 definition, section
       4.1. (AKC - 2010/6/11 - Bug 1921)
@@ -76,6 +82,8 @@ New Features
 
     Library:
     --------
+    - Removed all old code for Metraowerks compilers, bracketed by
+      __MWERKS__). Metraowerks compiler is long gone. (AKC - 2010/11/17) 
     - Added support for threadsafety on windows using the windows threads
       library. Use the HDF5_ENABLE_THREADSAFE option in CMake while on a 
       windows platform to enable this functionality. This is supported on 
@@ -249,6 +257,10 @@ Bug Fixes since HDF5-1.8.0 release
 
     Library
     -------
+      - Retrieving a link's name by index in the case where the link is
+            external and the file that the link refers to doesn't exist will 
+            now fail gracefully rather than cause a segmentation fault. 
+            (MAM - 2010/11/17)
       - Modified library to always cache symbol table information.  Libraries
             version 1.6.3 have a bug which causes them to require this
             information for some operations. (NAF - 2010/09/21 - 1864)
@@ -474,6 +486,14 @@ Bug Fixes since HDF5-1.8.0 release
 
     Tools
     -----
+        - Improve h5diff performance. 1) use HDmemcmp() before comparing each 
+          elements. 2) replace expensive H5Tequals() calls 3) retrieve datatype
+          information at dataset level not each element level for compound 
+          datasets
+        - Fixed h5ls to display nested compound type with curly bracket 
+          when -S (--simple) option is used with -l (--label), so it shows  
+          which member (in curly bracket) belong to which nested compound type 
+          and make the output make sense.  bug#1979 (JKM 2010/11/09)
         - Fixed h5diff to handle variable-length strings in a compound dataset 
           correctly. (also variable-length string array in a compound dataset)
           Garbage values were displayed when h5diff compared multiple 

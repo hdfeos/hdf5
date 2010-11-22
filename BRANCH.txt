@@ -1,4 +1,41 @@
-This branch is for work on a page buffering algorithm to replace the metadata
-accumulator.  Currently, as of r19514, all the changes are in src/H5FDsec2.c.
+SUMMARY:
+========
+This branch is for work on a page caching algorithm to replace the metadata
+accumulator.  Currently, as of r19724, all the changes are in src/H5FDsec2.c.
 
--QAK, 2010-10-05
+-QAK, 2010-11-04
+
+DESIGN:
+=======
+The page cache is designed to operate as a "level 2" cache, underneath the
+metadata cache.
+
+The page cache is implemented as a layer above the H5FD* interface, so it's
+global to all VFDs.  It can be enabled/disabled by a particular VFD though,
+by a flag set in the VFD's "feature flags".
+
+The page cache is implemented as a collection of pages in memory,
+simultaneously indexed by two data structures: a hash table, for performing
+lookups by page address; and an page replacement algorithm & associated
+data structures, for determining pages to evict from the page cache.
+
+FEATURES OF NOTE:
+=================
+A flushed page is chained together with neighboring pages, to create a single,
+larger block to flush to the file.
+
+IMPLEMENTATION DETAILS:
+=======================
+The hash table is implemented as a Linear Hashing scheme ([1], [2], [3]) which
+uses a dynamic array ([4], [5]) as the underlying array for the hash table.
+
+The page replacement algorithm is the "Clock with Adaptive Replacement"
+algorithm ([6], [7]).
+
+[1] - http://en.wikipedia.org/wiki/Linear_hashing
+[2] - http://www.eecs.berkeley.edu/~fox/summaries/database/linhash.html
+[3] - http://www.cs.cmu.edu/afs/cs.cmu.edu/user/christos/www/courses/826-resources/PAPERS+BOOK/linear-hashing.PDF
+[4] - http://en.wikipedia.org/wiki/Dynamic_array
+[5] - http://www.cs.uwaterloo.ca/research/tr/1999/09/CS-99-09.pdf
+[6] - http://en.wikipedia.org/wiki/Clock_with_Adaptive_Replacement
+[7] - http://www.almaden.ibm.com/cs/people/dmodha/clockfast.pdf
