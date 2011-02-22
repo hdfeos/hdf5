@@ -12,18 +12,15 @@ INCLUDE_DIRECTORIES (${HDF5_PROJECT_DIR}/test)
 # --------------------------------------------------------------------
 #-- Misc Executables
 ADD_EXECUTABLE (h5debug ${HDF5_TOOLS_MISC_SOURCE_DIR}/h5debug.c)
-H5_NAMING (h5debug)
-TARGET_WIN_PROPERTIES (h5debug)
+H5_NAMING (h5debug ${LIB_TYPE})
 TARGET_LINK_LIBRARIES (h5debug ${HDF5_LIB_TARGET} ${HDF5_TOOLS_LIB_TARGET})
 
 ADD_EXECUTABLE (h5repart ${HDF5_TOOLS_MISC_SOURCE_DIR}/h5repart.c)
-H5_NAMING (h5repart)
-TARGET_WIN_PROPERTIES (h5repart)
+H5_NAMING (h5repart ${LIB_TYPE})
 TARGET_LINK_LIBRARIES (h5repart ${HDF5_LIB_TARGET} ${HDF5_TOOLS_LIB_TARGET})
 
 ADD_EXECUTABLE (h5mkgrp ${HDF5_TOOLS_MISC_SOURCE_DIR}/h5mkgrp.c)
-H5_NAMING (h5mkgrp)
-TARGET_WIN_PROPERTIES (h5mkgrp)
+H5_NAMING (h5mkgrp ${LIB_TYPE})
 TARGET_LINK_LIBRARIES (h5mkgrp  ${HDF5_TOOLS_LIB_TARGET} ${HDF5_LIB_TARGET})
 
 SET (H5_DEP_EXECUTABLES
@@ -44,15 +41,13 @@ IF (BUILD_TESTING)
   # --------------------------------------------------------------------
   IF (HDF5_BUILD_GENERATORS AND NOT BUILD_SHARED_LIBS)
     ADD_EXECUTABLE (h5repart_gentest ${HDF5_TOOLS_MISC_SOURCE_DIR}/h5repart_gentest.c)
-    H5_NAMING (h5repart_gentest)
-    TARGET_WIN_PROPERTIES (h5repart_gentest)
+    H5_NAMING (h5repart_gentest ${LIB_TYPE})
     TARGET_LINK_LIBRARIES (h5repart_gentest ${HDF5_LIB_TARGET} ${HDF5_TOOLS_LIB_TARGET})
     #ADD_TEST (NAME h5repart_gentest COMMAND $<TARGET_FILE:h5repart_gentest>)
   ENDIF (HDF5_BUILD_GENERATORS AND NOT BUILD_SHARED_LIBS)
 
   ADD_EXECUTABLE (h5repart_test ${HDF5_TOOLS_MISC_SOURCE_DIR}/repart_test.c)
-  H5_NAMING (h5repart_test)
-  TARGET_WIN_PROPERTIES (h5repart_test)
+  H5_NAMING (h5repart_test ${LIB_TYPE})
   TARGET_LINK_LIBRARIES (h5repart_test ${HDF5_LIB_TARGET} ${HDF5_TOOLS_LIB_TARGET})
   
   # --------------------------------------------------------------------
@@ -149,6 +144,7 @@ IF (BUILD_TESTING)
           COMMAND $<TARGET_FILE:h5mkgrp> ${PROJECT_BINARY_DIR}/../testfiles/${resultfile}.h5 ${ARGN}
       )
     ENDIF (NOT ${resultoption} STREQUAL " ")
+    SET_TESTS_PROPERTIES (H5MKGRP-${resultfile}${resultoption} PROPERTIES DEPENDS H5MKGRP-clear-${resultfile}${resultoption})
     ADD_TEST (
         NAME H5MKGRP-H5LS-${resultfile}${resultoption}
         COMMAND "${CMAKE_COMMAND}"
@@ -161,6 +157,7 @@ IF (BUILD_TESTING)
             -D "TEST_REFERENCE=${resultfile}.ls"
             -P "${HDF5_RESOURCES_DIR}/runTest.cmake"
     )
+    SET_TESTS_PROPERTIES (H5MKGRP-H5LS-${resultfile}${resultoption} PROPERTIES DEPENDS H5MKGRP-${resultfile}${resultoption})
   ENDMACRO (ADD_H5_TEST resultfile resultcode resultoption)
 
   MACRO (ADD_H5_CMP resultfile resultcode)
@@ -192,6 +189,7 @@ IF (BUILD_TESTING)
   )
   # repartition family member size to 20,000 bytes.
   ADD_TEST (NAME h5repart_20K COMMAND $<TARGET_FILE:h5repart> -m 20000 family_file%05d.h5 fst_family%05d.h5)
+  SET_TESTS_PROPERTIES (h5repart_20K PROPERTIES DEPENDS h5repart_20K-clear-objects)
 
   # Remove any output file left over from previous test run
   ADD_TEST (
@@ -205,6 +203,7 @@ IF (BUILD_TESTING)
   )
   # repartition family member size to 5 KB.
   ADD_TEST (NAME h5repart_5K COMMAND $<TARGET_FILE:h5repart> -m 5k family_file%05d.h5 scd_family%05d.h5)
+  SET_TESTS_PROPERTIES (h5repart_5K PROPERTIES DEPENDS h5repart_5K-clear-objects)
 
   # Remove any output file left over from previous test run
   ADD_TEST (
@@ -215,9 +214,11 @@ IF (BUILD_TESTING)
   )
   # convert family file to sec2 file of 20,000 bytes
   ADD_TEST (NAME h5repart_sec2 COMMAND $<TARGET_FILE:h5repart> -m 20000 -family_to_sec2 family_file%05d.h5 family_to_sec2.h5)
+  SET_TESTS_PROPERTIES (h5repart_sec2 PROPERTIES DEPENDS h5repart_sec2-clear-objects)
 
   # test the output files repartitioned above.
   ADD_TEST (NAME h5repart_test COMMAND $<TARGET_FILE:h5repart_test>)
+  SET_TESTS_PROPERTIES (h5repart_test PROPERTIES DEPENDS h5repart_sec2 h5repart_5K h5repart_20K)
 
   SET (H5_DEP_EXECUTABLES ${H5_DEP_EXECUTABLES}
         h5repart_test

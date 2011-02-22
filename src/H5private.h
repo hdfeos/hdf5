@@ -403,11 +403,6 @@
 #   error "nothing appropriate for int32_t"
 #endif
 
-/* Definition of uint32_t was moved to H5public.h */
-
-/* Definition of int64_t was moved to H5public.h */
-/* Definition of uint64_t was moved to H5public.h */
-
 /*
  * Maximum and minimum values.	These should be defined in <limits.h> for the
  * most part.
@@ -998,6 +993,9 @@ H5_DLL int HDfprintf (FILE *stream, const char *fmt, ...);
 #ifndef HDpow
     #define HDpow(X,Y)		pow(X,Y)
 #endif /* HDpow */
+#ifndef HDpread
+    #define HDpread(F,Z,M,O)		pread(F,Z,M,O)
+#endif /* HDpread */
 /* printf() variable arguments */
 #ifndef HDputc
     #define HDputc(C,F)		putc(C,F)
@@ -1008,6 +1006,9 @@ H5_DLL int HDfprintf (FILE *stream, const char *fmt, ...);
 #ifndef HDputs
     #define HDputs(S)		puts(S)
 #endif /* HDputs */
+#ifndef HDpwrite
+    #define HDpwrite(F,Z,M,O)		pwrite(F,Z,M,O)
+#endif /* HDpwrite */
 #ifndef HDqsort
     #define HDqsort(M,N,Z,F)	qsort(M,N,Z,F)
 #endif /* HDqsort*/

@@ -16,11 +16,20 @@
 /* Defined if HDF5 was built with CMake AND build as a shared library */
 #cmakedefine H5_BUILT_AS_DYNAMIC_LIB @H5_BUILT_AS_DYNAMIC_LIB@
 
+/* Defined if HDF5 was built with CMake AND build as a static library */
+#cmakedefine H5_BUILT_AS_STATIC_LIB @H5_BUILT_AS_STATIC_LIB@
+
 /* Defined if HDF5 CPP  was built with CMake AND build as a shared library  */
 #cmakedefine H5_CPP_BUILT_AS_DYNAMIC_LIB @H5_CPP_BUILT_AS_DYNAMIC_LIB@
 
+/* Defined if HDF5 CPP  was built with CMake AND build as a static library  */
+#cmakedefine H5_CPP_BUILT_AS_STATIC_LIB @H5_CPP_BUILT_AS_STATIC_LIB@
+
 /* Defined if HDF5 HL was built with CMake AND build as a shared library */
 #cmakedefine H5_HL_BUILT_AS_DYNAMIC_LIB @H5_HL_BUILT_AS_DYNAMIC_LIB@
+
+/* Defined if HDF5 HL was built with CMake AND build as a static library */
+#cmakedefine H5_HL_BUILT_AS_STATIC_LIB @H5_HL_BUILT_AS_STATIC_LIB@
 
 /* Define if building universal (internal helper macro) */
 #cmakedefine H5_AC_APPLE_UNIVERSAL_BUILD @H5_AC_APPLE_UNIVERSAL_BUILD@
@@ -188,7 +197,7 @@
 /* Define to 1 if you have the `gettimeofday' function declared in time.h . */
 #cmakedefine H5_HAVE_TIME_GETTIMEOFDAY @H5_HAVE_TIME_GETTIMEOFDAY@
 
-/* Define to 1 if you have the `gettimeofday' function declared in time.h . */
+/* Define to 1 if you have the `gettimeofday' function declared in sys/time.h . */
 #cmakedefine H5_HAVE_SYS_TIME_GETTIMEOFDAY @H5_HAVE_SYS_TIME_GETTIMEOFDAY@
 
 /* Define to 1 if you have the `get_fpc_csr' function. */

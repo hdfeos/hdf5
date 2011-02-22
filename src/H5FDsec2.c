@@ -71,7 +71,7 @@ typedef struct H5FD_sec2_t {
     int		fd;			/*the unix file			*/
     haddr_t	eoa;			/*end of allocated region	*/
     haddr_t	eof;			/*end of file; current file size*/
-    char	filename[H5FD_SEC2_MAX_FILENAME_LEN];     /* Copy of file name from open operation */
+    char	filename[H5FD_MAX_FILENAME_LEN];     /* Copy of file name from open operation */
 #ifndef _WIN32
     /*
      * On most systems the combination of device and i-node number uniquely
@@ -176,10 +176,10 @@ static const H5FD_class_t H5FD_sec2_g = {
     0,						/*dxpl_size		*/
     NULL,					/*dxpl_copy		*/
     NULL,					/*dxpl_free		*/
-    H5FD_sec2_open,			        /*open			*/
-    H5FD_sec2_close,		                /*close			*/
-    H5FD_sec2_cmp,			        /*cmp			*/
-    H5FD_sec2_query,		                /*query			*/
+    H5FD_sec2_open,				/*open			*/
+    H5FD_sec2_close,				/*close			*/
+    H5FD_sec2_cmp,				/*cmp			*/
+    H5FD_sec2_query,				/*query			*/
     NULL,					/*get_type_map		*/
     NULL,					/*alloc			*/
     NULL,					/*free			*/
@@ -239,7 +239,7 @@ H5FD_sec2_init_interface(void)
 hid_t
 H5FD_sec2_init(void)
 {
-    hid_t ret_value;        /* Return value */
+    hid_t ret_value;            /* Return value */
 
     FUNC_ENTER_NOAPI(H5FD_sec2_init, FAIL)
 
@@ -301,7 +301,7 @@ H5Pset_fapl_sec2(hid_t fapl_id)
     FUNC_ENTER_API(H5Pset_fapl_sec2, FAIL)
     H5TRACE1("e", "i", fapl_id);
 
-    if(NULL == (plist = H5P_object_verify(fapl_id,H5P_FILE_ACCESS)))
+    if(NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
 
     ret_value = H5P_set_driver(plist, H5FD_SEC2, NULL);
@@ -319,7 +319,6 @@ done:
  * Return:	Success:	A pointer to a new file data structure. The
  *				public fields will be initialized by the
  *				caller, which is always H5FD_open().
- *
  *		Failure:	NULL
  *
  * Programmer:	Robb Matzke
@@ -331,8 +330,8 @@ static H5FD_t *
 H5FD_sec2_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
 {
     H5FD_sec2_t	*file = NULL;   /* sec2 VFD info */
-    int	fd = (-1);              /* File descriptor */
-    int	o_flags;                /* Flags for open() call */
+    int		fd = (-1);      /* File descriptor */
+    int		o_flags;        /* Flags for open() call */
 #ifdef _WIN32
     HFILE filehandle;
     struct _BY_HANDLE_FILE_INFORMATION fileinfo;
@@ -346,7 +345,7 @@ HDfprintf(stderr, "%s: Called, name = '%s'\n", FUNC, name);
 #endif /* H5FD_SEC2_PAGE_DEBUG */
 
     /* Sanity check on file offsets */
-    HDassert(sizeof(HDoff_t) >= sizeof(size_t));
+    HDcompile_assert(sizeof(HDoff_t) >= sizeof(size_t));
 
     /* Check arguments */
     if(!name || !*name)
@@ -460,7 +459,6 @@ HDfprintf(stderr, "%s: Leaving, ret_value = %p\n", FUNC, ret_value);
  * Purpose:	Closes a Unix file.
  *
  * Return:	Success:	0
- *
  *		Failure:	-1, file not closed.
  *
  * Programmer:	Robb Matzke
@@ -471,7 +469,7 @@ HDfprintf(stderr, "%s: Leaving, ret_value = %p\n", FUNC, ret_value);
 static herr_t
 H5FD_sec2_close(H5FD_t *_file)
 {
-    H5FD_sec2_t	*file = (H5FD_sec2_t*)_file;
+    H5FD_sec2_t	*file = (H5FD_sec2_t *)_file;
     herr_t ret_value = SUCCEED;                 /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT(H5FD_sec2_close)
@@ -508,22 +506,19 @@ done:
  *		arbitrary (but consistent) ordering.
  *
  * Return:	Success:	A value like strcmp()
- *
  *		Failure:	never fails (arguments were checked by the
  *				caller).
  *
  * Programmer:	Robb Matzke
  *              Thursday, July 29, 1999
  *
- * Modifications:
- *
  *-------------------------------------------------------------------------
  */
 static int
 H5FD_sec2_cmp(const H5FD_t *_f1, const H5FD_t *_f2)
 {
-    const H5FD_sec2_t	*f1 = (const H5FD_sec2_t*)_f1;
-    const H5FD_sec2_t	*f2 = (const H5FD_sec2_t*)_f2;
+    const H5FD_sec2_t	*f1 = (const H5FD_sec2_t *)_f1;
+    const H5FD_sec2_t	*f2 = (const H5FD_sec2_t *)_f2;
     int ret_value = 0;
 
     FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5FD_sec2_cmp)
@@ -544,16 +539,16 @@ H5FD_sec2_cmp(const H5FD_t *_f1, const H5FD_t *_f2)
      * determine if the values are the same or not.  The actual return value
      * shouldn't really matter...
      */
-    if(HDmemcmp(&(f1->device),&(f2->device),sizeof(dev_t))<0) HGOTO_DONE(-1)
-    if(HDmemcmp(&(f1->device),&(f2->device),sizeof(dev_t))>0) HGOTO_DONE(1)
+    if(HDmemcmp(&(f1->device),&(f2->device),sizeof(dev_t)) < 0) HGOTO_DONE(-1)
+    if(HDmemcmp(&(f1->device),&(f2->device),sizeof(dev_t)) > 0) HGOTO_DONE(1)
 #endif /* H5_DEV_T_IS_SCALAR */
 
 #ifndef H5_VMS
     if(f1->inode < f2->inode) HGOTO_DONE(-1)
     if(f1->inode > f2->inode) HGOTO_DONE(1)
 #else
-    if(HDmemcmp(&(f1->inode),&(f2->inode),3*sizeof(ino_t))<0) HGOTO_DONE(-1)
-    if(HDmemcmp(&(f1->inode),&(f2->inode),3*sizeof(ino_t))>0) HGOTO_DONE(1)
+    if(HDmemcmp(&(f1->inode), &(f2->inode), 3 * sizeof(ino_t)) < 0) HGOTO_DONE(-1)
+    if(HDmemcmp(&(f1->inode), &(f2->inode), 3 * sizeof(ino_t)) > 0) HGOTO_DONE(1)
 #endif /*H5_VMS*/
 
 #endif /* _WIN32 */
@@ -580,7 +575,7 @@ done:
 static herr_t
 H5FD_sec2_query(const H5FD_t *_file, unsigned long *flags /* out */)
 {
-    const H5FD_sec2_t	*file = (const H5FD_sec2_t*)_file;    /* sec2 VFD info */
+    const H5FD_sec2_t	*file = (const H5FD_sec2_t *)_file;    /* sec2 VFD info */
 
     FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5FD_sec2_query)
 
@@ -610,23 +605,17 @@ H5FD_sec2_query(const H5FD_t *_file, unsigned long *flags /* out */)
  *		format address space.
  *
  * Return:	Success:	The end-of-address marker.
- *
  *		Failure:	HADDR_UNDEF
  *
  * Programmer:	Robb Matzke
  *              Monday, August  2, 1999
- *
- * Modifications:
- *              Raymond Lu
- *              21 Dec. 2006
- *              Added the parameter TYPE.  It's only used for MULTI driver.
  *
  *-------------------------------------------------------------------------
  */
 static haddr_t
 H5FD_sec2_get_eoa(const H5FD_t *_file, H5FD_mem_t UNUSED type)
 {
-    const H5FD_sec2_t	*file = (const H5FD_sec2_t*)_file;
+    const H5FD_sec2_t	*file = (const H5FD_sec2_t *)_file;
 
     FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5FD_sec2_get_eoa)
 
@@ -642,23 +631,17 @@ H5FD_sec2_get_eoa(const H5FD_t *_file, H5FD_mem_t UNUSED type)
  *		to tell the driver where the end of the HDF5 data is located.
  *
  * Return:	Success:	0
- *
  *		Failure:	-1
  *
  * Programmer:	Robb Matzke
  *              Thursday, July 29, 1999
- *
- * Modifications:
- *              Raymond Lu
- *              21 Dec. 2006
- *              Added the parameter TYPE.  It's only used for MULTI driver.
  *
  *-------------------------------------------------------------------------
  */
 static herr_t
 H5FD_sec2_set_eoa(H5FD_t *_file, H5FD_mem_t UNUSED type, haddr_t addr)
 {
-    H5FD_sec2_t	*file = (H5FD_sec2_t*)_file;
+    H5FD_sec2_t	*file = (H5FD_sec2_t *)_file;
 
     FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5FD_sec2_set_eoa)
 
@@ -678,20 +661,17 @@ H5FD_sec2_set_eoa(H5FD_t *_file, H5FD_mem_t UNUSED type, haddr_t addr)
  * Return:	Success:	End of file address, the first address past
  *				the end of the "file", either the Unix file
  *				or the HDF5 file.
- *
  *		Failure:	HADDR_UNDEF
  *
  * Programmer:	Robb Matzke
  *              Thursday, July 29, 1999
- *
- * Modifications:
  *
  *-------------------------------------------------------------------------
  */
 static haddr_t
 H5FD_sec2_get_eof(const H5FD_t *_file)
 {
-    const H5FD_sec2_t	*file = (const H5FD_sec2_t*)_file;
+    const H5FD_sec2_t	*file = (const H5FD_sec2_t *)_file;
 
     FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5FD_sec2_get_eof)
 
@@ -722,6 +702,7 @@ H5FD_sec2_get_handle(H5FD_t *_file, hid_t UNUSED fapl, void **file_handle)
 
     if(!file_handle)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "file handle not valid")
+
     *file_handle = &(file->fd);
 
 done:
@@ -748,7 +729,7 @@ done:
 static herr_t
 H5FD_sec2_read_real(const H5FD_sec2_t *file, haddr_t addr, size_t size, void *buf/*out*/)
 {
-    herr_t      ret_value = SUCCEED;       /* Return value */
+    herr_t              ret_value = SUCCEED;       /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT(H5FD_sec2_read_real)
 
@@ -809,7 +790,7 @@ done:
 static herr_t
 H5FD_sec2_write_real(H5FD_sec2_t *file, haddr_t addr, size_t size, const void *buf)
 {
-    herr_t      ret_value = SUCCEED;       /* Return value */
+    herr_t              ret_value = SUCCEED;       /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT(H5FD_sec2_write_real)
 
@@ -1006,7 +987,7 @@ static herr_t
 H5FD_sec2_read(H5FD_t *_file, H5FD_mem_t UNUSED type, hid_t UNUSED dxpl_id,
     haddr_t addr, size_t size, void *_buf/*out*/)
 {
-    H5FD_sec2_t	*file = (H5FD_sec2_t*)_file;    /* Alias for file pointer */
+    H5FD_sec2_t	*file = (H5FD_sec2_t *)_file;   /* Alias for file pointer */
     unsigned u;                         /* Local index variable */
     herr_t ret_value = SUCCEED;         /* Return value */
 
@@ -1225,7 +1206,7 @@ static herr_t
 H5FD_sec2_write(H5FD_t *_file, H5FD_mem_t UNUSED type, hid_t UNUSED dxpl_id, haddr_t addr,
 		size_t size, const void *_buf)
 {
-    H5FD_sec2_t	*file = (H5FD_sec2_t*)_file;    /* Alias for file structure */
+    H5FD_sec2_t	*file = (H5FD_sec2_t *)_file;   /* Alias for file structure */
     unsigned u;                                 /* Local index variable */
     herr_t ret_value = SUCCEED;                 /* Return value */
 
@@ -1498,7 +1479,6 @@ done:
  *		than the end-of-address.
  *
  * Return:	Success:	Non-negative
- *
  *		Failure:	Negative
  *
  * Programmer:	Robb Matzke
@@ -1510,7 +1490,7 @@ done:
 static herr_t
 H5FD_sec2_truncate(H5FD_t *_file, hid_t UNUSED dxpl_id, hbool_t UNUSED closing)
 {
-    H5FD_sec2_t *file = (H5FD_sec2_t*)_file;
+    H5FD_sec2_t *file = (H5FD_sec2_t *)_file;
     herr_t ret_value = SUCCEED;                 /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT(H5FD_sec2_truncate)
