@@ -48,7 +48,8 @@
 /* Definitions for create intermediate groups flag */
 #define H5L_CRT_INTERMEDIATE_GROUP_SIZE         sizeof(unsigned)
 #define H5L_CRT_INTERMEDIATE_GROUP_DEF          0
-
+#define H5L_CRT_INTERMEDIATE_GROUP_ENC H5P_lcrt_create_intermediate_group_enc
+#define H5L_CRT_INTERMEDIATE_GROUP_DEC H5P_lcrt_create_intermediate_group_dec
 
 /******************/
 /* Local Typedefs */
@@ -67,6 +68,9 @@
 /* Property class callbacks */
 static herr_t H5P_lcrt_reg_prop(H5P_genclass_t *pclass);
 
+/* Property callbacks */
+static herr_t H5P_lcrt_create_intermediate_group_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_lcrt_create_intermediate_group_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 
 /*********************/
 /* Package Variables */
@@ -119,7 +123,9 @@ H5P_lcrt_reg_prop(H5P_genclass_t *pclass)
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Register create intermediate groups property */
-    if(H5P_register_real(pclass, H5L_CRT_INTERMEDIATE_GROUP_NAME, H5L_CRT_INTERMEDIATE_GROUP_SIZE, &intmd_group, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+    if(H5P_register_real(pclass, H5L_CRT_INTERMEDIATE_GROUP_NAME, H5L_CRT_INTERMEDIATE_GROUP_SIZE, &intmd_group, 
+                         NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                         H5L_CRT_INTERMEDIATE_GROUP_ENC, H5L_CRT_INTERMEDIATE_GROUP_DEC) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
@@ -198,3 +204,71 @@ done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_create_intermediate_group() */
 
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_lcrt_create_intermediate_group_enc
+ *
+ * Purpose:        Callback routine which is called whenever the intermediate_group
+ *                 property in the dataset access property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_lcrt_create_intermediate_group_enc(H5F_t UNUSED *f, size_t *size, 
+                                                     void *value, H5P_genplist_t UNUSED *plist, 
+                                                     uint8_t **pp)
+{
+    unsigned *create_intermediate_group = (unsigned *) value;
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if (NULL != *pp)
+        *(*pp)++ = (uint8_t)*create_intermediate_group;
+    else {
+        *size += sizeof(uint8_t);
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_lcrt_create_intermediate_group_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_lcrt_create_intermediate_group_dec
+ *
+ * Purpose:        Callback routine which is called whenever the intermediate_group
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_lcrt_create_intermediate_group_dec(H5F_t UNUSED *f, size_t UNUSED *size, 
+                                                     void UNUSED *value, H5P_genplist_t *plist, 
+                                                     uint8_t **pp)
+{
+    unsigned create_intermediate_group;
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    create_intermediate_group = *(*pp)++;
+
+    /* Set value */
+    create_intermediate_group = (unsigned)(create_intermediate_group > 0 ? 1 : 0);
+    if(H5P_set(plist, H5L_CRT_INTERMEDIATE_GROUP_NAME, &create_intermediate_group) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set intermediate group creation flag")
+ done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_lcrt_create_intermediate_group_dec() */

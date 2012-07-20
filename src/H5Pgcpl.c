@@ -38,6 +38,11 @@
 #include "H5Ppkg.h"		/* Property lists		  	*/
 
 
+#define H5G_CRT_GROUP_INFO_ENC    H5P_gcrt_group_info_enc
+#define H5G_CRT_GROUP_INFO_DEC    H5P_gcrt_group_info_dec
+#define H5G_CRT_LINK_INFO_ENC     H5P_gcrt_link_info_enc
+#define H5G_CRT_LINK_INFO_DEC     H5P_gcrt_link_info_dec
+
 /****************/
 /* Local Macros */
 /****************/
@@ -60,6 +65,11 @@
 /* Property class callbacks */
 static herr_t H5P_gcrt_reg_prop(H5P_genclass_t *pclass);
 
+/* Property callbacks */
+static herr_t H5P_gcrt_group_info_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_gcrt_group_info_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_gcrt_link_info_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_gcrt_link_info_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 
 /*********************/
 /* Package Variables */
@@ -113,11 +123,15 @@ H5P_gcrt_reg_prop(H5P_genclass_t *pclass)
     FUNC_ENTER_NOAPI_NOINIT
 
     /* Register group info property */
-    if(H5P_register_real(pclass, H5G_CRT_GROUP_INFO_NAME, H5G_CRT_GROUP_INFO_SIZE, &ginfo, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+    if(H5P_register_real(pclass, H5G_CRT_GROUP_INFO_NAME, H5G_CRT_GROUP_INFO_SIZE, &ginfo, 
+                         NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                         H5G_CRT_GROUP_INFO_ENC, H5G_CRT_GROUP_INFO_DEC) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register link info property */
-    if(H5P_register_real(pclass, H5G_CRT_LINK_INFO_NAME, H5G_CRT_LINK_INFO_SIZE, &linfo, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+    if(H5P_register_real(pclass, H5G_CRT_LINK_INFO_NAME, H5G_CRT_LINK_INFO_SIZE, &linfo, 
+                         NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                         H5G_CRT_LINK_INFO_ENC, H5G_CRT_LINK_INFO_DEC) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
@@ -505,3 +519,171 @@ done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_link_creation_order() */
 
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_gcrt_link_info_enc
+ *
+ * Purpose:        Callback routine which is called whenever the link
+ *                 property in the dataset access property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_gcrt_link_info_enc(H5F_t UNUSED *f, size_t *size, void *value, 
+                                     H5P_genplist_t UNUSED *plist, uint8_t **pp)
+{
+    const H5O_linfo_t *linfo = (H5O_linfo_t *)value; /* Create local aliases for values */
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if (NULL != *pp) {
+        unsigned crt_order_flags;
+
+        crt_order_flags |= linfo->track_corder ? H5P_CRT_ORDER_TRACKED : 0;
+        crt_order_flags |= linfo->index_corder ? H5P_CRT_ORDER_INDEXED : 0;
+        *(*pp)++ = (uint8_t)crt_order_flags;
+    }
+    else
+        *size += sizeof(uint8_t);
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_gcrt_link_info_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_gcrt_link_info_dec
+ *
+ * Purpose:        Callback routine which is called whenever the link info
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_gcrt_link_info_dec(H5F_t UNUSED *f, size_t UNUSED *size, 
+                                     void UNUSED *value, H5P_genplist_t *plist, uint8_t **pp)
+{
+    unsigned crt_order_flags;
+    H5O_linfo_t linfo;
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    crt_order_flags = *(*pp)++;
+
+    /* Get link info */
+    if(H5P_get(plist, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get link info")
+
+    /* Update fields */
+    linfo.track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
+    linfo.index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);
+
+    /* Set link info */
+    if(H5P_set(plist, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set link info")
+
+ done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_gcrt_link_info_dec() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_gcrt_group_info_enc
+ *
+ * Purpose:        Callback routine which is called whenever the group
+ *                 property in the dataset access property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_gcrt_group_info_enc(H5F_t UNUSED *f, size_t *size, void *value, 
+                                      H5P_genplist_t UNUSED *plist, uint8_t **pp)
+{
+    const H5O_ginfo_t *ginfo = (H5O_ginfo_t *)value; /* Create local aliases for values */
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if (NULL != *pp) {
+        UINT32ENCODE(*pp, ginfo->lheap_size_hint)
+        UINT16ENCODE(*pp, ginfo->max_compact)
+        UINT16ENCODE(*pp, ginfo->min_dense)
+        UINT16ENCODE(*pp, ginfo->est_num_entries)
+        UINT16ENCODE(*pp, ginfo->est_name_len)      
+    }
+    else
+        *size += sizeof(uint16_t)*4 + sizeof(uint32_t);
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_gcrt_group_info_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_gcrt_group_info_dec
+ *
+ * Purpose:        Callback routine which is called whenever the group info
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_gcrt_group_info_dec(H5F_t UNUSED *f, size_t UNUSED *size, 
+                                     void UNUSED *value, H5P_genplist_t *plist, uint8_t **pp)
+{
+    unsigned crt_order_flags;
+    H5O_ginfo_t ginfo;
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    UINT32DECODE(*pp, ginfo.lheap_size_hint)
+    UINT16DECODE(*pp, ginfo.max_compact)
+    UINT16DECODE(*pp, ginfo.min_dense)
+    UINT16DECODE(*pp, ginfo.est_num_entries)
+    UINT16DECODE(*pp, ginfo.est_name_len)      
+
+    /* Update fields */
+    if(ginfo.max_compact != H5G_CRT_GINFO_MAX_COMPACT || 
+       ginfo.min_dense != H5G_CRT_GINFO_MIN_DENSE)
+        ginfo.store_link_phase_change = TRUE;
+    else
+        ginfo.store_link_phase_change = FALSE;
+
+    if(ginfo.est_num_entries != H5G_CRT_GINFO_EST_NUM_ENTRIES || 
+       ginfo.est_name_len != H5G_CRT_GINFO_EST_NAME_LEN)
+        ginfo.store_est_entry_info = TRUE;
+    else
+        ginfo.store_est_entry_info = FALSE;
+
+    /* Set group info */
+    if(H5P_set(plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set group info")
+
+ done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_gcrt_group_info_dec() */

@@ -117,7 +117,8 @@ H5P_strcrt_reg_prop(H5P_genclass_t *pclass)
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Register character encoding */
-    if(H5P_register_real(pclass, H5P_STRCRT_CHAR_ENCODING_NAME, H5P_STRCRT_CHAR_ENCODING_SIZE, &char_encoding, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+    if(H5P_register_real(pclass, H5P_STRCRT_CHAR_ENCODING_NAME, H5P_STRCRT_CHAR_ENCODING_SIZE, &char_encoding, 
+                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:

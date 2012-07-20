@@ -49,6 +49,8 @@
 /* Definitions for copy options */
 #define H5O_CPY_OPTION_SIZE			sizeof(unsigned)
 #define H5O_CPY_OPTION_DEF			0
+#define H5O_CPY_OPTION_ENC			H5P_copy_option_enc
+#define H5O_CPY_OPTION_DEC			H5P_copy_option_dec
 /* Definitions for merge committed dtype list */
 #define H5O_CPY_MERGE_COMM_DT_LIST_SIZE        sizeof(char *)
 #define H5O_CPY_MERGE_COMM_DT_LIST_DEF         NULL
@@ -81,6 +83,8 @@ static herr_t H5P_ocpy_copy(hid_t dst_plist_id, hid_t src_plist_id,
 static herr_t H5P_ocpy_close(hid_t ocpypl_id, void *close_data);
 
 /* Property callbacks */
+static herr_t H5P_copy_option_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_copy_option_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 static int H5P_ocpy_merge_comm_dt_list_cmp(const void *value1, const void *value2, size_t size);
 
 
@@ -140,15 +144,19 @@ H5P_ocpy_reg_prop(H5P_genclass_t *pclass)
     FUNC_ENTER_NOAPI(FAIL)
 
     /* Register copy options property */
-    if(H5P_register_real(pclass, H5O_CPY_OPTION_NAME, H5O_CPY_OPTION_SIZE, &ocpy_option, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+    if(H5P_register_real(pclass, H5O_CPY_OPTION_NAME, H5O_CPY_OPTION_SIZE, &ocpy_option, 
+                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+                         H5O_CPY_OPTION_ENC, H5O_CPY_OPTION_DEC) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register merge named dtype list property */
-    if(H5P_register_real(pclass, H5O_CPY_MERGE_COMM_DT_LIST_NAME, H5O_CPY_MERGE_COMM_DT_LIST_SIZE, &merge_comm_dtype_list, NULL, NULL, NULL, NULL, NULL, H5O_CPY_MERGE_COMM_DT_LIST_CMP, NULL) < 0)
+    if(H5P_register_real(pclass, H5O_CPY_MERGE_COMM_DT_LIST_NAME, H5O_CPY_MERGE_COMM_DT_LIST_SIZE, &merge_comm_dtype_list, 
+                         NULL, NULL, NULL, NULL, NULL, H5O_CPY_MERGE_COMM_DT_LIST_CMP, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for callback when completing the search for a matching named datatype from the named dtype list */
-    if(H5P_register_real(pclass, H5O_CPY_MCDT_SEARCH_CB_NAME, H5O_CPY_MCDT_SEARCH_CB_SIZE, &mcdt_cb, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+    if(H5P_register_real(pclass, H5O_CPY_MCDT_SEARCH_CB_NAME, H5O_CPY_MCDT_SEARCH_CB_SIZE, &mcdt_cb, 
+                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
@@ -441,6 +449,73 @@ done:
 
 
 /*-------------------------------------------------------------------------
+ * Function:       H5P_copy_option_enc
+ *
+ * Purpose:        Callback routine which is called whenever the option
+ *                 property in the dataset access property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_copy_option_enc(H5F_t UNUSED *f, size_t *size, void *value, 
+                                  H5P_genplist_t UNUSED *plist, uint8_t **pp)
+{
+    unsigned *cpy_option = (unsigned *) value;
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if (NULL != *pp)
+        *(*pp)++ = (uint8_t)*cpy_option;
+    else {
+        *size += sizeof(uint8_t);
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_copy_option_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_copy_option_dec
+ *
+ * Purpose:        Callback routine which is called whenever the option
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_copy_option_dec(H5F_t UNUSED *f, size_t UNUSED *size, void UNUSED *value, 
+                                  H5P_genplist_t *plist, uint8_t **pp)
+{
+    unsigned cpy_option;
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    cpy_option = *(*pp)++;
+
+    /* Set value */
+    if(H5P_set(plist, H5O_CPY_OPTION_NAME, &cpy_option) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set copy object flag")
+
+ done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_copy_option_dec() */
+
+
+/*-------------------------------------------------------------------------
  * Function:    H5Padd_merge_committed_dtype_path
  *
  * Purpose:     Adds path to the list of paths to search first in the
@@ -645,4 +720,3 @@ H5Pget_mcdt_search_cb(hid_t plist_id, H5O_mcdt_search_cb_t *func, void **op_data
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_mcdt_search_cb() */
-

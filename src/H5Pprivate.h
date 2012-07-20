@@ -42,6 +42,26 @@
 typedef struct H5P_genplist_t H5P_genplist_t;
 typedef struct H5P_genclass_t H5P_genclass_t;
 
+typedef enum H5P_plist_type_t {
+    H5P_TYPE_ERROR	       = -1,
+    H5P_TYPE_ROOT              = 0,
+    H5P_TYPE_OBJECT_CREATE     = 1,
+    H5P_TYPE_FILE_CREATE       = 2,
+    H5P_TYPE_FILE_ACCESS       = 3,
+    H5P_TYPE_DATASET_CREATE    = 4,
+    H5P_TYPE_DATASET_ACCESS    = 5,
+    H5P_TYPE_DATASET_XFER      = 6,
+    H5P_TYPE_FILE_MOUNT        = 7,
+    H5P_TYPE_GROUP_CREATE      = 8,
+    H5P_TYPE_GROUP_ACCESS      = 9,
+    H5P_TYPE_DATATYPE_CREATE   = 10,
+    H5P_TYPE_DATATYPE_ACCESS   = 11,
+    H5P_TYPE_STRING_CREATE     = 12,
+    H5P_TYPE_ATTRIBUTE_CREATE  = 13,
+    H5P_TYPE_OBJECT_COPY       = 14,
+    H5P_TYPE_LINK_CREATE       = 15,
+    H5P_TYPE_LINK_ACCESS       = 16
+} H5P_plist_type_t;
 
 /*****************************/
 /* Library Private Variables */
@@ -64,7 +84,8 @@ H5_DLL herr_t H5P_set(H5P_genplist_t *plist, const char *name, const void *value
 H5_DLL herr_t H5P_insert(H5P_genplist_t *plist, const char *name, size_t size,
     void *value, H5P_prp_set_func_t prp_set, H5P_prp_get_func_t prp_get,
     H5P_prp_delete_func_t prp_delete, H5P_prp_copy_func_t prp_copy,
-    H5P_prp_compare_func_t prp_cmp, H5P_prp_close_func_t prp_close);
+    H5P_prp_compare_func_t prp_cmp, H5P_prp_close_func_t prp_close,
+    H5P_prp_decode_func_t prp_encode, H5P_prp_decode_func_t prp_decode);
 H5_DLL herr_t H5P_remove(hid_t plist_id, H5P_genplist_t *plist, const char *name);
 H5_DLL htri_t H5P_exist_plist(H5P_genplist_t *plist, const char *name);
 H5_DLL char *H5P_get_class_name(H5P_genclass_t *pclass);
@@ -102,6 +123,10 @@ H5_DLL herr_t H5P_fill_value_defined(H5P_genplist_t *plist,
     H5D_fill_value_t *status);
 H5_DLL herr_t H5P_get_fill_value(H5P_genplist_t *plist, const H5T_t *type,
     void *value, hid_t dxpl_id);
+
+/* private functions to encode/decode a plist */
+H5_DLL herr_t H5P_encode(hid_t plist_id, uint8_t *buf, size_t *nalloc);
+H5_DLL herr_t H5P_decode(hid_t plist_id, size_t buf_size, uint8_t *buf);
 
 #endif /* _H5Pprivate_H */
 

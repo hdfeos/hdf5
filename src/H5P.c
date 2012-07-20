@@ -455,7 +455,7 @@ H5Pregister2(hid_t cls_id, const char *name, size_t size, void *def_value,
 
     /* Create the new property list class */
     orig_pclass = pclass;
-    if((ret_value = H5P_register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, prp_delete, prp_copy, prp_cmp, prp_close)) < 0)
+    if((ret_value = H5P_register(&pclass, name, size, def_value, prp_create, prp_set, prp_get, prp_delete, prp_copy, prp_cmp, prp_close, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in class")
 
     /* Check if the property class changed and needs to be substituted in the ID */
@@ -638,7 +638,8 @@ H5Pinsert2(hid_t plist_id, const char *name, size_t size, void *value,
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "properties >0 size must have default")
 
     /* Create the new property list class */
-    if((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, prp_delete, prp_copy, prp_cmp, prp_close)) < 0)
+    if((ret_value = H5P_insert(plist, name, size, value, prp_set, prp_get, prp_delete, prp_copy, 
+                               prp_cmp, prp_close, NULL, NULL)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTREGISTER, FAIL, "unable to register property in plist")
 
 done:

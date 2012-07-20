@@ -506,6 +506,9 @@ int main(int argc, char **argv)
             "test actual io mode proprerty",
             PARATESTFILE);
 
+    AddTest("edpl", test_plist_ed, NULL,
+	    "encode/decode Property Lists", NULL);
+
     if((mpi_size < 2) && MAINPROCESS) {
         printf("File Image Ops daisy chain test needs at least 2 processes.\n");
         printf("File Image Ops daisy chain test will be skipped \n");

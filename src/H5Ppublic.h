@@ -110,6 +110,7 @@ typedef herr_t (*H5P_cls_close_func_t)(hid_t prop_id, void *close_data);
 /* Define property list callback function pointer types */
 typedef herr_t (*H5P_prp_cb1_t)(const char *name, size_t size, void *value);
 typedef herr_t (*H5P_prp_cb2_t)(hid_t prop_id, const char *name, size_t size, void *value);
+typedef herr_t (*H5P_prp_cb3_t)(void *f, size_t *size, void *value, void *plist, uint8_t **buf);
 typedef H5P_prp_cb1_t H5P_prp_create_func_t;
 typedef H5P_prp_cb2_t H5P_prp_set_func_t;
 typedef H5P_prp_cb2_t H5P_prp_get_func_t;
@@ -117,6 +118,8 @@ typedef H5P_prp_cb2_t H5P_prp_delete_func_t;
 typedef H5P_prp_cb1_t H5P_prp_copy_func_t;
 typedef int (*H5P_prp_compare_func_t)(const void *value1, const void *value2, size_t size);
 typedef H5P_prp_cb1_t H5P_prp_close_func_t;
+typedef H5P_prp_cb3_t H5P_prp_encode_func_t;
+typedef H5P_prp_cb3_t H5P_prp_decode_func_t;
 
 /* Define property list iteration function type */
 typedef herr_t (*H5P_iterate_t)(hid_t id, const char *name, void *iter_data);

@@ -43,7 +43,7 @@
 #include "H5MMprivate.h"	/* Memory management			*/
 #include "H5Ppkg.h"		/* Property lists		  	*/
 #include "H5Zpkg.h"		/* Data filters				*/
-
+#include "H5HLprivate.h"        /* Local Heaps                          */
 
 /****************/
 /* Local Macros */
@@ -77,18 +77,26 @@
 #define H5D_CRT_LAYOUT_SIZE        sizeof(H5O_layout_t)
 #define H5D_CRT_LAYOUT_DEF         H5D_DEF_LAYOUT_CONTIG
 #define H5D_CRT_LAYOUT_CMP     H5P_dcrt_layout_cmp
+#define H5D_CRT_LAYOUT_ENC     H5P_dcrt_layout_enc
+#define H5D_CRT_LAYOUT_DEC     H5P_dcrt_layout_dec
 /* Definitions for fill value.  size=0 means fill value will be 0 as
  * library default; size=-1 means fill value is undefined. */
 #define H5D_CRT_FILL_VALUE_SIZE    sizeof(H5O_fill_t)
 #define H5D_CRT_FILL_VALUE_DEF     {{0, NULL, H5O_NULL_ID, {{0, HADDR_UNDEF}}}, H5O_FILL_VERSION_2, NULL, 0, NULL, H5D_ALLOC_TIME_LATE, H5D_FILL_TIME_IFSET, FALSE}
 #define H5D_CRT_FILL_VALUE_CMP     H5P_fill_value_cmp
+#define H5D_CRT_FILL_VALUE_ENC     H5P_fill_value_enc
+#define H5D_CRT_FILL_VALUE_DEC     H5P_fill_value_dec
 /* Definitions for space allocation time state */
 #define H5D_CRT_ALLOC_TIME_STATE_SIZE   sizeof(unsigned)
 #define H5D_CRT_ALLOC_TIME_STATE_DEF    1
+#define H5D_CRT_ALLOC_TIME_STATE_ENC    H5P_dcrt_alloc_time_state_enc
+#define H5D_CRT_ALLOC_TIME_STATE_DEC    H5P_dcrt_alloc_time_state_dec
 /* Definitions for external file list */
 #define H5D_CRT_EXT_FILE_LIST_SIZE sizeof(H5O_efl_t)
 #define H5D_CRT_EXT_FILE_LIST_DEF  {HADDR_UNDEF, 0, 0, NULL}
 #define H5D_CRT_EXT_FILE_LIST_CMP  H5P_dcrt_ext_file_list_cmp
+#define H5D_CRT_EXT_FILE_LIST_ENC  H5P_dcrt_ext_file_list_enc
+#define H5D_CRT_EXT_FILE_LIST_DEC  H5P_dcrt_ext_file_list_dec
 
 
 /******************/
@@ -118,8 +126,15 @@ static herr_t H5P_dcrt_close(hid_t dxpl_id, void *close_data);
 
 /* Property callbacks */
 static int H5P_dcrt_layout_cmp(const void *value1, const void *value2, size_t size);
+static herr_t H5P_dcrt_layout_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_dcrt_layout_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 static int H5P_dcrt_ext_file_list_cmp(const void *value1, const void *value2, size_t size);
-
+static herr_t H5P_fill_value_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_fill_value_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_dcrt_alloc_time_state_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_dcrt_alloc_time_state_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_dcrt_ext_file_list_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_dcrt_ext_file_list_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 
 /*********************/
 /* Package Variables */
@@ -185,19 +200,27 @@ H5P_dcrt_reg_prop(H5P_genclass_t *pclass)
     FUNC_ENTER_NOAPI_NOINIT
 
     /* Register the storage layout property */
-    if(H5P_register_real(pclass, H5D_CRT_LAYOUT_NAME, H5D_CRT_LAYOUT_SIZE, &layout, NULL, NULL, NULL, NULL, NULL, H5D_CRT_LAYOUT_CMP, NULL) < 0)
+    if(H5P_register_real(pclass, H5D_CRT_LAYOUT_NAME, H5D_CRT_LAYOUT_SIZE, &layout, 
+                         NULL, NULL, NULL, NULL, NULL, H5D_CRT_LAYOUT_CMP, NULL, 
+                         H5D_CRT_LAYOUT_ENC, H5D_CRT_LAYOUT_DEC) < 0)
        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the fill value property */
-    if(H5P_register_real(pclass, H5D_CRT_FILL_VALUE_NAME, H5D_CRT_FILL_VALUE_SIZE, &fill, NULL, NULL, NULL, NULL, NULL, H5D_CRT_FILL_VALUE_CMP, NULL) < 0)
+    if(H5P_register_real(pclass, H5D_CRT_FILL_VALUE_NAME, H5D_CRT_FILL_VALUE_SIZE, &fill, 
+                         NULL, NULL, NULL, NULL, NULL, H5D_CRT_FILL_VALUE_CMP, NULL,
+                         H5D_CRT_FILL_VALUE_ENC, H5D_CRT_FILL_VALUE_DEC) < 0)
        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the space allocation time state property */
-    if(H5P_register_real(pclass, H5D_CRT_ALLOC_TIME_STATE_NAME, H5D_CRT_ALLOC_TIME_STATE_SIZE, &alloc_time_state, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+    if(H5P_register_real(pclass, H5D_CRT_ALLOC_TIME_STATE_NAME, H5D_CRT_ALLOC_TIME_STATE_SIZE, &alloc_time_state, 
+                         NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                         H5D_CRT_ALLOC_TIME_STATE_ENC, H5D_CRT_ALLOC_TIME_STATE_DEC) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the external file list property */
-    if(H5P_register_real(pclass, H5D_CRT_EXT_FILE_LIST_NAME, H5D_CRT_EXT_FILE_LIST_SIZE, &efl, NULL, NULL, NULL, NULL, NULL, H5D_CRT_EXT_FILE_LIST_CMP, NULL) < 0)
+    if(H5P_register_real(pclass, H5D_CRT_EXT_FILE_LIST_NAME, H5D_CRT_EXT_FILE_LIST_SIZE, &efl, 
+                         NULL, NULL, NULL, NULL, NULL, H5D_CRT_EXT_FILE_LIST_CMP, NULL, 
+                         H5D_CRT_EXT_FILE_LIST_ENC, H5D_CRT_EXT_FILE_LIST_DEC) < 0)
        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
@@ -435,6 +458,152 @@ done:
 
 
 /*-------------------------------------------------------------------------
+ * Function:       H5P_dcrt_layout_enc
+ *
+ * Purpose:        Callback routine which is called whenever the layout
+ *                 property in the dataset creation property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_dcrt_layout_enc (H5F_t UNUSED *f, size_t *size, void *value, 
+                     H5P_genplist_t UNUSED *plist, uint8_t **pp)
+{
+    const H5O_layout_t *layout = (const H5O_layout_t *)value; /* Create local aliases for values */
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* Sanity check */
+    HDassert(layout);
+
+    if (NULL != *pp)
+        /* encode layout type */
+        *(*pp)++ = (uint8_t)layout->type;
+    else
+        *size += sizeof(uint8_t);
+
+    switch(layout->type) {
+        case H5D_COMPACT:
+            break;
+        case H5D_CONTIGUOUS:
+            break;
+        case H5D_CHUNKED:
+            {
+                /* If layout is chunked, encode chunking structure */
+                unsigned u;     /* Local index variable */
+                if (NULL != *pp)
+                    *(*pp)++ = (uint8_t)layout->u.chunk.ndims;
+                else
+                    *size += sizeof (uint8_t);
+                for(u = 0; u < layout->u.chunk.ndims; u++) {
+                    if (NULL != *pp)
+                        UINT32ENCODE(*pp, layout->u.chunk.dim[u])
+                    else
+                        *size += sizeof(uint32_t);
+                } /* end for */
+            } /* end case */
+            break;
+        default:
+            HDassert(0 && "Unknown layout type!");
+    } /* end switch */
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_dcrt_layout_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_dcrt_layout_dec
+ *
+ * Purpose:        Callback routine which is called whenever the layout
+ *                 property in the dataset creation property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_dcrt_layout_dec (H5F_t UNUSED *f, size_t UNUSED *size, void *value, 
+                     H5P_genplist_t *plist, uint8_t **pp)
+{
+    H5D_layout_t type;
+    unsigned ndims;
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* decode layout type */
+    type = *(*pp)++;
+
+    /* set default layout in case the type is compact or contiguous, otherwise
+     * decode the chunked structure and set chunked layout */
+    switch(type) {
+        case H5D_COMPACT:
+            {
+                const H5O_layout_t *layout;
+                layout = &H5D_def_layout_compact_g;
+                if(H5P_set_layout(plist, layout) < 0)
+                    HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set layout")
+            }
+            break;
+        case H5D_CONTIGUOUS:
+            {
+                const H5O_layout_t *layout;
+                layout = &H5D_def_layout_contig_g;
+                if(H5P_set_layout(plist, layout) < 0)
+                    HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set layout")
+            }
+            break;
+        case H5D_CHUNKED:
+            {
+                unsigned u;
+
+                ndims = *(*pp)++;
+                if (0 == ndims) {
+                    /* default chunk layout */
+                    const H5O_layout_t *layout;
+                    layout = &H5D_def_layout_chunk_g;
+                    if(H5P_set_layout(plist, layout) < 0)
+                        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set layout")
+                }
+                else {
+                    /* chunk layout structure is encoded*/
+                    H5O_layout_t layout;
+                    HDmemcpy(&layout, &H5D_def_layout_chunk_g, 
+                             sizeof(H5D_def_layout_chunk_g));
+                    HDmemset(&layout.u.chunk.dim, 0, sizeof(layout.u.chunk.dim));
+
+                    for(u = 0; u < (unsigned)ndims; u++) {
+                        UINT32DECODE (*pp, layout.u.chunk.dim[u])
+                    }
+                    layout.u.chunk.ndims = (unsigned)ndims;
+                    if(H5P_set_layout(plist, &layout) < 0)
+                        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set layout")
+                }
+            }
+            break;
+        default:
+            HDassert(0 && "Unknown layout type!");
+    } /* end switch */
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_dcrt_layout_dec() */
+
+
+/*-------------------------------------------------------------------------
  * Function:       H5P_fill_value_cmp
  *
  * Purpose:        Callback routine which is called whenever the fill value
@@ -493,6 +662,129 @@ H5P_fill_value_cmp(const void *_fill1, const void *_fill2, size_t UNUSED size)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_fill_value_cmp() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_fill_value_enc
+ *
+ * Purpose:        Callback routine which is called whenever the fill value
+ *                 property in the dataset creation property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_fill_value_enc (H5F_t UNUSED *f, size_t *size, void *value, 
+                    H5P_genplist_t UNUSED *plist, uint8_t **pp)
+{
+    const H5O_fill_t *fill = (H5O_fill_t *)value; /* Create local aliases for values */
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* Sanity check */
+    HDassert(fill);
+
+    if (NULL != *pp) {
+        uint8_t type_def;
+
+        /* encode size of fill value */
+        INT64ENCODE(*pp, fill->size)
+        /* encode the fill buffer */
+        HDmemcpy(*pp, (uint8_t *)fill->buf, (size_t)fill->size);
+        *pp += fill->size;
+
+        /* encode alloc and fill time */
+        *(*pp)++ = (uint8_t)fill->alloc_time;
+        *(*pp)++ = (uint8_t)fill->fill_time;
+
+        if (NULL != fill->type) {
+            /* encode 1 indicating that the type is not NULL */
+            type_def = 1;
+            *(*pp)++ = (uint8_t)type_def;
+            /* encode type */
+            if (H5T_encode (fill->type, *pp, size) < 0)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
+        }
+        else {
+            /* encode 0 indicating that the type is NULL */
+            type_def = 0;
+            *(*pp)++ = (uint8_t)type_def;
+        }
+    }
+    else {
+        /* calculate size needed for encoding */
+        size_t temp = 0;
+        *size += sizeof (int64_t);
+        *size += fill->size;
+        *size += sizeof(uint8_t)*3;
+        if (NULL != fill->type) {
+            if (H5T_encode (fill->type, NULL, &temp) < 0)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
+            *size += temp;
+        }
+    }
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_fill_value_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_fill_value_dec
+ *
+ * Purpose:        Callback routine which is called whenever the fill value
+ *                 property in the dataset creation property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_fill_value_dec (H5F_t UNUSED *f, size_t UNUSED *size, void *value, 
+                    H5P_genplist_t *plist, uint8_t **pp)
+{
+    H5O_fill_t fill; /* Create local aliases for values */
+    uint8_t type_def;
+    herr_t ret_value = 0;       /* Return value */
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* decode fill size */
+    INT64DECODE(*pp, fill.size)
+
+    /* allocated fill buffer and copy the contents in it */
+    if(NULL == (fill.buf = H5MM_malloc((size_t)fill.size)))
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for fill value")
+    HDmemcpy((uint8_t *)fill.buf, *pp, (size_t)fill.size);
+    *pp += fill.size;
+
+    /* decode alloc and fill time */
+    fill.alloc_time = *(*pp)++;
+    fill.fill_time = *(*pp)++;
+
+    /* decode type if it exists */
+    type_def = *(*pp)++;
+    if (type_def) {
+        fill.type = H5T_decode (*pp);
+    }
+    /* set the property Fill value */
+    if(H5P_set(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set space allocation time")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_fill_value_dec() */
 
 
 /*-------------------------------------------------------------------------
@@ -1680,8 +1972,7 @@ done:
  * Function:    H5P_fill_value_defined
  *
  * Purpose:	Check if fill value is defined.
- *
- * Return:	Non-negative on success/Negative on failure
+ * * Return:	Non-negative on success/Negative on failure
  *
  * Programmer:  Quincey Koziol
  *              Wednesday, October 17, 2007
@@ -1970,3 +2261,220 @@ done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_fill_time() */
 
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_dcrt_alloc_time_state_enc
+ *
+ * Purpose:        Callback routine which is called whenever the alloc_time_state
+ *                 property in the dataset creation property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_dcrt_alloc_time_state_enc (H5F_t UNUSED *f, size_t *size, void *value, 
+                               H5P_genplist_t *plist, uint8_t **pp)
+{
+    unsigned *alloc_time_state = (unsigned *)value; /* Create local aliases for values */
+    H5O_fill_t fill;
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if (NULL != *pp)
+        *(*pp)++ = (uint8_t)*alloc_time_state;
+    else
+        *size += sizeof(uint8_t);
+
+    if (0 == *alloc_time_state) {
+        if (NULL != *pp) {
+            /* Retrieve previous fill value settings */
+            if(H5P_get(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value")
+
+            *(*pp)++ = (uint8_t)fill.alloc_time;
+        }
+        else
+            *size += sizeof(uint8_t);
+    }
+
+ done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_dcrt_alloc_time_state_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_dcrt_alloc_time_state_dec
+ *
+ * Purpose:        Callback routine which is called whenever the alloc_time_state
+ *                 property in the dataset creation property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_dcrt_alloc_time_state_dec (H5F_t UNUSED *f, size_t UNUSED *size, void *value, 
+                               H5P_genplist_t *plist, uint8_t **pp)
+{
+    unsigned alloc_time_state;
+    H5O_fill_t fill;
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    alloc_time_state = *(*pp)++;
+    if (0 == alloc_time_state) {
+        if(H5P_get(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get fill value")
+        fill.alloc_time = *(*pp)++;
+        if(H5P_set(plist, H5D_CRT_FILL_VALUE_NAME, &fill) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set fill value")
+    }
+    if(H5P_set(plist, H5D_CRT_ALLOC_TIME_STATE_NAME, &alloc_time_state) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set space allocation time")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_dcrt_alloc_time_state_dec() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_ext_file_list_enc
+ *
+ * Purpose:        Callback routine which is called whenever the efl
+ *                 property in the dataset creation property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_dcrt_ext_file_list_enc (H5F_t UNUSED *f, size_t *size, void *value, 
+                            H5P_genplist_t UNUSED *plist, uint8_t **pp)
+{
+    const H5O_efl_t *efl = (H5O_efl_t *)value; /* Create local aliases for values */
+    size_t len = 0;
+    size_t u;      /* Local index variable */
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* Sanity check */
+    HDassert(efl);
+
+    if (NULL != *pp) {
+        /* encode how many slots are used */
+        H5F_ENCODE_LENGTH(f, *pp, efl->nused)
+        /* Encode file list */
+        for(u = 0; u < efl->nused; u++) {
+            /* calculate length of slot name and encode it*/
+            len = (HDstrlen(efl->slot[u].name) * sizeof (char)) / sizeof (uint8_t);
+            H5F_ENCODE_LENGTH(f, *pp, len)
+            /* encode name */
+            HDmemcpy(*pp, (uint8_t *)(efl->slot[u].name), len);
+            *pp += len;
+            /* encode offset and size */
+            H5F_ENCODE_LENGTH(f, *pp, efl->slot[u].offset)
+            H5F_ENCODE_LENGTH(f, *pp, efl->slot[u].size)
+        } /* end for */
+    }
+    else {
+        /* calculate size needed for encoding */
+        *size += H5F_SIZEOF_SIZE(f);
+        for(u = 0; u < efl->nused; u++) {
+            *size += H5F_SIZEOF_SIZE(f) * 3;
+            len = (HDstrlen(efl->slot[u].name) * sizeof (char)) / sizeof (uint8_t);
+            *size += len;
+        }
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_ext_file_list_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_ext_file_list_dec
+ *
+ * Purpose:        Callback routine which is called whenever the efl
+ *                 property in the dataset creation property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_dcrt_ext_file_list_dec (H5F_t *f, size_t UNUSED *size, void *value, 
+                            H5P_genplist_t *plist, uint8_t **pp)
+{
+    H5O_efl_t efl; /* Create local aliases for values */
+    size_t u, nused;
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* decode number of slots */
+    H5F_DECODE_LENGTH(f, *pp, nused)
+
+    /* get the current EFL property */
+    if(H5P_get(plist, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get external file list")
+    if(efl.nused > 0 && H5O_EFL_UNLIMITED==efl.slot[efl.nused-1].size)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "previous file size is unlimited")
+
+    for(u = 0; u < nused; u++) {
+        size_t len, idx;
+        /* Add to the list */
+        if(efl.nused >= efl.nalloc) {
+            size_t na = efl.nalloc + H5O_EFL_ALLOC;
+            H5O_efl_entry_t *x = (H5O_efl_entry_t *)H5MM_realloc(efl.slot, na * sizeof(H5O_efl_entry_t));
+
+            if(!x)
+                HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed")
+            efl.nalloc = na;
+            efl.slot = x;
+        } /* end if */
+        idx = efl.nused;
+        efl.slot[idx].name_offset = 0; /*not entered into heap yet*/
+        /* decode length of slot name */
+        H5F_DECODE_LENGTH(f, *pp, len)
+        /* allocate name buffer and decode the name into it */
+        if(NULL == (efl.slot[idx].name = (char *)H5MM_malloc(len*sizeof(uint8_t)/sizeof(char) +1)))
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for filename")
+        HDmemcpy((uint8_t *)efl.slot[idx].name, *pp, len);
+        efl.slot[idx].name[len] = '\0';
+        *pp += len;
+
+        /* decode offset and size */
+        H5F_DECODE_LENGTH(f, *pp, efl.slot[idx].offset)
+        H5F_DECODE_LENGTH(f, *pp, efl.slot[idx].size)
+        efl.nused++;
+    }
+
+    if(H5P_set(plist, H5D_CRT_EXT_FILE_LIST_NAME, &efl) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINIT, FAIL, "can't set external file list")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_ext_file_list_dec() */
