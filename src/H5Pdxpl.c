@@ -321,12 +321,12 @@ H5P_dxfr_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the MPI memory type property */
     if(H5P_register_real(pclass, H5FD_MPI_XFER_MEM_MPI_TYPE_NAME, H5FD_MPI_XFER_MEM_MPI_TYPE_SIZE, 
-                         &btype, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         &btype, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the MPI file type property */
     if(H5P_register_real(pclass, H5FD_MPI_XFER_FILE_MPI_TYPE_NAME, H5FD_MPI_XFER_FILE_MPI_TYPE_SIZE, 
-                         &ftype, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         &ftype, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 #endif /* H5_HAVE_PARALLEL */
