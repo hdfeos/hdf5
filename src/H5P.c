@@ -839,6 +839,90 @@ done:
 
 /*--------------------------------------------------------------------------
  NAME
+    H5Pencode
+ PURPOSE
+    Routine to convert the property values in a property list into a binary buffer
+ USAGE
+    hid_t H5Pencode(plist_id, enc_all_prop, buf, nalloc)
+        hid_t plist_id;         IN: Identifier to property list to encode
+        hbool_t enc_all_prop;   IN: Whether to encode all properties (TRUE),
+                                    or just non-default (i.e. changed) properties (FALSE).
+        void *buf:              OUT: buffer to gold the encoded plist
+        size_t *nalloc;         IN/OUT: size of buffer needed to encode plist
+ RETURNS
+    Returns non-negative on success, negative on failure.
+ DESCRIPTION
+    Encodes a property list into a binary buffer. If the size of the buffer passed 
+    in is zero or the buffer is NULL, then the call will set the size needed to encode
+    the plist in nalloc. Otherwise the routine will encode the plist in buf.
+ GLOBAL VARIABLES
+ COMMENTS, BUGS, ASSUMPTIONS
+    Change the name of this function to H5Pencode (and remove old H5Pencode)
+ EXAMPLES
+ REVISION LOG
+--------------------------------------------------------------------------*/
+herr_t
+H5Pencode(hid_t plist_id, hbool_t enc_all_prop, void *buf, size_t *nalloc)
+{
+    H5P_genplist_t	*plist;         /* Property list to query */
+    hid_t ret_value = SUCCEED;          /* return value */
+
+    FUNC_ENTER_API(FAIL)
+
+    /* Check arguments. */
+    if(NULL == (plist = (H5P_genplist_t *)H5I_object_verify(plist_id, H5I_GENPROP_LST)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
+
+    /* Call the internal encode routine */
+    if((ret_value = H5P_encode(plist, enc_all_prop, buf, nalloc)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "unable to encode property list");
+
+done:
+    FUNC_LEAVE_API(ret_value)
+}   /* H5Pencode() */
+
+
+/*--------------------------------------------------------------------------
+ NAME
+    H5P_decode
+ PURPOSE
+    API routine to decode a property list from a binary buffer.
+ USAGE
+    hid_t *H5P_decode(buf)
+        void *buf;    IN: buffer that holds the encoded plist
+ RETURNS
+    Returns non-negative ID of new property list object on success, negative
+        on failure.
+ DESCRIPTION
+     Decodes a property list from a binary buffer. The contents of the buffer
+     contain the values for the correponding properties of the plist. The decode 
+     callback of a certain property decodes its value from the buffer and sets it
+     in the property list.
+ GLOBAL VARIABLES
+ COMMENTS, BUGS, ASSUMPTIONS
+     Properties in the property list that are not encoded in the serialized
+     form retain their default value.
+ EXAMPLES
+ REVISION LOG
+--------------------------------------------------------------------------*/
+hid_t
+H5Pdecode(const void *buf)
+{
+    hid_t ret_value = SUCCEED;          /* return value */
+
+    FUNC_ENTER_API(FAIL)
+
+    /* Call the internal decode routine */
+    if((ret_value = H5P_decode(buf)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "unable to decode property list");
+
+done:
+    FUNC_LEAVE_API(ret_value)
+}   /* H5Pdecode() */
+
+
+/*--------------------------------------------------------------------------
+ NAME
     H5Pget_class
  PURPOSE
     Routine to query the class of a generic property list

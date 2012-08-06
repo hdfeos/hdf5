@@ -218,6 +218,8 @@ H5_DLL herr_t H5Pinsert2(hid_t plist_id, const char *name, size_t size,
     H5P_prp_compare_func_t prp_cmp, H5P_prp_close_func_t prp_close);
 H5_DLL herr_t H5Pset(hid_t plist_id, const char *name, void *value);
 H5_DLL htri_t H5Pexist(hid_t plist_id, const char *name);
+H5_DLL herr_t H5Pencode(hid_t plist_id, hbool_t enc_all_prop, void *buf, size_t *nalloc);
+H5_DLL hid_t  H5Pdecode(const void *buf);
 H5_DLL herr_t H5Pget_size(hid_t id, const char *name, size_t *size);
 H5_DLL herr_t H5Pget_nprops(hid_t id, size_t *nprops);
 H5_DLL hid_t H5Pget_class(hid_t plist_id);

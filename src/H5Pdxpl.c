@@ -144,6 +144,8 @@
 #define H5D_XFER_XFORM_DEF          NULL
 #define H5D_XFER_XFORM_DEL          H5P__dxfr_xform_del
 #define H5D_XFER_XFORM_COPY         H5P__dxfr_xform_copy
+#define H5D_XFER_XFORM_ENC          H5P__dxfr_xform_enc
+#define H5D_XFER_XFORM_DEC          H5P__dxfr_xform_dec
 #define H5D_XFER_XFORM_CLOSE        H5P__dxfr_xform_close
 
 /******************/
@@ -180,6 +182,8 @@ static herr_t H5P__dxfr_edc_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_edc_dec(const uint8_t **pp, void *value);
 static herr_t H5P__dxfr_xform_del(hid_t prop_id, const char* name, size_t size, void* value);
 static herr_t H5P__dxfr_xform_copy(const char* name, size_t size, void* value);
+static herr_t H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P__dxfr_xform_dec(const uint8_t **pp, void *value);
 static herr_t H5P__dxfr_xform_close(const char* name, size_t size, void* value);
 
 
@@ -388,7 +392,8 @@ H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the data transform property */
     if(H5P_register_real(pclass, H5D_XFER_XFORM_NAME, H5D_XFER_XFORM_SIZE, &def_xfer_xform, 
-                         NULL, NULL, NULL, NULL, NULL, H5D_XFER_XFORM_DEL, H5D_XFER_XFORM_COPY, NULL, H5D_XFER_XFORM_CLOSE) < 0)
+                         NULL, NULL, NULL, H5D_XFER_XFORM_ENC, H5D_XFER_XFORM_DEC, 
+                         H5D_XFER_XFORM_DEL, H5D_XFER_XFORM_COPY, NULL, H5D_XFER_XFORM_CLOSE) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
@@ -598,7 +603,7 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
     /* Check for data transform set */
     if(NULL == *data_xform_prop) {
         /* Get the transform expression */
-        if(NULL == (pexp = H5Z_xform_extract_xform_str(data_xform_prop)))
+        if(NULL == (pexp = H5Z_xform_extract_xform_str(*data_xform_prop)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "failed to retrieve transform expression")
 
         /* Get the transform expression size */
@@ -662,7 +667,7 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
     if(is_transform) {
         size_t	len;            /* Length of transform expression */
 
-        if(NULL == (data_xform_prop = H5Z_xform_create(*pp)))
+        if(NULL == (data_xform_prop = H5Z_xform_create((const char *)*pp)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "unable to create data transform info")
         len = HDstrlen((const char *)*pp);
         *pp += len + 1;
@@ -1792,7 +1797,7 @@ H5P__dxfr_mpio_chunk_opt_hard_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_mpio_chunk_opt_hard_enc(const uint8_t **pp, void *value)
+H5P__dxfr_mpio_chunk_opt_hard_dec(const uint8_t **pp, void *value)
 {
     H5FD_mpio_chunk_opt_t chunk_opt;         /* MPI-I/O chunk optimization mode */
 
