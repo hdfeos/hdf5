@@ -822,6 +822,7 @@
 ./src/H5Pdcpl.c
 ./src/H5Pdeprec.c
 ./src/H5Pdxpl.c
+./src/H5Pencdec.c
 ./src/H5Pfapl.c
 ./src/H5Pfcpl.c
 ./src/H5Pfmpl.c

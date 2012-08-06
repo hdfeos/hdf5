@@ -78,6 +78,7 @@ static herr_t H5P_gcrt_link_info_dec(H5F_t *f, size_t *size, void *value, H5P_ge
 /* Group creation property list class library initialization object */
 const H5P_libclass_t H5P_CLS_GCRT[1] = {{
     "group create",		/* Class name for debugging     */
+    H5P_TYPE_GROUP_CREATE,      /* Class type                   */
     &H5P_CLS_OBJECT_CREATE_g,	/* Parent class ID              */
     &H5P_CLS_GROUP_CREATE_g,	/* Pointer to class ID          */
     &H5P_LST_GROUP_CREATE_g,	/* Pointer to default property list ID */
@@ -124,14 +125,12 @@ H5P_gcrt_reg_prop(H5P_genclass_t *pclass)
 
     /* Register group info property */
     if(H5P_register_real(pclass, H5G_CRT_GROUP_INFO_NAME, H5G_CRT_GROUP_INFO_SIZE, &ginfo, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                         H5G_CRT_GROUP_INFO_ENC, H5G_CRT_GROUP_INFO_DEC) < 0)
+             NULL, NULL, NULL, H5G_CRT_GROUP_INFO_ENC, H5G_CRT_GROUP_INFO_DEC, NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register link info property */
     if(H5P_register_real(pclass, H5G_CRT_LINK_INFO_NAME, H5G_CRT_LINK_INFO_SIZE, &linfo, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                         H5G_CRT_LINK_INFO_ENC, H5G_CRT_LINK_INFO_DEC) < 0)
+             NULL, NULL, NULL, H5G_CRT_LINK_INFO_ENC, H5G_CRT_LINK_INFO_DEC, NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:

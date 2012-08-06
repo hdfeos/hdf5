@@ -60,9 +60,9 @@
 #define H5O_CRT_OHDR_FLAGS_DEC    H5P_ocrt_ohdr_flags_dec
 /* Definitions for filter pipeline */
 #define H5O_CRT_PIPELINE_SIZE sizeof(H5O_pline_t)
-#define H5O_CRT_PIPELINE_CMP  H5P_ocrt_pipeline_cmp
 #define H5O_CRT_PIPELINE_ENC  H5P_ocrt_pipeline_enc
 #define H5O_CRT_PIPELINE_DEC  H5P_ocrt_pipeline_dec
+#define H5O_CRT_PIPELINE_CMP  H5P_ocrt_pipeline_cmp
 
 
 /******************/
@@ -91,9 +91,9 @@ static herr_t H5P_ocrt_attr_min_dense_enc(H5F_t *f, size_t *size, void *value, H
 static herr_t H5P_ocrt_attr_min_dense_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 static herr_t H5P_ocrt_ohdr_flags_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 static herr_t H5P_ocrt_ohdr_flags_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static int H5P_ocrt_pipeline_cmp(const void *value1, const void *value2, size_t size);
 static herr_t H5P_ocrt_pipeline_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 static herr_t H5P_ocrt_pipeline_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static int H5P_ocrt_pipeline_cmp(const void *value1, const void *value2, size_t size);
 
 
 /*********************/
@@ -103,6 +103,7 @@ static herr_t H5P_ocrt_pipeline_dec(H5F_t *f, size_t *size, void *value, H5P_gen
 /* Object creation property list class library initialization object */
 const H5P_libclass_t H5P_CLS_OCRT[1] = {{
     "object create",		/* Class name for debugging     */
+    H5P_TYPE_OBJECT_CREATE,     /* Class type                   */
     &H5P_CLS_ROOT_g,		/* Parent class ID              */
     &H5P_CLS_OBJECT_CREATE_g,	/* Pointer to class ID          */
     NULL,			/* Pointer to default property list ID */
@@ -153,27 +154,27 @@ H5P_ocrt_reg_prop(H5P_genclass_t *pclass)
 
     /* Register max. compact attribute storage property */
     if(H5P_register_real(pclass, H5O_CRT_ATTR_MAX_COMPACT_NAME, H5O_CRT_ATTR_MAX_COMPACT_SIZE, &attr_max_compact, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-                         H5O_CRT_ATTR_MAX_COMPACT_ENC, H5O_CRT_ATTR_MAX_COMPACT_DEC) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5O_CRT_ATTR_MAX_COMPACT_ENC, H5O_CRT_ATTR_MAX_COMPACT_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register min. dense attribute storage property */
     if(H5P_register_real(pclass, H5O_CRT_ATTR_MIN_DENSE_NAME, H5O_CRT_ATTR_MIN_DENSE_SIZE, &attr_min_dense, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
-                         H5O_CRT_ATTR_MIN_DENSE_ENC, H5O_CRT_ATTR_MIN_DENSE_DEC) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5O_CRT_ATTR_MIN_DENSE_ENC, H5O_CRT_ATTR_MIN_DENSE_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register object header flags property */
     if(H5P_register_real(pclass, H5O_CRT_OHDR_FLAGS_NAME, H5O_CRT_OHDR_FLAGS_SIZE, &ohdr_flags, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                         H5O_CRT_OHDR_FLAGS_ENC, H5O_CRT_OHDR_FLAGS_DEC) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5O_CRT_OHDR_FLAGS_ENC, H5O_CRT_OHDR_FLAGS_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the pipeline property */
     if(H5P_register_real(pclass, H5O_CRT_PIPELINE_NAME, H5O_CRT_PIPELINE_SIZE, &pline, 
-                         NULL, NULL, NULL, NULL, NULL, H5O_CRT_PIPELINE_CMP, NULL, 
-                         H5O_CRT_PIPELINE_ENC, H5O_CRT_PIPELINE_DEC) < 0)
-       HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5O_CRT_PIPELINE_ENC, H5O_CRT_PIPELINE_DEC,
+            NULL, NULL, H5O_CRT_PIPELINE_CMP, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1353,6 +1354,148 @@ H5P_get_filter(const H5Z_filter_info_t *filter, unsigned int *flags/*out*/,
 
 
 /*-------------------------------------------------------------------------
+ * Function:       H5P_ocrt_pipeline_enc
+ *
+ * Purpose:        Callback routine which is called whenever the pipeline
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_ocrt_pipeline_enc(H5F_t *f, size_t *size, void *value, 
+                                    H5P_genplist_t UNUSED *plist, uint8_t **pp)
+{
+    const H5O_pline_t *pline = (const H5O_pline_t *)value;
+    herr_t ret_value = 0;
+    size_t u , v;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if (NULL != *pp) {
+        uint8_t temp;
+        /* encode pipeline nalloc and nused calues */
+        H5F_ENCODE_LENGTH(f, *pp, pline->nalloc)
+        H5F_ENCODE_LENGTH(f, *pp, pline->nused)
+        /* encode each pipeline */
+        for(u = 0; u < pline->nused; u++) {
+            /* encode filter ID */
+            *(*pp)++ = (uint8_t)pline->filter[u].id;
+            /* encode filter flags */
+            *(*pp)++ = (uint8_t)pline->filter[u].flags;
+            /* encode filter name if it exits */
+            if (NULL != pline->filter[u].name) {
+                /* encode 1 indicating that it exits */
+                temp = 1;
+                *(*pp)++ = temp;
+                /* enocde filter name */
+                HDmemcpy(*pp, (uint8_t *)pline->filter[u].name, H5Z_COMMON_NAME_LEN);
+                *pp += H5Z_COMMON_NAME_LEN * sizeof(char);
+            }
+            else {
+                /* encode 0 indicating that it does not exit */
+                temp = 0;
+                *(*pp)++ = temp;
+            }
+            /* encode cd_nelmts */
+            H5F_ENCODE_LENGTH(f, *pp, pline->filter[u].cd_nelmts)
+            /* encode all values */
+            for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
+                *(*pp)++ = pline->filter[u].cd_values[v];
+            }
+        }
+    }
+    else {
+        /* calculate size required for encoding */
+        *size += H5F_SIZEOF_SIZE(f)*2;
+        for(u = 0; u < pline->nused; u++) {
+            *size += sizeof(uint8_t) * 3;
+            if (NULL != pline->filter[u].name)
+                *size += sizeof(char) * H5Z_COMMON_NAME_LEN ;
+            *size += H5F_SIZEOF_SIZE(f);
+            for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
+                *size += sizeof(uint8_t);
+            }
+        }
+    }
+
+    FUNC_LEAVE_NOAPI(ret_value)
+}
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_ocrt_pipeline_dec
+ *
+ * Purpose:        Callback routine which is called whenever the pipeline
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t H5P_ocrt_pipeline_dec(H5F_t *f, size_t UNUSED *size, void UNUSED *value, 
+                                    H5P_genplist_t *plist, uint8_t **pp)
+{
+    size_t u , v;
+    unsigned nused, nalloc;
+    H5O_pline_t pline;
+    uint8_t temp;
+    herr_t ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* decode nalloc and nused */
+    H5F_DECODE_LENGTH(f, *pp, nalloc)
+    H5F_DECODE_LENGTH(f, *pp, nused)
+
+    for(u = 0; u < nused; u++) {
+        H5Z_filter_info_t filter;
+        /* decode filter id */
+        filter.id = *(*pp)++;
+        /* decode filter flags */
+        filter.flags = *(*pp)++;
+        /* decode value indicating if the name is encoded */
+        temp = *(*pp)++;
+        if (1 == temp) {
+            /* decode name */
+            HDmemcpy((uint8_t *)(filter.name), *pp, sizeof(char) * H5Z_COMMON_NAME_LEN);
+            *pp += H5Z_COMMON_NAME_LEN * sizeof(char);
+        }
+        /* decode num elements */
+        H5F_DECODE_LENGTH(f, *pp, filter.cd_nelmts)
+        /* decode values */
+        for(v = 0; v < filter.cd_nelmts; v++) {
+            filter.cd_values[v] = *(*pp)++;
+        }
+
+        /* Get the pipeline property to append to */
+        if(H5P_get(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline")
+
+        /* Add the filter to the I/O pipeline */
+        if(H5Z_append(&pline, filter.id, filter.flags, filter.cd_nelmts, filter.cd_values) < 0)
+            HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to add filter to pipeline")
+                
+        /* Put the I/O pipeline information back into the property list */
+        if(H5P_set(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set pipeline")
+    }
+
+ done: 
+    FUNC_LEAVE_NOAPI(ret_value)
+}
+
+/*-------------------------------------------------------------------------
  * Function:       H5P_ocrt_pipeline_cmp
  *
  * Purpose:        Callback routine which is called whenever a filter pipeline
@@ -1793,145 +1936,3 @@ static herr_t H5P_ocrt_ohdr_flags_dec(H5F_t UNUSED *f, size_t UNUSED *size, void
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_ocrt_ohdr_flags_dec() */
 
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_pipeline_enc
- *
- * Purpose:        Callback routine which is called whenever the pipeline
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_pipeline_enc(H5F_t *f, size_t *size, void *value, 
-                                    H5P_genplist_t UNUSED *plist, uint8_t **pp)
-{
-    const H5O_pline_t *pline = (const H5O_pline_t *)value;
-    herr_t ret_value = 0;
-    size_t u , v;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    if (NULL != *pp) {
-        uint8_t temp;
-        /* encode pipeline nalloc and nused calues */
-        H5F_ENCODE_LENGTH(f, *pp, pline->nalloc)
-        H5F_ENCODE_LENGTH(f, *pp, pline->nused)
-        /* encode each pipeline */
-        for(u = 0; u < pline->nused; u++) {
-            /* encode filter ID */
-            *(*pp)++ = (uint8_t)pline->filter[u].id;
-            /* encode filter flags */
-            *(*pp)++ = (uint8_t)pline->filter[u].flags;
-            /* encode filter name if it exits */
-            if (NULL != pline->filter[u].name) {
-                /* encode 1 indicating that it exits */
-                temp = 1;
-                *(*pp)++ = temp;
-                /* enocde filter name */
-                HDmemcpy(*pp, (uint8_t *)pline->filter[u].name, H5Z_COMMON_NAME_LEN);
-                *pp += H5Z_COMMON_NAME_LEN * sizeof(char);
-            }
-            else {
-                /* encode 0 indicating that it does not exit */
-                temp = 0;
-                *(*pp)++ = temp;
-            }
-            /* encode cd_nelmts */
-            H5F_ENCODE_LENGTH(f, *pp, pline->filter[u].cd_nelmts)
-            /* encode all values */
-            for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
-                *(*pp)++ = pline->filter[u].cd_values[v];
-            }
-        }
-    }
-    else {
-        /* calculate size required for encoding */
-        *size += H5F_SIZEOF_SIZE(f)*2;
-        for(u = 0; u < pline->nused; u++) {
-            *size += sizeof(uint8_t) * 3;
-            if (NULL != pline->filter[u].name)
-                *size += sizeof(char) * H5Z_COMMON_NAME_LEN ;
-            *size += H5F_SIZEOF_SIZE(f);
-            for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
-                *size += sizeof(uint8_t);
-            }
-        }
-    }
-
-    FUNC_LEAVE_NOAPI(ret_value)
-}
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_pipeline_dec
- *
- * Purpose:        Callback routine which is called whenever the pipeline
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_pipeline_dec(H5F_t *f, size_t UNUSED *size, void UNUSED *value, 
-                                    H5P_genplist_t *plist, uint8_t **pp)
-{
-    size_t u , v;
-    unsigned nused, nalloc;
-    H5O_pline_t pline;
-    uint8_t temp;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    /* decode nalloc and nused */
-    H5F_DECODE_LENGTH(f, *pp, nalloc)
-    H5F_DECODE_LENGTH(f, *pp, nused)
-
-    for(u = 0; u < nused; u++) {
-        H5Z_filter_info_t filter;
-        /* decode filter id */
-        filter.id = *(*pp)++;
-        /* decode filter flags */
-        filter.flags = *(*pp)++;
-        /* decode value indicating if the name is encoded */
-        temp = *(*pp)++;
-        if (1 == temp) {
-            /* decode name */
-            HDmemcpy((uint8_t *)(filter.name), *pp, sizeof(char) * H5Z_COMMON_NAME_LEN);
-            *pp += H5Z_COMMON_NAME_LEN * sizeof(char);
-        }
-        /* decode num elements */
-        H5F_DECODE_LENGTH(f, *pp, filter.cd_nelmts)
-        /* decode values */
-        for(v = 0; v < filter.cd_nelmts; v++) {
-            filter.cd_values[v] = *(*pp)++;
-        }
-
-        /* Get the pipeline property to append to */
-        if(H5P_get(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline")
-
-        /* Add the filter to the I/O pipeline */
-        if(H5Z_append(&pline, filter.id, filter.flags, filter.cd_nelmts, filter.cd_values) < 0)
-            HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to add filter to pipeline")
-                
-        /* Put the I/O pipeline information back into the property list */
-        if(H5P_set(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set pipeline")
-    }
-
- done: 
-    FUNC_LEAVE_NOAPI(ret_value)
-}
