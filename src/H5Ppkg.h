@@ -204,9 +204,13 @@ H5_DLL H5P_genprop_t *H5P__find_prop_plist(H5P_genplist_t *plist, const char *na
 
 /* Generic encode/decode routines */
 H5_DLL herr_t H5P__encode_size_t(const void *value, uint8_t **pp, size_t *size);
+H5_DLL herr_t H5P__encode_hsize_t(const void *value, uint8_t **pp, size_t *size);
+H5_DLL herr_t H5P__encode_uint8_t(const void *value, uint8_t **pp, size_t *size);
 H5_DLL herr_t H5P__encode_unsigned(const void *value, uint8_t **pp, size_t *size);
 H5_DLL herr_t H5P__encode_double(const void *value, uint8_t **pp, size_t *size);
 H5_DLL herr_t H5P__decode_size_t(const uint8_t **pp, void *value);
+H5_DLL herr_t H5P__decode_hsize_t(const uint8_t **pp, void *value);
+H5_DLL herr_t H5P__decode_uint8_t(const uint8_t **pp, void *value);
 H5_DLL herr_t H5P__decode_unsigned(const uint8_t **pp, void *value);
 H5_DLL herr_t H5P__decode_double(const uint8_t **pp, void *value);
 

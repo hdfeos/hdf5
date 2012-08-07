@@ -66,10 +66,10 @@
 static herr_t H5P_gcrt_reg_prop(H5P_genclass_t *pclass);
 
 /* Property callbacks */
-static herr_t H5P_gcrt_group_info_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_gcrt_group_info_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_gcrt_link_info_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_gcrt_link_info_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P_gcrt_group_info_dec(const uint8_t **pp, void *value);
+static herr_t H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P_gcrt_link_info_dec(const uint8_t **pp, void *value);
 
 /*********************/
 /* Package Variables */
@@ -534,13 +534,13 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5P_gcrt_link_info_enc(H5F_t UNUSED *f, size_t *size, void *value, 
-                                     H5P_genplist_t UNUSED *plist, uint8_t **pp)
+static herr_t 
+H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    const H5O_linfo_t *linfo = (H5O_linfo_t *)value; /* Create local aliases for values */
+    const H5O_linfo_t *linfo = (const H5O_linfo_t *)value; /* Create local aliases for values */
     herr_t ret_value = 0;
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     if (NULL != *pp) {
         unsigned crt_order_flags;
@@ -571,28 +571,28 @@ static herr_t H5P_gcrt_link_info_enc(H5F_t UNUSED *f, size_t *size, void *value,
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5P_gcrt_link_info_dec(H5F_t UNUSED *f, size_t UNUSED *size, 
-                                     void UNUSED *value, H5P_genplist_t *plist, uint8_t **pp)
+static herr_t 
+H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
 {
     unsigned crt_order_flags;
     H5O_linfo_t linfo;
-    herr_t ret_value = 0;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NOINIT
 
-    crt_order_flags = *(*pp)++;
+    /* Reset link info property */
+    HDmemset(&linfo, 0, sizeof(linfo));
+    if(H5O_msg_reset(H5O_LINFO_ID, &linfo) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
-    /* Get link info */
-    if(H5P_get(plist, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get link info")
+    crt_order_flags = *(*pp)++;
 
     /* Update fields */
     linfo.track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
     linfo.index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);
 
-    /* Set link info */
-    if(H5P_set(plist, H5G_CRT_LINK_INFO_NAME, &linfo) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set link info")
+    /* Set the value */
+    HDmemcpy(value, &linfo, sizeof(linfo));
 
  done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -614,13 +614,13 @@ static herr_t H5P_gcrt_link_info_dec(H5F_t UNUSED *f, size_t UNUSED *size,
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5P_gcrt_group_info_enc(H5F_t UNUSED *f, size_t *size, void *value, 
-                                      H5P_genplist_t UNUSED *plist, uint8_t **pp)
+static herr_t 
+H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    const H5O_ginfo_t *ginfo = (H5O_ginfo_t *)value; /* Create local aliases for values */
-    herr_t ret_value = 0;
+    const H5O_ginfo_t *ginfo = (const H5O_ginfo_t *)value; /* Create local aliases for values */
+    herr_t ret_value = SUCCEED;
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     if (NULL != *pp) {
         UINT32ENCODE(*pp, ginfo->lheap_size_hint)
@@ -651,14 +651,18 @@ static herr_t H5P_gcrt_group_info_enc(H5F_t UNUSED *f, size_t *size, void *value
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5P_gcrt_group_info_dec(H5F_t UNUSED *f, size_t UNUSED *size, 
-                                     void UNUSED *value, H5P_genplist_t *plist, uint8_t **pp)
+static herr_t 
+H5P_gcrt_group_info_dec(const uint8_t **pp, void *value)
 {
-    unsigned crt_order_flags;
     H5O_ginfo_t ginfo;
     herr_t ret_value = 0;
 
     FUNC_ENTER_NOAPI_NOINIT
+
+    /* Reset link info property */
+    HDmemset(&ginfo, 0, sizeof(ginfo));
+    if(H5O_msg_reset(H5O_GINFO_ID, &ginfo) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
     UINT32DECODE(*pp, ginfo.lheap_size_hint)
     UINT16DECODE(*pp, ginfo.max_compact)
@@ -679,10 +683,9 @@ static herr_t H5P_gcrt_group_info_dec(H5F_t UNUSED *f, size_t UNUSED *size,
     else
         ginfo.store_est_entry_info = FALSE;
 
-    /* Set group info */
-    if(H5P_set(plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set group info")
+    /* Set the value */
+    HDmemcpy(value, &ginfo, sizeof(ginfo));
 
- done:
+done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_gcrt_group_info_dec() */

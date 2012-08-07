@@ -142,6 +142,44 @@ H5P__encode_size_t(const void *value, uint8_t **pp, size_t *size)
 
 
 /*-------------------------------------------------------------------------
+ * Function:       H5P__encode_hsize_t
+ *
+ * Purpose:        Generic encoding callback routine for 'hsize_t' properties.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 August 07, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__encode_hsize_t(const void *value, uint8_t **pp, size_t *size)
+{
+    uint64_t enc_value = (uint64_t)*(const hsize_t *)value;    /* Property value to encode */
+    unsigned enc_size = H5V_limit_enc_size(enc_value);  /* Size of encoded property */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    HDcompile_assert(sizeof(hsize_t) <= sizeof(uint64_t));
+    // MSC??? HDassert(enc_size < 256);
+    HDassert(size);
+
+    if(NULL != *pp) {
+        /* Encode the value */
+        UINT64ENCODE_VARLEN(*pp, enc_value);
+    } /* end if */
+
+    /* Set size needed for encoding */
+    *size += (1 + enc_size);
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__encode_hsize_t() */
+
+
+/*-------------------------------------------------------------------------
  * Function:       H5P__encode_unsigned
  *
  * Purpose:        Generic encoding callback routine for 'unsigned' properties.
@@ -176,6 +214,40 @@ H5P__encode_unsigned(const void *value, uint8_t **pp, size_t *size)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__encode_unsigned() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__encode_uint8_t
+ *
+ * Purpose:        Generic encoding callback routine for 'uint8_t' properties.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 August 07, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__encode_uint8_t(const void *value, uint8_t **pp, size_t *size)
+{
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    HDassert(value);
+    HDassert(size);
+
+    if(NULL != *pp) {
+        /* Encode the value */
+        *(*pp)++ = *(const uint8_t *)value;
+    } /* end if */
+
+    /* Set size needed for encoding */
+    *size += (1 + sizeof(uint8_t));
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__encode_uint8_t() */
 
 
 /*-------------------------------------------------------------------------
@@ -395,6 +467,42 @@ H5P__decode_size_t(const uint8_t **pp, void *value)
 
 
 /*-------------------------------------------------------------------------
+ * Function:       H5P__decode_hsize_t
+ *
+ * Purpose:        Generic decoding callback routine for 'hsize_t' properties.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 August 07, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__decode_hsize_t(const uint8_t **pp, void *value)
+{
+    uint64_t enc_value;                 /* Decoded property value */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity check */
+    HDcompile_assert(sizeof(hsize_t) <= sizeof(uint64_t));
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(value);
+
+    /* Decode the value */
+    UINT64DECODE_VARLEN(*pp, enc_value);
+
+    /* Set the value */
+    HDmemcpy(value, &enc_value, sizeof(uint64_t));
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__decode_hsize_t() */
+
+
+/*-------------------------------------------------------------------------
  * Function:       H5P__decode_unsigned
  *
  * Purpose:        Generic decoding callback routine for 'unsigned' properties.
@@ -434,6 +542,42 @@ H5P__decode_unsigned(const uint8_t **pp, void *value)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__decode_unsigned() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__decode_uint8_t
+ *
+ * Purpose:        Generic decoding callback routine for 'uint8_t' properties.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Thursday, August 2, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__decode_uint8_t(const uint8_t **pp, void *value)
+{
+    uint8_t enc_value;           /* Property value to decode */
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(value);
+
+    /* Decode the value */
+    enc_value = (uint8_t)*(*pp)++;
+
+    /* Set the value */
+    HDmemcpy(value, &enc_value, sizeof(uint8_t));
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P__decode_uint8_t() */
 
 
 /*-------------------------------------------------------------------------

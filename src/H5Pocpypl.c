@@ -49,8 +49,8 @@
 /* Definitions for copy options */
 #define H5O_CPY_OPTION_SIZE			sizeof(unsigned)
 #define H5O_CPY_OPTION_DEF			0
-#define H5O_CPY_OPTION_ENC			H5P_copy_option_enc
-#define H5O_CPY_OPTION_DEC			H5P_copy_option_dec
+#define H5O_CPY_OPTION_ENC			H5P__encode_unsigned
+#define H5O_CPY_OPTION_DEC			H5P__decode_unsigned
 /* Definitions for merge committed dtype list */
 #define H5O_CPY_MERGE_COMM_DT_LIST_SIZE        sizeof(char *)
 #define H5O_CPY_MERGE_COMM_DT_LIST_DEF         NULL
@@ -83,8 +83,6 @@ static herr_t H5P_ocpy_copy(hid_t dst_plist_id, hid_t src_plist_id,
 static herr_t H5P_ocpy_close(hid_t ocpypl_id, void *close_data);
 
 /* Property callbacks */
-static herr_t H5P_copy_option_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_copy_option_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 static int H5P_ocpy_merge_comm_dt_list_cmp(const void *value1, const void *value2, size_t size);
 
 
@@ -447,73 +445,6 @@ H5Pget_copy_object(hid_t plist_id, unsigned *cpy_option /*out*/)
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_copy_object() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_copy_option_enc
- *
- * Purpose:        Callback routine which is called whenever the option
- *                 property in the dataset access property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_copy_option_enc(H5F_t UNUSED *f, size_t *size, void *value, 
-                                  H5P_genplist_t UNUSED *plist, uint8_t **pp)
-{
-    unsigned *cpy_option = (unsigned *) value;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    if (NULL != *pp)
-        *(*pp)++ = (uint8_t)*cpy_option;
-    else {
-        *size += sizeof(uint8_t);
-    }
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_copy_option_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_copy_option_dec
- *
- * Purpose:        Callback routine which is called whenever the option
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_copy_option_dec(H5F_t UNUSED *f, size_t UNUSED *size, void UNUSED *value, 
-                                  H5P_genplist_t *plist, uint8_t **pp)
-{
-    unsigned cpy_option;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    cpy_option = *(*pp)++;
-
-    /* Set value */
-    if(H5P_set(plist, H5O_CPY_OPTION_NAME, &cpy_option) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set copy object flag")
-
- done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_copy_option_dec() */
 
 
 /*-------------------------------------------------------------------------

@@ -89,8 +89,8 @@
 /* Definitions for space allocation time state */
 #define H5D_CRT_ALLOC_TIME_STATE_SIZE   sizeof(unsigned)
 #define H5D_CRT_ALLOC_TIME_STATE_DEF    1
-#define H5D_CRT_ALLOC_TIME_STATE_ENC    H5P__dcrt_alloc_time_state_enc
-#define H5D_CRT_ALLOC_TIME_STATE_DEC    H5P__dcrt_alloc_time_state_dec
+#define H5D_CRT_ALLOC_TIME_STATE_ENC    H5P__encode_unsigned
+#define H5D_CRT_ALLOC_TIME_STATE_DEC    H5P__decode_unsigned
 /* Definitions for external file list */
 #define H5D_CRT_EXT_FILE_LIST_SIZE sizeof(H5O_efl_t)
 #define H5D_CRT_EXT_FILE_LIST_DEF  {HADDR_UNDEF, 0, 0, NULL}
@@ -130,8 +130,6 @@ static herr_t H5P__dcrt_layout_enc(const void *value, uint8_t **pp, size_t *size
 static herr_t H5P__dcrt_layout_dec(const uint8_t **pp, void *value);
 static herr_t H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__fill_value_dec(const uint8_t **pp, void *value);
-static herr_t H5P__dcrt_alloc_time_state_enc(const void *value, uint8_t **pp, size_t *size);
-static herr_t H5P__dcrt_alloc_time_state_dec(const uint8_t **pp, void *value);
 static int H5P__dcrt_ext_file_list_cmp(const void *value1, const void *value2, size_t size);
 static herr_t H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value);
@@ -537,7 +535,7 @@ H5P__dcrt_layout_enc(const void *value, uint8_t **pp, size_t *size)
 static herr_t
 H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
 {
-    const H5O_layout_t *layout;         /* Layout information for property */
+    H5O_layout_t layout;         /* Layout information for property */
     H5O_layout_t chunk_layout;          /* Layout structure for chunk info */
     H5D_layout_t type;                  /* Layout type */
     herr_t ret_value = SUCCEED;         /* Return value */
@@ -561,11 +559,11 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
      * decode the chunked structure and set chunked layout */
     switch(type) {
         case H5D_COMPACT:
-            layout = &H5D_def_layout_compact_g;
+            layout = H5D_def_layout_compact_g;
             break;
 
         case H5D_CONTIGUOUS:
-            layout = &H5D_def_layout_contig_g;
+            layout = H5D_def_layout_contig_g;
             break;
 
         case H5D_CHUNKED:
@@ -577,7 +575,7 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
 
                 /* default chunk layout */
                 if(0 == ndims)
-                    layout = &H5D_def_layout_chunk_g;
+                    layout = H5D_def_layout_chunk_g;
                 else {
                     /* chunk layout structure is encoded*/
                     unsigned u;             /* Local index variable */
@@ -592,7 +590,7 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
                         UINT32DECODE(*pp, chunk_layout.u.chunk.dim[u])
 
                     /* Point at the newly set up struct */
-                    layout = &chunk_layout;
+                    layout = chunk_layout;
                 } /* end else */
             }
             break;
@@ -600,12 +598,11 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
         case H5D_LAYOUT_ERROR:
         case H5D_NLAYOUTS:
         default:
-            HDassert(0 && "Unknown layout type!");
-            HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad chunk type")
+            HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad layout type")
     } /* end switch */
 
     /* Set the value */
-    HDmemcpy(value, layout, sizeof(H5O_layout_t));
+    HDmemcpy(value, &layout, sizeof(H5O_layout_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -715,17 +712,15 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
             HDmemcpy(*pp, (uint8_t *)fill->buf, (size_t)fill->size);
             *pp += fill->size;
 
-            /* Get the size of the encoded datatype */
-            HDassert(fill->type);
-            if(H5T_encode(fill->type, NULL, &dt_size) < 0)
-                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
-
             /* Encode the size of the encoded datatype */
-            UINT64ENCODE_VARLEN(*pp, dt_size);
+            //UINT64ENCODE_VARLEN(*pp, dt_size);
 
             /* Encode fill value datatype */
             HDassert(fill->type);
-            if(H5T_encode(fill->type, *pp, size) < 0)
+            if(H5T_encode(fill->type, NULL, &dt_size) < 0)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
+                    printf ("dt size = %d\n", dt_size);
+            if(H5T_encode(fill->type, *pp, &dt_size) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
         } /* end if */
     } /* end if */
@@ -736,8 +731,12 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
     if(fill->size > 0) {
         /* The size of the fill value buffer */
         *size += (size_t)fill->size;
-
-        /* The size of the encoded datatype */
+        /* the size of the datatype */
+        //*size += sizeof(uint64_t);
+        /* Get the size of the encoded datatype */
+        HDassert(fill->type);
+        if(H5T_encode(fill->type, NULL, &dt_size) < 0)
+            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
         *size += dt_size;
     } /* end if */
 
@@ -792,7 +791,7 @@ H5P__fill_value_dec(const uint8_t **pp, void *value)
         *pp += fill.size;
 
         /* Decode size of encoded datatype */
-        UINT64DECODE_VARLEN(*pp, dt_size);
+        //UINT64DECODE_VARLEN(*pp, dt_size);
 
         /* Decode type */
         if(NULL == (fill.type = H5T_decode(*pp)))
@@ -2276,75 +2275,6 @@ H5Pget_fill_time(hid_t plist_id, H5D_fill_time_t *fill_time/*out*/)
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_fill_time() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P__dcrt_alloc_time_state_enc
- *
- * Purpose:        Callback routine which is called whenever the alloc_time_state
- *                 property in the dataset creation property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P__dcrt_alloc_time_state_enc(const void *value, uint8_t **pp, size_t *size)
-{
-    FUNC_ENTER_STATIC_NOERR
-
-    /* Sanity checks */
-    HDassert(value);
-    HDassert(size);
-
-    if(NULL != *pp)
-        *(*pp)++ = (uint8_t)*(const unsigned *)value;
-    *size += sizeof(uint8_t);
-
-    FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5P__dcrt_alloc_time_state_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P__dcrt_alloc_time_state_dec
- *
- * Purpose:        Callback routine which is called whenever the alloc_time_state
- *                 property in the dataset creation property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P__dcrt_alloc_time_state_dec(const uint8_t **pp, void *value)
-{
-    unsigned alloc_time_state;          /* Property value to set */
-    herr_t ret_value = SUCCEED;         /* Return value */
-
-    FUNC_ENTER_STATIC_NOERR
-
-    /* Sanity check */
-    HDassert(pp);
-    HDassert(*pp);
-    HDassert(value);
-
-    alloc_time_state = (unsigned)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &alloc_time_state, sizeof(unsigned));
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P__dcrt_alloc_time_state_dec() */
 
 
 /*-------------------------------------------------------------------------

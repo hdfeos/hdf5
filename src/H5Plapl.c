@@ -48,8 +48,8 @@
 /* Definitions for number of soft links to traverse */
 #define H5L_ACS_NLINKS_SIZE        sizeof(size_t)
 #define H5L_ACS_NLINKS_DEF         H5L_NUM_LINKS /*max symlinks to follow per lookup  */
-#define H5L_ACS_NLINKS_ENC         H5P_lacc_nlinks_enc
-#define H5L_ACS_NLINKS_DEC         H5P_lacc_nlinks_dec
+#define H5L_ACS_NLINKS_ENC         H5P__encode_size_t
+#define H5L_ACS_NLINKS_DEC         H5P__decode_size_t
 
 /* Definitions for external link prefix */
 #define H5L_ACS_ELINK_PREFIX_SIZE        sizeof(char *)
@@ -71,8 +71,8 @@
 /* Definitions for file access flags for external link traversal */
 #define H5L_ACS_ELINK_FLAGS_SIZE        sizeof(unsigned)
 #define H5L_ACS_ELINK_FLAGS_DEF         H5F_ACC_DEFAULT
-#define H5L_ACS_ELINK_FLAGS_ENC         H5P_lacc_elink_flags_enc
-#define H5L_ACS_ELINK_FLAGS_DEC         H5P_lacc_elink_flags_dec
+#define H5L_ACS_ELINK_FLAGS_ENC         H5P__encode_unsigned
+#define H5L_ACS_ELINK_FLAGS_DEC         H5P__decode_unsigned
 
 /* Definitions for callback function for external link traversal */
 #define H5L_ACS_ELINK_CB_SIZE           sizeof(H5L_elink_cb_t)
@@ -97,8 +97,8 @@
 static herr_t H5P_lacc_reg_prop(H5P_genclass_t *pclass);
 
 /* Property list callbacks */
-static herr_t H5P_lacc_elink_pref_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_lacc_elink_pref_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_lacc_elink_pref_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value);
 static herr_t H5P_lacc_elink_pref_del(hid_t prop_id, const char* name, size_t size, void* value);
 static herr_t H5P_lacc_elink_pref_copy(const char* name, size_t size, void* value);
 static int H5P_lacc_elink_pref_cmp(const void *value1, const void *value2, size_t size);
@@ -106,10 +106,6 @@ static herr_t H5P_lacc_elink_pref_close(const char* name, size_t size, void* val
 static herr_t H5P_lacc_elink_fapl_del(hid_t prop_id, const char* name, size_t size, void* value);
 static herr_t H5P_lacc_elink_fapl_copy(const char* name, size_t size, void* value);
 static herr_t H5P_lacc_elink_fapl_close(const char* name, size_t size, void* value);
-static herr_t H5P_lacc_nlinks_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_lacc_nlinks_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_lacc_elink_flags_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_lacc_elink_flags_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
 
 /*********************/
 /* Package Variables */
@@ -328,34 +324,40 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P_lacc_elink_pref_enc(H5F_t *f, size_t *size, void *value,
-    H5P_genplist_t UNUSED *plist, uint8_t **pp) 
+H5P_lacc_elink_pref_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    char *elink_pref = *(char **)value;
+    const char *elink_pref = (const char *)value;
     size_t len = 0;
+    uint64_t enc_value = (uint64_t)len;
+    unsigned enc_size = H5V_limit_enc_size(enc_value);
     herr_t ret_value = 0;
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    HDassert(elink_pref);
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     /* calculate prefix length */
     if (NULL != elink_pref)
         len = (HDstrlen(elink_pref) * sizeof (char)) / sizeof (uint8_t);
 
     if (NULL != *pp) {
+
+        *(*pp)++ = (uint8_t)enc_size;
+
         /* encode the length of the prefix */
-        H5F_ENCODE_LENGTH(f, *pp, len)
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
+
         /* enocode the prefix */
         if (NULL != elink_pref) {
-            HDmemcpy(*pp, (uint8_t *)elink_pref, len);
+            HDmemcpy(*pp, (const uint8_t *)elink_pref, len);
             *pp += len;
         }
     }
-    else {
-        /* return size needed for decoding */
-        *size += H5F_SIZEOF_SIZE(f);
-        if (NULL != elink_pref) {
-            *size += len;
-        }
+
+    *size += (1 + enc_size);
+    if (NULL != elink_pref) {
+        *size += len;
     }
 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -378,25 +380,29 @@ H5P_lacc_elink_pref_enc(H5F_t *f, size_t *size, void *value,
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P_lacc_elink_pref_dec(H5F_t *f, size_t UNUSED *size, void UNUSED *value, 
-    H5P_genplist_t *plist, uint8_t **pp)
+H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
 {
     size_t len;
+    uint64_t enc_value;                 /* Decoded property value */
+    unsigned enc_size;                  /* Size of encoded property */
     char *elink_pref;
     herr_t ret_value = 0;
 
     FUNC_ENTER_NOAPI_NOINIT
 
-    H5F_DECODE_LENGTH(f, *pp, len);
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
+
+    /* Decode the size */
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+
+    /* Decode the value */
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+
+    /* Set the value */
+    HDmemcpy(&len, &enc_value, sizeof(uint64_t));
 
     if (0 != len) {
-        /* Get current prefix value */
-        if(H5P_get(plist, H5L_ACS_ELINK_PREFIX_NAME, &elink_pref) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get prefix info")
-
-        /* Free existing prefix, if there is one */
-        H5MM_xfree(elink_pref);
-
         /* allocate prefix buffer and decode value into it */
         if(NULL == (elink_pref = (char *)H5MM_malloc(len*sizeof(uint8_t)/sizeof(char) +1)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for fill value")
@@ -405,11 +411,9 @@ H5P_lacc_elink_pref_dec(H5F_t *f, size_t UNUSED *size, void UNUSED *value,
         elink_pref[len] = '\0';
 
         *pp += len;
-
-        /* Set prefix */
-        if(H5P_set(plist, H5L_ACS_ELINK_PREFIX_NAME, &elink_pref) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set prefix info")
     }
+
+    value = (void *)elink_pref;
 
  done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -975,141 +979,4 @@ H5Pget_elink_cb(hid_t lapl_id, H5L_elink_traverse_t *func, void **op_data)
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_elink_cb() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_lacc_nlinks_enc
- *
- * Purpose:        Callback routine which is called whenever the nlinks
- *                 property in the dataset access property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_lacc_nlinks_enc(H5F_t *f, size_t *size, void *value, 
-    H5P_genplist_t UNUSED *plist, uint8_t **pp)
-{
-    size_t *nlinks = (size_t *) value;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    if (NULL != *pp)
-        H5F_ENCODE_LENGTH(f, *pp, *nlinks)
-    else
-        *size += H5F_SIZEOF_SIZE(f);
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_lacc_nlinks_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_lacc_nlinks_dec
- *
- * Purpose:        Callback routine which is called whenever the nlinks
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_lacc_nlinks_dec(H5F_t *f, size_t UNUSED *size, void UNUSED *value, 
-    H5P_genplist_t *plist, uint8_t **pp)
-{
-    size_t nlinks;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    H5F_DECODE_LENGTH(f, *pp, nlinks);
-
-    /* Set number of links */
-    if(H5P_set(plist, H5L_ACS_NLINKS_NAME, &nlinks) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set nlink info")
-
- done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_lacc_nlinks_dec() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_lacc_elink_flags_enc
- *
- * Purpose:        Callback routine which is called whenever the elink flags
- *                 property in the dataset access property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_lacc_elink_flags_enc(H5F_t UNUSED *f, size_t *size, void *value, 
-    H5P_genplist_t UNUSED *plist, uint8_t **pp)
-{
-    unsigned *elink_flags = (unsigned *) value;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    if (NULL != *pp)
-        *(*pp)++ = (uint8_t)*elink_flags;
-    else {
-        *size += sizeof(uint8_t);
-    }
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_lacc_elink_flags_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_lacc_elink_flags_dec
- *
- * Purpose:        Callback routine which is called whenever the elink flags
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_lacc_elink_flags_dec(H5F_t UNUSED *f, size_t UNUSED *size, 
-    void UNUSED *value, H5P_genplist_t *plist, uint8_t **pp)
-{
-    unsigned elink_flags;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    elink_flags = *(*pp)++;
-
-    /* Set flags */
-    if(H5P_set(plist, H5L_ACS_ELINK_FLAGS_NAME, &elink_flags) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set access flags")
-
- done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_lacc_elink_flags_dec() */
 

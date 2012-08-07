@@ -48,16 +48,16 @@
 /* ========= Object Creation properties ============ */
 /* Definitions for the max. # of attributes to store compactly */
 #define H5O_CRT_ATTR_MAX_COMPACT_SIZE   sizeof(unsigned)
-#define H5O_CRT_ATTR_MAX_COMPACT_ENC    H5P_ocrt_attr_max_compact_enc
-#define H5O_CRT_ATTR_MAX_COMPACT_DEC    H5P_ocrt_attr_max_compact_dec
+#define H5O_CRT_ATTR_MAX_COMPACT_ENC    H5P__encode_unsigned
+#define H5O_CRT_ATTR_MAX_COMPACT_DEC    H5P__decode_unsigned
 /* Definitions for the min. # of attributes to store densely */
 #define H5O_CRT_ATTR_MIN_DENSE_SIZE     sizeof(unsigned)
-#define H5O_CRT_ATTR_MIN_DENSE_ENC    H5P_ocrt_attr_min_dense_enc
-#define H5O_CRT_ATTR_MIN_DENSE_DEC    H5P_ocrt_attr_min_dense_dec
+#define H5O_CRT_ATTR_MIN_DENSE_ENC      H5P__encode_unsigned
+#define H5O_CRT_ATTR_MIN_DENSE_DEC      H5P__decode_unsigned
 /* Definitions for object header flags */
 #define H5O_CRT_OHDR_FLAGS_SIZE         sizeof(uint8_t)
-#define H5O_CRT_OHDR_FLAGS_ENC    H5P_ocrt_ohdr_flags_enc
-#define H5O_CRT_OHDR_FLAGS_DEC    H5P_ocrt_ohdr_flags_dec
+#define H5O_CRT_OHDR_FLAGS_ENC          H5P__encode_uint8_t
+#define H5O_CRT_OHDR_FLAGS_DEC          H5P__decode_uint8_t
 /* Definitions for filter pipeline */
 #define H5O_CRT_PIPELINE_SIZE sizeof(H5O_pline_t)
 #define H5O_CRT_PIPELINE_ENC  H5P_ocrt_pipeline_enc
@@ -85,14 +85,8 @@ static herr_t H5P_ocrt_copy(hid_t new_plist_t, hid_t old_plist_t, void *copy_dat
 static herr_t H5P_ocrt_close(hid_t dxpl_id, void *close_data);
 
 /* Property callbacks */
-static herr_t H5P_ocrt_attr_max_compact_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_ocrt_attr_max_compact_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_ocrt_attr_min_dense_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_ocrt_attr_min_dense_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_ocrt_ohdr_flags_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_ocrt_ohdr_flags_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_ocrt_pipeline_enc(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
-static herr_t H5P_ocrt_pipeline_dec(H5F_t *f, size_t *size, void *value, H5P_genplist_t *plist, uint8_t **buf);
+static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value);
 static int H5P_ocrt_pipeline_cmp(const void *value1, const void *value2, size_t size);
 
 
@@ -1368,20 +1362,26 @@ H5P_get_filter(const H5Z_filter_info_t *filter, unsigned int *flags/*out*/,
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5P_ocrt_pipeline_enc(H5F_t *f, size_t *size, void *value, 
-                                    H5P_genplist_t UNUSED *plist, uint8_t **pp)
+static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5O_pline_t *pline = (const H5O_pline_t *)value;
-    herr_t ret_value = 0;
+    unsigned enc_size = H5V_limit_enc_size((uint64_t)pline->nalloc);
     size_t u , v;
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     if (NULL != *pp) {
         uint8_t temp;
+
+        /* Encode the size */
+        *(*pp)++ = (uint8_t)enc_size;
+
         /* encode pipeline nalloc and nused calues */
-        H5F_ENCODE_LENGTH(f, *pp, pline->nalloc)
-        H5F_ENCODE_LENGTH(f, *pp, pline->nused)
+        UINT64ENCODE_VAR(*pp, (uint64_t)pline->nalloc, enc_size);
+        UINT64ENCODE_VAR(*pp, (uint64_t)pline->nused, enc_size);
+
         /* encode each pipeline */
         for(u = 0; u < pline->nused; u++) {
             /* encode filter ID */
@@ -1402,29 +1402,36 @@ static herr_t H5P_ocrt_pipeline_enc(H5F_t *f, size_t *size, void *value,
                 temp = 0;
                 *(*pp)++ = temp;
             }
+
             /* encode cd_nelmts */
-            H5F_ENCODE_LENGTH(f, *pp, pline->filter[u].cd_nelmts)
+            UINT64ENCODE_VAR(*pp, (uint64_t)pline->filter[u].cd_nelmts, enc_size);
+
             /* encode all values */
             for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
-                *(*pp)++ = pline->filter[u].cd_values[v];
+                /* encode the size of "unsigned" once */
+                if(v == 0)
+                    *(*pp)++ = (uint8_t)sizeof(unsigned);
+
+                /* Encode the value */
+                H5_ENCODE_UNSIGNED(*pp, pline->filter[u].cd_values[v])
             }
         }
     }
-    else {
-        /* calculate size required for encoding */
-        *size += H5F_SIZEOF_SIZE(f)*2;
-        for(u = 0; u < pline->nused; u++) {
-            *size += sizeof(uint8_t) * 3;
-            if (NULL != pline->filter[u].name)
-                *size += sizeof(char) * H5Z_COMMON_NAME_LEN ;
-            *size += H5F_SIZEOF_SIZE(f);
-            for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
-                *size += sizeof(uint8_t);
-            }
+    /* calculate size required for encoding */
+    *size += 1 + enc_size*2;
+    for(u = 0; u < pline->nused; u++) {
+        *size += sizeof(uint8_t) * 3;
+        if (NULL != pline->filter[u].name)
+            *size += sizeof(char) * H5Z_COMMON_NAME_LEN ;
+        *size += enc_size;
+        for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
+            if(v==0)
+                *size += 1;
+            *size += sizeof(uint8_t);
         }
     }
 
-    FUNC_LEAVE_NOAPI(ret_value)
+    FUNC_LEAVE_NOAPI(SUCCEED)
 }
 
 
@@ -1443,22 +1450,28 @@ static herr_t H5P_ocrt_pipeline_enc(H5F_t *f, size_t *size, void *value,
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5P_ocrt_pipeline_dec(H5F_t *f, size_t UNUSED *size, void UNUSED *value, 
-                                    H5P_genplist_t *plist, uint8_t **pp)
+static herr_t 
+H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value)
 {
     size_t u , v;
-    unsigned nused, nalloc;
     H5O_pline_t pline;
     uint8_t temp;
+    unsigned enc_size;
     herr_t ret_value = 0;
 
     FUNC_ENTER_NOAPI_NOINIT
 
-    /* decode nalloc and nused */
-    H5F_DECODE_LENGTH(f, *pp, nalloc)
-    H5F_DECODE_LENGTH(f, *pp, nused)
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
-    for(u = 0; u < nused; u++) {
+    /* Decode the size of size_t */
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+
+    /* decode nalloc and nused */
+    UINT64DECODE_VAR(*pp, pline.nalloc, enc_size)
+    UINT64DECODE_VAR(*pp, pline.nused, enc_size)
+
+    for(u = 0; u < pline.nused; u++) {
         H5Z_filter_info_t filter;
         /* decode filter id */
         filter.id = *(*pp)++;
@@ -1471,25 +1484,39 @@ static herr_t H5P_ocrt_pipeline_dec(H5F_t *f, size_t UNUSED *size, void UNUSED *
             HDmemcpy((uint8_t *)(filter.name), *pp, sizeof(char) * H5Z_COMMON_NAME_LEN);
             *pp += H5Z_COMMON_NAME_LEN * sizeof(char);
         }
+
         /* decode num elements */
-        H5F_DECODE_LENGTH(f, *pp, filter.cd_nelmts)
+        UINT64DECODE_VAR(*pp, filter.cd_nelmts, enc_size);
+
         /* decode values */
         for(v = 0; v < filter.cd_nelmts; v++) {
-            filter.cd_values[v] = *(*pp)++;
+            unsigned unsigned_size;
+            /* decode the size of "unsigned" once */
+            if (v==0) {
+                unsigned_size = *(*pp)++;
+                if(enc_size != sizeof(unsigned))
+                    HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
+            }
+            H5_DECODE_UNSIGNED(*pp, filter.cd_values[v])
         }
-
-        /* Get the pipeline property to append to */
-        if(H5P_get(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline")
 
         /* Add the filter to the I/O pipeline */
         if(H5Z_append(&pline, filter.id, filter.flags, filter.cd_nelmts, filter.cd_values) < 0)
             HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to add filter to pipeline")
-                
+
+#if 0   /* MSC now how do we do this outside of here ??? */
+        /* Get the pipeline property to append to */
+        if(H5P_get(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline")
+
         /* Put the I/O pipeline information back into the property list */
         if(H5P_set(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set pipeline")
+#endif
     }
+
+    /* Set the value */
+    HDmemcpy(value, &pline, sizeof(H5O_pline_t));
 
  done: 
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1734,205 +1761,3 @@ done:
 } /* end H5Pget_filter_by_id1() */
 
 #endif /* H5_NO_DEPRECATED_SYMBOLS */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_attr_max_compact_enc
- *
- * Purpose:        Callback routine which is called whenever the max compact
- *                 property in the dataset access property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_attr_max_compact_enc(H5F_t UNUSED *f, size_t *size, void *value, 
-                                            H5P_genplist_t UNUSED *plist, uint8_t **pp)
-{
-    unsigned *max_compact = (unsigned *) value;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    if (NULL != *pp)
-        *(*pp)++ = (uint8_t)*max_compact;
-    /* calculate size needed for encoding */
-    else
-        *size += sizeof(uint8_t);
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_ocrt_attr_max_compact_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_attr_max_compact_dec
- *
- * Purpose:        Callback routine which is called whenever the min dense
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_attr_max_compact_dec(H5F_t UNUSED *f, size_t UNUSED *size, void UNUSED *value, 
-                                            H5P_genplist_t *plist, uint8_t **pp)
-{
-    unsigned max_compact;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    max_compact = *(*pp)++;
-
-    /* Set value */
-    if(H5P_set(plist, H5O_CRT_ATTR_MAX_COMPACT_NAME, &max_compact) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set max. # of compact attributes in property list")
-
- done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_ocrt_attr_max_compact_dec() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_attr_min_dense_enc
- *
- * Purpose:        Callback routine which is called whenever the max compact
- *                 property in the dataset access property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_attr_min_dense_enc(H5F_t UNUSED *f, size_t *size, void *value, 
-                                          H5P_genplist_t UNUSED *plist, uint8_t **pp)
-{
-    unsigned *min_dense = (unsigned *) value;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    if (NULL != *pp)
-        *(*pp)++ = (uint8_t)*min_dense;
-    /* calculate size needed for encoding */
-    else 
-        *size += sizeof(uint8_t);
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_ocrt_attr_min_dense_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_attr_min_dense_dec
- *
- * Purpose:        Callback routine which is called whenever the min dense
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_attr_min_dense_dec(H5F_t UNUSED *f, size_t UNUSED *size, void UNUSED *value, 
-                                          H5P_genplist_t *plist, uint8_t **pp)
-{
-    unsigned min_dense;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    min_dense = *(*pp)++;
-
-    /* Set value */
-    if(H5P_set(plist, H5O_CRT_ATTR_MIN_DENSE_NAME, &min_dense) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set max. # of compact attributes in property list")
-
- done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_ocrt_attr_min_dense_dec() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_ohdr_flags_enc
- *
- * Purpose:        Callback routine which is called whenever the order flag
- *                 property in the dataset access property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_ohdr_flags_enc(H5F_t UNUSED *f, size_t *size, void *value, 
-                                      H5P_genplist_t UNUSED *plist, uint8_t **pp)
-{
-    unsigned *crt_order_flags = (unsigned *) value;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    if (NULL != *pp)
-        *(*pp)++ = (uint8_t)*crt_order_flags;
-    /* calculate size needed for encoding */
-    else
-        *size += sizeof(uint8_t);
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_ocrt_ohdr_flags_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_ocrt_ohdr_flags_dec
- *
- * Purpose:        Callback routine which is called whenever the order flag
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t H5P_ocrt_ohdr_flags_dec(H5F_t UNUSED *f, size_t UNUSED *size, void UNUSED *value, 
-                                      H5P_genplist_t *plist, uint8_t **pp)
-{
-    unsigned crt_order_flags;
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    crt_order_flags = *(*pp)++;
-
-    /* Set value */
-    if(H5P_set(plist, H5O_CRT_OHDR_FLAGS_NAME, &crt_order_flags) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set max. # of compact attributes in property list")
-
- done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_ocrt_ohdr_flags_dec() */
-

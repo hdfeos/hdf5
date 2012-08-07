@@ -48,14 +48,15 @@ main(void)
     if ((dcpl1 = H5Pcreate(H5P_DATASET_CREATE)) < 0)
         goto error;
 
-    if ((H5Pset_chunk(dcpl1, 1, &chunk_size)) < 0)
-         goto error;
+    //if ((H5Pset_chunk(dcpl1, 1, &chunk_size)) < 0)
+    //goto error;
 
     if ((H5Pset_alloc_time(dcpl1, H5D_ALLOC_TIME_LATE)) < 0)
-        goto error;
+    goto error;
 
-    if ((H5Pset_fill_value(dcpl1, H5T_NATIVE_DOUBLE, &fill)) < 0)
-        goto error;
+    //if ((H5Pset_fill_value(dcpl1, H5T_NATIVE_DOUBLE, &fill)) < 0)
+    //goto error;
+
 
     max_size[0] = 100;
     if ((H5Pset_external(dcpl1, "ext1.data", (off_t)0, 
@@ -73,7 +74,7 @@ main(void)
 
     {
         void *temp_buf = NULL;
-        uint8_t *enc_buf, *dec_buf;
+        void *enc_buf, *dec_buf;
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
