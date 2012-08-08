@@ -25,6 +25,7 @@ main(void)
 {
     hid_t dcpl1, dcpl2;	       	/* dataset create prop. list */
     hid_t dapl1, dapl2;	       	/* dataset access prop. list */
+    hid_t dxpl1, dxpl2;	       	/* dataset xfer prop. list */
     hid_t gcpl1, gcpl2;	       	/* group create prop. list */
     hid_t lcpl1, lcpl2;	       	/* link create prop. list */
     hid_t lapl1, lapl2;	       	/* link create prop. list */
@@ -39,6 +40,7 @@ main(void)
     double w0 = 0.5;
     unsigned max_compact;
     unsigned min_dense;
+    const char* c_to_f = "x+32\0";
 
     if(VERBOSE_MED)
 	printf("Encode/Decode DCPLs\n");
@@ -48,16 +50,15 @@ main(void)
     if ((dcpl1 = H5Pcreate(H5P_DATASET_CREATE)) < 0)
         goto error;
 
-    //if ((H5Pset_chunk(dcpl1, 1, &chunk_size)) < 0)
-    //goto error;
+    if ((H5Pset_chunk(dcpl1, 1, &chunk_size)) < 0)
+        goto error;
 
     if ((H5Pset_alloc_time(dcpl1, H5D_ALLOC_TIME_LATE)) < 0)
     goto error;
 
-    //if ((H5Pset_fill_value(dcpl1, H5T_NATIVE_DOUBLE, &fill)) < 0)
-    //goto error;
-
-
+    if ((H5Pset_fill_value(dcpl1, H5T_NATIVE_DOUBLE, &fill)) < 0)
+        goto error;
+    /*
     max_size[0] = 100;
     if ((H5Pset_external(dcpl1, "ext1.data", (off_t)0, 
                          (hsize_t)(max_size[0] * sizeof(int)/4))) < 0)
@@ -71,7 +72,7 @@ main(void)
     if ((H5Pset_external(dcpl1, "ext4.data", (off_t)0, 
                          (hsize_t)(max_size[0] * sizeof(int)/4))) < 0)
         goto error;
-
+    */
     {
         void *temp_buf = NULL;
         void *enc_buf, *dec_buf;
@@ -113,17 +114,17 @@ main(void)
 
     {
         void *temp_buf = NULL;
-        uint8_t *enc_buf, *dec_buf;
+        void *enc_buf, *dec_buf;
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (dapl1, TRUE, NULL, &temp_size);
+        H5Pencode (dapl1, FALSE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
-        enc_buf = (uint8_t *)temp_buf;
-        dec_buf = (uint8_t *)temp_buf;
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
 
-        H5Pencode (dapl1, TRUE, enc_buf, &temp_size);
+        H5Pencode (dapl1, FALSE, enc_buf, &temp_size);
 
         dapl2 = H5Pdecode (dec_buf);
 
@@ -143,14 +144,72 @@ main(void)
 
     PASSED();
 
-#if 0 /* MSC not implemented yet */
+    /******* ENCODE/DECODE DXPLS *****/
+    TESTING("DXPL Encoding/Decoding");
+    if ((dxpl1 = H5Pcreate(H5P_DATASET_XFER)) < 0)
+        goto error;
+
+    if ((H5Pset_btree_ratios(dxpl1, 0.2, 0.6, 0.2)) < 0)
+        goto error;
+    if ((H5Pset_hyper_vector_size(dxpl1, 5)) < 0)
+        goto error;
+
+    /* MSC - This fails because we do not call H5P_set_driver after decoding
+    if ((H5Pset_dxpl_mpio(dxpl1, H5FD_MPIO_COLLECTIVE)) < 0)
+        goto error;
+    */
+
+    if ((H5Pset_dxpl_mpio_collective_opt(dxpl1, H5FD_MPIO_INDIVIDUAL_IO)) < 0)
+        goto error;
+    if ((H5Pset_dxpl_mpio_chunk_opt(dxpl1, H5FD_MPIO_CHUNK_MULTI_IO)) < 0)
+        goto error;
+    if ((H5Pset_dxpl_mpio_chunk_opt_ratio(dxpl1, 30)) < 0)
+        goto error;
+    if ((H5Pset_dxpl_mpio_chunk_opt_num(dxpl1, 40)) < 0)
+        goto error;
+    if ((H5Pset_edc_check(dxpl1, H5Z_DISABLE_EDC)) < 0)
+        goto error;
+    /* MSC - not working yet
+    if ((H5Pset_data_transform(dxpl1, c_to_f)) < 0)
+        goto error;
+    */
+    {
+        void *temp_buf = NULL;
+        void *enc_buf, *dec_buf;
+        size_t temp_size=0;
+
+        /* first call to encode returns only the size of the buffer needed */
+        H5Pencode (dxpl1, FALSE, NULL, &temp_size);
+
+        temp_buf = (uint8_t *) malloc (temp_size);
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
+
+        H5Pencode (dxpl1, FALSE, enc_buf, &temp_size);
+
+        dxpl2 = H5Pdecode (dec_buf);
+
+        if (0 == H5Pequal(dxpl1, dxpl2)) {
+            printf ("DXPL encoding decoding failed\n");
+            goto error;
+        }
+
+        free (temp_buf);
+    }
+        
+    /* release resource */
+    if ((H5Pclose(dxpl1)) < 0)
+         goto error;
+    if ((H5Pclose(dxpl2)) < 0)
+         goto error;
+
+    PASSED();
+
+
     /******* ENCODE/DECODE GCPLS *****/
     TESTING("GCPL Encoding/Decoding");
     if ((gcpl1 = H5Pcreate(H5P_GROUP_CREATE)) < 0)
         goto error;
-
-    if ((H5Pset_link_creation_order(gcpl1, (H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED))) < 0)
-         goto error;
 
     if ((H5Pset_local_heap_size_hint(gcpl1, 256)) < 0)
          goto error;
@@ -164,42 +223,31 @@ main(void)
 
     if ((H5Pset_est_link_info(gcpl1, 3, 9)) < 0)
          goto error;
-
+    /* MSC - not working for now
+    if ((H5Pset_link_creation_order(gcpl1, (H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED))) < 0)
+         goto error;
+    */
     {
         void *temp_buf = NULL;
-        uint8_t *enc_buf, *dec_buf;
+        void *enc_buf, *dec_buf;
         size_t temp_size=0;
-        H5P_plist_type_t class_type;
-
-        class_type = H5P_TYPE_GROUP_CREATE;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5P_encode (gcpl1, NULL, &temp_size);
-        /* extra space for plist type */
-        temp_size += sizeof(uint8_t); 
+        H5Pencode (gcpl1, FALSE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
-        enc_buf = (uint8_t *)temp_buf;
-        dec_buf = (uint8_t *)temp_buf;
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
 
-        *enc_buf++ = (uint8_t)class_type;
-        H5P_encode (gcpl1, enc_buf, &temp_size);
+        H5Pencode (gcpl1, FALSE, enc_buf, &temp_size);
 
-        class_type = *dec_buf++;
-        if (class_type != H5P_TYPE_GROUP_CREATE) {
+        gcpl2 = H5Pdecode (dec_buf);
+
+        if (0 == H5Pequal(gcpl1, gcpl2)) {
             printf ("GCPL encoding decoding failed\n");
             goto error;
         }
 
-        if ((gcpl2 = H5Pcreate(H5P_GROUP_CREATE)) < 0)
-            goto error;
-
-        H5P_decode (gcpl2, temp_size, dec_buf);
-
-        if (0 == H5Pequal(gcpl1, gcpl2)){
-            printf ("GCPL encoding decoding failed\n");
-            goto error;
-        }
         free (temp_buf);
     }
         
@@ -221,39 +269,25 @@ main(void)
 
     {
         void *temp_buf = NULL;
-        uint8_t *enc_buf, *dec_buf;
+        void *enc_buf, *dec_buf;
         size_t temp_size=0;
-        H5P_plist_type_t class_type;
-
-        class_type = H5P_TYPE_LINK_CREATE;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5P_encode (lcpl1, NULL, &temp_size);
-        /* extra space for plist type */
-        temp_size += sizeof(uint8_t); 
+        H5Pencode (lcpl1, FALSE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
-        enc_buf = (uint8_t *)temp_buf;
-        dec_buf = (uint8_t *)temp_buf;
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
 
-        *enc_buf++ = (uint8_t)class_type;
-        H5P_encode (lcpl1, enc_buf, &temp_size);
+        H5Pencode (lcpl1, FALSE, enc_buf, &temp_size);
 
-        class_type = *dec_buf++;
-        if (class_type != H5P_TYPE_LINK_CREATE) {
+        lcpl2 = H5Pdecode (dec_buf);
+
+        if (0 == H5Pequal(lcpl1, lcpl2)) {
             printf ("LCPL encoding decoding failed\n");
             goto error;
         }
 
-        if ((lcpl2 = H5Pcreate(H5P_LINK_CREATE)) < 0)
-            goto error;
-
-        H5P_decode (lcpl2, temp_size, dec_buf);
-
-        if (0 == H5Pequal(lcpl1, lcpl2)){
-            printf ("LCPL encoding decoding failed\n");
-            goto error;
-        }
         free (temp_buf);
     }
         
@@ -275,36 +309,21 @@ main(void)
 
     {
         void *temp_buf = NULL;
-        uint8_t *enc_buf, *dec_buf;
+        void *enc_buf, *dec_buf;
         size_t temp_size=0;
-        H5P_plist_type_t class_type;
-
-        class_type = H5P_TYPE_OBJECT_COPY;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5P_encode (ocpypl1, NULL, &temp_size);
-        /* extra space for plist type */
-        temp_size += sizeof(uint8_t); 
+        H5Pencode (ocpypl1, FALSE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
-        enc_buf = (uint8_t *)temp_buf;
-        dec_buf = (uint8_t *)temp_buf;
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
 
-        *enc_buf++ = (uint8_t)class_type;
-        H5P_encode (ocpypl1, enc_buf, &temp_size);
+        H5Pencode (ocpypl1, FALSE, enc_buf, &temp_size);
 
-        class_type = *dec_buf++;
-        if (class_type != H5P_TYPE_OBJECT_COPY) {
-            printf ("OCPYPL encoding decoding failed\n");
-            goto error;
-        }
+        ocpypl2 = H5Pdecode (dec_buf);
 
-        if ((ocpypl2 = H5Pcreate(H5P_OBJECT_COPY)) < 0)
-            goto error;
-
-        H5P_decode (ocpypl2, temp_size, dec_buf);
-
-        if (0 == H5Pequal(ocpypl1, ocpypl2)){
+        if (0 == H5Pequal(ocpypl1, ocpypl2)) {
             printf ("OCPYPL encoding decoding failed\n");
             goto error;
         }
@@ -331,44 +350,30 @@ main(void)
     if ((H5Pset_attr_phase_change (ocpl1, 110, 105)) < 0)
          goto error;
 
-    if ((H5Pset_filter (ocpl1, H5Z_FILTER_FLETCHER32, 0, (size_t)0, NULL)) < 0)
-         goto error;
+    //if ((H5Pset_filter (ocpl1, H5Z_FILTER_FLETCHER32, 0, (size_t)0, NULL)) < 0)
+    //goto error;
 
     {
         void *temp_buf = NULL;
-        uint8_t *enc_buf, *dec_buf;
+        void *enc_buf, *dec_buf;
         size_t temp_size=0;
-        H5P_plist_type_t class_type;
-
-        class_type = H5P_TYPE_OBJECT_CREATE;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5P_encode (ocpl1, NULL, &temp_size);
-        /* extra space for plist type */
-        temp_size += sizeof(uint8_t); 
+        H5Pencode (ocpl1, FALSE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
-        enc_buf = (uint8_t *)temp_buf;
-        dec_buf = (uint8_t *)temp_buf;
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
 
-        *enc_buf++ = (uint8_t)class_type;
-        H5P_encode (ocpl1, enc_buf, &temp_size);
+        H5Pencode (ocpl1, FALSE, enc_buf, &temp_size);
 
-        class_type = *dec_buf++;
-        if (class_type != H5P_TYPE_OBJECT_CREATE) {
+        ocpl2 = H5Pdecode (dec_buf);
+
+        if (0 == H5Pequal(ocpl1, ocpl2)) {
             printf ("OCPL encoding decoding failed\n");
             goto error;
         }
 
-        if ((ocpl2 = H5Pcreate(H5P_OBJECT_CREATE)) < 0)
-            goto error;
-
-        H5P_decode (ocpl2, temp_size, dec_buf);
-
-        if (0 == H5Pequal(ocpl1, ocpl2)){
-            printf ("OCPL encoding decoding failed\n");
-            goto error;
-        }
         free (temp_buf);
     }
 
@@ -396,39 +401,25 @@ main(void)
 
     {
         void *temp_buf = NULL;
-        uint8_t *enc_buf, *dec_buf;
+        void *enc_buf, *dec_buf;
         size_t temp_size=0;
-        H5P_plist_type_t class_type;
-
-        class_type = H5P_TYPE_LINK_ACCESS;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5P_encode (lapl1, NULL, &temp_size);
-        /* extra space for plist type */
-        temp_size += sizeof(uint8_t); 
+        H5Pencode (lapl1, FALSE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
-        enc_buf = (uint8_t *)temp_buf;
-        dec_buf = (uint8_t *)temp_buf;
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
 
-        *enc_buf++ = (uint8_t)class_type;
-        H5P_encode (lapl1, enc_buf, &temp_size);
+        H5Pencode (lapl1, FALSE, enc_buf, &temp_size);
 
-        class_type = *dec_buf++;
-        if (class_type != H5P_TYPE_LINK_ACCESS) {
+        lapl2 = H5Pdecode (dec_buf);
+
+        if (0 == H5Pequal(lapl1, lapl2)) {
             printf ("LAPL encoding decoding failed\n");
             goto error;
         }
 
-        if ((lapl2 = H5Pcreate(H5P_LINK_ACCESS)) < 0)
-            goto error;
-
-        H5P_decode (lapl2, temp_size, dec_buf);
-
-        if (0 == H5Pequal(lapl1, lapl2)){
-            printf ("LAPL encoding decoding failed\n");
-            goto error;
-        }
         free (temp_buf);
     }
 
@@ -439,7 +430,6 @@ main(void)
         goto error;
 
     PASSED();
-#endif /* MSC not implemented yet */
 
     return 0;
 

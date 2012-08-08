@@ -42,6 +42,7 @@
 #include "H5Iprivate.h"		/* IDs			  		*/
 #include "H5MMprivate.h"	/* Memory management			*/
 #include "H5Ppkg.h"		/* Property lists		  	*/
+#include "H5Tprivate.h"		/* Datatypes 				*/
 #include "H5Zpkg.h"		/* Data filters				*/
 
 
@@ -689,12 +690,15 @@ static herr_t
 H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5O_fill_t *fill = (const H5O_fill_t *)value; /* Create local aliases for values */
-    size_t dt_size = 0;                 /* Size of encoded datatype */
+    size_t   dt_size = 0;                 /* Size of encoded datatype */
     herr_t ret_value = SUCCEED;         /* Return value */
+    uint64_t enc_value;
+    unsigned enc_size;
 
     FUNC_ENTER_STATIC
 
     /* Sanity check */
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
     HDassert(fill);
     HDassert(size);
 
@@ -712,16 +716,26 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
             HDmemcpy(*pp, (uint8_t *)fill->buf, (size_t)fill->size);
             *pp += fill->size;
 
-            /* Encode the size of the encoded datatype */
-            //UINT64ENCODE_VARLEN(*pp, dt_size);
-
             /* Encode fill value datatype */
             HDassert(fill->type);
+
             if(H5T_encode(fill->type, NULL, &dt_size) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
-                    printf ("dt size = %d\n", dt_size);
+
+            /* Encode the size of a size_t*/
+            enc_value = (uint64_t)dt_size;
+            enc_size = H5V_limit_enc_size(enc_value);
+            HDassert(enc_size < 256);
+
+            /* Encode the size */
+            *(*pp)++ = (uint8_t)enc_size;
+
+            /* Encode the size of the encoded datatype */
+            UINT64ENCODE_VAR(*pp, enc_value, enc_size);
+
             if(H5T_encode(fill->type, *pp, &dt_size) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
+            *pp += dt_size;
         } /* end if */
     } /* end if */
 
@@ -731,12 +745,18 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
     if(fill->size > 0) {
         /* The size of the fill value buffer */
         *size += (size_t)fill->size;
-        /* the size of the datatype */
-        //*size += sizeof(uint64_t);
+
         /* Get the size of the encoded datatype */
         HDassert(fill->type);
         if(H5T_encode(fill->type, NULL, &dt_size) < 0)
             HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
+
+        /* calculate those if they were not calculated earlier */
+        if(NULL == *pp) {
+            enc_value = (uint64_t)dt_size;
+            enc_size = H5V_limit_enc_size(enc_value);
+        }
+        *size += (1 + enc_size);
         *size += dt_size;
     } /* end if */
 
@@ -768,6 +788,8 @@ H5P__fill_value_dec(const uint8_t **pp, void *value)
 
     FUNC_ENTER_STATIC
 
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
+
     /* Reset fill value property */
     HDmemset(&fill, 0, sizeof(fill));
     if(H5O_msg_reset(H5O_FILL_ID, &fill) < 0)
@@ -783,6 +805,8 @@ H5P__fill_value_dec(const uint8_t **pp, void *value)
     /* Check if there's a fill value */
     if(fill.size > 0) {
         size_t dt_size = 0;
+        uint64_t enc_value;
+        unsigned enc_size;
 
         /* Allocate fill buffer and copy the contents in it */
         if(NULL == (fill.buf = H5MM_malloc((size_t)fill.size)))
@@ -790,8 +814,12 @@ H5P__fill_value_dec(const uint8_t **pp, void *value)
         HDmemcpy((uint8_t *)fill.buf, *pp, (size_t)fill.size);
         *pp += fill.size;
 
-        /* Decode size of encoded datatype */
-        //UINT64DECODE_VARLEN(*pp, dt_size);
+        enc_size = *(*pp)++;
+        HDassert(enc_size < 256);
+
+        /* Decode the size of encoded datatype */
+        UINT64DECODE_VAR(*pp, enc_value, enc_size);
+        dt_size = (size_t)enc_value;
 
         /* Decode type */
         if(NULL == (fill.type = H5T_decode(*pp)))
@@ -2329,13 +2357,13 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
     } /* end if */
 
     /* Calculate size needed for encoding */
-    *size += (1 + H5V_limit_enc_size((uint64_t)efl->nused));
+    *size += sizeof(uint64_t); //(1 + H5V_limit_enc_size((uint64_t)efl->nused));
     for(u = 0; u < efl->nused; u++) {
         len = HDstrlen(efl->slot[u].name);
-        *size += (1 + H5V_limit_enc_size((uint64_t)len));
+        *size += 3 * sizeof(uint64_t);//(1 + H5V_limit_enc_size((uint64_t)len));
         *size += len;
-        *size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].offset));
-        *size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].size));
+        //*size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].offset));
+        //*size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].size));
     } /* end for */
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -2401,7 +2429,6 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
         /* decode offset and size */
         UINT64DECODE_VARLEN(*pp, efl.slot[u].offset);
         UINT64DECODE_VARLEN(*pp, efl.slot[u].size);
-        efl.nused++;
     } /* end for */
 
     /* Set the value */

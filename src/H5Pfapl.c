@@ -639,8 +639,7 @@ H5P_set_driver(H5P_genplist_t *plist, hid_t new_driver_id, const void *new_drive
         /* Set the driver for the property list */
         if(H5FD_fapl_open(plist, new_driver_id, new_driver_info) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set driver")
-    } /* end if */
-    else
+    } else
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
 
 done:

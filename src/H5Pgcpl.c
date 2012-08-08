@@ -547,10 +547,15 @@ H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
 
         crt_order_flags |= linfo->track_corder ? H5P_CRT_ORDER_TRACKED : 0;
         crt_order_flags |= linfo->index_corder ? H5P_CRT_ORDER_INDEXED : 0;
-        *(*pp)++ = (uint8_t)crt_order_flags;
+
+        /* Encode the size of unsigned*/
+        *(*pp)++ = (uint8_t)sizeof(unsigned);
+
+        /* Encode the value */
+        H5_ENCODE_UNSIGNED(*pp, crt_order_flags)
     }
-    else
-        *size += sizeof(uint8_t);
+
+    *size += (1 + sizeof(unsigned));
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_gcrt_link_info_enc() */
@@ -575,6 +580,7 @@ static herr_t
 H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
 {
     unsigned crt_order_flags;
+    unsigned enc_size;
     H5O_linfo_t linfo;
     herr_t ret_value = SUCCEED;
 
@@ -585,14 +591,18 @@ H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
     if(H5O_msg_reset(H5O_LINFO_ID, &linfo) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
-    crt_order_flags = *(*pp)++;
+    enc_size = *(*pp)++;
+    if(enc_size != sizeof(unsigned))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
+
+    H5_DECODE_UNSIGNED(*pp, crt_order_flags)
 
     /* Update fields */
     linfo.track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
     linfo.index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);
 
     /* Set the value */
-    HDmemcpy(value, &linfo, sizeof(linfo));
+    HDmemcpy(value, &linfo, sizeof(H5O_linfo_t));
 
  done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -629,8 +639,8 @@ H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
         UINT16ENCODE(*pp, ginfo->est_num_entries)
         UINT16ENCODE(*pp, ginfo->est_name_len)      
     }
-    else
-        *size += sizeof(uint16_t)*4 + sizeof(uint32_t);
+
+    *size += sizeof(uint16_t)*4 + sizeof(uint32_t);
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_gcrt_group_info_enc() */

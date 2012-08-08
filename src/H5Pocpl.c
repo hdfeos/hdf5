@@ -1373,10 +1373,9 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     if (NULL != *pp) {
-        uint8_t temp;
-
-        /* Encode the size */
+        /* Encode sizes */
         *(*pp)++ = (uint8_t)enc_size;
+        *(*pp)++ = (uint8_t)sizeof(unsigned);
 
         /* encode pipeline nalloc and nused calues */
         UINT64ENCODE_VAR(*pp, (uint64_t)pline->nalloc, enc_size);
@@ -1385,22 +1384,23 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
         /* encode each pipeline */
         for(u = 0; u < pline->nused; u++) {
             /* encode filter ID */
-            *(*pp)++ = (uint8_t)pline->filter[u].id;
+            INT32ENCODE(*pp, pline->filter[u].id)
+
             /* encode filter flags */
-            *(*pp)++ = (uint8_t)pline->filter[u].flags;
+            H5_ENCODE_UNSIGNED(*pp, pline->filter[u].flags)
+
             /* encode filter name if it exits */
             if (NULL != pline->filter[u].name) {
-                /* encode 1 indicating that it exits */
-                temp = 1;
-                *(*pp)++ = temp;
+                /* encode TRUE indicating that it exits */
+                *(*pp)++ = (uint8_t)TRUE;
+
                 /* enocde filter name */
                 HDmemcpy(*pp, (uint8_t *)pline->filter[u].name, H5Z_COMMON_NAME_LEN);
-                *pp += H5Z_COMMON_NAME_LEN * sizeof(char);
+                *pp += H5Z_COMMON_NAME_LEN;
             }
             else {
-                /* encode 0 indicating that it does not exit */
-                temp = 0;
-                *(*pp)++ = temp;
+                /* encode FALSE indicating that it does not exit */
+                *(*pp)++ = (uint8_t)FALSE;
             }
 
             /* encode cd_nelmts */
@@ -1408,26 +1408,20 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
 
             /* encode all values */
             for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
-                /* encode the size of "unsigned" once */
-                if(v == 0)
-                    *(*pp)++ = (uint8_t)sizeof(unsigned);
-
                 /* Encode the value */
                 H5_ENCODE_UNSIGNED(*pp, pline->filter[u].cd_values[v])
             }
         }
     }
     /* calculate size required for encoding */
-    *size += 1 + enc_size*2;
+    *size += (2 + enc_size*2);
     for(u = 0; u < pline->nused; u++) {
-        *size += sizeof(uint8_t) * 3;
+        *size += (sizeof(int32_t) + sizeof(unsigned));
         if (NULL != pline->filter[u].name)
-            *size += sizeof(char) * H5Z_COMMON_NAME_LEN ;
+            *size += (1 + H5Z_COMMON_NAME_LEN);
         *size += enc_size;
         for(v = 0; v < pline->filter[u].cd_nelmts; v++) {
-            if(v==0)
-                *size += 1;
-            *size += sizeof(uint8_t);
+            *size += sizeof(unsigned);
         }
     }
 
@@ -1457,6 +1451,7 @@ H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value)
     H5O_pline_t pline;
     uint8_t temp;
     unsigned enc_size;
+    unsigned unsigned_size;
     herr_t ret_value = 0;
 
     FUNC_ENTER_NOAPI_NOINIT
@@ -1467,22 +1462,29 @@ H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value)
     enc_size = *(*pp)++;
     HDassert(enc_size < 256);
 
+    unsigned_size = *(*pp)++;
+    if(unsigned_size != sizeof(unsigned))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
+
     /* decode nalloc and nused */
     UINT64DECODE_VAR(*pp, pline.nalloc, enc_size)
     UINT64DECODE_VAR(*pp, pline.nused, enc_size)
 
     for(u = 0; u < pline.nused; u++) {
         H5Z_filter_info_t filter;
+
         /* decode filter id */
-        filter.id = *(*pp)++;
+        INT32DECODE(*pp, filter.id)
+
         /* decode filter flags */
-        filter.flags = *(*pp)++;
+        H5_DECODE_UNSIGNED(*pp, filter.flags)
+
         /* decode value indicating if the name is encoded */
-        temp = *(*pp)++;
-        if (1 == temp) {
+        temp = (hbool_t)*(*pp)++;
+        if (temp) {
             /* decode name */
-            HDmemcpy((uint8_t *)(filter.name), *pp, sizeof(char) * H5Z_COMMON_NAME_LEN);
-            *pp += H5Z_COMMON_NAME_LEN * sizeof(char);
+            HDmemcpy((uint8_t *)(filter.name), *pp, H5Z_COMMON_NAME_LEN);
+            *pp += H5Z_COMMON_NAME_LEN;
         }
 
         /* decode num elements */
@@ -1490,29 +1492,12 @@ H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value)
 
         /* decode values */
         for(v = 0; v < filter.cd_nelmts; v++) {
-            unsigned unsigned_size;
-            /* decode the size of "unsigned" once */
-            if (v==0) {
-                unsigned_size = *(*pp)++;
-                if(enc_size != sizeof(unsigned))
-                    HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
-            }
             H5_DECODE_UNSIGNED(*pp, filter.cd_values[v])
         }
 
         /* Add the filter to the I/O pipeline */
         if(H5Z_append(&pline, filter.id, filter.flags, filter.cd_nelmts, filter.cd_values) < 0)
             HGOTO_ERROR(H5E_PLINE, H5E_CANTINIT, FAIL, "unable to add filter to pipeline")
-
-#if 0   /* MSC now how do we do this outside of here ??? */
-        /* Get the pipeline property to append to */
-        if(H5P_get(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get pipeline")
-
-        /* Put the I/O pipeline information back into the property list */
-        if(H5P_set(plist, H5O_CRT_PIPELINE_NAME, &pline) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set pipeline")
-#endif
     }
 
     /* Set the value */

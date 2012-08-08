@@ -46,6 +46,7 @@
 /****************/
 
 /* ======== Data transfer properties ======== */
+/* what does it help having some of the buffer properties encodable ?? */
 /* Definitions for maximum temp buffer size property */
 #define H5D_XFER_MAX_TEMP_BUF_SIZE      sizeof(size_t)
 #define H5D_XFER_MAX_TEMP_BUF_DEF       H5D_TEMP_BUF_SIZE
@@ -589,7 +590,7 @@ done:
 static herr_t
 H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    const H5Z_data_xform_t **data_xform_prop = (const H5Z_data_xform_t **)value; /* Create local alias for values */
+    const H5Z_data_xform_t *data_xform_prop = (const H5Z_data_xform_t *)value; /* Create local alias for values */
     const char *pexp = NULL;            /* Pointer to transform expression */
     size_t	len = 0;                /* Length of transform expression */
     herr_t ret_value = SUCCEED;         /* Return value */
@@ -601,24 +602,26 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
     HDassert(size);
 
     /* Check for data transform set */
-    if(NULL == *data_xform_prop) {
+    if(NULL != data_xform_prop) {
         /* Get the transform expression */
-        if(NULL == (pexp = H5Z_xform_extract_xform_str(*data_xform_prop)))
+        if(NULL == (pexp = H5Z_xform_extract_xform_str(data_xform_prop)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "failed to retrieve transform expression")
 
         /* Get the transform expression size */
-        len = HDstrlen(pexp) + 1;
+        len = HDstrlen(pexp);
+
     } /* end if */
 
     if(NULL != *pp) {
         /* Set flag whether there's a transform set */
-        if(NULL == *data_xform_prop)
-            *pp++ = (uint8_t)FALSE;
+        if(NULL == data_xform_prop)
+            *(*pp)++ = (uint8_t)FALSE;
         else {
-            *pp++ = (uint8_t)TRUE;
+            *(*pp)++ = (uint8_t)TRUE;
 
             /* Copy the expression into the buffer */
-            HDstrncpy((char *)*pp, pexp, len + 1);
+            HDmemcpy(*pp, (const uint8_t *)pexp, len);
+            //HDstrncpy((char *)*pp, pexp, len);
             *pp += len;
         } /* end else */
     } /* end if */
@@ -670,11 +673,11 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
         if(NULL == (data_xform_prop = H5Z_xform_create((const char *)*pp)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "unable to create data transform info")
         len = HDstrlen((const char *)*pp);
-        *pp += len + 1;
+        *pp += len;
     } /* end if */
 
     /* Set the value */
-    HDmemcpy(value, &data_xform_prop, sizeof(H5Z_data_xform_t *));
+    HDmemcpy(value, data_xform_prop, sizeof(H5Z_data_xform_t *));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1738,7 +1741,7 @@ H5P__dxfr_mpio_collective_opt_dec(const uint8_t **pp, void *value)
     coll_opt = (H5FD_mpio_collective_opt_t)*(*pp)++;
 
     /* Set the value */
-    HDmemcpy(value, coll_opt, sizeof(H5FD_mpio_collective_opt_t));
+    HDmemcpy(value, &coll_opt, sizeof(H5FD_mpio_collective_opt_t));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_mpio_collective_opt_dec() */
@@ -1812,7 +1815,7 @@ H5P__dxfr_mpio_chunk_opt_hard_dec(const uint8_t **pp, void *value)
     chunk_opt = (H5FD_mpio_chunk_opt_t)*(*pp)++;
 
     /* Set the value */
-    HDmemcpy(value, chunk_opt, sizeof(H5FD_mpio_chunk_opt_t));
+    HDmemcpy(value, &chunk_opt, sizeof(H5FD_mpio_chunk_opt_t));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_mpio_chunk_opt_hard_enc() */
@@ -1958,7 +1961,7 @@ H5P__dxfr_edc_dec(const uint8_t **pp, void *value)
     check = (H5Z_EDC_t)*(*pp)++;
 
     /* Set the value */
-    HDmemcpy(value, check, sizeof(H5Z_EDC_t));
+    HDmemcpy(value, &check, sizeof(H5Z_EDC_t));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_edc_dec() */
