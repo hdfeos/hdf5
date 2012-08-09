@@ -581,22 +581,16 @@ H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
 {
     unsigned crt_order_flags;
     unsigned enc_size;
-    H5O_linfo_t linfo;
+    H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;
     herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NOINIT
-
-    /* Reset link info property */
-    HDmemset(&linfo, 0, sizeof(linfo));
-    if(H5O_msg_reset(H5O_LINFO_ID, &linfo) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
     enc_size = *(*pp)++;
     if(enc_size != sizeof(unsigned))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
 
     H5_DECODE_UNSIGNED(*pp, crt_order_flags)
-
     /* Update fields */
     linfo.track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
     linfo.index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);

@@ -326,9 +326,9 @@ done:
 static herr_t
 H5P_lacc_elink_pref_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    const char *elink_pref = (const char *)value;
+    const char *elink_pref = *(const char **)value;
     size_t len = 0;
-    uint64_t enc_value = (uint64_t)len;
+    uint64_t enc_value;
     unsigned enc_size = H5V_limit_enc_size(enc_value);
     herr_t ret_value = 0;
 
@@ -339,12 +339,12 @@ H5P_lacc_elink_pref_enc(const void *value, uint8_t **pp, size_t *size)
 
     /* calculate prefix length */
     if (NULL != elink_pref)
-        len = (HDstrlen(elink_pref) * sizeof (char)) / sizeof (uint8_t);
+        len = HDstrlen(elink_pref);
 
     if (NULL != *pp) {
-
         *(*pp)++ = (uint8_t)enc_size;
 
+        enc_value = (uint64_t)len;
         /* encode the length of the prefix */
         UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
@@ -390,6 +390,9 @@ H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
 
     FUNC_ENTER_NOAPI_NOINIT
 
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(value);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     /* Decode the size */
@@ -401,21 +404,21 @@ H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
 
     /* Set the value */
     HDmemcpy(&len, &enc_value, sizeof(uint64_t));
-
     if (0 != len) {
         /* allocate prefix buffer and decode value into it */
-        if(NULL == (elink_pref = (char *)H5MM_malloc(len*sizeof(uint8_t)/sizeof(char) +1)))
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for fill value")
+        if(NULL == (elink_pref = (char *)H5MM_malloc(len)))
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for prefix")
 
         HDmemcpy((uint8_t *)elink_pref, *pp, len);
-        elink_pref[len] = '\0';
+        //elink_pref[len] = '\0';
 
         *pp += len;
     }
+    /* Set the value */
+    *(char **)value = H5MM_xstrdup(elink_pref);
 
-    value = (void *)elink_pref;
-
- done:
+done:
+    H5MM_free(elink_pref);
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_lacc_elink_pref_dec() */
 

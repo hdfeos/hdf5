@@ -38,6 +38,7 @@
 #include "H5Dprivate.h"		/* Datasets				*/
 #include "H5Eprivate.h"		/* Error handling		  	*/
 #include "H5Iprivate.h"		/* IDs			  		*/
+#include "H5MMprivate.h"	/* Memory management			*/
 #include "H5Ppkg.h"		/* Property lists		  	*/
 
 
@@ -46,7 +47,6 @@
 /****************/
 
 /* ======== Data transfer properties ======== */
-/* what does it help having some of the buffer properties encodable ?? */
 /* Definitions for maximum temp buffer size property */
 #define H5D_XFER_MAX_TEMP_BUF_SIZE      sizeof(size_t)
 #define H5D_XFER_MAX_TEMP_BUF_DEF       H5D_TEMP_BUF_SIZE
@@ -590,9 +590,11 @@ done:
 static herr_t
 H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    const H5Z_data_xform_t *data_xform_prop = (const H5Z_data_xform_t *)value; /* Create local alias for values */
+    const H5Z_data_xform_t *data_xform_prop = *(const H5Z_data_xform_t **)value; /* Create local alias for values */
     const char *pexp = NULL;            /* Pointer to transform expression */
     size_t	len = 0;                /* Length of transform expression */
+    uint64_t enc_value;
+    unsigned enc_size = H5V_limit_enc_size(enc_value);
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -609,26 +611,27 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
 
         /* Get the transform expression size */
         len = HDstrlen(pexp);
-
     } /* end if */
 
     if(NULL != *pp) {
-        /* Set flag whether there's a transform set */
-        if(NULL == data_xform_prop)
-            *(*pp)++ = (uint8_t)FALSE;
-        else {
-            *(*pp)++ = (uint8_t)TRUE;
+        *(*pp)++ = (uint8_t)enc_size;
+        
+        enc_value = (uint64_t)len;
+        /* encode the length of the prefix */
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
+        if(NULL != pexp) {
             /* Copy the expression into the buffer */
             HDmemcpy(*pp, (const uint8_t *)pexp, len);
-            //HDstrncpy((char *)*pp, pexp, len);
             *pp += len;
-        } /* end else */
+        }
     } /* end if */
 
     /* Size of encoded data transform */
-    *size += 1 + len;
-
+    *size += (1 + enc_size);
+    if (NULL != pexp) {
+        *size += len;
+    }
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__dxfr_xform_enc() */
@@ -652,8 +655,9 @@ done:
 static herr_t
 H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
 {
-    H5Z_data_xform_t *data_xform_prop = NULL;    /* New data xform property */
-    hbool_t is_transform;               /* Whether there's a transform set */
+    size_t len;
+    uint64_t enc_value;                 /* Decoded property value */
+    unsigned enc_size;                  /* Size of encoded property */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -662,22 +666,32 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
     HDassert(pp);
     HDassert(*pp);
     HDassert(value);
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
-    /* Decode whether there's a transform expression */
-    is_transform = (hbool_t)*(*pp)++;
+    /* Decode the size */
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
 
-    /* Create the actual transform, if there's an expression */
-    if(is_transform) {
-        size_t	len;            /* Length of transform expression */
-
-        if(NULL == (data_xform_prop = H5Z_xform_create((const char *)*pp)))
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "unable to create data transform info")
-        len = HDstrlen((const char *)*pp);
-        *pp += len;
-    } /* end if */
-
+    /* Decode the value */
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
     /* Set the value */
-    HDmemcpy(value, data_xform_prop, sizeof(H5Z_data_xform_t *));
+    HDmemcpy(&len, &enc_value, sizeof(uint64_t));
+
+    if (0 != len) {
+        char *pexp = NULL;
+
+        /* allocate buffer and decode value into it */
+        if(NULL == (pexp = (char *)H5MM_malloc(len+1)))
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for expression")
+        HDmemcpy((uint8_t *)pexp, *pp, len);
+        pexp[len] = '\0';
+
+        if(NULL == (value = (void *)H5Z_xform_create((const char *)pexp)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "unable to create data transform info")
+        *pp += len;
+
+        H5MM_free(pexp);
+    } /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

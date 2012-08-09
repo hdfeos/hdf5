@@ -37,6 +37,7 @@
 #include "H5private.h"		/* Generic Functions			*/
 #include "H5Eprivate.h"		/* Error handling		  	*/
 #include "H5Iprivate.h"		/* IDs			  		*/
+#include "H5MMprivate.h"	/* Memory management			*/
 #include "H5Opkg.h"             /* Object headers			*/
 #include "H5Ppkg.h"		/* Property lists		  	*/
 
@@ -1366,7 +1367,8 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
 {
     const H5O_pline_t *pline = (const H5O_pline_t *)value;
     unsigned enc_size = H5V_limit_enc_size((uint64_t)pline->nalloc);
-    size_t u , v;
+    size_t u;
+    unsigned v;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -1380,7 +1382,7 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
         /* encode pipeline nalloc and nused calues */
         UINT64ENCODE_VAR(*pp, (uint64_t)pline->nalloc, enc_size);
         UINT64ENCODE_VAR(*pp, (uint64_t)pline->nused, enc_size);
-
+        
         /* encode each pipeline */
         for(u = 0; u < pline->nused; u++) {
             /* encode filter ID */
@@ -1395,7 +1397,7 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
                 *(*pp)++ = (uint8_t)TRUE;
 
                 /* enocde filter name */
-                HDmemcpy(*pp, (uint8_t *)pline->filter[u].name, H5Z_COMMON_NAME_LEN);
+                HDmemcpy(*pp, (uint8_t *)(pline->filter[u].name), H5Z_COMMON_NAME_LEN);
                 *pp += H5Z_COMMON_NAME_LEN;
             }
             else {
@@ -1447,7 +1449,7 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
 static herr_t 
 H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value)
 {
-    size_t u , v;
+    size_t u, nalloc, nused;
     H5O_pline_t pline;
     uint8_t temp;
     unsigned enc_size;
@@ -1458,6 +1460,11 @@ H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value)
 
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
+    /* Reset pline property */
+    HDmemset(&pline, 0, sizeof(pline));
+    if(H5O_msg_reset(H5O_PLINE_ID, &pline) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset pline info")
+
     /* Decode the size of size_t */
     enc_size = *(*pp)++;
     HDassert(enc_size < 256);
@@ -1467,28 +1474,34 @@ H5P_ocrt_pipeline_dec(const uint8_t **pp, void *value)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
 
     /* decode nalloc and nused */
-    UINT64DECODE_VAR(*pp, pline.nalloc, enc_size)
-    UINT64DECODE_VAR(*pp, pline.nused, enc_size)
+    UINT64DECODE_VAR(*pp, nalloc, enc_size)
+    UINT64DECODE_VAR(*pp, nused, enc_size)
 
-    for(u = 0; u < pline.nused; u++) {
+    for(u = 0; u < nused; u++) {
         H5Z_filter_info_t filter;
-
+        unsigned v;
         /* decode filter id */
         INT32DECODE(*pp, filter.id)
 
         /* decode filter flags */
         H5_DECODE_UNSIGNED(*pp, filter.flags)
 
+        filter.name = NULL;
         /* decode value indicating if the name is encoded */
         temp = (hbool_t)*(*pp)++;
         if (temp) {
             /* decode name */
-            HDmemcpy((uint8_t *)(filter.name), *pp, H5Z_COMMON_NAME_LEN);
+            filter.name = H5MM_xstrdup((const char *)(*pp));
+            //HDmemcpy((uint8_t *)(filter.name), *pp, H5Z_COMMON_NAME_LEN);
             *pp += H5Z_COMMON_NAME_LEN;
         }
 
         /* decode num elements */
         UINT64DECODE_VAR(*pp, filter.cd_nelmts, enc_size);
+
+        if(filter.cd_nelmts)
+            if(NULL == (filter.cd_values = (unsigned *)H5MM_malloc(sizeof(unsigned) * filter.cd_nelmts)))
+                HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed for cd_values")
 
         /* decode values */
         for(v = 0; v < filter.cd_nelmts; v++) {

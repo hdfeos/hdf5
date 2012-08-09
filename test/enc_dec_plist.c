@@ -40,7 +40,7 @@ main(void)
     double w0 = 0.5;
     unsigned max_compact;
     unsigned min_dense;
-    const char* c_to_f = "x+32\0";
+    const char* c_to_f = "x+32";
 
     if(VERBOSE_MED)
 	printf("Encode/Decode DCPLs\n");
@@ -58,7 +58,7 @@ main(void)
 
     if ((H5Pset_fill_value(dcpl1, H5T_NATIVE_DOUBLE, &fill)) < 0)
         goto error;
-    /*
+
     max_size[0] = 100;
     if ((H5Pset_external(dcpl1, "ext1.data", (off_t)0, 
                          (hsize_t)(max_size[0] * sizeof(int)/4))) < 0)
@@ -72,7 +72,7 @@ main(void)
     if ((H5Pset_external(dcpl1, "ext4.data", (off_t)0, 
                          (hsize_t)(max_size[0] * sizeof(int)/4))) < 0)
         goto error;
-    */
+
     {
         void *temp_buf = NULL;
         void *enc_buf, *dec_buf;
@@ -169,7 +169,7 @@ main(void)
         goto error;
     if ((H5Pset_edc_check(dxpl1, H5Z_DISABLE_EDC)) < 0)
         goto error;
-    /* MSC - not working yet
+    /* MSC - still not working
     if ((H5Pset_data_transform(dxpl1, c_to_f)) < 0)
         goto error;
     */
@@ -223,10 +223,10 @@ main(void)
 
     if ((H5Pset_est_link_info(gcpl1, 3, 9)) < 0)
          goto error;
-    /* MSC - not working for now
+
     if ((H5Pset_link_creation_order(gcpl1, (H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED))) < 0)
          goto error;
-    */
+
     {
         void *temp_buf = NULL;
         void *enc_buf, *dec_buf;
@@ -350,8 +350,8 @@ main(void)
     if ((H5Pset_attr_phase_change (ocpl1, 110, 105)) < 0)
          goto error;
 
-    //if ((H5Pset_filter (ocpl1, H5Z_FILTER_FLETCHER32, 0, (size_t)0, NULL)) < 0)
-    //goto error;
+    if ((H5Pset_filter (ocpl1, H5Z_FILTER_FLETCHER32, 0, (size_t)0, NULL)) < 0)
+        goto error;
 
     {
         void *temp_buf = NULL;
@@ -397,7 +397,7 @@ main(void)
         goto error;
     
     if ((H5Pset_elink_prefix (lapl1, "/tmpasodiasod")) < 0)
-        goto error;
+    goto error;
 
     {
         void *temp_buf = NULL;

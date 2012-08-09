@@ -2343,7 +2343,7 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
         /* Encode file list */
         for(u = 0; u < efl->nused; u++) {
             /* Calculate length of slot name and encode it */
-            len = HDstrlen(efl->slot[u].name);
+            len = HDstrlen(efl->slot[u].name) + 1;
             UINT64ENCODE_VARLEN(*pp, len);
 
             /* Encode name */
@@ -2407,32 +2407,37 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
     /* Decode number of slots */
     UINT64DECODE_VARLEN(*pp, nused);
 
-    /* Allocate the entry list */
-    if(NULL == (efl.slot = (H5O_efl_entry_t *)H5MM_calloc(nused * sizeof(H5O_efl_entry_t))))
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "can't allocate external list list entries")
-    efl.nalloc = nused;
-
     /* Decode information for each slot */
     for(u = 0; u < nused; u++) {
         size_t len;
+        if(efl.nused >= efl.nalloc) {
+            size_t na = efl.nalloc + H5O_EFL_ALLOC;
+            H5O_efl_entry_t *x = (H5O_efl_entry_t *)H5MM_realloc(efl.slot, 
+                                                                 na * sizeof(H5O_efl_entry_t));
+            if(!x)
+                HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, FAIL, "memory allocation failed")
+
+            efl.nalloc = na;
+            efl.slot = x;
+        } /* end if */
 
         /* Decode length of slot name */
         UINT64DECODE_VARLEN(*pp, len);
 
         /* Allocate name buffer and decode the name into it */
-        if(NULL == (efl.slot[u].name = (char *)H5MM_malloc(len + 1)))
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed for filename")
-        HDmemcpy((uint8_t *)efl.slot[u].name, *pp, len);
-        efl.slot[u].name[len] = '\0';
+        efl.slot[u].name = H5MM_xstrdup((const char *)(*pp));
         *pp += len;
 
         /* decode offset and size */
         UINT64DECODE_VARLEN(*pp, efl.slot[u].offset);
         UINT64DECODE_VARLEN(*pp, efl.slot[u].size);
+
+        efl.slot[u].name_offset = 0; /*not entered into heap yet*/
+        efl.nused++;
     } /* end for */
 
     /* Set the value */
-    HDmemcpy(value, &efl, sizeof(efl));
+    HDmemcpy(value, &efl, sizeof(H5O_efl_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
