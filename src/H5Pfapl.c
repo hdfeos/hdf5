@@ -62,33 +62,51 @@
 /* Definitions for size of raw data chunk cache(slots) */
 #define H5F_ACS_DATA_CACHE_NUM_SLOTS_SIZE       sizeof(size_t)
 #define H5F_ACS_DATA_CACHE_NUM_SLOTS_DEF        521
+#define H5F_ACS_DATA_CACHE_NUM_SLOTS_ENC        H5P__encode_size_t
+#define H5F_ACS_DATA_CACHE_NUM_SLOTS_DEC        H5P__decode_size_t
 /* Definition for size of raw data chunk cache(bytes) */
 #define H5F_ACS_DATA_CACHE_BYTE_SIZE_SIZE       sizeof(size_t)
 #define H5F_ACS_DATA_CACHE_BYTE_SIZE_DEF        (1024*1024)
+#define H5F_ACS_DATA_CACHE_BYTE_SIZE_ENC        H5P__encode_size_t
+#define H5F_ACS_DATA_CACHE_BYTE_SIZE_DEC        H5P__decode_size_t
 /* Definition for preemption read chunks first */
 #define H5F_ACS_PREEMPT_READ_CHUNKS_SIZE        sizeof(double)
 #define H5F_ACS_PREEMPT_READ_CHUNKS_DEF         0.75
+#define H5F_ACS_PREEMPT_READ_CHUNKS_ENC         H5P__encode_double
+#define H5F_ACS_PREEMPT_READ_CHUNKS_DEC         H5P__decode_double
 /* Definition for threshold for alignment */
 #define H5F_ACS_ALIGN_THRHD_SIZE                sizeof(hsize_t)
 #define H5F_ACS_ALIGN_THRHD_DEF                 1
+#define H5F_ACS_ALIGN_THRHD_ENC                 H5P__encode_hsize_t
+#define H5F_ACS_ALIGN_THRHD_DEC                 H5P__decode_hsize_t
 /* Definition for alignment */
 #define H5F_ACS_ALIGN_SIZE                      sizeof(hsize_t)
 #define H5F_ACS_ALIGN_DEF                       1
+#define H5F_ACS_ALIGN_ENC                       H5P__encode_hsize_t
+#define H5F_ACS_ALIGN_DEC                       H5P__decode_hsize_t
 /* Definition for minimum metadata allocation block size (when
    aggregating metadata allocations. */
 #define H5F_ACS_META_BLOCK_SIZE_SIZE            sizeof(hsize_t)
 #define H5F_ACS_META_BLOCK_SIZE_DEF             2048
+#define H5F_ACS_META_BLOCK_SIZE_ENC             H5P__encode_hsize_t
+#define H5F_ACS_META_BLOCK_SIZE_DEC             H5P__decode_hsize_t
 /* Definition for maximum sieve buffer size (when data sieving
    is allowed by file driver */
 #define H5F_ACS_SIEVE_BUF_SIZE_SIZE             sizeof(size_t)
 #define H5F_ACS_SIEVE_BUF_SIZE_DEF              (64*1024)
+#define H5F_ACS_SIEVE_BUF_SIZE_ENC              H5P__encode_size_t
+#define H5F_ACS_SIEVE_BUF_SIZE_DEC              H5P__decode_size_t
 /* Definition for minimum "small data" allocation block size (when
    aggregating "small" raw data allocations. */
 #define H5F_ACS_SDATA_BLOCK_SIZE_SIZE           sizeof(hsize_t)
 #define H5F_ACS_SDATA_BLOCK_SIZE_DEF            2048
+#define H5F_ACS_SDATA_BLOCK_SIZE_ENC            H5P__encode_hsize_t
+#define H5F_ACS_SDATA_BLOCK_SIZE_DEC            H5P__decode_hsize_t
 /* Definition for garbage-collect references */
 #define H5F_ACS_GARBG_COLCT_REF_SIZE            sizeof(unsigned)
 #define H5F_ACS_GARBG_COLCT_REF_DEF             0
+#define H5F_ACS_GARBG_COLCT_REF_ENC             H5P__encode_unsigned
+#define H5F_ACS_GARBG_COLCT_REF_DEC             H5P__decode_unsigned
 /* Definition for file driver ID */
 #define H5F_ACS_FILE_DRV_ID_SIZE                sizeof(hid_t)
 #define H5F_ACS_FILE_DRV_ID_DEF                 H5_DEFAULT_VFD
@@ -101,28 +119,40 @@
 /* Definition for offset position in file for family file driver */
 #define H5F_ACS_FAMILY_OFFSET_SIZE              sizeof(hsize_t)
 #define H5F_ACS_FAMILY_OFFSET_DEF               0
+#define H5F_ACS_FAMILY_OFFSET_ENC               H5P__encode_hsize_t
+#define H5F_ACS_FAMILY_OFFSET_DEC               H5P__decode_hsize_t
 /* Definition for new member size of family driver. It's private
  * property only used by h5repart */
 #define H5F_ACS_FAMILY_NEWSIZE_SIZE             sizeof(hsize_t)
 #define H5F_ACS_FAMILY_NEWSIZE_DEF              0
+#define H5F_ACS_FAMILY_NEWSIZE_ENC              H5P__encode_hsize_t
+#define H5F_ACS_FAMILY_NEWSIZE_DEC              H5P__decode_hsize_t
 /* Definition for whether to convert family to sec2 driver. It's private
  * property only used by h5repart */
 #define H5F_ACS_FAMILY_TO_SEC2_SIZE             sizeof(hbool_t)
 #define H5F_ACS_FAMILY_TO_SEC2_DEF              FALSE
+#define H5F_ACS_FAMILY_TO_SEC2_ENC              H5P__encode_unsigned
+#define H5F_ACS_FAMILY_TO_SEC2_DEC              H5P__decode_unsigned
 /* Definition for data type in multi file driver */
 #define H5F_ACS_MULTI_TYPE_SIZE                 sizeof(H5FD_mem_t)
 #define H5F_ACS_MULTI_TYPE_DEF                  H5FD_MEM_DEFAULT
 /* Definition for 'use latest format version' flag */
 #define H5F_ACS_LATEST_FORMAT_SIZE              sizeof(hbool_t)
 #define H5F_ACS_LATEST_FORMAT_DEF               FALSE
+#define H5F_ACS_LATEST_FORMAT_ENC               H5P__encode_unsigned
+#define H5F_ACS_LATEST_FORMAT_DEC               H5P__decode_unsigned
 /* Definition for whether to query the file descriptor from the core VFD
  * instead of the memory address.  (Private to library)
  */
 #define H5F_ACS_WANT_POSIX_FD_SIZE              sizeof(hbool_t)
 #define H5F_ACS_WANT_POSIX_FD_DEF               FALSE
+#define H5F_ACS_WANT_POSIX_FD_ENC               H5P__encode_unsigned
+#define H5F_ACS_WANT_POSIX_FD_DEC               H5P__decode_unsigned
 /* Definition for external file cache size */
 #define H5F_ACS_EFC_SIZE_SIZE                   sizeof(unsigned)
 #define H5F_ACS_EFC_SIZE_DEF                    0
+#define H5F_ACS_EFC_SIZE_ENC                    H5P__encode_unsigned
+#define H5F_ACS_EFC_SIZE_DEC                    H5P__decode_unsigned
 /* Definition of pointer to initial file image info */
 #define H5F_ACS_FILE_IMAGE_INFO_SIZE            sizeof(H5FD_file_image_info_t)
 #define H5F_ACS_FILE_IMAGE_INFO_DEF             H5FD_DEFAULT_FILE_IMAGE_INFO
@@ -239,47 +269,56 @@ H5P_facc_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the size of raw data chunk cache (elements) */
     if(H5P_register_real(pclass, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, H5F_ACS_DATA_CACHE_NUM_SLOTS_SIZE, &rdcc_nslots, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_DATA_CACHE_NUM_SLOTS_ENC, H5F_ACS_DATA_CACHE_NUM_SLOTS_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the size of raw data chunk cache(bytes) */
     if(H5P_register_real(pclass, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, H5F_ACS_DATA_CACHE_BYTE_SIZE_SIZE, &rdcc_nbytes, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_DATA_CACHE_BYTE_SIZE_ENC, H5F_ACS_DATA_CACHE_BYTE_SIZE_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the preemption for reading chunks */
     if(H5P_register_real(pclass, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, H5F_ACS_PREEMPT_READ_CHUNKS_SIZE, &rdcc_w0, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_PREEMPT_READ_CHUNKS_ENC, H5F_ACS_PREEMPT_READ_CHUNKS_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the threshold for alignment */
     if(H5P_register_real(pclass, H5F_ACS_ALIGN_THRHD_NAME, H5F_ACS_ALIGN_THRHD_SIZE, &threshold, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_ALIGN_THRHD_ENC, H5F_ACS_ALIGN_THRHD_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the alignment */
     if(H5P_register_real(pclass, H5F_ACS_ALIGN_NAME, H5F_ACS_ALIGN_SIZE, &alignment, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_ALIGN_ENC, H5F_ACS_ALIGN_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the minimum metadata allocation block size */
     if(H5P_register_real(pclass, H5F_ACS_META_BLOCK_SIZE_NAME, H5F_ACS_META_BLOCK_SIZE_SIZE, &meta_block_size, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_META_BLOCK_SIZE_ENC, H5F_ACS_META_BLOCK_SIZE_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the maximum sieve buffer size */
     if(H5P_register_real(pclass, H5F_ACS_SIEVE_BUF_SIZE_NAME, H5F_ACS_SIEVE_BUF_SIZE_SIZE, &sieve_buf_size, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_SIEVE_BUF_SIZE_ENC, H5F_ACS_SIEVE_BUF_SIZE_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the minimum "small data" allocation block size */
     if(H5P_register_real(pclass, H5F_ACS_SDATA_BLOCK_SIZE_NAME, H5F_ACS_SDATA_BLOCK_SIZE_SIZE, &sdata_block_size, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_SDATA_BLOCK_SIZE_ENC, H5F_ACS_SDATA_BLOCK_SIZE_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the garbage collection reference */
     if(H5P_register_real(pclass, H5F_ACS_GARBG_COLCT_REF_NAME, H5F_ACS_GARBG_COLCT_REF_SIZE, &gc_ref, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_GARBG_COLCT_REF_ENC, H5F_ACS_GARBG_COLCT_REF_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the file driver ID */
@@ -299,17 +338,20 @@ H5P_facc_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the offset of family driver info */
     if(H5P_register_real(pclass, H5F_ACS_FAMILY_OFFSET_NAME, H5F_ACS_FAMILY_OFFSET_SIZE, &family_offset, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_FAMILY_OFFSET_ENC, H5F_ACS_FAMILY_OFFSET_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the private property of new family file size. It's used by h5repart only. */
     if(H5P_register_real(pclass, H5F_ACS_FAMILY_NEWSIZE_NAME, H5F_ACS_FAMILY_NEWSIZE_SIZE, &family_newsize, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_FAMILY_NEWSIZE_ENC, H5F_ACS_FAMILY_NEWSIZE_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the private property of whether convert family to sec2 driver. It's used by h5repart only. */
     if(H5P_register_real(pclass, H5F_ACS_FAMILY_TO_SEC2_NAME, H5F_ACS_FAMILY_TO_SEC2_SIZE, &family_to_sec2, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_FAMILY_TO_SEC2_ENC, H5F_ACS_FAMILY_TO_SEC2_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the data type of multi driver info */
@@ -319,23 +361,27 @@ H5P_facc_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the 'use the latest version of the format' flag */
     if(H5P_register_real(pclass, H5F_ACS_LATEST_FORMAT_NAME, H5F_ACS_LATEST_FORMAT_SIZE, &latest_format, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_LATEST_FORMAT_ENC, H5F_ACS_LATEST_FORMAT_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the private property of whether to retrieve the file descriptor from the core VFD */
     /* (used internally to the library only) */
     if(H5P_register_real(pclass, H5F_ACS_WANT_POSIX_FD_NAME, H5F_ACS_WANT_POSIX_FD_SIZE, &want_posix_fd, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_WANT_POSIX_FD_ENC, H5F_ACS_WANT_POSIX_FD_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the external file cache size */
     if(H5P_register_real(pclass, H5F_ACS_EFC_SIZE_NAME, H5F_ACS_EFC_SIZE_SIZE, &efc_size, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+                         NULL, NULL, NULL, H5F_ACS_EFC_SIZE_ENC, H5F_ACS_EFC_SIZE_DEC, 
+                         NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the initial file image info */
     if(H5P_register_real(pclass, H5F_ACS_FILE_IMAGE_INFO_NAME, H5F_ACS_FILE_IMAGE_INFO_SIZE, &file_image_info, 
-                         NULL, NULL, NULL, NULL, NULL, H5F_ACS_FILE_IMAGE_INFO_DEL, H5F_ACS_FILE_IMAGE_INFO_COPY, NULL, H5F_ACS_FILE_IMAGE_INFO_CLOSE) < 0)
+                         NULL, NULL, NULL, NULL, NULL, 
+                         H5F_ACS_FILE_IMAGE_INFO_DEL, H5F_ACS_FILE_IMAGE_INFO_COPY, NULL, H5F_ACS_FILE_IMAGE_INFO_CLOSE) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:

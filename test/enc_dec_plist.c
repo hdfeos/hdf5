@@ -28,9 +28,10 @@ main(void)
     hid_t dxpl1, dxpl2;	       	/* dataset xfer prop. list */
     hid_t gcpl1, gcpl2;	       	/* group create prop. list */
     hid_t lcpl1, lcpl2;	       	/* link create prop. list */
-    hid_t lapl1, lapl2;	       	/* link create prop. list */
+    hid_t lapl1, lapl2;	       	/* link access prop. list */
     hid_t ocpypl1, ocpypl2;	/* object copy prop. list */
     hid_t ocpl1, ocpl2;	        /* object create prop. list */
+    hid_t fapl1, fapl2;	       	/* file access prop. list */
 
     hsize_t chunk_size = 16384;	/* chunk size */ 
     double fill=2.7;            /* Fill value */
@@ -397,7 +398,7 @@ main(void)
         goto error;
     
     if ((H5Pset_elink_prefix (lapl1, "/tmpasodiasod")) < 0)
-    goto error;
+        goto error;
 
     {
         void *temp_buf = NULL;
@@ -427,6 +428,62 @@ main(void)
     if ((H5Pclose(lapl1)) < 0)
         goto error;
     if ((H5Pclose(lapl2)) < 0)
+        goto error;
+
+    PASSED();
+
+    /******* ENCODE/DECODE FAPLS *****/
+    TESTING("FAPL Encoding/Decoding");
+    if ((fapl1 = H5Pcreate(H5P_FILE_ACCESS)) < 0)
+        goto error;
+
+    if ((H5Pset_family_offset(fapl1, 1024)) < 0)
+        goto error;
+    if ((H5Pset_meta_block_size(fapl1, 2098452)) < 0)
+        goto error;
+    if ((H5Pset_sieve_buf_size(fapl1, 1048576)) < 0)
+        goto error;
+    if ((H5Pset_alignment(fapl1, 2, 1024)) < 0)
+        goto error;
+    if ((H5Pset_cache(fapl1, 1024, 128, 10485760, 0.3)) < 0)
+        goto error;
+    if ((H5Pset_elink_file_cache_size(fapl1, 10485760)) < 0)
+        goto error;
+    if ((H5Pset_gc_references(fapl1, 1)) < 0)
+        goto error;
+    if ((H5Pset_small_data_block_size(fapl1, 2048)) < 0)
+        goto error;
+    if ((H5Pset_libver_bounds(fapl1, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST)) < 0)
+        goto error;
+
+    {
+        void *temp_buf = NULL;
+        void *enc_buf, *dec_buf;
+        size_t temp_size=0;
+
+        /* first call to encode returns only the size of the buffer needed */
+        H5Pencode (fapl1, FALSE, NULL, &temp_size);
+
+        temp_buf = (uint8_t *) malloc (temp_size);
+        enc_buf = temp_buf;
+        dec_buf = temp_buf;
+
+        H5Pencode (fapl1, FALSE, enc_buf, &temp_size);
+
+        fapl2 = H5Pdecode (dec_buf);
+
+        if (0 == H5Pequal(fapl1, fapl2)) {
+            printf ("FAPL encoding decoding failed\n");
+            goto error;
+        }
+
+        free (temp_buf);
+    }
+
+    /* release resource */
+    if ((H5Pclose(fapl1)) < 0)
+        goto error;
+    if ((H5Pclose(fapl2)) < 0)
         goto error;
 
     PASSED();
