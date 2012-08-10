@@ -42,6 +42,37 @@ main(void)
     unsigned max_compact;
     unsigned min_dense;
     const char* c_to_f = "x+32";
+    H5AC_cache_config_t my_cache_config = {
+        H5AC__CURR_CACHE_CONFIG_VERSION,
+        TRUE,
+        FALSE,
+        FALSE,
+        "temp",
+        TRUE,
+        FALSE,
+        ( 2 * 2048 * 1024),
+        0.3,
+        (64 * 1024 * 1024),
+        (4 * 1024 * 1024),
+        60000,
+        H5C_incr__threshold,
+        0.8,
+        3.0,
+        TRUE,
+        (8 * 1024 * 1024),
+        H5C_flash_incr__add_space,
+        2.0,
+        0.25,
+        H5C_decr__age_out_with_threshold,
+        0.997,
+        0.8,
+        TRUE,
+        (3 * 1024 * 1024),
+        3,
+        FALSE,
+        0.2,
+        (256 * 2048),
+        H5AC__DEFAULT_METADATA_WRITE_STRATEGY};
 
     if(VERBOSE_MED)
 	printf("Encode/Decode DCPLs\n");
@@ -369,7 +400,6 @@ main(void)
         H5Pencode (ocpl1, FALSE, enc_buf, &temp_size);
 
         ocpl2 = H5Pdecode (dec_buf);
-
         if (0 == H5Pequal(ocpl1, ocpl2)) {
             printf ("OCPL encoding decoding failed\n");
             goto error;
@@ -455,7 +485,14 @@ main(void)
         goto error;
     if ((H5Pset_libver_bounds(fapl1, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST)) < 0)
         goto error;
-
+    if ((H5Pset_fclose_degree(fapl1, H5F_CLOSE_WEAK)) < 0)
+        goto error;
+    if ((H5Pset_multi_type(fapl1, H5FD_MEM_GHEAP)) < 0)
+        goto error;
+    /* values seem to be set right, but still not working
+    if ((H5Pset_mdc_config(fapl1, &my_cache_config)) < 0)
+        goto error;
+    */
     {
         void *temp_buf = NULL;
         void *enc_buf, *dec_buf;
