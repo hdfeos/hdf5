@@ -2776,9 +2776,6 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
     if(enc_size != sizeof(double))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "double value can't be decoded")
 
-            //enc_size = *(*pp)++;
-            //HDassert(enc_size < 256);
-
     /* int */
     INT32DECODE(*pp, config.version);
 
@@ -2788,7 +2785,6 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
 
     H5_DECODE_UNSIGNED(*pp, config.close_trace_file);
 
-    //config.trace_file_name = H5MM_xstrdup((const char *)(*pp));
     HDstrcpy(config.trace_file_name, (const char *)(*pp));
     *pp += H5AC__MAX_TRACE_FILE_NAME_LEN + 1;
 
@@ -2809,7 +2805,6 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
 
     /* enum */
     config.incr_mode = *(*pp)++;
-    //UINT64DECODE_VARLEN(*pp, config.incr_mode);
 
     H5_DECODE_DOUBLE(*pp, config.lower_hr_threshold);
 
@@ -2821,7 +2816,6 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
 
     /* enum */
     config.flash_incr_mode = *(*pp)++;
-    //UINT64DECODE_VARLEN(*pp, config.flash_incr_mode);
 
     H5_DECODE_DOUBLE(*pp, config.flash_multiple);
 
@@ -2829,7 +2823,6 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
 
     /* enum */
     config.decr_mode = *(*pp)++;
-    //UINT64DECODE_VARLEN(*pp, config.decr_mode);
 
     H5_DECODE_DOUBLE(*pp, config.upper_hr_threshold);
 

@@ -699,6 +699,7 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
 
     /* Sanity check */
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
+    HDcompile_assert(sizeof(ssize_t) <= sizeof(int64_t));
     HDassert(fill);
     HDassert(size);
 
@@ -789,6 +790,7 @@ H5P__fill_value_dec(const uint8_t **pp, void *value)
     FUNC_ENTER_STATIC
 
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
+    HDcompile_assert(sizeof(ssize_t) <= sizeof(int64_t));
 
     /* Reset fill value property */
     HDmemset(&fill, 0, sizeof(fill));
@@ -2337,7 +2339,17 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
     HDassert(size);
 
     if(NULL != *pp) {
-        /* Encode how many slots are used */
+        uint64_t enc_value;
+        unsigned enc_size;
+
+#if 0
+        /* Encode how many slots are used, but first encode the size of size_t */
+        enc_value = (uint64_t)efl->nused;
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
+#endif
         UINT64ENCODE_VARLEN(*pp, efl->nused);
 
         /* Encode file list */
@@ -2357,7 +2369,7 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
     } /* end if */
 
     /* Calculate size needed for encoding */
-    *size += sizeof(uint64_t); //(1 + H5V_limit_enc_size((uint64_t)efl->nused));
+    *size += sizeof(uint64_t);//(1 + H5V_limit_enc_size((uint64_t)efl->nused));
     for(u = 0; u < efl->nused; u++) {
         len = HDstrlen(efl->slot[u].name);
         *size += 3 * sizeof(uint64_t);//(1 + H5V_limit_enc_size((uint64_t)len));
@@ -2390,6 +2402,8 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
 {
     H5O_efl_t efl; /* Create local aliases for values */
     size_t u, nused;
+    uint64_t enc_value;
+    unsigned enc_size;
     herr_t ret_value = SUCCEED;       /* Return value */
 
     FUNC_ENTER_STATIC
@@ -2398,13 +2412,22 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
     HDassert(pp);
     HDassert(*pp);
     HDassert(value);
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
+    HDcompile_assert(sizeof(off_t) <= sizeof(uint64_t));
+    HDcompile_assert(sizeof(hsize_t) <= sizeof(uint64_t));
 
     /* Reset EFL property */
     HDmemset(&efl, 0, sizeof(efl));
     if(H5O_msg_reset(H5O_EFL_ID, &efl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
-    /* Decode number of slots */
+#if 0
+    /* Decode the size of size_t */
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    HDmemcpy(&nused, &enc_value, sizeof(uint64_t));
+#endif
     UINT64DECODE_VARLEN(*pp, nused);
 
     /* Decode information for each slot */
@@ -2423,7 +2446,6 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
 
         /* Decode length of slot name */
         UINT64DECODE_VARLEN(*pp, len);
-
         /* Allocate name buffer and decode the name into it */
         efl.slot[u].name = H5MM_xstrdup((const char *)(*pp));
         *pp += len;

@@ -111,13 +111,13 @@ main(void)
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (dcpl1, FALSE, NULL, &temp_size);
+        H5Pencode (dcpl1, TRUE, NULL, &temp_size);
 
         temp_buf = (void *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (dcpl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (dcpl1, TRUE, enc_buf, &temp_size);
 
         dcpl2 = H5Pdecode (dec_buf);
 
@@ -150,13 +150,13 @@ main(void)
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (dapl1, FALSE, NULL, &temp_size);
+        H5Pencode (dapl1, TRUE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (dapl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (dapl1, TRUE, enc_buf, &temp_size);
 
         dapl2 = H5Pdecode (dec_buf);
 
@@ -265,13 +265,13 @@ main(void)
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (gcpl1, FALSE, NULL, &temp_size);
+        H5Pencode (gcpl1, TRUE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (gcpl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (gcpl1, TRUE, enc_buf, &temp_size);
 
         gcpl2 = H5Pdecode (dec_buf);
 
@@ -305,13 +305,13 @@ main(void)
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (lcpl1, FALSE, NULL, &temp_size);
+        H5Pencode (lcpl1, TRUE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (lcpl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (lcpl1, TRUE, enc_buf, &temp_size);
 
         lcpl2 = H5Pdecode (dec_buf);
 
@@ -345,13 +345,13 @@ main(void)
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (ocpypl1, FALSE, NULL, &temp_size);
+        H5Pencode (ocpypl1, TRUE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (ocpypl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (ocpypl1, TRUE, enc_buf, &temp_size);
 
         ocpypl2 = H5Pdecode (dec_buf);
 
@@ -391,13 +391,13 @@ main(void)
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (ocpl1, FALSE, NULL, &temp_size);
+        H5Pencode (ocpl1, TRUE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (ocpl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (ocpl1, TRUE, enc_buf, &temp_size);
 
         ocpl2 = H5Pdecode (dec_buf);
         if (0 == H5Pequal(ocpl1, ocpl2)) {
@@ -420,13 +420,13 @@ main(void)
     TESTING("LAPL Encoding/Decoding");
     if ((lapl1 = H5Pcreate(H5P_LINK_ACCESS)) < 0)
         goto error;
-    
+
     if ((H5Pset_nlinks(lapl1, (size_t)134)) < 0)
         goto error;
 
     if ((H5Pset_elink_acc_flags(lapl1, H5F_ACC_RDONLY)) < 0)
         goto error;
-    
+
     if ((H5Pset_elink_prefix (lapl1, "/tmpasodiasod")) < 0)
         goto error;
 
@@ -436,13 +436,13 @@ main(void)
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (lapl1, FALSE, NULL, &temp_size);
+        H5Pencode (lapl1, TRUE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (lapl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (lapl1, TRUE, enc_buf, &temp_size);
 
         lapl2 = H5Pdecode (dec_buf);
 
@@ -489,23 +489,23 @@ main(void)
         goto error;
     if ((H5Pset_multi_type(fapl1, H5FD_MEM_GHEAP)) < 0)
         goto error;
-    /* values seem to be set right, but still not working
+    /* values seem to be set right, but still not working */
     if ((H5Pset_mdc_config(fapl1, &my_cache_config)) < 0)
         goto error;
-    */
+
     {
         void *temp_buf = NULL;
         void *enc_buf, *dec_buf;
         size_t temp_size=0;
 
         /* first call to encode returns only the size of the buffer needed */
-        H5Pencode (fapl1, FALSE, NULL, &temp_size);
+        H5Pencode (fapl1, TRUE, NULL, &temp_size);
 
         temp_buf = (uint8_t *) malloc (temp_size);
         enc_buf = temp_buf;
         dec_buf = temp_buf;
 
-        H5Pencode (fapl1, FALSE, enc_buf, &temp_size);
+        H5Pencode (fapl1, TRUE, enc_buf, &temp_size);
 
         fapl2 = H5Pdecode (dec_buf);
 
