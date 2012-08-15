@@ -2603,19 +2603,31 @@ static herr_t
 H5P__fcrt_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5AC_cache_config_t *config = (const H5AC_cache_config_t *)value; /* Create local aliases for values */
-    uint64_t enc_value;
-    //unsigned enc_size;
+    unsigned enc_size = 0;      /* Size of encoded property */
+    uint64_t enc_value;         /* Property to encode */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Sanity check */
     HDassert(value);
-    //HDassert(enc_size < 256);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
+
+    /* Compute encoded size of variably-encoded values */
+    enc_value = (uint64_t)config->initial_size;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->max_size;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->min_size;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->max_increment;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->max_decrement;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
 
     if(NULL != *pp) {
         /* encode type sizes */
         *(*pp)++ = (uint8_t)sizeof(unsigned);
+        *(*pp)++ = (uint8_t)sizeof(size_t);
         *(*pp)++ = (uint8_t)sizeof(double);
 
         /* int */
@@ -2691,54 +2703,11 @@ H5P__fcrt_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
 
         /* int */
         INT32ENCODE(*pp, config->metadata_write_strategy);
-
-    printf("%d %d %d %d \"%s\" %d %d %d %f %d %d %ld %d %f %f %d %f %f %d %d %d %f %f %d %d %d %d %f %d %d\n",
-           config->version,
-           (int)(config->rpt_fcn_enabled),
-           (int)(config->open_trace_file),
-           (int)(config->close_trace_file),
-           config->trace_file_name,
-           (int)(config->evictions_enabled),
-           (int)(config->set_initial_size),
-           (int)(config->initial_size),
-           config->min_clean_fraction,
-           (int)(config->max_size),
-           (int)(config->min_size),
-           config->epoch_length,
-           (int)(config->incr_mode),
-           config->lower_hr_threshold,
-           config->increment,
-           (int)(config->flash_incr_mode),
-           config->flash_multiple,
-           config->flash_threshold,
-           (int)(config->apply_max_increment),
-           (int)(config->max_increment),
-           (int)(config->decr_mode),
-           config->upper_hr_threshold,
-           config->decrement,
-           (int)(config->apply_max_decrement),
-           (int)(config->max_decrement),
-           config->epochs_before_eviction,
-           (int)(config->apply_empty_reserve),
-           config->empty_reserve,
-           config->dirty_bytes_threshold,
-           config->metadata_write_strategy);
     } /* end if */
 
-    *size += (5 + sizeof(unsigned)*8 + sizeof(double)*8 + sizeof(uint64_t)*5 + sizeof(int32_t)*4 + 
+    *size += (6 + sizeof(unsigned)*8 + sizeof(double)*8 + enc_size + sizeof(int32_t)*4 + 
               sizeof(int64_t) + H5AC__MAX_TRACE_FILE_NAME_LEN + 1);
-    /*
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    *size += (1 + H5V_limit_enc_size((uint64_t)));
-    */
-    printf("size = %d needed %d %d\n", *size, sizeof(H5AC_cache_config_t), sizeof(long int));
+
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__fcrt_cache_config_enc() */
 
@@ -2773,9 +2742,14 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
     HDassert(value);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
+    HDmemset(&config, 0, sizeof(H5AC_cache_config_t));
+
     enc_size = *(*pp)++;
     if(enc_size != sizeof(unsigned))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
+    enc_size = *(*pp)++;
+    if(enc_size != sizeof(size_t))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "size_t value can't be decoded")
     enc_size = *(*pp)++;
     if(enc_size != sizeof(double))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "double value can't be decoded")
@@ -2808,7 +2782,7 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
     INT64DECODE(*pp, config.epoch_length);
 
     /* enum */
-    config.incr_mode = *(*pp)++;
+    config.incr_mode = (enum H5C_cache_incr_mode)*(*pp)++;
 
     H5_DECODE_DOUBLE(*pp, config.lower_hr_threshold);
 
@@ -2819,14 +2793,14 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
     UINT64DECODE_VARLEN(*pp, config.max_increment);
 
     /* enum */
-    config.flash_incr_mode = *(*pp)++;
+    config.flash_incr_mode = (enum H5C_cache_flash_incr_mode)*(*pp)++;
 
     H5_DECODE_DOUBLE(*pp, config.flash_multiple);
 
     H5_DECODE_DOUBLE(*pp, config.flash_threshold);
 
     /* enum */
-    config.decr_mode = *(*pp)++;
+    config.decr_mode = (enum H5C_cache_decr_mode)*(*pp)++;
 
     H5_DECODE_DOUBLE(*pp, config.upper_hr_threshold);
 
@@ -2852,38 +2826,6 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
     /* Set the value */
     HDmemcpy(value, &config, sizeof(H5AC_cache_config_t));
 
-    printf("%d %d %d %d \"%s\" %d %d %d %f %d %d %ld %d %f %f %d %f %f %d %d %d %f %f %d %d %d %d %f %d %d\n",
-           config.version,
-           (int)(config.rpt_fcn_enabled),
-           (int)(config.open_trace_file),
-           (int)(config.close_trace_file),
-           config.trace_file_name,
-           (int)(config.evictions_enabled),
-           (int)(config.set_initial_size),
-           (int)(config.initial_size),
-           config.min_clean_fraction,
-           (int)(config.max_size),
-           (int)(config.min_size),
-           config.epoch_length,
-           (int)(config.incr_mode),
-           config.lower_hr_threshold,
-           config.increment,
-           (int)(config.flash_incr_mode),
-           config.flash_multiple,
-           config.flash_threshold,
-           (int)(config.apply_max_increment),
-           (int)(config.max_increment),
-           (int)(config.decr_mode),
-           config.upper_hr_threshold,
-           config.decrement,
-           (int)(config.apply_max_decrement),
-           (int)(config.max_decrement),
-           config.epochs_before_eviction,
-           (int)(config.apply_empty_reserve),
-           config.empty_reserve,
-           config.dirty_bytes_threshold,
-           config.metadata_write_strategy);
-    printf("size = %d needed %d\n", sizeof(config), sizeof(H5AC_cache_config_t));
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__fcrt_cache_config_dec() */
