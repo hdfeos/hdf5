@@ -698,7 +698,8 @@ H5P_set_driver(H5P_genplist_t *plist, hid_t new_driver_id, const void *new_drive
         /* Set the driver for the property list */
         if(H5FD_fapl_open(plist, new_driver_id, new_driver_info) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set driver")
-    } else
+    } /* end if */
+    else
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
 
 done:
@@ -822,7 +823,7 @@ H5Pget_driver(hid_t plist_id)
 
     /* Get the driver */
     if((ret_value = H5P_get_driver(plist)) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't set driver")
+         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -2474,12 +2475,13 @@ done:
 herr_t
 H5P_file_image_info_copy(const char UNUSED *name, size_t UNUSED size, void *value)
 {
-    H5FD_file_image_info_t *info;       /* Image info struct */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 
     if(value) {
+        H5FD_file_image_info_t *info;   /* Image info struct */
+
         info = (H5FD_file_image_info_t *)value;
 
         /* verify file image field consistancy */
@@ -2513,16 +2515,17 @@ H5P_file_image_info_copy(const char UNUSED *name, size_t UNUSED size, void *valu
 	    else
                 HDmemcpy(info->buffer, old_buffer, info->size);
         } /* end if */
-    } /* end if */
 
-    /* Copy udata if it exists */
-    if(info->callbacks.udata) {
-        void *old_udata = info->callbacks.udata;
+        /* Copy udata if it exists */
+        if(info->callbacks.udata) {
+            void *old_udata = info->callbacks.udata;
 
-        if(NULL == info->callbacks.udata_copy)
-            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "udata_copy not defined")
+            if(NULL == info->callbacks.udata_copy)
+                HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "udata_copy not defined")
 
-        info->callbacks.udata = info->callbacks.udata_copy(old_udata);
+            info->callbacks.udata = info->callbacks.udata_copy(old_udata);
+        } /* end if */
+
     } /* end if */
 
 done:
@@ -2547,32 +2550,33 @@ done:
 herr_t
 H5P_file_image_info_close(const char UNUSED *name, size_t UNUSED size, void *value)
 {
-    H5FD_file_image_info_t info;        /* Image info struct */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 
     if(value) {
-        info = *(H5FD_file_image_info_t *)value;
+        H5FD_file_image_info_t *info;        /* Image info struct */
+
+        info = (H5FD_file_image_info_t *)value;
              
-        if(info.buffer != NULL && info.size > 0) { 
+        if(info->buffer != NULL && info->size > 0) { 
             /* Free buffer */
-            if(info.callbacks.image_free) {
-                if(info.callbacks.image_free(info.buffer, H5FD_FILE_IMAGE_OP_PROPERTY_LIST_CLOSE,
-                        info.callbacks.udata) < 0)
+            if(info->callbacks.image_free) {
+                if(info->callbacks.image_free(info->buffer, H5FD_FILE_IMAGE_OP_PROPERTY_LIST_CLOSE,
+                        info->callbacks.udata) < 0)
 		    HGOTO_ERROR(H5E_RESOURCE, H5E_CANTFREE, FAIL, "image_free callback failed")
             } /* end if */
             else
-                H5MM_xfree(info.buffer);
+                H5MM_xfree(info->buffer);
         } /* end if */
-    } /* end if */
 
-    /* Free udata if it exists */
-    if(info.callbacks.udata) {
-        if(NULL == info.callbacks.udata_free)
-            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "udata_free not defined")
-        if(info.callbacks.udata_free(info.callbacks.udata) < 0)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTFREE, FAIL, "udata_free callback failed")
+        /* Free udata if it exists */
+        if(info->callbacks.udata) {
+            if(NULL == info->callbacks.udata_free)
+                HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "udata_free not defined")
+            if(info->callbacks.udata_free(info->callbacks.udata) < 0)
+                HGOTO_ERROR(H5E_RESOURCE, H5E_CANTFREE, FAIL, "udata_free callback failed")
+        } /* end if */
     } /* end if */
 
 done:

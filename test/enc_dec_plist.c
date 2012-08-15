@@ -180,17 +180,13 @@ main(void)
     TESTING("DXPL Encoding/Decoding");
     if ((dxpl1 = H5Pcreate(H5P_DATASET_XFER)) < 0)
         goto error;
-
     if ((H5Pset_btree_ratios(dxpl1, 0.2, 0.6, 0.2)) < 0)
         goto error;
     if ((H5Pset_hyper_vector_size(dxpl1, 5)) < 0)
         goto error;
-
-    /* MSC - This fails because we do not call H5P_set_driver after decoding
+#ifdef H5_HAVE_PARALLEL
     if ((H5Pset_dxpl_mpio(dxpl1, H5FD_MPIO_COLLECTIVE)) < 0)
         goto error;
-    */
-
     if ((H5Pset_dxpl_mpio_collective_opt(dxpl1, H5FD_MPIO_INDIVIDUAL_IO)) < 0)
         goto error;
     if ((H5Pset_dxpl_mpio_chunk_opt(dxpl1, H5FD_MPIO_CHUNK_MULTI_IO)) < 0)
@@ -199,6 +195,7 @@ main(void)
         goto error;
     if ((H5Pset_dxpl_mpio_chunk_opt_num(dxpl1, 40)) < 0)
         goto error;
+#endif /* H5_HAVE_PARALLEL */
     if ((H5Pset_edc_check(dxpl1, H5Z_DISABLE_EDC)) < 0)
         goto error;
     /* MSC - still not working

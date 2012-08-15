@@ -127,7 +127,7 @@ static const H5FD_class_mpi_t H5FD_mpio_g = {
     H5FD_mpio_truncate,				/*truncate		*/
     NULL,                                       /*lock                  */
     NULL,                                       /*unlock                */
-    H5FD_FLMAP_SINGLE                           /*fl_map                */
+    H5FD_FLMAP_DICHOTOMY                        /*fl_map                */
     },  /* End of superclass information */
     H5FD_mpio_mpi_rank,                         /*get_rank              */
     H5FD_mpio_mpi_size,                         /*get_size              */
@@ -460,7 +460,7 @@ herr_t
 H5Pset_dxpl_mpio(hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode)
 {
     H5P_genplist_t *plist;      /* Property list pointer */
-    herr_t ret_value;           /* Return value */
+    herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_API(FAIL)
     H5TRACE2("e", "iDt", dxpl_id, xfer_mode);
@@ -477,9 +477,6 @@ H5Pset_dxpl_mpio(hid_t dxpl_id, H5FD_mpio_xfer_t xfer_mode)
     /* Set the transfer mode */
     if(H5P_set(plist, H5D_XFER_IO_XFER_MODE_NAME, &xfer_mode) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value")
-
-    /* Initialize driver-specific properties */
-    ret_value = H5P_set_driver(plist, H5FD_MPIO, NULL);
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -514,8 +511,6 @@ H5Pget_dxpl_mpio(hid_t dxpl_id, H5FD_mpio_xfer_t *xfer_mode/*out*/)
 
     if(NULL == (plist = H5P_object_verify(dxpl_id, H5P_DATASET_XFER)))
         HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl")
-    if(H5FD_MPIO != H5P_get_driver(plist))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "incorrect VFL driver")
 
     /* Get the transfer mode */
     if(xfer_mode)

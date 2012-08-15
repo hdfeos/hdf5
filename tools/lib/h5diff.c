@@ -1013,27 +1013,18 @@ hsize_t h5diff(const char *fname1,
 #ifdef H5_HAVE_PARALLEL
     if(g_Parallel)
     {
-        /* if both obj1 and obj2 are group */
-        if (both_objs_grp)
+        if((HDstrlen(fname1) > MAX_FILENAME) || (HDstrlen(fname2) > MAX_FILENAME))
         {
-            if((HDstrlen(fname1) > MAX_FILENAME) || (HDstrlen(fname2) > MAX_FILENAME))
-            {
-                HDfprintf(stderr, "The parallel diff only supports path names up to %d characters\n", MAX_FILENAME);
-                MPI_Abort(MPI_COMM_WORLD, 0);
-            } /* end if */
+            HDfprintf(stderr, "The parallel diff only supports path names up to %d characters\n", MAX_FILENAME);
+            MPI_Abort(MPI_COMM_WORLD, 0);
+        } /* end if */
 
-            HDstrcpy(filenames[0], fname1);
-            HDstrcpy(filenames[1], fname2);
+        HDstrcpy(filenames[0], fname1);
+        HDstrcpy(filenames[1], fname2);
 
-            /* Alert the worker tasks that there's going to be work. */
-            for(i = 1; i < g_nTasks; i++)
-                MPI_Send(filenames, (MAX_FILENAME * 2), MPI_CHAR, i, MPI_TAG_PARALLEL, MPI_COMM_WORLD);
-        }
-        else
-        {
-            /* Only single object diff, parallel workers won't be needed */
-            phdiff_dismiss_workers();
-        }
+        /* Alert the worker tasks that there's going to be work. */
+        for(i = 1; i < g_nTasks; i++)
+            MPI_Send(filenames, (MAX_FILENAME * 2), MPI_CHAR, i, MPI_TAG_PARALLEL, MPI_COMM_WORLD);
     } /* end if */
 #endif
 
@@ -1567,11 +1558,11 @@ hsize_t diff(hid_t file1_id,
     hsize_t nfound = 0;
     h5trav_type_t object_type;
 
-    h5difftrace("diff start\n");
-
     /* to get link info */
     h5tool_link_info_t linkinfo1;
     h5tool_link_info_t linkinfo2;
+
+    h5difftrace("diff start\n");
 
     /*init link info struct */
     HDmemset(&linkinfo1,0,sizeof(h5tool_link_info_t));
