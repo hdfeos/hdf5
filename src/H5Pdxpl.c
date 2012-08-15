@@ -1729,7 +1729,7 @@ H5P__dxfr_io_xfer_mode_dec(const uint8_t **pp, void *value)
     xfer_mode = (H5FD_mpio_xfer_t)*(*pp)++;
 
     /* Set the value */
-    HDmemcpy(value, xfer_mode, sizeof(H5FD_mpio_xfer_t));
+    HDmemcpy(value, &xfer_mode, sizeof(H5FD_mpio_xfer_t));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_io_xfer_mode_dec() */
