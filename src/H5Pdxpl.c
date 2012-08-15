@@ -143,10 +143,11 @@
 /* Definitions for data transform property */
 #define H5D_XFER_XFORM_SIZE         sizeof(void *)
 #define H5D_XFER_XFORM_DEF          NULL
-#define H5D_XFER_XFORM_DEL          H5P__dxfr_xform_del
-#define H5D_XFER_XFORM_COPY         H5P__dxfr_xform_copy
 #define H5D_XFER_XFORM_ENC          H5P__dxfr_xform_enc
 #define H5D_XFER_XFORM_DEC          H5P__dxfr_xform_dec
+#define H5D_XFER_XFORM_DEL          H5P__dxfr_xform_del
+#define H5D_XFER_XFORM_COPY         H5P__dxfr_xform_copy
+#define H5D_XFER_XFORM_CMP          H5P__dxfr_xform_cmp
 #define H5D_XFER_XFORM_CLOSE        H5P__dxfr_xform_close
 
 /******************/
@@ -181,10 +182,11 @@ static herr_t H5P__dxfr_mpio_chunk_opt_hard_dec(const uint8_t **pp, void *value)
 #endif /* H5_HAVE_PARALLEL */
 static herr_t H5P__dxfr_edc_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_edc_dec(const uint8_t **pp, void *value);
-static herr_t H5P__dxfr_xform_del(hid_t prop_id, const char* name, size_t size, void* value);
-static herr_t H5P__dxfr_xform_copy(const char* name, size_t size, void* value);
 static herr_t H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_xform_dec(const uint8_t **pp, void *value);
+static herr_t H5P__dxfr_xform_del(hid_t prop_id, const char* name, size_t size, void* value);
+static herr_t H5P__dxfr_xform_copy(const char* name, size_t size, void* value);
+static int H5P__dxfr_xform_cmp(const void *value1, const void *value2, size_t size);
 static herr_t H5P__dxfr_xform_close(const char* name, size_t size, void* value);
 
 
@@ -393,8 +395,8 @@ H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the data transform property */
     if(H5P_register_real(pclass, H5D_XFER_XFORM_NAME, H5D_XFER_XFORM_SIZE, &def_xfer_xform, 
-                         NULL, NULL, NULL, H5D_XFER_XFORM_ENC, H5D_XFER_XFORM_DEC, 
-                         H5D_XFER_XFORM_DEL, H5D_XFER_XFORM_COPY, NULL, H5D_XFER_XFORM_CLOSE) < 0)
+            NULL, NULL, NULL, H5D_XFER_XFORM_ENC, H5D_XFER_XFORM_DEC, 
+            H5D_XFER_XFORM_DEL, H5D_XFER_XFORM_COPY, H5D_XFER_XFORM_CMP, H5D_XFER_XFORM_CLOSE) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
@@ -594,7 +596,7 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
     const char *pexp = NULL;            /* Pointer to transform expression */
     size_t	len = 0;                /* Length of transform expression */
     uint64_t enc_value;
-    unsigned enc_size = H5V_limit_enc_size(enc_value);
+    unsigned enc_size;
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -609,29 +611,35 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
         if(NULL == (pexp = H5Z_xform_extract_xform_str(data_xform_prop)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "failed to retrieve transform expression")
 
-        /* Get the transform expression size */
-        len = HDstrlen(pexp);
+        /* Get the transform string expression size */
+        len = HDstrlen(pexp) + 1;
     } /* end if */
 
-    if(NULL != *pp) {
-        *(*pp)++ = (uint8_t)enc_size;
-        
-        enc_value = (uint64_t)len;
-        /* encode the length of the prefix */
-        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
+    /* Get the length of the encoded length */
+    enc_value = len;
+    enc_size = H5V_limit_enc_size(enc_value);
 
-        if(NULL != pexp) {
+    if(NULL != *pp) {
+        /* encode the length of the prefix */
+        enc_value = (uint64_t)len;
+        UINT64ENCODE_VARLEN(*pp, enc_value);
+
+        if(NULL != data_xform_prop) {
+            /* Sanity check */
+            HDassert(pexp);
+
             /* Copy the expression into the buffer */
             HDmemcpy(*pp, (const uint8_t *)pexp, len);
             *pp += len;
-        }
+            *pp[0] = '\0';
+        } /* end if */
     } /* end if */
 
     /* Size of encoded data transform */
     *size += (1 + enc_size);
-    if (NULL != pexp) {
+    if(NULL != pexp)
         *size += len;
-    }
+
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__dxfr_xform_enc() */
@@ -655,9 +663,8 @@ done:
 static herr_t
 H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
 {
-    size_t len;
-    uint64_t enc_value;                 /* Decoded property value */
-    unsigned enc_size;                  /* Size of encoded property */
+    H5Z_data_xform_t *data_xform_prop = NULL;    /* New data xform property */
+    size_t len;                         /* Length of encoded string */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -668,30 +675,17 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
     HDassert(value);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
-    /* Decode the size */
-    enc_size = *(*pp)++;
-    HDassert(enc_size < 256);
-
     /* Decode the value */
-    UINT64DECODE_VAR(*pp, enc_value, enc_size);
-    /* Set the value */
-    HDmemcpy(&len, &enc_value, sizeof(uint64_t));
+    UINT64DECODE_VARLEN(*pp, len);
 
-    if (0 != len) {
-        char *pexp = NULL;
-
-        /* allocate buffer and decode value into it */
-        if(NULL == (pexp = (char *)H5MM_malloc(len+1)))
-            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for expression")
-        HDmemcpy((uint8_t *)pexp, *pp, len);
-        pexp[len] = '\0';
-
-        if(NULL == (value = (void *)H5Z_xform_create((const char *)pexp)))
+    if(0 != len) {
+        if(NULL == (data_xform_prop = H5Z_xform_create((const char *)*pp)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "unable to create data transform info")
         *pp += len;
-
-        H5MM_free(pexp);
     } /* end if */
+
+    /* Set the value */
+    HDmemcpy(value, &data_xform_prop, sizeof(H5Z_data_xform_t *));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -755,6 +749,60 @@ H5P__dxfr_xform_copy(const char UNUSED *name, size_t UNUSED size, void *value)
 
     if(H5Z_xform_copy((H5Z_data_xform_t **)value) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTCLOSEOBJ, FAIL, "error copying the data transform info")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P__dxfr_xform_copy() */
+
+
+/*-------------------------------------------------------------------------
+ * Function: H5P__dxfr_xform_cmp
+ *
+ * Purpose: Compare two data transforms.
+ *
+ * Return: positive if VALUE1 is greater than VALUE2, negative if VALUE2 is
+ *		greater than VALUE1 and zero if VALUE1 and VALUE2 are equal.
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static int
+H5P__dxfr_xform_cmp(const void *_xform1, const void *_xform2, size_t UNUSED size)
+{
+    const H5Z_data_xform_t * const *xform1 = (const H5Z_data_xform_t * const *)_xform1; /* Create local aliases for values */
+    const H5Z_data_xform_t * const *xform2 = (const H5Z_data_xform_t * const *)_xform2; /* Create local aliases for values */
+    const char *pexp1, *pexp2;          /* Pointers to transform expressions */
+    herr_t ret_value = 0;               /* Return value */
+
+    FUNC_ENTER_STATIC_NOERR
+
+    /* Sanity check */
+    HDassert(xform1);
+    HDassert(xform2);
+    HDassert(size == sizeof(H5Z_data_xform_t *));
+
+    /* Check for a property being set */
+    if(*xform1 == NULL && *xform2 != NULL) HGOTO_DONE(-1);
+    if(*xform1 != NULL && *xform2 == NULL) HGOTO_DONE(1);
+
+    if(*xform1) {
+        HDassert(*xform2);
+    
+        /* Get the transform expressions */
+        pexp1 = H5Z_xform_extract_xform_str(*xform1);
+        pexp2 = H5Z_xform_extract_xform_str(*xform2);
+
+        /* Check for property expressions */
+        if(pexp1 == NULL && pexp2 != NULL) HGOTO_DONE(-1);
+        if(pexp1 != NULL && pexp2 == NULL) HGOTO_DONE(1);
+
+        if(pexp1) {
+            HDassert(pexp2);
+            ret_value = HDstrcmp(pexp1, pexp2);
+        } /* end if */
+    } /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
