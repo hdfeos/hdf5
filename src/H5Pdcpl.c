@@ -391,77 +391,6 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P__dcrt_layout_cmp
- *
- * Purpose:        Callback routine which is called whenever the layout
- *                 property in the dataset creation property list is
- *                 compared.
- *
- * Return:         positive if VALUE1 is greater than VALUE2, negative if
- *                      VALUE2 is greater than VALUE1 and zero if VALUE1 and
- *                      VALUE2 are equal.
- *
- * Programmer:     Quincey Koziol
- *                 Tuesday, December 23, 2008
- *
- *-------------------------------------------------------------------------
- */
-static int
-H5P__dcrt_layout_cmp(const void *_layout1, const void *_layout2, size_t UNUSED size)
-{
-    const H5O_layout_t *layout1 = (const H5O_layout_t *)_layout1,     /* Create local aliases for values */
-        *layout2 = (const H5O_layout_t *)_layout2;
-    herr_t ret_value = 0;       /* Return value */
-
-    FUNC_ENTER_STATIC_NOERR
-
-    /* Sanity check */
-    HDassert(layout1);
-    HDassert(layout2);
-    HDassert(size == sizeof(H5O_layout_t));
-
-    /* Check for different layout type */
-    if(layout1->type < layout2->type) HGOTO_DONE(-1)
-    if(layout1->type > layout2->type) HGOTO_DONE(1)
-
-    /* Check for different layout version */
-    if(layout1->version < layout2->version) HGOTO_DONE(-1)
-    if(layout1->version > layout2->version) HGOTO_DONE(1)
-
-    /* Compare non-dataset-specific fields in layout info */
-    switch(layout1->type) {
-        case H5D_COMPACT:
-        case H5D_CONTIGUOUS:
-            break;
-
-        case H5D_CHUNKED:
-            {
-                unsigned u;     /* Local index variable */
-
-                /* Check the number of dimensions */
-                if(layout1->u.chunk.ndims < layout2->u.chunk.ndims) HGOTO_DONE(-1)
-                if(layout1->u.chunk.ndims > layout2->u.chunk.ndims) HGOTO_DONE(1)
-
-                /* Compare the chunk dims */
-                for(u = 0; u < layout1->u.chunk.ndims - 1; u++) {
-                    if(layout1->u.chunk.dim[u] < layout2->u.chunk.dim[u]) HGOTO_DONE(-1)
-                    if(layout1->u.chunk.dim[u] > layout2->u.chunk.dim[u]) HGOTO_DONE(1)
-                } /* end for */
-            } /* end case */
-            break;
-
-        case H5D_LAYOUT_ERROR:
-        case H5D_NLAYOUTS:
-        default:
-            HDassert(0 && "Unknown layout type!");
-    } /* end switch */
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P__dcrt_layout_cmp() */
-
-
-/*-------------------------------------------------------------------------
  * Function:       H5P__dcrt_layout_enc
  *
  * Purpose:        Callback routine which is called whenever the layout
@@ -611,64 +540,74 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P_fill_value_cmp
+ * Function:       H5P__dcrt_layout_cmp
  *
- * Purpose:        Callback routine which is called whenever the fill value
- *                 property in the dataset creation property list is compared.
+ * Purpose:        Callback routine which is called whenever the layout
+ *                 property in the dataset creation property list is
+ *                 compared.
  *
  * Return:         positive if VALUE1 is greater than VALUE2, negative if
  *                      VALUE2 is greater than VALUE1 and zero if VALUE1 and
  *                      VALUE2 are equal.
  *
  * Programmer:     Quincey Koziol
- *                 Wednesday, January 7, 2004
+ *                 Tuesday, December 23, 2008
  *
  *-------------------------------------------------------------------------
  */
-int
-H5P_fill_value_cmp(const void *_fill1, const void *_fill2, size_t UNUSED size)
+static int
+H5P__dcrt_layout_cmp(const void *_layout1, const void *_layout2, size_t UNUSED size)
 {
-    const H5O_fill_t *fill1 = (const H5O_fill_t *)_fill1,     /* Create local aliases for values */
-        *fill2 = (const H5O_fill_t *)_fill2;
-    int cmp_value;              /* Value from comparison */
+    const H5O_layout_t *layout1 = (const H5O_layout_t *)_layout1,     /* Create local aliases for values */
+        *layout2 = (const H5O_layout_t *)_layout2;
     herr_t ret_value = 0;       /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
     /* Sanity check */
-    HDassert(fill1);
-    HDassert(fill2);
-    HDassert(size == sizeof(H5O_fill_t));
+    HDassert(layout1);
+    HDassert(layout2);
+    HDassert(size == sizeof(H5O_layout_t));
 
-    /* Check the size of fill values */
-    if(fill1->size < fill2->size) HGOTO_DONE(-1);
-    if(fill1->size > fill2->size) HGOTO_DONE(1);
+    /* Check for different layout type */
+    if(layout1->type < layout2->type) HGOTO_DONE(-1)
+    if(layout1->type > layout2->type) HGOTO_DONE(1)
 
-    /* Check the types of the fill values */
-    if(fill1->type == NULL && fill2->type != NULL) HGOTO_DONE(-1);
-    if(fill1->type != NULL && fill2->type == NULL) HGOTO_DONE(1);
-    if(fill1->type != NULL)
-        if((cmp_value = H5T_cmp(fill1->type, fill2->type, FALSE)) != 0)
-            HGOTO_DONE(cmp_value);
+    /* Check for different layout version */
+    if(layout1->version < layout2->version) HGOTO_DONE(-1)
+    if(layout1->version > layout2->version) HGOTO_DONE(1)
 
-    /* Check the fill values in the buffers */
-    if(fill1->buf == NULL && fill2->buf != NULL) HGOTO_DONE(-1);
-    if(fill1->buf != NULL && fill2->buf == NULL) HGOTO_DONE(1);
-    if(fill1->buf != NULL)
-        if((cmp_value = HDmemcmp(fill1->buf, fill2->buf, (size_t)fill1->size)) != 0)
-            HGOTO_DONE(cmp_value);
+    /* Compare non-dataset-specific fields in layout info */
+    switch(layout1->type) {
+        case H5D_COMPACT:
+        case H5D_CONTIGUOUS:
+            break;
 
-    /* Check the allocation time for the fill values */
-    if(fill1->alloc_time < fill2->alloc_time) HGOTO_DONE(-1);
-    if(fill1->alloc_time > fill2->alloc_time) HGOTO_DONE(1);
+        case H5D_CHUNKED:
+            {
+                unsigned u;     /* Local index variable */
 
-    /* Check the fill time for the fill values */
-    if(fill1->fill_time < fill2->fill_time) HGOTO_DONE(-1);
-    if(fill1->fill_time > fill2->fill_time) HGOTO_DONE(1);
+                /* Check the number of dimensions */
+                if(layout1->u.chunk.ndims < layout2->u.chunk.ndims) HGOTO_DONE(-1)
+                if(layout1->u.chunk.ndims > layout2->u.chunk.ndims) HGOTO_DONE(1)
+
+                /* Compare the chunk dims */
+                for(u = 0; u < layout1->u.chunk.ndims - 1; u++) {
+                    if(layout1->u.chunk.dim[u] < layout2->u.chunk.dim[u]) HGOTO_DONE(-1)
+                    if(layout1->u.chunk.dim[u] > layout2->u.chunk.dim[u]) HGOTO_DONE(1)
+                } /* end for */
+            } /* end case */
+            break;
+
+        case H5D_LAYOUT_ERROR:
+        case H5D_NLAYOUTS:
+        default:
+            HDassert(0 && "Unknown layout type!");
+    } /* end switch */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_fill_value_cmp() */
+} /* end H5P__dcrt_layout_cmp() */
 
 
 /*-------------------------------------------------------------------------
@@ -838,6 +777,67 @@ done:
 
 
 /*-------------------------------------------------------------------------
+ * Function:       H5P_fill_value_cmp
+ *
+ * Purpose:        Callback routine which is called whenever the fill value
+ *                 property in the dataset creation property list is compared.
+ *
+ * Return:         positive if VALUE1 is greater than VALUE2, negative if
+ *                      VALUE2 is greater than VALUE1 and zero if VALUE1 and
+ *                      VALUE2 are equal.
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, January 7, 2004
+ *
+ *-------------------------------------------------------------------------
+ */
+int
+H5P_fill_value_cmp(const void *_fill1, const void *_fill2, size_t UNUSED size)
+{
+    const H5O_fill_t *fill1 = (const H5O_fill_t *)_fill1,     /* Create local aliases for values */
+        *fill2 = (const H5O_fill_t *)_fill2;
+    int cmp_value;              /* Value from comparison */
+    herr_t ret_value = 0;       /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Sanity check */
+    HDassert(fill1);
+    HDassert(fill2);
+    HDassert(size == sizeof(H5O_fill_t));
+
+    /* Check the size of fill values */
+    if(fill1->size < fill2->size) HGOTO_DONE(-1);
+    if(fill1->size > fill2->size) HGOTO_DONE(1);
+
+    /* Check the types of the fill values */
+    if(fill1->type == NULL && fill2->type != NULL) HGOTO_DONE(-1);
+    if(fill1->type != NULL && fill2->type == NULL) HGOTO_DONE(1);
+    if(fill1->type != NULL)
+        if((cmp_value = H5T_cmp(fill1->type, fill2->type, FALSE)) != 0)
+            HGOTO_DONE(cmp_value);
+
+    /* Check the fill values in the buffers */
+    if(fill1->buf == NULL && fill2->buf != NULL) HGOTO_DONE(-1);
+    if(fill1->buf != NULL && fill2->buf == NULL) HGOTO_DONE(1);
+    if(fill1->buf != NULL)
+        if((cmp_value = HDmemcmp(fill1->buf, fill2->buf, (size_t)fill1->size)) != 0)
+            HGOTO_DONE(cmp_value);
+
+    /* Check the allocation time for the fill values */
+    if(fill1->alloc_time < fill2->alloc_time) HGOTO_DONE(-1);
+    if(fill1->alloc_time > fill2->alloc_time) HGOTO_DONE(1);
+
+    /* Check the fill time for the fill values */
+    if(fill1->fill_time < fill2->fill_time) HGOTO_DONE(-1);
+    if(fill1->fill_time > fill2->fill_time) HGOTO_DONE(1);
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_fill_value_cmp() */
+
+
+/*-------------------------------------------------------------------------
  * Function:       H5P__dcrt_ext_file_list_enc
  *
  * Purpose:        Callback routine which is called whenever the efl
@@ -869,17 +869,7 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
     HDassert(size);
 
     if(NULL != *pp) {
-        uint64_t enc_value;
-        unsigned enc_size;
-
-#if 0
-        /* Encode how many slots are used, but first encode the size of size_t */
-        enc_value = (uint64_t)efl->nused;
-        enc_size = H5V_limit_enc_size(enc_value);
-        HDassert(enc_size < 256);
-        *(*pp)++ = (uint8_t)enc_size;
-        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
-#endif
+        /* Encode number of slots used */
         UINT64ENCODE_VARLEN(*pp, efl->nused);
 
         /* Encode file list */
@@ -899,13 +889,13 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
     } /* end if */
 
     /* Calculate size needed for encoding */
-    *size += sizeof(uint64_t);//(1 + H5V_limit_enc_size((uint64_t)efl->nused));
+    *size += (1 + H5V_limit_enc_size((uint64_t)efl->nused));
     for(u = 0; u < efl->nused; u++) {
-        len = HDstrlen(efl->slot[u].name);
-        *size += 3 * sizeof(uint64_t);//(1 + H5V_limit_enc_size((uint64_t)len));
+        len = HDstrlen(efl->slot[u].name) + 1;
+        *size += (1 + H5V_limit_enc_size((uint64_t)len));
         *size += len;
-        //*size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].offset));
-        //*size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].size));
+        *size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].offset));
+        *size += (1 + H5V_limit_enc_size((uint64_t)efl->slot[u].size));
     } /* end for */
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -932,8 +922,6 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
 {
     H5O_efl_t efl; /* Create local aliases for values */
     size_t u, nused;
-    uint64_t enc_value;
-    unsigned enc_size;
     herr_t ret_value = SUCCEED;       /* Return value */
 
     FUNC_ENTER_STATIC
@@ -951,13 +939,7 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
     if(H5O_msg_reset(H5O_EFL_ID, &efl) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
-#if 0
-    /* Decode the size of size_t */
-    enc_size = *(*pp)++;
-    HDassert(enc_size < 256);
-    UINT64DECODE_VAR(*pp, enc_value, enc_size);
-    HDmemcpy(&nused, &enc_value, sizeof(uint64_t));
-#endif
+    /* Decode number of slots used */
     UINT64DECODE_VARLEN(*pp, nused);
 
     /* Decode information for each slot */
@@ -976,6 +958,7 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
 
         /* Decode length of slot name */
         UINT64DECODE_VARLEN(*pp, len);
+
         /* Allocate name buffer and decode the name into it */
         efl.slot[u].name = H5MM_xstrdup((const char *)(*pp));
         *pp += len;
