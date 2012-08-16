@@ -32,6 +32,7 @@ main(void)
     hid_t lcpl1;	       	/* link create prop. list */
     hid_t lapl1;	       	/* link access prop. list */
     hid_t fapl1;	       	/* file access prop. list */
+    hid_t fcpl1;	       	/* file create prop. list */
 
     hsize_t chunk_size = 16384;	/* chunk size */ 
     double fill=2.7;            /* Fill value */
@@ -529,6 +530,64 @@ main(void)
 
     /* release resource */
     if((H5Pclose(fapl1)) < 0)
+        FAIL_STACK_ERROR
+
+    PASSED();
+
+    /******* ENCODE/DECODE FCPLS *****/
+    TESTING("FCPL Encoding/Decoding");
+
+    if((fcpl1 = H5Pcreate(H5P_FILE_CREATE)) < 0)
+        FAIL_STACK_ERROR
+
+    if((H5Pset_userblock(fcpl1, 1024) < 0))
+         FAIL_STACK_ERROR
+
+    if((H5Pset_istore_k(fcpl1, 3) < 0))
+         FAIL_STACK_ERROR
+
+    if((H5Pset_sym_k(fcpl1, 4, 5) < 0))
+         FAIL_STACK_ERROR
+
+    if((H5Pset_shared_mesg_nindexes(fcpl1, 8) < 0))
+         FAIL_STACK_ERROR
+
+    if((H5Pset_shared_mesg_index(fcpl1, 1,  H5O_SHMESG_SDSPACE_FLAG, 32) < 0))
+         FAIL_STACK_ERROR
+
+   if((H5Pset_shared_mesg_phase_change(fcpl1, 60, 20) < 0))
+         FAIL_STACK_ERROR
+
+    if((H5Pset_sizes(fcpl1, 8, 4) < 0))
+         FAIL_STACK_ERROR
+
+    {
+        hid_t fcpl2;	        /* object create prop. list */
+        void *temp_buf = NULL;
+        size_t temp_size = 0;
+
+        /* first call to encode returns only the size of the buffer needed */
+        if(H5Pencode(fcpl1, TRUE, NULL, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        temp_buf = (uint8_t *)HDmalloc(temp_size);
+
+        if(H5Pencode(fcpl1, TRUE, temp_buf, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        if((fcpl2 = H5Pdecode(temp_buf)) < 0)
+            FAIL_STACK_ERROR
+        if(!H5Pequal(fcpl1, fcpl2))
+            FAIL_PUTS_ERROR("FCPL encoding decoding failed\n")
+
+        if((H5Pclose(fcpl2)) < 0)
+            FAIL_STACK_ERROR
+
+        HDfree(temp_buf);
+    }
+
+    /* release resource */
+    if((H5Pclose(fcpl1)) < 0)
         FAIL_STACK_ERROR
 
     PASSED();

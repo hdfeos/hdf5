@@ -698,7 +698,7 @@ H5P__fcrt_btree_rank_enc(const void *value, uint8_t **pp, size_t *size)
     if(NULL != *pp) {
         unsigned u;             /* Local index variable */
 
-        /* Encode the size of a double*/
+        /* Encode the size of an unsigned*/
         *(*pp)++ = (uint8_t)sizeof(unsigned);
 
         /* Encode all the btree  */
