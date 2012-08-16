@@ -164,7 +164,7 @@ H5P__encode_hsize_t(const void *value, uint8_t **pp, size_t *size)
 
     /* Sanity checks */
     HDcompile_assert(sizeof(hsize_t) <= sizeof(uint64_t));
-    // MSC??? HDassert(enc_size < 256);
+    HDassert(enc_size < 256);
     HDassert(size);
 
     if(NULL != *pp) {
@@ -244,10 +244,43 @@ H5P__encode_uint8_t(const void *value, uint8_t **pp, size_t *size)
     } /* end if */
 
     /* Set size needed for encoding */
-    *size += (1 + sizeof(uint8_t));
+    *size += 1;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__encode_uint8_t() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__encode_hbool_t
+ *
+ * Purpose:        Generic encoding callback routine for 'hbool_t' properties.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__encode_hbool_t(const void *value, uint8_t **pp, size_t *size)
+{
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    HDassert(value);
+    HDassert(size);
+
+    if(NULL != *pp)
+        /* Encode the value */
+        *(*pp)++ = *(const hbool_t *)value;
+
+    /* Set size needed for encoding */
+    *size += 1;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__encode_hbool_t() */
 
 
 /*-------------------------------------------------------------------------
@@ -350,8 +383,8 @@ done:
  PURPOSE
     Internal routine to encode a property list into a binary buffer.
  USAGE
-    herr_t H5P_encode(plist_id, enc_all_prop, buf, nalloc)
-        hid_t plist_id;  IN: Identifier to property list to encode
+    herr_t H5P_encode(plist, enc_all_prop, buf, nalloc)
+        const H5P_genplist_t *plist;  IN: Property list to encode
         hbool_t enc_all_prop;  IN: Whether to encode all properties (TRUE),
                 or just non-default (i.e. changed) properties (FALSE).
         uint8_t *buf;    OUT: buffer to hold the encoded plist
@@ -359,9 +392,9 @@ done:
  RETURNS
     Returns non-negative on success, negative on failure.
  DESCRIPTION
-    Encodes a property list into a binary buffer. If the size of the buffer passed 
-    in is zero or the buffer is NULL, then the call will set the size needed to encode
-    the plist in nalloc. Otherwise the routine will encode the plist in buf.
+    Encodes a property list into a binary buffer. If the buffer is NULL, then
+    the call will set the size needed to encode the plist in nalloc. Otherwise
+    the routine will encode the plist in buf.
  GLOBAL VARIABLES
  COMMENTS, BUGS, ASSUMPTIONS
  EXAMPLES
@@ -384,13 +417,11 @@ H5P_encode(const H5P_genplist_t *plist, hbool_t enc_all_prop, void *buf,
     if(NULL == nalloc)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad allocation size pointer")
 
-    /* If the size of the buffer passed in (nalloc) is zero or the buffer is NULL, then 
-       this call to H5P_encode will return how much space is needed to encode a property.
+    /* If the buffer is NULL, then this call to H5P_encode will return how much
+     * space is needed to encode a property.
      */
-    if(0 == *nalloc || NULL == p) {
+    if(NULL == p)
         encode = FALSE;
-        p = NULL;       /* (if it wasn't already) */
-    } /* end if */
 
     /* Encode property list description info */
     if(encode) {
@@ -581,6 +612,42 @@ H5P__decode_uint8_t(const uint8_t **pp, void *value)
 
 
 /*-------------------------------------------------------------------------
+ * Function:       H5P__decode_hbool_t
+ *
+ * Purpose:        Generic decoding callback routine for 'hbool_t' properties.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__decode_hbool_t(const uint8_t **pp, void *value)
+{
+    hbool_t enc_value;           /* Property value to decode */
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_PACKAGE_NOERR
+
+    /* Sanity checks */
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(value);
+
+    /* Decode the value */
+    enc_value = (hbool_t)*(*pp)++;
+
+    /* Set the value */
+    HDmemcpy(value, &enc_value, sizeof(hbool_t));
+
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P__decode_hbool_t() */
+
+
+/*-------------------------------------------------------------------------
  * Function:       H5P__decode_double
  *
  * Purpose:        Generic decoding callback routine for 'double' properties.
@@ -629,7 +696,7 @@ done:
     Internal routine to decode a property list from a binary buffer.
  USAGE
     H5P_genplist_t *H5P_decode(buf)
-        void *buf;    IN: buffer that holds the encoded plist
+        const void *buf;    IN: buffer that holds the encoded plist
  RETURNS
     Returns non-negative ID of new property list object on success, negative
         on failure.
@@ -670,7 +737,7 @@ H5P_decode(const void *buf)
 
     /* Get the type of the property list */
     type = (H5P_plist_type_t)*p++;
-    if(type < H5P_TYPE_USER || type > H5P_TYPE_LINK_ACCESS)
+    if(type <= H5P_TYPE_USER || type > H5P_TYPE_LINK_ACCESS)
         HGOTO_ERROR(H5E_PLIST, H5E_BADRANGE, FAIL, "bad type of encoded information: %u", (unsigned)type)
 
     /* Create new property list of the specified type */

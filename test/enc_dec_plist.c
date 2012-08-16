@@ -423,7 +423,20 @@ main(void)
     if((H5Pset_elink_acc_flags(lapl1, H5F_ACC_RDONLY)) < 0)
         FAIL_STACK_ERROR
 
-    if((H5Pset_elink_prefix (lapl1, "/tmpasodiasod")) < 0)
+    if((H5Pset_elink_prefix(lapl1, "/tmpasodiasod")) < 0)
+        FAIL_STACK_ERROR
+
+    /* Create FAPL for the elink FAPL */
+    if((fapl1 = H5Pcreate(H5P_FILE_ACCESS)) < 0)
+        FAIL_STACK_ERROR
+    if((H5Pset_alignment(fapl1, 2, 1024)) < 0)
+        FAIL_STACK_ERROR
+
+    if((H5Pset_elink_fapl(lapl1, fapl1)) < 0)
+        FAIL_STACK_ERROR
+
+    /* Close the elink's FAPL */
+    if((H5Pclose(fapl1)) < 0)
         FAIL_STACK_ERROR
 
     {

@@ -59,8 +59,8 @@
 /* Definitions for the initial metadata cache resize configuration */
 #define H5F_ACS_META_CACHE_INIT_CONFIG_SIZE	sizeof(H5AC_cache_config_t)
 #define H5F_ACS_META_CACHE_INIT_CONFIG_DEF	H5AC__DEFAULT_CACHE_CONFIG
-#define H5F_ACS_META_CACHE_INIT_CONFIG_ENC	H5P__fcrt_cache_config_enc
-#define H5F_ACS_META_CACHE_INIT_CONFIG_DEC	H5P__fcrt_cache_config_dec
+#define H5F_ACS_META_CACHE_INIT_CONFIG_ENC	H5P__facc_cache_config_enc
+#define H5F_ACS_META_CACHE_INIT_CONFIG_DEC	H5P__facc_cache_config_dec
 /* Definitions for size of raw data chunk cache(slots) */
 #define H5F_ACS_DATA_CACHE_NUM_SLOTS_SIZE       sizeof(size_t)
 #define H5F_ACS_DATA_CACHE_NUM_SLOTS_DEF        521
@@ -118,8 +118,8 @@
 /* Definition for file close degree */
 #define H5F_CLOSE_DEGREE_SIZE		        sizeof(H5F_close_degree_t)
 #define H5F_CLOSE_DEGREE_DEF		        H5F_CLOSE_DEFAULT
-#define H5F_CLOSE_DEGREE_ENC		        H5P__encode_size_t
-#define H5F_CLOSE_DEGREE_DEC		        H5P__decode_size_t
+#define H5F_CLOSE_DEGREE_ENC		        H5P__facc_fclose_degree_enc
+#define H5F_CLOSE_DEGREE_DEC		        H5P__facc_fclose_degree_dec
 /* Definition for offset position in file for family file driver */
 #define H5F_ACS_FAMILY_OFFSET_SIZE              sizeof(hsize_t)
 #define H5F_ACS_FAMILY_OFFSET_DEF               0
@@ -129,31 +129,25 @@
  * property only used by h5repart */
 #define H5F_ACS_FAMILY_NEWSIZE_SIZE             sizeof(hsize_t)
 #define H5F_ACS_FAMILY_NEWSIZE_DEF              0
-#define H5F_ACS_FAMILY_NEWSIZE_ENC              H5P__encode_hsize_t
-#define H5F_ACS_FAMILY_NEWSIZE_DEC              H5P__decode_hsize_t
 /* Definition for whether to convert family to sec2 driver. It's private
  * property only used by h5repart */
 #define H5F_ACS_FAMILY_TO_SEC2_SIZE             sizeof(hbool_t)
 #define H5F_ACS_FAMILY_TO_SEC2_DEF              FALSE
-#define H5F_ACS_FAMILY_TO_SEC2_ENC              H5P__encode_unsigned
-#define H5F_ACS_FAMILY_TO_SEC2_DEC              H5P__decode_unsigned
 /* Definition for data type in multi file driver */
 #define H5F_ACS_MULTI_TYPE_SIZE                 sizeof(H5FD_mem_t)
 #define H5F_ACS_MULTI_TYPE_DEF                  H5FD_MEM_DEFAULT
-#define H5F_ACS_MULTI_TYPE_ENC                  H5P__encode_size_t
-#define H5F_ACS_MULTI_TYPE_DEC                  H5P__decode_size_t
+#define H5F_ACS_MULTI_TYPE_ENC                  H5P__facc_multi_type_enc
+#define H5F_ACS_MULTI_TYPE_DEC                  H5P__facc_multi_type_dec
 /* Definition for 'use latest format version' flag */
 #define H5F_ACS_LATEST_FORMAT_SIZE              sizeof(hbool_t)
 #define H5F_ACS_LATEST_FORMAT_DEF               FALSE
-#define H5F_ACS_LATEST_FORMAT_ENC               H5P__encode_unsigned
-#define H5F_ACS_LATEST_FORMAT_DEC               H5P__decode_unsigned
+#define H5F_ACS_LATEST_FORMAT_ENC               H5P__encode_hbool_t
+#define H5F_ACS_LATEST_FORMAT_DEC               H5P__decode_hbool_t
 /* Definition for whether to query the file descriptor from the core VFD
  * instead of the memory address.  (Private to library)
  */
 #define H5F_ACS_WANT_POSIX_FD_SIZE              sizeof(hbool_t)
 #define H5F_ACS_WANT_POSIX_FD_DEF               FALSE
-#define H5F_ACS_WANT_POSIX_FD_ENC               H5P__encode_unsigned
-#define H5F_ACS_WANT_POSIX_FD_DEC               H5P__decode_unsigned
 /* Definition for external file cache size */
 #define H5F_ACS_EFC_SIZE_SIZE                   sizeof(unsigned)
 #define H5F_ACS_EFC_SIZE_DEF                    0
@@ -181,12 +175,6 @@
 /* Local Prototypes */
 /********************/
 
-/* General routines */
-static herr_t H5P_set_family_offset(H5P_genplist_t *plist, hsize_t offset);
-static herr_t H5P_get_family_offset(H5P_genplist_t *plist, hsize_t *offset);
-static herr_t H5P_set_multi_type(H5P_genplist_t *plist, H5FD_mem_t type);
-static herr_t H5P_get_multi_type(H5P_genplist_t *plist, H5FD_mem_t *type);
-
 /* Property class callbacks */
 static herr_t H5P_facc_reg_prop(H5P_genclass_t *pclass);
 static herr_t H5P_facc_create(hid_t fapl_id, void *copy_data);
@@ -198,8 +186,12 @@ static herr_t H5P_file_image_info_copy(const char *name, size_t size, void *valu
 static herr_t H5P_file_image_info_close(const char *name, size_t size, void *value);
 
 /* encode & decode callbacks */
-static herr_t H5P__fcrt_cache_config_enc(const void *value, uint8_t **pp, size_t *size);
-static herr_t H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value);
+static herr_t H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P__facc_cache_config_dec(const uint8_t **pp, void *value);
+static herr_t H5P__facc_fclose_degree_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P__facc_fclose_degree_dec(const uint8_t **pp, void *value);
+static herr_t H5P__facc_multi_type_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P__facc_multi_type_dec(const uint8_t **pp, void *value);
 
 /*********************/
 /* Package Variables */
@@ -274,128 +266,131 @@ H5P_facc_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the initial metadata cache resize configuration */
     if(H5P_register_real(pclass, H5F_ACS_META_CACHE_INIT_CONFIG_NAME, H5F_ACS_META_CACHE_INIT_CONFIG_SIZE, &mdc_initCacheCfg, 
-                         NULL, NULL, NULL, H5F_ACS_META_CACHE_INIT_CONFIG_ENC, H5F_ACS_META_CACHE_INIT_CONFIG_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_META_CACHE_INIT_CONFIG_ENC, H5F_ACS_META_CACHE_INIT_CONFIG_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the size of raw data chunk cache (elements) */
     if(H5P_register_real(pclass, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, H5F_ACS_DATA_CACHE_NUM_SLOTS_SIZE, &rdcc_nslots, 
-                         NULL, NULL, NULL, H5F_ACS_DATA_CACHE_NUM_SLOTS_ENC, H5F_ACS_DATA_CACHE_NUM_SLOTS_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_DATA_CACHE_NUM_SLOTS_ENC, H5F_ACS_DATA_CACHE_NUM_SLOTS_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the size of raw data chunk cache(bytes) */
     if(H5P_register_real(pclass, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, H5F_ACS_DATA_CACHE_BYTE_SIZE_SIZE, &rdcc_nbytes, 
-                         NULL, NULL, NULL, H5F_ACS_DATA_CACHE_BYTE_SIZE_ENC, H5F_ACS_DATA_CACHE_BYTE_SIZE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_DATA_CACHE_BYTE_SIZE_ENC, H5F_ACS_DATA_CACHE_BYTE_SIZE_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the preemption for reading chunks */
     if(H5P_register_real(pclass, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, H5F_ACS_PREEMPT_READ_CHUNKS_SIZE, &rdcc_w0, 
-                         NULL, NULL, NULL, H5F_ACS_PREEMPT_READ_CHUNKS_ENC, H5F_ACS_PREEMPT_READ_CHUNKS_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_PREEMPT_READ_CHUNKS_ENC, H5F_ACS_PREEMPT_READ_CHUNKS_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the threshold for alignment */
     if(H5P_register_real(pclass, H5F_ACS_ALIGN_THRHD_NAME, H5F_ACS_ALIGN_THRHD_SIZE, &threshold, 
-                         NULL, NULL, NULL, H5F_ACS_ALIGN_THRHD_ENC, H5F_ACS_ALIGN_THRHD_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_ALIGN_THRHD_ENC, H5F_ACS_ALIGN_THRHD_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the alignment */
     if(H5P_register_real(pclass, H5F_ACS_ALIGN_NAME, H5F_ACS_ALIGN_SIZE, &alignment, 
-                         NULL, NULL, NULL, H5F_ACS_ALIGN_ENC, H5F_ACS_ALIGN_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_ALIGN_ENC, H5F_ACS_ALIGN_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the minimum metadata allocation block size */
     if(H5P_register_real(pclass, H5F_ACS_META_BLOCK_SIZE_NAME, H5F_ACS_META_BLOCK_SIZE_SIZE, &meta_block_size, 
-                         NULL, NULL, NULL, H5F_ACS_META_BLOCK_SIZE_ENC, H5F_ACS_META_BLOCK_SIZE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_META_BLOCK_SIZE_ENC, H5F_ACS_META_BLOCK_SIZE_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the maximum sieve buffer size */
     if(H5P_register_real(pclass, H5F_ACS_SIEVE_BUF_SIZE_NAME, H5F_ACS_SIEVE_BUF_SIZE_SIZE, &sieve_buf_size, 
-                         NULL, NULL, NULL, H5F_ACS_SIEVE_BUF_SIZE_ENC, H5F_ACS_SIEVE_BUF_SIZE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_SIEVE_BUF_SIZE_ENC, H5F_ACS_SIEVE_BUF_SIZE_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the minimum "small data" allocation block size */
     if(H5P_register_real(pclass, H5F_ACS_SDATA_BLOCK_SIZE_NAME, H5F_ACS_SDATA_BLOCK_SIZE_SIZE, &sdata_block_size, 
-                         NULL, NULL, NULL, H5F_ACS_SDATA_BLOCK_SIZE_ENC, H5F_ACS_SDATA_BLOCK_SIZE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_SDATA_BLOCK_SIZE_ENC, H5F_ACS_SDATA_BLOCK_SIZE_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the garbage collection reference */
     if(H5P_register_real(pclass, H5F_ACS_GARBG_COLCT_REF_NAME, H5F_ACS_GARBG_COLCT_REF_SIZE, &gc_ref, 
-                         NULL, NULL, NULL, H5F_ACS_GARBG_COLCT_REF_ENC, H5F_ACS_GARBG_COLCT_REF_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_GARBG_COLCT_REF_ENC, H5F_ACS_GARBG_COLCT_REF_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the file driver ID */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5F_ACS_FILE_DRV_ID_NAME, H5F_ACS_FILE_DRV_ID_SIZE, &driver_id, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the file driver info */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5F_ACS_FILE_DRV_INFO_NAME, H5F_ACS_FILE_DRV_INFO_SIZE, &driver_info, 
-                         NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the file close degree */
     if(H5P_register_real(pclass, H5F_ACS_CLOSE_DEGREE_NAME, H5F_CLOSE_DEGREE_SIZE, &close_degree, 
-                         NULL, NULL, NULL, H5F_CLOSE_DEGREE_ENC, H5F_CLOSE_DEGREE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CLOSE_DEGREE_ENC, H5F_CLOSE_DEGREE_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the offset of family driver info */
     if(H5P_register_real(pclass, H5F_ACS_FAMILY_OFFSET_NAME, H5F_ACS_FAMILY_OFFSET_SIZE, &family_offset, 
-                         NULL, NULL, NULL, H5F_ACS_FAMILY_OFFSET_ENC, H5F_ACS_FAMILY_OFFSET_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_FAMILY_OFFSET_ENC, H5F_ACS_FAMILY_OFFSET_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the private property of new family file size. It's used by h5repart only. */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5F_ACS_FAMILY_NEWSIZE_NAME, H5F_ACS_FAMILY_NEWSIZE_SIZE, &family_newsize, 
-                         NULL, NULL, NULL, H5F_ACS_FAMILY_NEWSIZE_ENC, H5F_ACS_FAMILY_NEWSIZE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the private property of whether convert family to sec2 driver. It's used by h5repart only. */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5F_ACS_FAMILY_TO_SEC2_NAME, H5F_ACS_FAMILY_TO_SEC2_SIZE, &family_to_sec2, 
-                         NULL, NULL, NULL, H5F_ACS_FAMILY_TO_SEC2_ENC, H5F_ACS_FAMILY_TO_SEC2_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the data type of multi driver info */
     if(H5P_register_real(pclass, H5F_ACS_MULTI_TYPE_NAME, H5F_ACS_MULTI_TYPE_SIZE, &mem_type, 
-                         NULL, NULL, NULL, H5F_ACS_MULTI_TYPE_ENC, H5F_ACS_MULTI_TYPE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_MULTI_TYPE_ENC, H5F_ACS_MULTI_TYPE_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the 'use the latest version of the format' flag */
     if(H5P_register_real(pclass, H5F_ACS_LATEST_FORMAT_NAME, H5F_ACS_LATEST_FORMAT_SIZE, &latest_format, 
-                         NULL, NULL, NULL, H5F_ACS_LATEST_FORMAT_ENC, H5F_ACS_LATEST_FORMAT_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_LATEST_FORMAT_ENC, H5F_ACS_LATEST_FORMAT_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the private property of whether to retrieve the file descriptor from the core VFD */
     /* (used internally to the library only) */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5F_ACS_WANT_POSIX_FD_NAME, H5F_ACS_WANT_POSIX_FD_SIZE, &want_posix_fd, 
-                         NULL, NULL, NULL, H5F_ACS_WANT_POSIX_FD_ENC, H5F_ACS_WANT_POSIX_FD_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the external file cache size */
     if(H5P_register_real(pclass, H5F_ACS_EFC_SIZE_NAME, H5F_ACS_EFC_SIZE_SIZE, &efc_size, 
-                         NULL, NULL, NULL, H5F_ACS_EFC_SIZE_ENC, H5F_ACS_EFC_SIZE_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_ACS_EFC_SIZE_ENC, H5F_ACS_EFC_SIZE_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the initial file image info */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5F_ACS_FILE_IMAGE_INFO_NAME, H5F_ACS_FILE_IMAGE_INFO_SIZE, &file_image_info, 
-                         NULL, NULL, NULL, NULL, NULL, 
-                         H5F_ACS_FILE_IMAGE_INFO_DEL, H5F_ACS_FILE_IMAGE_INFO_COPY, NULL, H5F_ACS_FILE_IMAGE_INFO_CLOSE) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, NULL, NULL, 
+            H5F_ACS_FILE_IMAGE_INFO_DEL, H5F_ACS_FILE_IMAGE_INFO_COPY, NULL, H5F_ACS_FILE_IMAGE_INFO_CLOSE) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -936,48 +931,15 @@ H5Pset_family_offset(hid_t fapl_id, hsize_t offset)
     if(H5P_DEFAULT == fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list")
     if(NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
-         HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set value */
-    if((ret_value = H5P_set_family_offset(plist, offset)) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set family offset")
+    if(H5P_set(plist, H5F_ACS_FAMILY_OFFSET_NAME, &offset) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set offset for family file")
 
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_family_offset() */
-
-
-/*-------------------------------------------------------------------------
- * Function:    H5P_set_family_offset
- *
- * Purpose:     Set offset for family driver.  Private function for
- *              H5Pset_family_offset
- *
- * Return:      Success:        Non-negative value.
- *              Failure:        Negative value.
- *
- * Programmer:  Raymond Lu
- *              Sep 17, 2002
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_set_family_offset(H5P_genplist_t *plist, hsize_t offset)
-{
-    herr_t      ret_value = SUCCEED;    /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    if(TRUE == H5P_isa_class(plist->plist_id, H5P_FILE_ACCESS)) {
-         if(H5P_set(plist, H5F_ACS_FAMILY_OFFSET_NAME, &offset) < 0)
-              HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set offset for family file")
-    } /* end if */
-    else
-         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_set_family_offset() */
 
 
 /*-------------------------------------------------------------------------
@@ -1008,48 +970,17 @@ H5Pget_family_offset(hid_t fapl_id, hsize_t *offset)
     if(H5P_DEFAULT == fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list")
     if(NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
-         HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Get value */
-    if((ret_value = H5P_get_family_offset(plist, offset)) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't get family offset")
+    if(offset) {
+        if(H5P_get(plist, H5F_ACS_FAMILY_OFFSET_NAME, offset) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set offset for family file")
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_family_offset() */
-
-
-/*-------------------------------------------------------------------------
- * Function:    H5P_get_family_offset
- *
- * Purpose:     Get offset for family driver.  Private function for
- *              H5Pget_family_offset
- *
- * Return:      Success:        Non-negative value.
- *              Failure:        Negative value.
- *
- * Programmer:  Raymond Lu
- *              Sep 17, 2002
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_get_family_offset(H5P_genplist_t *plist, hsize_t *offset)
-{
-    herr_t      ret_value = SUCCEED;    /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    if(TRUE == H5P_isa_class(plist->plist_id, H5P_FILE_ACCESS)) {
-        if(H5P_get(plist, H5F_ACS_FAMILY_OFFSET_NAME, offset) < 0)
-             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set offset for family file")
-    } /* end if */
-    else
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_get_family_offset() */
 
 
 /*-------------------------------------------------------------------------
@@ -1080,48 +1011,15 @@ H5Pset_multi_type(hid_t fapl_id, H5FD_mem_t type)
     if(H5P_DEFAULT == fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list")
     if(NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
-         HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set value */
-    if((ret_value = H5P_set_multi_type(plist, type)) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set data type for multi driver")
+     if(H5P_set(plist, H5F_ACS_MULTI_TYPE_NAME, &type) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set type for multi driver")
 
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pset_multi_type() */
-
-
-/*-------------------------------------------------------------------------
- * Function:    H5P_set_multi_type
- *
- * Purpose:     Set data type for multi file driver.  Private function for
- *              H5Pset_multi_type.
- *
- * Return:      Success:        Non-negative value.
- *              Failure:        Negative value.
- *
- * Programmer:  Raymond Lu
- *              Sep 17, 2002
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_set_multi_type(H5P_genplist_t *plist, H5FD_mem_t type)
-{
-    herr_t      ret_value = SUCCEED;    /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    if(TRUE == H5P_isa_class(plist->plist_id, H5P_FILE_ACCESS)) {
-         if(H5P_set(plist, H5F_ACS_MULTI_TYPE_NAME, &type) < 0)
-                HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set type for multi driver")
-    } /* end if */
-    else
-         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_set_multi_type() */
 
 
 /*-------------------------------------------------------------------------
@@ -1152,48 +1050,17 @@ H5Pget_multi_type(hid_t fapl_id, H5FD_mem_t *type)
     if(H5P_DEFAULT == fapl_id)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "can't modify default property list")
     if(NULL == (plist = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
-         HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Get value */
-    if((ret_value = H5P_get_multi_type(plist, type)) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't get data type for multi driver")
+    if(type) {
+        if(H5P_get(plist, H5F_ACS_MULTI_TYPE_NAME, type) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't get type for multi driver")
+    } /* end if */
 
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_multi_type() */
-
-
-/*-------------------------------------------------------------------------
- * Function:    H5P_get_multi_type
- *
- * Purpose:     Get data type for multi file driver.  Private function for
- *              H5Pget_multi_type.
- *
- * Return:      Success:        Non-negative value.
- *              Failure:        Negative value.
- *
- * Programmer:  Raymond Lu
- *              Sep 17, 2002
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5P_get_multi_type(H5P_genplist_t *plist, H5FD_mem_t *type)
-{
-    herr_t      ret_value = SUCCEED;    /* Return value */
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    if(TRUE == H5P_isa_class(plist->plist_id, H5P_FILE_ACCESS)) {
-         if(H5P_get(plist, H5F_ACS_MULTI_TYPE_NAME, type) < 0)
-             HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't get type for multi driver")
-    } /* end if */
-    else
-         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_get_multi_type() */
 
 
 /*-------------------------------------------------------------------------
@@ -2585,7 +2452,7 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P__fcrt_cache_config_enc
+ * Function:       H5P__facc_cache_config_enc
  *
  * Purpose:        Callback routine which is called whenever the default
  *                 cache config property in the file creation property list is
@@ -2600,7 +2467,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__fcrt_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
+H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5AC_cache_config_t *config = (const H5AC_cache_config_t *)value; /* Create local aliases for values */
     unsigned enc_size = 0;      /* Size of encoded property */
@@ -2611,18 +2478,6 @@ H5P__fcrt_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
     /* Sanity check */
     HDassert(value);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
-
-    /* Compute encoded size of variably-encoded values */
-    enc_value = (uint64_t)config->initial_size;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
-    enc_value = (uint64_t)config->max_size;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
-    enc_value = (uint64_t)config->min_size;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
-    enc_value = (uint64_t)config->max_increment;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
-    enc_value = (uint64_t)config->max_decrement;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
 
     if(NULL != *pp) {
         /* encode type sizes */
@@ -2705,15 +2560,27 @@ H5P__fcrt_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
         INT32ENCODE(*pp, config->metadata_write_strategy);
     } /* end if */
 
+    /* Compute encoded size of variably-encoded values */
+    enc_value = (uint64_t)config->initial_size;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->max_size;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->min_size;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->max_increment;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    enc_value = (uint64_t)config->max_decrement;
+    enc_size += 1 + H5V_limit_enc_size(enc_value);
+
     *size += (6 + sizeof(unsigned)*8 + sizeof(double)*8 + enc_size + sizeof(int32_t)*4 + 
               sizeof(int64_t) + H5AC__MAX_TRACE_FILE_NAME_LEN + 1);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5P__fcrt_cache_config_enc() */
+} /* end H5P__facc_cache_config_enc() */
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P__fcrt_cache_config_dec
+ * Function:       H5P__facc_cache_config_dec
  *
  * Purpose:        Callback routine which is called whenever the default
  *                 cache config property in the file creation property list is
@@ -2728,7 +2595,7 @@ H5P__fcrt_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
+H5P__facc_cache_config_dec(const uint8_t **pp, void *value)
 {
     H5AC_cache_config_t config;
     unsigned enc_size;                  /* Size of encoded values */
@@ -2828,4 +2695,153 @@ H5P__fcrt_cache_config_dec(const uint8_t **pp, void *value)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P__fcrt_cache_config_dec() */
+} /* end H5P__facc_cache_config_dec() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__facc_fclose_degree_enc
+ *
+ * Purpose:        Callback routine which is called whenever the file close
+ *                 degree property in the file access property list
+ *                 is encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__facc_fclose_degree_enc(const void *value, uint8_t **pp, size_t *size)
+{
+    const H5F_close_degree_t *fclose_degree = (const H5F_close_degree_t *)value; /* Create local alias for values */
+
+    FUNC_ENTER_STATIC_NOERR
+
+    /* Sanity check */
+    HDassert(fclose_degree);
+    HDassert(size);
+
+    if(NULL != *pp)
+        /* Encode file close degree */
+        *(*pp)++ = (uint8_t)*fclose_degree;
+
+    /* Size of file close degree */
+    (*size)++;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__facc_fclose_degree_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__facc_fclose_degree_dec
+ *
+ * Purpose:        Callback routine which is called whenever the file close
+ *                 degree property in the file access property list
+ *                 is decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__facc_fclose_degree_dec(const uint8_t **pp, void *value)
+{
+    H5F_close_degree_t fclose_degree;            /* File close degree */
+
+    FUNC_ENTER_STATIC_NOERR
+
+    /* Sanity checks */
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(value);
+
+    /* Decode file close degree */
+    fclose_degree = (H5F_close_degree_t)*(*pp)++;
+
+    /* Set the value */
+    HDmemcpy(value, &fclose_degree, sizeof(H5F_close_degree_t));
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__facc_fclose_degree_dec() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__facc_multi_type_enc
+ *
+ * Purpose:        Callback routine which is called whenever the multi VFD
+ *                 memory type property in the file access property list
+ *                 is encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__facc_multi_type_enc(const void *value, uint8_t **pp, size_t *size)
+{
+    const H5FD_mem_t *type = (const H5FD_mem_t *)value; /* Create local alias for values */
+
+    FUNC_ENTER_STATIC_NOERR
+
+    /* Sanity check */
+    HDassert(type);
+    HDassert(size);
+
+    if(NULL != *pp)
+        /* Encode file close degree */
+        *(*pp)++ = (uint8_t)*type;
+
+    /* Size of multi VFD memory type */
+    (*size)++;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__facc_multi_type_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__facc_multi_type_dec
+ *
+ * Purpose:        Callback routine which is called whenever the multi VFD
+ *                 memory type property in the file access property list
+ *                 is decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P__facc_multi_type_dec(const uint8_t **pp, void *value)
+{
+    H5FD_mem_t type;            /* File close degree */
+
+    FUNC_ENTER_STATIC_NOERR
+
+    /* Sanity checks */
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(value);
+
+    /* Decode multi VFD memory type */
+    type = (H5FD_mem_t)*(*pp)++;
+
+    /* Set the value */
+    HDmemcpy(value, &type, sizeof(H5FD_mem_t));
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__facc_multi_type_dec() */
+

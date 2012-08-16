@@ -843,7 +843,7 @@ done:
  PURPOSE
     Routine to convert the property values in a property list into a binary buffer
  USAGE
-    hid_t H5Pencode(plist_id, enc_all_prop, buf, nalloc)
+    herr_t H5Pencode(plist_id, enc_all_prop, buf, nalloc)
         hid_t plist_id;         IN: Identifier to property list to encode
         hbool_t enc_all_prop;   IN: Whether to encode all properties (TRUE),
                                     or just non-default (i.e. changed) properties (FALSE).
@@ -852,12 +852,11 @@ done:
  RETURNS
     Returns non-negative on success, negative on failure.
  DESCRIPTION
-    Encodes a property list into a binary buffer. If the size of the buffer passed 
-    in is zero or the buffer is NULL, then the call will set the size needed to encode
-    the plist in nalloc. Otherwise the routine will encode the plist in buf.
+    Encodes a property list into a binary buffer. If the buffer is NULL, then
+    the call will set the size needed to encode the plist in nalloc. Otherwise
+    the routine will encode the plist in buf.
  GLOBAL VARIABLES
  COMMENTS, BUGS, ASSUMPTIONS
-    Change the name of this function to H5Pencode (and remove old H5Pencode)
  EXAMPLES
  REVISION LOG
 --------------------------------------------------------------------------*/
@@ -884,11 +883,11 @@ done:
 
 /*--------------------------------------------------------------------------
  NAME
-    H5P_decode
+    H5Pdecode
  PURPOSE
     API routine to decode a property list from a binary buffer.
  USAGE
-    hid_t *H5P_decode(buf)
+    hid_t H5Pdecode(buf)
         void *buf;    IN: buffer that holds the encoded plist
  RETURNS
     Returns non-negative ID of new property list object on success, negative

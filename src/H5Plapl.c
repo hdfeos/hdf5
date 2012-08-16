@@ -64,8 +64,11 @@
 /* Definitions for setting fapl of external link access */
 #define H5L_ACS_ELINK_FAPL_SIZE        	sizeof(hid_t)
 #define H5L_ACS_ELINK_FAPL_DEF         	H5P_DEFAULT
+#define H5L_ACS_ELINK_FAPL_ENC		H5P_lacc_elink_fapl_enc
+#define H5L_ACS_ELINK_FAPL_DEC         	H5P_lacc_elink_fapl_dec
 #define H5L_ACS_ELINK_FAPL_DEL		H5P_lacc_elink_fapl_del
 #define H5L_ACS_ELINK_FAPL_COPY        	H5P_lacc_elink_fapl_copy
+#define H5L_ACS_ELINK_FAPL_CMP        	H5P_lacc_elink_fapl_cmp
 #define H5L_ACS_ELINK_FAPL_CLOSE       	H5P_lacc_elink_fapl_close
 
 /* Definitions for file access flags for external link traversal */
@@ -103,9 +106,13 @@ static herr_t H5P_lacc_elink_pref_del(hid_t prop_id, const char* name, size_t si
 static herr_t H5P_lacc_elink_pref_copy(const char* name, size_t size, void* value);
 static int H5P_lacc_elink_pref_cmp(const void *value1, const void *value2, size_t size);
 static herr_t H5P_lacc_elink_pref_close(const char* name, size_t size, void* value);
+static herr_t H5P_lacc_elink_fapl_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *value);
 static herr_t H5P_lacc_elink_fapl_del(hid_t prop_id, const char* name, size_t size, void* value);
 static herr_t H5P_lacc_elink_fapl_copy(const char* name, size_t size, void* value);
+static int H5P_lacc_elink_fapl_cmp(const void *value1, const void *value2, size_t size);
 static herr_t H5P_lacc_elink_fapl_close(const char* name, size_t size, void* value);
+
 
 /*********************/
 /* Package Variables */
@@ -176,13 +183,13 @@ H5P_lacc_reg_prop(H5P_genclass_t *pclass)
     /* Register property for external link prefix */
     if(H5P_register_real(pclass, H5L_ACS_ELINK_PREFIX_NAME, H5L_ACS_ELINK_PREFIX_SIZE, &elink_prefix, 
             NULL, NULL, NULL, H5L_ACS_ELINK_PREFIX_ENC, H5L_ACS_ELINK_PREFIX_DEC,
-            H5L_ACS_ELINK_PREFIX_DEL, H5L_ACS_ELINK_PREFIX_COPY,
-            H5L_ACS_ELINK_PREFIX_CMP, H5L_ACS_ELINK_PREFIX_CLOSE) < 0)
+            H5L_ACS_ELINK_PREFIX_DEL, H5L_ACS_ELINK_PREFIX_COPY, H5L_ACS_ELINK_PREFIX_CMP, H5L_ACS_ELINK_PREFIX_CLOSE) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register fapl for link access */
     if(H5P_register_real(pclass, H5L_ACS_ELINK_FAPL_NAME, H5L_ACS_ELINK_FAPL_SIZE, &def_fapl_id, 
-             NULL, NULL, NULL, NULL, NULL, H5L_ACS_ELINK_FAPL_DEL, H5L_ACS_ELINK_FAPL_COPY, NULL, H5L_ACS_ELINK_FAPL_CLOSE) < 0)
+             NULL, NULL, NULL, H5L_ACS_ELINK_FAPL_ENC, H5L_ACS_ELINK_FAPL_DEC,
+             H5L_ACS_ELINK_FAPL_DEL, H5L_ACS_ELINK_FAPL_COPY, H5L_ACS_ELINK_FAPL_CMP, H5L_ACS_ELINK_FAPL_CLOSE) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for external link file access flags */
@@ -191,6 +198,7 @@ H5P_lacc_reg_prop(H5P_genclass_t *pclass)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for external link file traversal callback */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5L_ACS_ELINK_CB_NAME, H5L_ACS_ELINK_CB_SIZE, &elink_cb, 
              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
@@ -198,6 +206,121 @@ H5P_lacc_reg_prop(H5P_genclass_t *pclass)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_lacc_reg_prop() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_lacc_elink_fapl_enc
+ *
+ * Purpose:        Callback routine which is called whenever the elink FAPL
+ *                 property in the dataset access property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_lacc_elink_fapl_enc(const void *value, uint8_t **pp, size_t *size)
+{
+    const hid_t *elink_fapl = (const hid_t *)value;     /* Property to encode */
+    H5P_genplist_t *fapl_plist;         /* Pointer to property list */
+    hbool_t non_default_fapl = FALSE;   /* Whether the FAPL is non-default */
+    size_t enc_size = 0;                /* FAPL's encoded size */
+    herr_t ret_value = SUCCEED;         /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* Check for non-default FAPL */
+    if(*elink_fapl != H5P_DEFAULT) {
+        if(NULL == (fapl_plist = (H5P_genplist_t *)H5P_object_verify(*elink_fapl, H5P_FILE_ACCESS)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get property list")
+        non_default_fapl = TRUE;
+    } /* end if */
+
+    if(NULL != *pp) {
+        /* Store whether the FAPL is non-default */
+        *(*pp)++ = (uint8_t)non_default_fapl;
+    } /* end if */
+
+    /* Encode the property list, if non-default */
+    /* (if *pp == NULL, will only compute the size) */
+    if(non_default_fapl) {
+        if(H5P_encode(fapl_plist, TRUE, *pp, &enc_size) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "can't encode property list")
+        if(*pp)
+            *pp += enc_size;
+    } /* end if */
+
+    *size += 1 + enc_size;      /* Non-default flag, plus encoded property list size */
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_lacc_elink_fapl_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_lacc_elink_fapl_dec
+ *
+ * Purpose:        Callback routine which is called whenever the elink FAPL
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *value)
+{
+    hbool_t non_default_fapl;           /* Whether the FAPL is non-default */
+    hid_t elink_fapl;                   /* The elink FAPL value */
+    herr_t ret_value = SUCCEED;         /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(value);
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
+
+    /* Determine if the FAPL is non-default */
+    non_default_fapl = (hbool_t)*(*pp)++;
+
+    if(non_default_fapl) {
+        H5P_genplist_t *fapl_plist;         /* Pointer to property list */
+        size_t enc_size = 0;                /* Encoded size of property list */
+
+        /* Decode the property list */
+        if((elink_fapl = H5P_decode(*pp)) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "can't decode property")
+
+        /* Get the property list object */
+        if(NULL == (fapl_plist = (H5P_genplist_t *)H5P_object_verify(elink_fapl, H5P_FILE_ACCESS)))
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get property list")
+
+        /* Compute the encoded size of the property list */
+        if(H5P_encode(fapl_plist, TRUE, NULL, &enc_size) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "can't compute encoded property list size")
+
+        *pp += enc_size;
+    } /* end if */
+    else
+        elink_fapl = H5P_DEFAULT;
+
+    /* Set the value */
+    HDmemcpy(value, &elink_fapl, sizeof(hid_t));
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_lacc_elink_fapl_dec() */
 
 
 /*--------------------------------------------------------------------------
@@ -275,6 +398,49 @@ done:
 } /* end H5P_lacc_elink_fapl_copy() */
 
 
+/*-------------------------------------------------------------------------
+ * Function:       H5P_lacc_elink_fapl_cmp
+ *
+ * Purpose:        Callback routine which is called whenever the elink FAPL
+ *                 property in the link access property list is
+ *                 compared.
+ *
+ * Return:         zero if VALUE1 and VALUE2 are equal, non zero otherwise.
+ *
+ * Programmer:     Quincey Koziol
+ *                 Wednesday, August 15, 2012
+ *
+ *-------------------------------------------------------------------------
+ */
+static int
+H5P_lacc_elink_fapl_cmp(const void *value1, const void *value2, size_t UNUSED size)
+{
+    const hid_t *fapl1 = (const hid_t *)value1;
+    const hid_t *fapl2 = (const hid_t *)value2;
+    H5P_genplist_t *obj1, *obj2;          /* Property lists to compare */
+    int ret_value = 0;
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    /* Check for comparison with default value */
+    if(*fapl1 == 0 && *fapl2 > 0) HGOTO_DONE(1);
+    if(*fapl1 > 0 && *fapl2 == 0) HGOTO_DONE(-1);
+
+    /* Get the property list objects */
+    obj1 = (H5P_genplist_t *)H5I_object(*fapl1);
+    obj2 = (H5P_genplist_t *)H5I_object(*fapl2);
+
+    /* Check for NULL property lists */
+    if(obj1 == NULL && obj2 != NULL) HGOTO_DONE(1);
+    if(obj1 != NULL && obj2 == NULL) HGOTO_DONE(-1);
+    if(obj1 && obj2)
+        ret_value = H5P_cmp_plist(obj1, obj2);
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_lacc_elink_fapl_cmp() */
+
+
 /*--------------------------------------------------------------------------
  * Function:	H5P_lacc_elink_fapl_close
  *
@@ -326,42 +492,40 @@ done:
 static herr_t
 H5P_lacc_elink_pref_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    const char *elink_pref = *(const char **)value;
+    const char *elink_pref = *(const char * const *)value;
     size_t len = 0;
     uint64_t enc_value;
     unsigned enc_size;
-    herr_t ret_value = 0;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     /* calculate prefix length */
-    if (NULL != elink_pref)
+    if(NULL != elink_pref)
         len = HDstrlen(elink_pref);
 
     enc_value = (uint64_t)len;
     enc_size = H5V_limit_enc_size(enc_value);
     HDassert(enc_size < 256);
 
-    if (NULL != *pp) {
-        *(*pp)++ = (uint8_t)enc_size;
+    if(NULL != *pp) {
         /* encode the length of the prefix */
+        *(*pp)++ = (uint8_t)enc_size;
         UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
-        /* enocode the prefix */
-        if (NULL != elink_pref) {
+        /* encode the prefix */
+        if(NULL != elink_pref) {
             HDmemcpy(*(char **)pp, elink_pref, len);
             *pp += len;
-        }
-    }
+        } /* end if */
+    } /* end if */
 
     *size += (1 + enc_size);
-    if (NULL != elink_pref) {
+    if(NULL != elink_pref)
         *size += len;
-    }
 
-    FUNC_LEAVE_NOAPI(ret_value)
+    FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P_lacc_elink_pref_enc() */
 
 
@@ -387,7 +551,7 @@ H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
     uint64_t enc_value;                 /* Decoded property value */
     unsigned enc_size;                  /* Size of encoded property */
     char *elink_pref = NULL;
-    herr_t ret_value = 0;
+    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NOINIT
 
@@ -402,10 +566,9 @@ H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
 
     /* Decode the value */
     UINT64DECODE_VAR(*pp, enc_value, enc_size);
-    /* Set the value */
-    HDmemcpy(&len, &enc_value, sizeof(uint64_t));
+    len = enc_value;
 
-    if (0 != len) {
+    if(0 != len) {
         /* Make a copy of the user's prefix string */
         if(NULL == (elink_pref = (char *)H5MM_malloc(len + 1)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for prefix")
@@ -413,7 +576,8 @@ H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
         elink_pref[len] = '\0';
 
         *pp += len;
-    }
+    } /* end if */
+
     /* Set the value */
     HDmemcpy(value, &elink_pref, sizeof(char *));
 
@@ -491,8 +655,8 @@ H5P_lacc_elink_pref_copy(const char UNUSED *name, size_t UNUSED size, void *valu
 static int
 H5P_lacc_elink_pref_cmp(const void *value1, const void *value2, size_t UNUSED size)
 {
-    const char *pref1 = *(const char **)value1;
-    const char *pref2 = *(const char **)value2;
+    const char *pref1 = *(const char * const *)value1;
+    const char *pref2 = *(const char * const *)value2;
     int ret_value = 0;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR

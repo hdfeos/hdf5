@@ -77,9 +77,9 @@
 /* Definitions for storage layout property */
 #define H5D_CRT_LAYOUT_SIZE        sizeof(H5O_layout_t)
 #define H5D_CRT_LAYOUT_DEF         H5D_DEF_LAYOUT_CONTIG
-#define H5D_CRT_LAYOUT_ENC     H5P__dcrt_layout_enc
-#define H5D_CRT_LAYOUT_DEC     H5P__dcrt_layout_dec
-#define H5D_CRT_LAYOUT_CMP     H5P__dcrt_layout_cmp
+#define H5D_CRT_LAYOUT_ENC         H5P__dcrt_layout_enc
+#define H5D_CRT_LAYOUT_DEC         H5P__dcrt_layout_dec
+#define H5D_CRT_LAYOUT_CMP         H5P__dcrt_layout_cmp
 /* Definitions for fill value.  size=0 means fill value will be 0 as
  * library default; size=-1 means fill value is undefined. */
 #define H5D_CRT_FILL_VALUE_SIZE    sizeof(H5O_fill_t)

@@ -38,14 +38,15 @@
 #include "H5Ppkg.h"		/* Property lists		  	*/
 
 
+/****************/
+/* Local Macros */
+/****************/
+
+/* ========= Group Creation properties ============ */
 #define H5G_CRT_GROUP_INFO_ENC    H5P_gcrt_group_info_enc
 #define H5G_CRT_GROUP_INFO_DEC    H5P_gcrt_group_info_dec
 #define H5G_CRT_LINK_INFO_ENC     H5P_gcrt_link_info_enc
 #define H5G_CRT_LINK_INFO_DEC     H5P_gcrt_link_info_dec
-
-/****************/
-/* Local Macros */
-/****************/
 
 
 /******************/
@@ -70,6 +71,7 @@ static herr_t H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *s
 static herr_t H5P_gcrt_group_info_dec(const uint8_t **pp, void *value);
 static herr_t H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P_gcrt_link_info_dec(const uint8_t **pp, void *value);
+
 
 /*********************/
 /* Package Variables */
@@ -125,13 +127,15 @@ H5P_gcrt_reg_prop(H5P_genclass_t *pclass)
 
     /* Register group info property */
     if(H5P_register_real(pclass, H5G_CRT_GROUP_INFO_NAME, H5G_CRT_GROUP_INFO_SIZE, &ginfo, 
-             NULL, NULL, NULL, H5G_CRT_GROUP_INFO_ENC, H5G_CRT_GROUP_INFO_DEC, NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5G_CRT_GROUP_INFO_ENC, H5G_CRT_GROUP_INFO_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register link info property */
     if(H5P_register_real(pclass, H5G_CRT_LINK_INFO_NAME, H5G_CRT_LINK_INFO_SIZE, &linfo, 
-             NULL, NULL, NULL, H5G_CRT_LINK_INFO_ENC, H5G_CRT_LINK_INFO_DEC, NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5G_CRT_LINK_INFO_ENC, H5G_CRT_LINK_INFO_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -520,90 +524,6 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P_gcrt_link_info_enc
- *
- * Purpose:        Callback routine which is called whenever the link
- *                 property in the dataset access property list is
- *                 encoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t 
-H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
-{
-    const H5O_linfo_t *linfo = (const H5O_linfo_t *)value; /* Create local aliases for values */
-    herr_t ret_value = 0;
-
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    if (NULL != *pp) {
-        unsigned crt_order_flags;
-
-        crt_order_flags |= linfo->track_corder ? H5P_CRT_ORDER_TRACKED : 0;
-        crt_order_flags |= linfo->index_corder ? H5P_CRT_ORDER_INDEXED : 0;
-
-        /* Encode the size of unsigned*/
-        *(*pp)++ = (uint8_t)sizeof(unsigned);
-
-        /* Encode the value */
-        H5_ENCODE_UNSIGNED(*pp, crt_order_flags)
-    }
-
-    *size += (1 + sizeof(unsigned));
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_gcrt_link_info_enc() */
-
-
-/*-------------------------------------------------------------------------
- * Function:       H5P_gcrt_link_info_dec
- *
- * Purpose:        Callback routine which is called whenever the link info
- *                 property in the dataset access property list is
- *                 decoded.
- *
- * Return:	   Success:	Non-negative
- *		   Failure:	Negative
- *
- * Programmer:     Mohamad Chaarawi
- *                 Monday, October 10, 2011
- *
- *-------------------------------------------------------------------------
- */
-static herr_t 
-H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
-{
-    unsigned crt_order_flags;
-    unsigned enc_size;
-    H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;
-    herr_t ret_value = SUCCEED;
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    enc_size = *(*pp)++;
-    if(enc_size != sizeof(unsigned))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
-
-    H5_DECODE_UNSIGNED(*pp, crt_order_flags)
-    /* Update fields */
-    linfo.track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
-    linfo.index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);
-
-    /* Set the value */
-    HDmemcpy(value, &linfo, sizeof(H5O_linfo_t));
-
- done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_gcrt_link_info_dec() */
-
-
-/*-------------------------------------------------------------------------
  * Function:       H5P_gcrt_group_info_enc
  *
  * Purpose:        Callback routine which is called whenever the group
@@ -622,21 +542,20 @@ static herr_t
 H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5O_ginfo_t *ginfo = (const H5O_ginfo_t *)value; /* Create local aliases for values */
-    herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
-    if (NULL != *pp) {
+    if(NULL != *pp) {
         UINT32ENCODE(*pp, ginfo->lheap_size_hint)
         UINT16ENCODE(*pp, ginfo->max_compact)
         UINT16ENCODE(*pp, ginfo->min_dense)
         UINT16ENCODE(*pp, ginfo->est_num_entries)
         UINT16ENCODE(*pp, ginfo->est_name_len)      
-    }
+    } /* end if */
 
-    *size += sizeof(uint16_t)*4 + sizeof(uint32_t);
+    *size += sizeof(uint16_t) * 4 + sizeof(uint32_t);
 
-    FUNC_LEAVE_NOAPI(ret_value)
+    FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P_gcrt_group_info_enc() */
 
 
@@ -659,7 +578,7 @@ static herr_t
 H5P_gcrt_group_info_dec(const uint8_t **pp, void *value)
 {
     H5O_ginfo_t ginfo;
-    herr_t ret_value = 0;
+    herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 
@@ -676,13 +595,13 @@ H5P_gcrt_group_info_dec(const uint8_t **pp, void *value)
 
     /* Update fields */
     if(ginfo.max_compact != H5G_CRT_GINFO_MAX_COMPACT || 
-       ginfo.min_dense != H5G_CRT_GINFO_MIN_DENSE)
+            ginfo.min_dense != H5G_CRT_GINFO_MIN_DENSE)
         ginfo.store_link_phase_change = TRUE;
     else
         ginfo.store_link_phase_change = FALSE;
 
     if(ginfo.est_num_entries != H5G_CRT_GINFO_EST_NUM_ENTRIES || 
-       ginfo.est_name_len != H5G_CRT_GINFO_EST_NAME_LEN)
+            ginfo.est_name_len != H5G_CRT_GINFO_EST_NAME_LEN)
         ginfo.store_est_entry_info = TRUE;
     else
         ginfo.store_est_entry_info = FALSE;
@@ -693,3 +612,88 @@ H5P_gcrt_group_info_dec(const uint8_t **pp, void *value)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_gcrt_group_info_dec() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_gcrt_link_info_enc
+ *
+ * Purpose:        Callback routine which is called whenever the link
+ *                 property in the dataset access property list is
+ *                 encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
+{
+    const H5O_linfo_t *linfo = (const H5O_linfo_t *)value; /* Create local aliases for values */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    if(NULL != *pp) {
+        unsigned crt_order_flags;
+
+        crt_order_flags |= linfo->track_corder ? H5P_CRT_ORDER_TRACKED : 0;
+        crt_order_flags |= linfo->index_corder ? H5P_CRT_ORDER_INDEXED : 0;
+
+        /* Encode the size of unsigned*/
+        *(*pp)++ = (uint8_t)sizeof(unsigned);
+
+        /* Encode the value */
+        H5_ENCODE_UNSIGNED(*pp, crt_order_flags)
+    } /* end if */
+
+    *size += (1 + sizeof(unsigned));
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P_gcrt_link_info_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P_gcrt_link_info_dec
+ *
+ * Purpose:        Callback routine which is called whenever the link info
+ *                 property in the dataset access property list is
+ *                 decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Mohamad Chaarawi
+ *                 Monday, October 10, 2011
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
+{
+    H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;
+    unsigned crt_order_flags;
+    unsigned enc_size;
+    herr_t ret_value = SUCCEED;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    enc_size = *(*pp)++;
+    if(enc_size != sizeof(unsigned))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
+
+    H5_DECODE_UNSIGNED(*pp, crt_order_flags)
+
+    /* Update fields */
+    linfo.track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
+    linfo.index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);
+
+    /* Set the value */
+    HDmemcpy(value, &linfo, sizeof(H5O_linfo_t));
+
+ done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_gcrt_link_info_dec() */
+

@@ -68,6 +68,7 @@
 /* Property class callbacks */
 static herr_t H5P_lcrt_reg_prop(H5P_genclass_t *pclass);
 
+
 /*********************/
 /* Package Variables */
 /*********************/
@@ -200,3 +201,4 @@ H5Pget_create_intermediate_group(hid_t plist_id, unsigned *crt_intmd_group /*out
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_create_intermediate_group() */
+

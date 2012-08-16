@@ -73,8 +73,6 @@
 /* Definitions for version number of the superblock         */
 #define H5F_CRT_SUPER_VERS_SIZE       sizeof(unsigned)
 #define H5F_CRT_SUPER_VERS_DEF        HDF5_SUPERBLOCK_VERSION_DEF
-#define H5F_CRT_SUPER_VERS_ENC        H5P__encode_unsigned
-#define H5F_CRT_SUPER_VERS_DEC        H5P__decode_unsigned
 /* Definitions for shared object header messages */
 #define H5F_CRT_SHMSG_NINDEXES_SIZE    sizeof(unsigned)
 #define H5F_CRT_SHMSG_NINDEXES_DEF     (0)
@@ -106,6 +104,7 @@
 #define H5F_CRT_FREE_SPACE_THRESHOLD_DEF       H5F_FREE_SPACE_THRESHOLD_DEF
 #define H5F_CRT_FREE_SPACE_THRESHOLD_ENC       H5P__encode_hsize_t
 #define H5F_CRT_FREE_SPACE_THRESHOLD_DEC       H5P__decode_hsize_t
+
 
 /******************/
 /* Local Typedefs */
@@ -197,75 +196,75 @@ H5P_fcrt_reg_prop(H5P_genclass_t *pclass)
 
     /* Register the user block size */
     if(H5P_register_real(pclass, H5F_CRT_USER_BLOCK_NAME, H5F_CRT_USER_BLOCK_SIZE, &userblock_size, 
-                         NULL, NULL, NULL, H5F_CRT_USER_BLOCK_ENC, H5F_CRT_USER_BLOCK_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_USER_BLOCK_ENC, H5F_CRT_USER_BLOCK_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the 1/2 rank for symbol table leaf nodes */
     if(H5P_register_real(pclass, H5F_CRT_SYM_LEAF_NAME, H5F_CRT_SYM_LEAF_SIZE, &sym_leaf_k, 
-                         NULL, NULL, NULL, H5F_CRT_SYM_LEAF_ENC, H5F_CRT_SYM_LEAF_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_SYM_LEAF_ENC, H5F_CRT_SYM_LEAF_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the 1/2 rank for btree internal nodes */
     if(H5P_register_real(pclass, H5F_CRT_BTREE_RANK_NAME, H5F_CRT_BTREE_RANK_SIZE, btree_k, 
-                         NULL, NULL, NULL, H5F_CRT_BTREE_RANK_ENC, H5F_CRT_BTREE_RANK_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_BTREE_RANK_ENC, H5F_CRT_BTREE_RANK_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the byte number for an address */
     if(H5P_register_real(pclass, H5F_CRT_ADDR_BYTE_NUM_NAME, H5F_CRT_ADDR_BYTE_NUM_SIZE, &sizeof_addr, 
-                         NULL, NULL, NULL, H5F_CRT_ADDR_BYTE_NUM_ENC, H5F_CRT_ADDR_BYTE_NUM_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_ADDR_BYTE_NUM_ENC, H5F_CRT_ADDR_BYTE_NUM_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the byte number for object size */
     if(H5P_register_real(pclass, H5F_CRT_OBJ_BYTE_NUM_NAME, H5F_CRT_OBJ_BYTE_NUM_SIZE, &sizeof_size, 
-                         NULL, NULL, NULL, H5F_CRT_OBJ_BYTE_NUM_ENC, H5F_CRT_OBJ_BYTE_NUM_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_OBJ_BYTE_NUM_ENC, H5F_CRT_OBJ_BYTE_NUM_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the superblock version number */
+    /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5F_CRT_SUPER_VERS_NAME, H5F_CRT_SUPER_VERS_SIZE, &superblock_ver, 
-                         NULL, NULL, NULL, H5F_CRT_SUPER_VERS_ENC, H5F_CRT_SUPER_VERS_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the shared OH message information */
     if(H5P_register_real(pclass,H5F_CRT_SHMSG_NINDEXES_NAME, H5F_CRT_SHMSG_NINDEXES_SIZE, &num_sohm_indexes,
-                         NULL,NULL,NULL,H5F_CRT_SHMSG_NINDEXES_ENC,H5F_CRT_SHMSG_NINDEXES_DEC,
-                         NULL,NULL, NULL, NULL)<0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_SHMSG_NINDEXES_ENC,H5F_CRT_SHMSG_NINDEXES_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
     if(H5P_register_real(pclass,H5F_CRT_SHMSG_INDEX_TYPES_NAME, H5F_CRT_SHMSG_INDEX_TYPES_SIZE, &sohm_index_flags,
-                         NULL,NULL,NULL,H5F_CRT_SHMSG_INDEX_TYPES_ENC,H5F_CRT_SHMSG_INDEX_TYPES_DEC,
-                         NULL,NULL, NULL, NULL)<0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_SHMSG_INDEX_TYPES_ENC, H5F_CRT_SHMSG_INDEX_TYPES_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
     if(H5P_register_real(pclass,H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, H5F_CRT_SHMSG_INDEX_MINSIZE_SIZE, &sohm_index_minsizes,
-                         NULL,NULL,NULL,H5F_CRT_SHMSG_INDEX_MINSIZE_ENC,H5F_CRT_SHMSG_INDEX_MINSIZE_DEC,
-                         NULL,NULL, NULL, NULL)<0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_SHMSG_INDEX_MINSIZE_ENC, H5F_CRT_SHMSG_INDEX_MINSIZE_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the shared OH cutoff size information */
     if(H5P_register_real(pclass,H5F_CRT_SHMSG_LIST_MAX_NAME, H5F_CRT_SHMSG_LIST_MAX_SIZE, &sohm_list_max,
-                         NULL,NULL,NULL,H5F_CRT_SHMSG_LIST_MAX_ENC,H5F_CRT_SHMSG_LIST_MAX_DEC,
-                         NULL,NULL, NULL, NULL)<0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_SHMSG_LIST_MAX_ENC, H5F_CRT_SHMSG_LIST_MAX_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
     if(H5P_register_real(pclass,H5F_CRT_SHMSG_BTREE_MIN_NAME, H5F_CRT_SHMSG_BTREE_MIN_SIZE, &sohm_btree_min,
-                         NULL,NULL,NULL,H5F_CRT_SHMSG_BTREE_MIN_ENC, H5F_CRT_SHMSG_BTREE_MIN_DEC,
-                         NULL,NULL, NULL, NULL)<0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_SHMSG_BTREE_MIN_ENC, H5F_CRT_SHMSG_BTREE_MIN_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the file space handling strategy */
     if(H5P_register_real(pclass, H5F_CRT_FILE_SPACE_STRATEGY_NAME, H5F_CRT_FILE_SPACE_STRATEGY_SIZE, &file_space_strategy, 
-                         NULL, NULL, NULL, H5F_CRT_FILE_SPACE_STRATEGY_ENC, H5F_CRT_FILE_SPACE_STRATEGY_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_FILE_SPACE_STRATEGY_ENC, H5F_CRT_FILE_SPACE_STRATEGY_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the free space section threshold */
     if(H5P_register_real(pclass, H5F_CRT_FREE_SPACE_THRESHOLD_NAME, H5F_CRT_FREE_SPACE_THRESHOLD_SIZE, &free_space_threshold, 
-                         NULL, NULL, NULL, H5F_CRT_FREE_SPACE_THRESHOLD_ENC, H5F_CRT_FREE_SPACE_THRESHOLD_DEC, 
-                         NULL, NULL, NULL, NULL) < 0)
-         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+            NULL, NULL, NULL, H5F_CRT_FREE_SPACE_THRESHOLD_ENC, H5F_CRT_FREE_SPACE_THRESHOLD_DEC, 
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_fcrt_reg_prop() */
@@ -697,16 +696,17 @@ H5P__fcrt_btree_rank_enc(const void *value, uint8_t **pp, size_t *size)
     HDassert(size);
 
     if(NULL != *pp) {
-        int i = 0;
+        unsigned u;             /* Local index variable */
+
         /* Encode the size of a double*/
         *(*pp)++ = (uint8_t)sizeof(unsigned);
 
         /* Encode all the btree  */
-        for (i=0 ; i<H5B_NUM_BTREE_ID; i++) {
+        for(u = 0 ; u < H5B_NUM_BTREE_ID; u++) {
             /* Encode the left split value */
             H5_ENCODE_UNSIGNED(*pp, *(const unsigned *)btree_k)
             btree_k++;
-        }
+        } /* end for */
     } /* end if */
 
     /* Size of type flags values */
@@ -734,8 +734,8 @@ static herr_t
 H5P__fcrt_btree_rank_dec(const uint8_t **pp, void *value)
 {
     unsigned btree_k[H5B_NUM_BTREE_ID];
-    int i;
     unsigned enc_size;                  /* Size of encoded property */
+    unsigned u;                         /* Local index variable */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -751,8 +751,8 @@ H5P__fcrt_btree_rank_dec(const uint8_t **pp, void *value)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
 
     /* Decode all the type flags */
-    for (i=0 ; i<H5B_NUM_BTREE_ID; i++)
-        H5_DECODE_UNSIGNED(*pp, btree_k[i])
+    for(u = 0 ; u < H5B_NUM_BTREE_ID; u++)
+        H5_DECODE_UNSIGNED(*pp, btree_k[u])
 
     /* Set the value */
     HDmemcpy(value, btree_k, sizeof(unsigned[H5B_NUM_BTREE_ID]));
@@ -988,16 +988,17 @@ H5P__fcrt_shmsg_index_types_enc(const void *value, uint8_t **pp, size_t *size)
     HDassert(size);
 
     if(NULL != *pp) {
-        int i = 0;
+        unsigned u;             /* Local index variable */
+
         /* Encode the size of a double*/
         *(*pp)++ = (uint8_t)sizeof(unsigned);
 
         /* Encode all the type flags */
-        for (i=0 ; i<H5O_SHMESG_MAX_NINDEXES; i++) {
+        for(u = 0; u < H5O_SHMESG_MAX_NINDEXES; u++) {
             /* Encode the left split value */
             H5_ENCODE_UNSIGNED(*pp, *(const unsigned *)type_flags)
             type_flags++;
-        }
+        } /* end for */
     } /* end if */
 
     /* Size of type flags values */
@@ -1026,8 +1027,8 @@ static herr_t
 H5P__fcrt_shmsg_index_types_dec(const uint8_t **pp, void *value)
 {
     unsigned type_flags[H5O_SHMESG_MAX_NINDEXES];
-    int i;
     unsigned enc_size;                  /* Size of encoded property */
+    unsigned u;                         /* Local index variable */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -1043,8 +1044,8 @@ H5P__fcrt_shmsg_index_types_dec(const uint8_t **pp, void *value)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
 
     /* Decode all the type flags */
-    for (i=0 ; i<H5O_SHMESG_MAX_NINDEXES; i++)
-        H5_DECODE_UNSIGNED(*pp, type_flags[i])
+    for(u = 0; u < H5O_SHMESG_MAX_NINDEXES; u++)
+        H5_DECODE_UNSIGNED(*pp, type_flags[u])
 
     /* Set the value */
     HDmemcpy(value, type_flags, sizeof(unsigned[H5O_SHMESG_MAX_NINDEXES]));
@@ -1081,16 +1082,17 @@ H5P__fcrt_shmsg_index_minsize_enc(const void *value, uint8_t **pp, size_t *size)
     HDassert(size);
 
     if(NULL != *pp) {
-        int i = 0;
+        unsigned u;             /* Local index variable */
+
         /* Encode the size of a double*/
         *(*pp)++ = (uint8_t)sizeof(unsigned);
 
         /* Encode all the minsize values */
-        for (i=0 ; i<H5O_SHMESG_MAX_NINDEXES; i++) {
+        for(u = 0 ; u < H5O_SHMESG_MAX_NINDEXES; u++) {
             /* Encode the left split value */
             H5_ENCODE_UNSIGNED(*pp, *(const unsigned *)minsizes)
             minsizes++;
-        }
+        } /* end for */
     } /* end if */
 
     /* Size of type flags values */
@@ -1119,8 +1121,8 @@ static herr_t
 H5P__fcrt_shmsg_index_minsize_dec(const uint8_t **pp, void *value)
 {
     unsigned minsizes[H5O_SHMESG_MAX_NINDEXES];
-    int i;
     unsigned enc_size;                  /* Size of encoded property */
+    unsigned u;                         /* Local index variable */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -1136,8 +1138,8 @@ H5P__fcrt_shmsg_index_minsize_dec(const uint8_t **pp, void *value)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
 
     /* Decode all the minsize values */
-    for (i=0 ; i<H5O_SHMESG_MAX_NINDEXES; i++)
-        H5_DECODE_UNSIGNED(*pp, minsizes[i])
+    for(u = 0 ; u < H5O_SHMESG_MAX_NINDEXES; u++)
+        H5_DECODE_UNSIGNED(*pp, minsizes[u])
 
     /* Set the value */
     HDmemcpy(value, minsizes, sizeof(unsigned[H5O_SHMESG_MAX_NINDEXES]));

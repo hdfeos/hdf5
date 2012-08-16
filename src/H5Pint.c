@@ -975,12 +975,11 @@ done:
         H5P_prp_get_func_t prp_get; IN: Function pointer to property get callback
         H5P_prp_encode_func_t prp_encode; IN: Function pointer to property encode
         H5P_prp_decode_func_t prp_decode; IN: Function pointer to property decode
-                                    callback
         H5P_prp_delete_func_t prp_delete; IN: Function pointer to property delete callback
         H5P_prp_copy_func_t prp_copy; IN: Function pointer to property copy callback
         H5P_prp_compare_func_t prp_cmp; IN: Function pointer to property compare callback
         H5P_prp_close_func_t prp_close; IN: Function pointer to property close
-
+                                    callback
  RETURNS
     Returns a pointer to the newly created property on success,
         NULL on failure.
@@ -1795,11 +1794,11 @@ done:
         H5P_prp_get_func_t prp_get; IN: Function pointer to property get callback
         H5P_prp_encode_func_t prp_encode; IN: Function pointer to property encode
         H5P_prp_decode_func_t prp_decode; IN: Function pointer to property decode
-                                    callback
         H5P_prp_delete_func_t prp_delete; IN: Function pointer to property delete callback
         H5P_prp_copy_func_t prp_copy; IN: Function pointer to property copy callback
         H5P_prp_compare_func_t prp_cmp; IN: Function pointer to property compare callback
         H5P_prp_close_func_t prp_close; IN: Function pointer to property close
+                                    callback
  RETURNS
     Returns non-negative on success, negative on failure.
  DESCRIPTION
@@ -2284,11 +2283,11 @@ done:
         H5P_prp_get_func_t prp_get; IN: Function pointer to property get callback
         H5P_prp_encode_func_t prp_encode; IN: Function pointer to property encode
         H5P_prp_decode_func_t prp_decode; IN: Function pointer to property decode
-                                    callback
         H5P_prp_delete_func_t prp_delete; IN: Function pointer to property delete callback
         H5P_prp_copy_func_t prp_copy; IN: Function pointer to property copy callback
         H5P_prp_compare_func_t prp_cmp; IN: Function pointer to property compare callback
         H5P_prp_close_func_t prp_close; IN: Function pointer to property close
+                                    callback
  RETURNS
     Returns non-negative on success, negative on failure.
  DESCRIPTION
