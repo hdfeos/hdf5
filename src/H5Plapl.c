@@ -255,7 +255,7 @@ H5P_lacc_elink_fapl_enc(const void *value, uint8_t **pp, size_t *size)
             *pp += enc_size;
     } /* end if */
 
-    *size += 1 + enc_size;      /* Non-default flag, plus encoded property list size */
+    *size += (1 + enc_size);      /* Non-default flag, plus encoded property list size */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

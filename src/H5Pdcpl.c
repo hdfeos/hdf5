@@ -686,13 +686,12 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
         /* The size of the fill value buffer */
         *size += (size_t)fill->size;
 
-        /* Get the size of the encoded datatype */
-        HDassert(fill->type);
-        if(H5T_encode(fill->type, NULL, &dt_size) < 0)
-            HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
-
         /* calculate those if they were not calculated earlier */
         if(NULL == *pp) {
+            /* Get the size of the encoded datatype */
+            HDassert(fill->type);
+            if(H5T_encode(fill->type, NULL, &dt_size) < 0)
+                HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
             enc_value = (uint64_t)dt_size;
             enc_size = H5V_limit_enc_size(enc_value);
         }
@@ -858,6 +857,8 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
     const H5O_efl_t *efl = (const H5O_efl_t *)value; /* Create local aliases for values */
     size_t len = 0;                     /* String length of slot name */
     size_t u;                           /* Local index variable */
+    unsigned enc_size;
+    uint64_t enc_value;
 
     FUNC_ENTER_STATIC_NOERR
 
@@ -870,21 +871,39 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
 
     if(NULL != *pp) {
         /* Encode number of slots used */
-        UINT64ENCODE_VARLEN(*pp, efl->nused);
+        enc_value = (uint64_t)efl->nused;
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
         /* Encode file list */
         for(u = 0; u < efl->nused; u++) {
             /* Calculate length of slot name and encode it */
             len = HDstrlen(efl->slot[u].name) + 1;
-            UINT64ENCODE_VARLEN(*pp, len);
+            enc_value = (uint64_t)len;
+            enc_size = H5V_limit_enc_size(enc_value);
+            HDassert(enc_size < 256);
+            *(*pp)++ = (uint8_t)enc_size;
+            UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
             /* Encode name */
             HDmemcpy(*pp, (uint8_t *)(efl->slot[u].name), len);
             *pp += len;
 
-            /* Encode offset and size */
-            UINT64ENCODE_VARLEN(*pp, efl->slot[u].offset);
-            UINT64ENCODE_VARLEN(*pp, efl->slot[u].size);
+            /* Encode offset */
+            enc_value = (uint64_t)efl->slot[u].offset;
+            enc_size = H5V_limit_enc_size(enc_value);
+            HDassert(enc_size < 256);
+            *(*pp)++ = (uint8_t)enc_size;
+            UINT64ENCODE_VAR(*pp, enc_value, enc_size);
+
+            /* encode size */
+            enc_value = (uint64_t)efl->slot[u].size;
+            enc_size = H5V_limit_enc_size(enc_value);
+            HDassert(enc_size < 256);
+            *(*pp)++ = (uint8_t)enc_size;
+            UINT64ENCODE_VAR(*pp, enc_value, enc_size);
         } /* end for */
     } /* end if */
 
@@ -922,6 +941,8 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
 {
     H5O_efl_t efl; /* Create local aliases for values */
     size_t u, nused;
+    unsigned enc_size;
+    uint64_t enc_value;
     herr_t ret_value = SUCCEED;       /* Return value */
 
     FUNC_ENTER_STATIC
@@ -940,7 +961,10 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
     /* Decode number of slots used */
-    UINT64DECODE_VARLEN(*pp, nused);
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    nused = (size_t)enc_value;
 
     /* Decode information for each slot */
     for(u = 0; u < nused; u++) {
@@ -957,15 +981,26 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
         } /* end if */
 
         /* Decode length of slot name */
-        UINT64DECODE_VARLEN(*pp, len);
+        enc_size = *(*pp)++;
+        HDassert(enc_size < 256);
+        UINT64DECODE_VAR(*pp, enc_value, enc_size);
+        len = (size_t)enc_value;
 
         /* Allocate name buffer and decode the name into it */
         efl.slot[u].name = H5MM_xstrdup((const char *)(*pp));
         *pp += len;
 
-        /* decode offset and size */
-        UINT64DECODE_VARLEN(*pp, efl.slot[u].offset);
-        UINT64DECODE_VARLEN(*pp, efl.slot[u].size);
+        /* decode offset */
+        enc_size = *(*pp)++;
+        HDassert(enc_size < 256);
+        UINT64DECODE_VAR(*pp, enc_value, enc_size);
+        efl.slot[u].offset = (off_t)enc_value;
+
+        /* decode size */
+        enc_size = *(*pp)++;
+        HDassert(enc_size < 256);
+        UINT64DECODE_VAR(*pp, enc_value, enc_size);
+        efl.slot[u].size = (hsize_t)enc_value;
 
         efl.slot[u].name_offset = 0; /*not entered into heap yet*/
         efl.nused++;

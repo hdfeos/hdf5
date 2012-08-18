@@ -168,8 +168,10 @@ H5P__encode_hsize_t(const void *value, uint8_t **pp, size_t *size)
     HDassert(size);
 
     if(NULL != *pp) {
+        *(*pp)++ = (uint8_t)enc_size;
+
         /* Encode the value */
-        UINT64ENCODE_VARLEN(*pp, enc_value);
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
     } /* end if */
 
     /* Set size needed for encoding */
@@ -514,6 +516,7 @@ herr_t
 H5P__decode_hsize_t(const uint8_t **pp, void *value)
 {
     uint64_t enc_value;                 /* Decoded property value */
+    unsigned enc_size;                  /* Size of encoded property */
 
     FUNC_ENTER_PACKAGE_NOERR
 
@@ -523,8 +526,12 @@ H5P__decode_hsize_t(const uint8_t **pp, void *value)
     HDassert(*pp);
     HDassert(value);
 
+    /* Decode the size */
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+
     /* Decode the value */
-    UINT64DECODE_VARLEN(*pp, enc_value);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
 
     /* Set the value */
     HDmemcpy(value, &enc_value, sizeof(uint64_t));
@@ -602,7 +609,7 @@ H5P__decode_uint8_t(const uint8_t **pp, void *value)
     HDassert(value);
 
     /* Decode the value */
-    enc_value = (uint8_t)*(*pp)++;
+    enc_value = *(*pp)++;
 
     /* Set the value */
     HDmemcpy(value, &enc_value, sizeof(uint8_t));

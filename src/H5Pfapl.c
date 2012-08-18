@@ -2470,7 +2470,7 @@ static herr_t
 H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5AC_cache_config_t *config = (const H5AC_cache_config_t *)value; /* Create local aliases for values */
-    unsigned enc_size = 0;      /* Size of encoded property */
+    unsigned enc_size;      /* Size of encoded property */
     uint64_t enc_value;         /* Property to encode */
 
     FUNC_ENTER_STATIC_NOERR
@@ -2482,11 +2482,10 @@ H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
     if(NULL != *pp) {
         /* encode type sizes */
         *(*pp)++ = (uint8_t)sizeof(unsigned);
-        *(*pp)++ = (uint8_t)sizeof(size_t);
         *(*pp)++ = (uint8_t)sizeof(double);
 
         /* int */
-        INT32ENCODE(*pp, config->version);
+        INT32ENCODE(*pp, (int32_t)config->version);
 
         H5_ENCODE_UNSIGNED(*pp, config->rpt_fcn_enabled);
 
@@ -2502,18 +2501,27 @@ H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
         H5_ENCODE_UNSIGNED(*pp, config->set_initial_size);
 
         enc_value = (uint64_t)config->initial_size;
-        UINT64ENCODE_VARLEN(*pp, enc_value);
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
         H5_ENCODE_DOUBLE(*pp, config->min_clean_fraction);
 
         enc_value = (uint64_t)config->max_size;
-        UINT64ENCODE_VARLEN(*pp, enc_value);
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
         enc_value = (uint64_t)config->min_size;
-        UINT64ENCODE_VARLEN(*pp, enc_value);
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
         /* long int */
-        INT64ENCODE(*pp, config->epoch_length);
+        INT64ENCODE(*pp, (int64_t)config->epoch_length);
 
         /* enum */
         *(*pp)++ = (uint8_t)config->incr_mode;
@@ -2525,7 +2533,10 @@ H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
         H5_ENCODE_UNSIGNED(*pp, config->apply_max_increment);
 
         enc_value = (uint64_t)config->max_increment;
-        UINT64ENCODE_VARLEN(*pp, enc_value);
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
         /* enum */
         *(*pp)++ = (uint8_t)config->flash_incr_mode;
@@ -2544,21 +2555,26 @@ H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
         H5_ENCODE_UNSIGNED(*pp, config->apply_max_decrement);
 
         enc_value = (uint64_t)config->max_decrement;
-        UINT64ENCODE_VARLEN(*pp, enc_value);
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
         /* int */
-        INT32ENCODE(*pp, config->epochs_before_eviction);
+        INT32ENCODE(*pp, (int32_t)config->epochs_before_eviction);
 
         H5_ENCODE_UNSIGNED(*pp, config->apply_empty_reserve);
 
         H5_ENCODE_DOUBLE(*pp, config->empty_reserve);
 
         /* int */
-        INT32ENCODE(*pp, config->dirty_bytes_threshold);
+        INT32ENCODE(*pp, (int32_t)config->dirty_bytes_threshold);
 
         /* int */
-        INT32ENCODE(*pp, config->metadata_write_strategy);
+        INT32ENCODE(*pp, (int32_t)config->metadata_write_strategy);
     } /* end if */
+
+    enc_size = 0;
 
     /* Compute encoded size of variably-encoded values */
     enc_value = (uint64_t)config->initial_size;
@@ -2572,7 +2588,7 @@ H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
     enc_value = (uint64_t)config->max_decrement;
     enc_size += 1 + H5V_limit_enc_size(enc_value);
 
-    *size += (6 + sizeof(unsigned)*8 + sizeof(double)*8 + enc_size + sizeof(int32_t)*4 + 
+    *size += (5 + sizeof(unsigned)*8 + sizeof(double)*8 + enc_size + sizeof(int32_t)*4 + 
               sizeof(int64_t) + H5AC__MAX_TRACE_FILE_NAME_LEN + 1);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -2598,7 +2614,8 @@ static herr_t
 H5P__facc_cache_config_dec(const uint8_t **pp, void *value)
 {
     H5AC_cache_config_t config;
-    unsigned enc_size;                  /* Size of encoded values */
+    unsigned enc_size;
+    uint64_t enc_value;
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -2614,9 +2631,6 @@ H5P__facc_cache_config_dec(const uint8_t **pp, void *value)
     enc_size = *(*pp)++;
     if(enc_size != sizeof(unsigned))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
-    enc_size = *(*pp)++;
-    if(enc_size != sizeof(size_t))
-        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "size_t value can't be decoded")
     enc_size = *(*pp)++;
     if(enc_size != sizeof(double))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "double value can't be decoded")
@@ -2637,17 +2651,29 @@ H5P__facc_cache_config_dec(const uint8_t **pp, void *value)
 
     H5_DECODE_UNSIGNED(*pp, config.set_initial_size);
 
-    UINT64DECODE_VARLEN(*pp, config.initial_size);
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    config.initial_size = (size_t)enc_value;
 
     H5_DECODE_DOUBLE(*pp, config.min_clean_fraction);
 
-    UINT64DECODE_VARLEN(*pp, config.max_size);
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    config.max_size = (size_t)enc_value;
 
-    UINT64DECODE_VARLEN(*pp, config.min_size);
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    config.min_size = (size_t)enc_value;
 
     /* long int */
-    INT64DECODE(*pp, config.epoch_length);
-
+    {
+        int64_t temp;
+        INT64DECODE(*pp, temp);
+        config.epoch_length = (long int)temp;
+    }
     /* enum */
     config.incr_mode = (enum H5C_cache_incr_mode)*(*pp)++;
 
@@ -2657,7 +2683,10 @@ H5P__facc_cache_config_dec(const uint8_t **pp, void *value)
 
     H5_DECODE_UNSIGNED(*pp, config.apply_max_increment);
 
-    UINT64DECODE_VARLEN(*pp, config.max_increment);
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    config.max_increment = (size_t)enc_value;
 
     /* enum */
     config.flash_incr_mode = (enum H5C_cache_flash_incr_mode)*(*pp)++;
@@ -2675,7 +2704,10 @@ H5P__facc_cache_config_dec(const uint8_t **pp, void *value)
 
     H5_DECODE_UNSIGNED(*pp, config.apply_max_decrement);
 
-    UINT64DECODE_VARLEN(*pp, config.max_decrement);
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    config.max_decrement = (size_t)enc_value;
 
     /* int */
     INT32DECODE(*pp, config.epochs_before_eviction);

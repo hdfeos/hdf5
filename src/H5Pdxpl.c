@@ -472,7 +472,7 @@ H5P__dxfr_bkgr_buf_type_dec(const uint8_t **pp, void *value)
     bkgr_buf_type = (H5T_bkg_t)*(*pp)++;
 
     /* Set the value */
-    HDmemcpy(value, bkgr_buf_type, sizeof(H5T_bkg_t));
+    HDmemcpy(value, &bkgr_buf_type, sizeof(H5T_bkg_t));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_bkgr_buf_type_dec() */
@@ -595,14 +595,13 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
     const H5Z_data_xform_t *data_xform_prop = *(const H5Z_data_xform_t **)value; /* Create local alias for values */
     const char *pexp = NULL;            /* Pointer to transform expression */
     size_t	len = 0;                /* Length of transform expression */
-    uint64_t enc_value;
-    unsigned enc_size;
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Sanity check */
     HDassert(data_xform_prop);
+    HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
     HDassert(size);
 
     /* Check for data transform set */
@@ -615,14 +614,16 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
         len = HDstrlen(pexp) + 1;
     } /* end if */
 
-    /* Get the length of the encoded length */
-    enc_value = len;
-    enc_size = H5V_limit_enc_size(enc_value);
-
     if(NULL != *pp) {
+        uint64_t enc_value;
+        unsigned enc_size;
+
         /* encode the length of the prefix */
         enc_value = (uint64_t)len;
-        UINT64ENCODE_VARLEN(*pp, enc_value);
+        enc_size = H5V_limit_enc_size(enc_value);
+        HDassert(enc_size < 256);
+        *(*pp)++ = (uint8_t)enc_size;
+        UINT64ENCODE_VAR(*pp, enc_value, enc_size);
 
         if(NULL != data_xform_prop) {
             /* Sanity check */
@@ -636,7 +637,7 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
     } /* end if */
 
     /* Size of encoded data transform */
-    *size += (1 + enc_size);
+    *size += (1 + H5V_limit_enc_size((uint64_t)len));
     if(NULL != pexp)
         *size += len;
 
@@ -665,6 +666,8 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
 {
     H5Z_data_xform_t *data_xform_prop = NULL;    /* New data xform property */
     size_t len;                         /* Length of encoded string */
+    unsigned enc_size;
+    uint64_t enc_value;
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
@@ -675,8 +678,11 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
     HDassert(value);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
-    /* Decode the value */
-    UINT64DECODE_VARLEN(*pp, len);
+    /* Decode the length of xform expression */
+    enc_size = *(*pp)++;
+    HDassert(enc_size < 256);
+    UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    len = (size_t)enc_value;
 
     if(0 != len) {
         if(NULL == (data_xform_prop = H5Z_xform_create((const char *)*pp)))

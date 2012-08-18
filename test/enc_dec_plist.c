@@ -178,6 +178,51 @@ main(void)
 
     PASSED();
 
+    /******* ENCODE/DECODE OCPLS *****/
+    TESTING("OCPL Encoding/Decoding");
+    if((ocpl1 = H5Pcreate(H5P_OBJECT_CREATE)) < 0)
+        FAIL_STACK_ERROR
+
+    if((H5Pset_attr_creation_order(ocpl1, (H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED))) < 0)
+         FAIL_STACK_ERROR
+
+    if((H5Pset_attr_phase_change (ocpl1, 110, 105)) < 0)
+         FAIL_STACK_ERROR
+
+    if((H5Pset_filter (ocpl1, H5Z_FILTER_FLETCHER32, 0, (size_t)0, NULL)) < 0)
+        FAIL_STACK_ERROR
+
+    {
+        hid_t ocpl2;	        /* object create prop. list */
+        void *temp_buf = NULL;
+        size_t temp_size = 0;
+
+        /* first call to encode returns only the size of the buffer needed */
+        if(H5Pencode(ocpl1, TRUE, NULL, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        temp_buf = (uint8_t *)HDmalloc(temp_size);
+
+        if(H5Pencode(ocpl1, TRUE, temp_buf, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        if((ocpl2 = H5Pdecode(temp_buf)) < 0)
+            FAIL_STACK_ERROR
+        if(!H5Pequal(ocpl1, ocpl2))
+            FAIL_PUTS_ERROR("OCPL encoding decoding failed\n")
+
+        if((H5Pclose(ocpl2)) < 0)
+            FAIL_STACK_ERROR
+
+        HDfree(temp_buf);
+    }
+
+    /* release resource */
+    if((H5Pclose(ocpl1)) < 0)
+        FAIL_STACK_ERROR
+
+    PASSED();
+
     /******* ENCODE/DECODE DXPLS *****/
     TESTING("DXPL Encoding/Decoding");
     if((dxpl1 = H5Pcreate(H5P_DATASET_XFER)) < 0)
@@ -328,91 +373,6 @@ main(void)
 
     PASSED();
 
-    /******* ENCODE/DECODE OCPYLS *****/
-    TESTING("OCPYPL Encoding/Decoding");
-    if((ocpypl1 = H5Pcreate(H5P_OBJECT_COPY)) < 0)
-        FAIL_STACK_ERROR
-
-    if((H5Pset_copy_object(ocpypl1, H5O_COPY_EXPAND_EXT_LINK_FLAG)) < 0)
-        FAIL_STACK_ERROR
-
-    {
-        hid_t ocpypl2;		/* object copy prop. list */
-        void *temp_buf = NULL;
-        size_t temp_size = 0;
-
-        /* first call to encode returns only the size of the buffer needed */
-        if(H5Pencode(ocpypl1, TRUE, NULL, &temp_size) < 0)
-            FAIL_STACK_ERROR
-
-        temp_buf = (uint8_t *)HDmalloc(temp_size);
-
-        if(H5Pencode(ocpypl1, TRUE, temp_buf, &temp_size) < 0)
-            FAIL_STACK_ERROR
-
-        if((ocpypl2 = H5Pdecode(temp_buf)) < 0)
-            FAIL_STACK_ERROR
-
-        if(!H5Pequal(ocpypl1, ocpypl2))
-            FAIL_PUTS_ERROR("OCPYPL encoding decoding failed\n")
-
-        if((H5Pclose(ocpypl2)) < 0)
-             FAIL_STACK_ERROR
-
-        HDfree(temp_buf);
-    }
-        
-    /* release resource */
-    if((H5Pclose(ocpypl1)) < 0)
-         FAIL_STACK_ERROR
-
-    PASSED();
-
-    /******* ENCODE/DECODE OCPLS *****/
-    TESTING("OCPL Encoding/Decoding");
-    if((ocpl1 = H5Pcreate(H5P_OBJECT_CREATE)) < 0)
-        FAIL_STACK_ERROR
-
-    if((H5Pset_attr_creation_order(ocpl1, (H5P_CRT_ORDER_TRACKED | H5P_CRT_ORDER_INDEXED))) < 0)
-         FAIL_STACK_ERROR
-
-    if((H5Pset_attr_phase_change (ocpl1, 110, 105)) < 0)
-         FAIL_STACK_ERROR
-
-    if((H5Pset_filter (ocpl1, H5Z_FILTER_FLETCHER32, 0, (size_t)0, NULL)) < 0)
-        FAIL_STACK_ERROR
-
-    {
-        hid_t ocpl2;	        /* object create prop. list */
-        void *temp_buf = NULL;
-        size_t temp_size = 0;
-
-        /* first call to encode returns only the size of the buffer needed */
-        if(H5Pencode(ocpl1, TRUE, NULL, &temp_size) < 0)
-            FAIL_STACK_ERROR
-
-        temp_buf = (uint8_t *)HDmalloc(temp_size);
-
-        if(H5Pencode(ocpl1, TRUE, temp_buf, &temp_size) < 0)
-            FAIL_STACK_ERROR
-
-        if((ocpl2 = H5Pdecode(temp_buf)) < 0)
-            FAIL_STACK_ERROR
-        if(!H5Pequal(ocpl1, ocpl2))
-            FAIL_PUTS_ERROR("OCPL encoding decoding failed\n")
-
-        if((H5Pclose(ocpl2)) < 0)
-            FAIL_STACK_ERROR
-
-        HDfree(temp_buf);
-    }
-
-    /* release resource */
-    if((H5Pclose(ocpl1)) < 0)
-        FAIL_STACK_ERROR
-
-    PASSED();
-
     /******* ENCODE/DECODE LAPLS *****/
     TESTING("LAPL Encoding/Decoding");
     if((lapl1 = H5Pcreate(H5P_LINK_ACCESS)) < 0)
@@ -469,6 +429,46 @@ main(void)
     /* release resource */
     if((H5Pclose(lapl1)) < 0)
         FAIL_STACK_ERROR
+
+    PASSED();
+
+    /******* ENCODE/DECODE OCPYLS *****/
+    TESTING("OCPYPL Encoding/Decoding");
+    if((ocpypl1 = H5Pcreate(H5P_OBJECT_COPY)) < 0)
+        FAIL_STACK_ERROR
+
+    if((H5Pset_copy_object(ocpypl1, H5O_COPY_EXPAND_EXT_LINK_FLAG)) < 0)
+        FAIL_STACK_ERROR
+
+    {
+        hid_t ocpypl2;		/* object copy prop. list */
+        void *temp_buf = NULL;
+        size_t temp_size = 0;
+
+        /* first call to encode returns only the size of the buffer needed */
+        if(H5Pencode(ocpypl1, TRUE, NULL, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        temp_buf = (uint8_t *)HDmalloc(temp_size);
+
+        if(H5Pencode(ocpypl1, TRUE, temp_buf, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        if((ocpypl2 = H5Pdecode(temp_buf)) < 0)
+            FAIL_STACK_ERROR
+
+        if(!H5Pequal(ocpypl1, ocpypl2))
+            FAIL_PUTS_ERROR("OCPYPL encoding decoding failed\n")
+
+        if((H5Pclose(ocpypl2)) < 0)
+             FAIL_STACK_ERROR
+
+        HDfree(temp_buf);
+    }
+        
+    /* release resource */
+    if((H5Pclose(ocpypl1)) < 0)
+         FAIL_STACK_ERROR
 
     PASSED();
 
