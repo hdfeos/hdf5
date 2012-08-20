@@ -600,7 +600,6 @@ H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
     FUNC_ENTER_STATIC
 
     /* Sanity check */
-    HDassert(data_xform_prop);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
     HDassert(size);
 
