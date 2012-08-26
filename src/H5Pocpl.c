@@ -1363,7 +1363,8 @@ H5P_get_filter(const H5Z_filter_info_t *filter, unsigned int *flags/*out*/,
  *
  *-------------------------------------------------------------------------
  */
-static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *size)
+static herr_t
+H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5O_pline_t *pline = (const H5O_pline_t *)value;
     size_t u;
@@ -1375,7 +1376,7 @@ static herr_t H5P_ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *siz
     HDassert(size);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
-    if (NULL != *pp) {
+    if(NULL != *pp) {
         unsigned enc_size;
         uint64_t enc_value;
 

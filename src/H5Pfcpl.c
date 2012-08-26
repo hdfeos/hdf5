@@ -231,25 +231,25 @@ H5P_fcrt_reg_prop(H5P_genclass_t *pclass)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the shared OH message information */
-    if(H5P_register_real(pclass,H5F_CRT_SHMSG_NINDEXES_NAME, H5F_CRT_SHMSG_NINDEXES_SIZE, &num_sohm_indexes,
-            NULL, NULL, NULL, H5F_CRT_SHMSG_NINDEXES_ENC,H5F_CRT_SHMSG_NINDEXES_DEC,
+    if(H5P_register_real(pclass, H5F_CRT_SHMSG_NINDEXES_NAME, H5F_CRT_SHMSG_NINDEXES_SIZE, &num_sohm_indexes,
+            NULL, NULL, NULL, H5F_CRT_SHMSG_NINDEXES_ENC, H5F_CRT_SHMSG_NINDEXES_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
-    if(H5P_register_real(pclass,H5F_CRT_SHMSG_INDEX_TYPES_NAME, H5F_CRT_SHMSG_INDEX_TYPES_SIZE, &sohm_index_flags,
+    if(H5P_register_real(pclass, H5F_CRT_SHMSG_INDEX_TYPES_NAME, H5F_CRT_SHMSG_INDEX_TYPES_SIZE, &sohm_index_flags,
             NULL, NULL, NULL, H5F_CRT_SHMSG_INDEX_TYPES_ENC, H5F_CRT_SHMSG_INDEX_TYPES_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
-    if(H5P_register_real(pclass,H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, H5F_CRT_SHMSG_INDEX_MINSIZE_SIZE, &sohm_index_minsizes,
+    if(H5P_register_real(pclass, H5F_CRT_SHMSG_INDEX_MINSIZE_NAME, H5F_CRT_SHMSG_INDEX_MINSIZE_SIZE, &sohm_index_minsizes,
             NULL, NULL, NULL, H5F_CRT_SHMSG_INDEX_MINSIZE_ENC, H5F_CRT_SHMSG_INDEX_MINSIZE_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the shared OH cutoff size information */
-    if(H5P_register_real(pclass,H5F_CRT_SHMSG_LIST_MAX_NAME, H5F_CRT_SHMSG_LIST_MAX_SIZE, &sohm_list_max,
+    if(H5P_register_real(pclass, H5F_CRT_SHMSG_LIST_MAX_NAME, H5F_CRT_SHMSG_LIST_MAX_SIZE, &sohm_list_max,
             NULL, NULL, NULL, H5F_CRT_SHMSG_LIST_MAX_ENC, H5F_CRT_SHMSG_LIST_MAX_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
-    if(H5P_register_real(pclass,H5F_CRT_SHMSG_BTREE_MIN_NAME, H5F_CRT_SHMSG_BTREE_MIN_SIZE, &sohm_btree_min,
+    if(H5P_register_real(pclass, H5F_CRT_SHMSG_BTREE_MIN_NAME, H5F_CRT_SHMSG_BTREE_MIN_SIZE, &sohm_btree_min,
             NULL, NULL, NULL, H5F_CRT_SHMSG_BTREE_MIN_ENC, H5F_CRT_SHMSG_BTREE_MIN_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
@@ -265,6 +265,7 @@ H5P_fcrt_reg_prop(H5P_genclass_t *pclass)
             NULL, NULL, NULL, H5F_CRT_FREE_SPACE_THRESHOLD_ENC, H5F_CRT_FREE_SPACE_THRESHOLD_DEC, 
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P_fcrt_reg_prop() */
