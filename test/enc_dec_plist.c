@@ -432,7 +432,7 @@ main(void)
 
     PASSED();
 
-    /******* ENCODE/DECODE OCPYLS *****/
+    /******* ENCODE/DECODE OCPYPLS *****/
     TESTING("OCPYPL Encoding/Decoding");
     if((ocpypl1 = H5Pcreate(H5P_OBJECT_COPY)) < 0)
         FAIL_STACK_ERROR

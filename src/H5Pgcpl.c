@@ -43,10 +43,10 @@
 /****************/
 
 /* ========= Group Creation properties ============ */
-#define H5G_CRT_GROUP_INFO_ENC    H5P_gcrt_group_info_enc
-#define H5G_CRT_GROUP_INFO_DEC    H5P_gcrt_group_info_dec
-#define H5G_CRT_LINK_INFO_ENC     H5P_gcrt_link_info_enc
-#define H5G_CRT_LINK_INFO_DEC     H5P_gcrt_link_info_dec
+#define H5G_CRT_GROUP_INFO_ENC    H5P__gcrt_group_info_enc
+#define H5G_CRT_GROUP_INFO_DEC    H5P__gcrt_group_info_dec
+#define H5G_CRT_LINK_INFO_ENC     H5P__gcrt_link_info_enc
+#define H5G_CRT_LINK_INFO_DEC     H5P__gcrt_link_info_dec
 
 
 /******************/
@@ -64,13 +64,13 @@
 /********************/
 
 /* Property class callbacks */
-static herr_t H5P_gcrt_reg_prop(H5P_genclass_t *pclass);
+static herr_t H5P__gcrt_reg_prop(H5P_genclass_t *pclass);
 
 /* Property callbacks */
-static herr_t H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size);
-static herr_t H5P_gcrt_group_info_dec(const uint8_t **pp, void *value);
-static herr_t H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size);
-static herr_t H5P_gcrt_link_info_dec(const uint8_t **pp, void *value);
+static herr_t H5P__gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P__gcrt_group_info_dec(const uint8_t **pp, void *value);
+static herr_t H5P__gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size);
+static herr_t H5P__gcrt_link_info_dec(const uint8_t **pp, void *value);
 
 
 /*********************/
@@ -84,7 +84,7 @@ const H5P_libclass_t H5P_CLS_GCRT[1] = {{
     &H5P_CLS_OBJECT_CREATE_g,	/* Parent class ID              */
     &H5P_CLS_GROUP_CREATE_g,	/* Pointer to class ID          */
     &H5P_LST_GROUP_CREATE_g,	/* Pointer to default property list ID */
-    H5P_gcrt_reg_prop,		/* Default property registration routine */
+    H5P__gcrt_reg_prop,		/* Default property registration routine */
     NULL,		        /* Class creation callback      */
     NULL,		        /* Class creation callback info */
     NULL,			/* Class copy callback          */
@@ -106,7 +106,7 @@ const H5P_libclass_t H5P_CLS_GCRT[1] = {{
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5P_gcrt_reg_prop
+ * Function:    H5P__gcrt_reg_prop
  *
  * Purpose:     Initialize the group creation property list class
  *
@@ -117,13 +117,13 @@ const H5P_libclass_t H5P_CLS_GCRT[1] = {{
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P_gcrt_reg_prop(H5P_genclass_t *pclass)
+H5P__gcrt_reg_prop(H5P_genclass_t *pclass)
 {
     H5O_ginfo_t ginfo = H5G_CRT_GROUP_INFO_DEF;     /* Default group info settings */
     H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;      /* Default link info settings */
     herr_t ret_value = SUCCEED;         /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
     /* Register group info property */
     if(H5P_register_real(pclass, H5G_CRT_GROUP_INFO_NAME, H5G_CRT_GROUP_INFO_SIZE, &ginfo, 
@@ -139,7 +139,7 @@ H5P_gcrt_reg_prop(H5P_genclass_t *pclass)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_gcrt_reg_prop() */
+} /* end H5P__gcrt_reg_prop() */
 
 
 /*-------------------------------------------------------------------------
@@ -172,7 +172,7 @@ H5Pset_local_heap_size_hint(hid_t plist_id, size_t size_hint)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get group info")
 
     /* Update field */
-    ginfo.lheap_size_hint = size_hint;
+    H5_ASSIGN_OVERFLOW(ginfo.lheap_size_hint, size_hint, size_t, uint32_t);
 
     /* Set value */
     if(H5P_set(plist, H5G_CRT_GROUP_INFO_NAME, &ginfo) < 0)
@@ -524,7 +524,7 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P_gcrt_group_info_enc
+ * Function:       H5P__gcrt_group_info_enc
  *
  * Purpose:        Callback routine which is called whenever the group
  *                 property in the dataset access property list is
@@ -539,11 +539,11 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t 
-H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
+H5P__gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5O_ginfo_t *ginfo = (const H5O_ginfo_t *)value; /* Create local aliases for values */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
     if(NULL != *pp) {
         UINT32ENCODE(*pp, ginfo->lheap_size_hint)
@@ -556,11 +556,11 @@ H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
     *size += sizeof(uint16_t) * 4 + sizeof(uint32_t);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5P_gcrt_group_info_enc() */
+} /* end H5P__gcrt_group_info_enc() */
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P_gcrt_group_info_dec
+ * Function:       H5P__gcrt_group_info_dec
  *
  * Purpose:        Callback routine which is called whenever the group info
  *                 property in the dataset access property list is
@@ -575,17 +575,12 @@ H5P_gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t 
-H5P_gcrt_group_info_dec(const uint8_t **pp, void *value)
+H5P__gcrt_group_info_dec(const uint8_t **pp, void *value)
 {
     H5O_ginfo_t ginfo;
     herr_t ret_value = SUCCEED;         /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
-
-    /* Reset link info property */
-    HDmemset(&ginfo, 0, sizeof(ginfo));
-    if(H5O_msg_reset(H5O_GINFO_ID, &ginfo) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
+    FUNC_ENTER_STATIC_NOERR
 
     UINT32DECODE(*pp, ginfo.lheap_size_hint)
     UINT16DECODE(*pp, ginfo.max_compact)
@@ -609,13 +604,12 @@ H5P_gcrt_group_info_dec(const uint8_t **pp, void *value)
     /* Set the value */
     HDmemcpy(value, &ginfo, sizeof(ginfo));
 
-done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_gcrt_group_info_dec() */
+} /* end H5P__gcrt_group_info_dec() */
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P_gcrt_link_info_enc
+ * Function:       H5P__gcrt_link_info_enc
  *
  * Purpose:        Callback routine which is called whenever the link
  *                 property in the dataset access property list is
@@ -630,14 +624,14 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t 
-H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
+H5P__gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
 {
     const H5O_linfo_t *linfo = (const H5O_linfo_t *)value; /* Create local aliases for values */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
     if(NULL != *pp) {
-        unsigned crt_order_flags;
+        unsigned crt_order_flags = 0;
 
         crt_order_flags |= linfo->track_corder ? H5P_CRT_ORDER_TRACKED : 0;
         crt_order_flags |= linfo->index_corder ? H5P_CRT_ORDER_INDEXED : 0;
@@ -652,11 +646,11 @@ H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
     *size += (1 + sizeof(unsigned));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5P_gcrt_link_info_enc() */
+} /* end H5P__gcrt_link_info_enc() */
 
 
 /*-------------------------------------------------------------------------
- * Function:       H5P_gcrt_link_info_dec
+ * Function:       H5P__gcrt_link_info_dec
  *
  * Purpose:        Callback routine which is called whenever the link info
  *                 property in the dataset access property list is
@@ -671,14 +665,14 @@ H5P_gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t 
-H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
+H5P__gcrt_link_info_dec(const uint8_t **pp, void *value)
 {
     H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;
     unsigned crt_order_flags;
     unsigned enc_size;
     herr_t ret_value = SUCCEED;
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
     enc_size = *(*pp)++;
     if(enc_size != sizeof(unsigned))
@@ -693,7 +687,7 @@ H5P_gcrt_link_info_dec(const uint8_t **pp, void *value)
     /* Set the value */
     HDmemcpy(value, &linfo, sizeof(H5O_linfo_t));
 
- done:
+done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_gcrt_link_info_dec() */
+} /* end H5P__gcrt_link_info_dec() */
 

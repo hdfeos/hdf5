@@ -18,6 +18,7 @@
  */
 
 #include "h5test.h"
+#include "H5srcdir.h"
 
 static int test_plists(const char *filename1, const char *filename2);
 
@@ -99,8 +100,10 @@ static int test_plists(const char *filename1, const char *filename2)
     size_t size_le=0, size_be=0;
     void *buf_le=NULL, *buf_be=NULL;
     hid_t plist_le, plist_be;	       	/* dataset create prop. list */
+    const char *testfile1 = H5_get_srcdir_filename(filename1);
+    const char *testfile2 = H5_get_srcdir_filename(filename2);
 
-    if((fd_le = open(filename1, O_RDONLY)) < 0)
+    if((fd_le = open(testfile1, O_RDONLY)) < 0)
         FAIL_STACK_ERROR
     size_le = lseek(fd_le, 0, SEEK_END);
     lseek(fd_le, 0, SEEK_SET);
@@ -109,7 +112,7 @@ static int test_plists(const char *filename1, const char *filename2)
         FAIL_STACK_ERROR
     close(fd_le);
 
-    if((fd_be = open(filename2, O_RDONLY)) < 0)
+    if((fd_be = open(testfile2, O_RDONLY)) < 0)
         FAIL_STACK_ERROR
     size_be = lseek(fd_be, 0, SEEK_END);
     lseek(fd_be, 0, SEEK_SET);

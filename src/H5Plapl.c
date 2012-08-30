@@ -433,8 +433,12 @@ H5P_lacc_elink_fapl_cmp(const void *value1, const void *value2, size_t UNUSED si
     /* Check for NULL property lists */
     if(obj1 == NULL && obj2 != NULL) HGOTO_DONE(1);
     if(obj1 != NULL && obj2 == NULL) HGOTO_DONE(-1);
-    if(obj1 && obj2)
-        ret_value = H5P_cmp_plist(obj1, obj2);
+    if(obj1 && obj2) {
+        herr_t status;
+
+        status = H5P_cmp_plist(obj1, obj2, &ret_value);
+        HDassert(status >= 0);
+    } /* end if */
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
