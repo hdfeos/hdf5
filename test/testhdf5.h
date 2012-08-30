@@ -125,7 +125,7 @@
 } while(0)
 
 /* Used to document process through a test */
-#ifdef H5_HAVE_PARALLEL
+#if defined(H5_HAVE_PARALLEL) && defined(H5_PARALLEL_TEST)
 #define MESSAGE(V,A) {                                                        \
     int mpi_rank;                                                             \
                                                                               \
