@@ -131,6 +131,7 @@ static herr_t H5P__fcrt_shmsg_index_types_dec(const uint8_t **pp, void *value);
 static herr_t H5P__fcrt_shmsg_index_minsize_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__fcrt_shmsg_index_minsize_dec(const uint8_t **pp, void *value);
 
+
 /*********************/
 /* Package Variables */
 /*********************/

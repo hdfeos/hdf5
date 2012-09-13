@@ -200,8 +200,8 @@ H5_DLL herr_t H5P_close_class(void *_pclass);
 H5_DLL herr_t H5P_get_filter(const H5Z_filter_info_t *filter,
     unsigned int *flags, size_t *cd_nelmts, unsigned cd_values[],
     size_t namelen, char name[], unsigned *filter_config);
-H5_DLL hid_t H5P__new_plist_of_type(H5P_plist_type_t type);
 H5_DLL H5P_genprop_t *H5P__find_prop_plist(const H5P_genplist_t *plist, const char *name);
+H5_DLL hid_t H5P__new_plist_of_type(H5P_plist_type_t type);
 
 /* Generic encode/decode routines */
 H5_DLL herr_t H5P__encode_hsize_t(const void *value, uint8_t **pp, size_t *size);

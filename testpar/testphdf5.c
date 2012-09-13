@@ -506,6 +506,10 @@ int main(int argc, char **argv)
             "test actual io mode proprerty",
             PARATESTFILE);
 
+    AddTest("nocolcause", no_collective_cause_tests, NULL,
+            "test cause for broken collective io",
+            PARATESTFILE);
+
     AddTest("edpl", test_plist_ed, NULL,
 	    "encode/decode Property Lists", NULL);
 

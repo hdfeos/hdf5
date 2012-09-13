@@ -51,6 +51,7 @@
 #define H5L_ACS_NLINKS_ENC         H5P__encode_size_t
 #define H5L_ACS_NLINKS_DEC         H5P__decode_size_t
 
+
 /* Definitions for external link prefix */
 #define H5L_ACS_ELINK_PREFIX_SIZE        sizeof(char *)
 #define H5L_ACS_ELINK_PREFIX_DEF         NULL /*default is no prefix */
