@@ -92,7 +92,12 @@
 #define H5D_XFER_HYPER_VECTOR_SIZE_ENC  H5P__encode_size_t
 #define H5D_XFER_HYPER_VECTOR_SIZE_DEC  H5P__decode_size_t
 
-#ifdef H5_HAVE_PARALLEL
+/* Parallel I/O properties */
+/* Note: Some of these are registered with the DXPL class even when parallel
+ *      is disabled, so that property list comparisons of encoded property
+ *      lists (between parallel & non-parallel builds) work properly. -QAK
+ */
+
 /* Definitions for I/O transfer mode property */
 #define H5D_XFER_IO_XFER_MODE_SIZE      sizeof(H5FD_mpio_xfer_t)
 #define H5D_XFER_IO_XFER_MODE_DEF       H5FD_MPIO_INDEPENDENT
@@ -121,6 +126,7 @@
 /* Definitions for chunk io mode property. */
 #define H5D_MPIO_ACTUAL_IO_MODE_SIZE    sizeof(H5D_mpio_actual_io_mode_t)
 #define H5D_MPIO_ACTUAL_IO_MODE_DEF     H5D_MPIO_NO_COLLECTIVE
+#ifdef H5_HAVE_PARALLEL
 /* Definitions for memory MPI type property */
 #define H5FD_MPI_XFER_MEM_MPI_TYPE_SIZE        sizeof(MPI_Datatype)
 #define H5FD_MPI_XFER_MEM_MPI_TYPE_DEF         MPI_DATATYPE_NULL
@@ -172,14 +178,12 @@ static herr_t H5P__dxfr_bkgr_buf_type_enc(const void *value, uint8_t **pp, size_
 static herr_t H5P__dxfr_bkgr_buf_type_dec(const uint8_t **pp, void *value);
 static herr_t H5P__dxfr_btree_split_ratio_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_btree_split_ratio_dec(const uint8_t **pp, void *value);
-#ifdef H5_HAVE_PARALLEL
 static herr_t H5P__dxfr_io_xfer_mode_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_io_xfer_mode_dec(const uint8_t **pp, void *value);
 static herr_t H5P__dxfr_mpio_collective_opt_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_mpio_collective_opt_dec(const uint8_t **pp, void *value);
 static herr_t H5P__dxfr_mpio_chunk_opt_hard_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_mpio_chunk_opt_hard_dec(const uint8_t **pp, void *value);
-#endif /* H5_HAVE_PARALLEL */
 static herr_t H5P__dxfr_edc_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__dxfr_edc_dec(const uint8_t **pp, void *value);
 static herr_t H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size);
@@ -242,7 +246,6 @@ H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
     void *def_vlen_free_info = H5D_XFER_VLEN_FREE_INFO_DEF;     /* Default value for vlen free information */
     size_t def_hyp_vec_size = H5D_XFER_HYPER_VECTOR_SIZE_DEF;   /* Default value for vector size */
     haddr_t metadata_tag = H5AC_METADATA_TAG_DEF;              /* Default value for metadata tag */
-#ifdef H5_HAVE_PARALLEL
     H5FD_mpio_xfer_t def_io_xfer_mode = H5D_XFER_IO_XFER_MODE_DEF;      /* Default value for I/O transfer mode */
     H5FD_mpio_chunk_opt_t def_mpio_chunk_opt_mode = H5D_XFER_MPIO_CHUNK_OPT_HARD_DEF;
     H5FD_mpio_collective_opt_t def_mpio_collective_opt_mode = H5D_XFER_MPIO_COLLECTIVE_OPT_DEF;
@@ -250,6 +253,7 @@ H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
     unsigned def_mpio_chunk_opt_ratio = H5D_XFER_MPIO_CHUNK_OPT_RATIO_DEF;
     H5D_mpio_actual_chunk_opt_mode_t def_mpio_actual_chunk_opt_mode = H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_DEF;
     H5D_mpio_actual_io_mode_t def_mpio_actual_io_mode = H5D_MPIO_ACTUAL_IO_MODE_DEF;
+#ifdef H5_HAVE_PARALLEL
     MPI_Datatype btype = H5FD_MPI_XFER_MEM_MPI_TYPE_DEF;  /* Default value for MPI buffer type */
     MPI_Datatype ftype = H5FD_MPI_XFER_FILE_MPI_TYPE_DEF; /* Default value for MPI file type */
 #endif /* H5_HAVE_PARALLEL */
@@ -327,7 +331,6 @@ H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
-#ifdef H5_HAVE_PARALLEL
     /* Register the I/O transfer mode properties */
     if(H5P_register_real(pclass, H5D_XFER_IO_XFER_MODE_NAME, H5D_XFER_IO_XFER_MODE_SIZE, &def_io_xfer_mode, 
             NULL, NULL, NULL, H5D_XFER_IO_XFER_MODE_ENC, H5D_XFER_IO_XFER_MODE_DEC,
@@ -362,6 +365,7 @@ H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
+#ifdef H5_HAVE_PARALLEL
     /* Register the MPI memory type property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
     if(H5P_register_real(pclass, H5FD_MPI_XFER_MEM_MPI_TYPE_NAME, H5FD_MPI_XFER_MEM_MPI_TYPE_SIZE, &btype,
@@ -1665,7 +1669,6 @@ done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_hyper_vector_size() */
 
-#ifdef H5_HAVE_PARALLEL
 
 /*-------------------------------------------------------------------------
  * Function:       H5P__dxfr_io_xfer_mode_enc
@@ -1888,6 +1891,7 @@ H5P__dxfr_mpio_chunk_opt_hard_dec(const uint8_t **pp, void *value)
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_mpio_chunk_opt_hard_enc() */
 
+#ifdef H5_HAVE_PARALLEL
 
 /*-------------------------------------------------------------------------
  * Function:	H5Pget_mpio_actual_chunk_opt_mode

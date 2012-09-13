@@ -1742,7 +1742,6 @@ H5Z_xform_extract_xform_str(const H5Z_data_xform_t *data_xform_prop)
      * pasing them */
     assert(data_xform_prop);
 
-
     FUNC_LEAVE_NOAPI(data_xform_prop->xform_exp)
 } /* H5Z_xform_extract_xform_str() */
 

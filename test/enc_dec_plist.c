@@ -33,13 +33,15 @@ main(void)
     hid_t lapl1;	       	/* link access prop. list */
     hid_t fapl1;	       	/* file access prop. list */
     hid_t fcpl1;	       	/* file create prop. list */
+    hid_t strcpl1;	       	/* string create prop. list */
+    hid_t acpl1;	       	/* attribute create prop. list */
 
     hsize_t chunk_size = 16384;	/* chunk size */ 
-    double fill=2.7;            /* Fill value */
+    double fill = 2.7f;         /* Fill value */
     hsize_t max_size[1];        /* data space maximum size */
-    size_t nslots = 521*2;
+    size_t nslots = 521 * 2;
     size_t nbytes = 1048576 * 10;
-    double w0 = 0.5;
+    double w0 = 0.5f;
     unsigned max_compact;
     unsigned min_dense;
     const char* c_to_f = "x+32";
@@ -52,26 +54,26 @@ main(void)
         TRUE,
         FALSE,
         ( 2 * 2048 * 1024),
-        0.3,
+        0.3f,
         (64 * 1024 * 1024),
         (4 * 1024 * 1024),
         60000,
         H5C_incr__threshold,
-        0.8,
-        3.0,
+        0.8f,
+        3.0f,
         TRUE,
         (8 * 1024 * 1024),
         H5C_flash_incr__add_space,
-        2.0,
-        0.25,
+        2.0f,
+        0.25f,
         H5C_decr__age_out_with_threshold,
-        0.997,
-        0.8,
+        0.997f,
+        0.8f,
         TRUE,
         (3 * 1024 * 1024),
         3,
         FALSE,
-        0.2,
+        0.2f,
         (256 * 2048),
         H5AC__DEFAULT_METADATA_WRITE_STRATEGY};
 
@@ -227,7 +229,7 @@ main(void)
     TESTING("DXPL Encoding/Decoding");
     if((dxpl1 = H5Pcreate(H5P_DATASET_XFER)) < 0)
         FAIL_STACK_ERROR
-    if((H5Pset_btree_ratios(dxpl1, 0.2, 0.6, 0.2)) < 0)
+    if((H5Pset_btree_ratios(dxpl1, 0.2f, 0.6f, 0.2f)) < 0)
         FAIL_STACK_ERROR
     if((H5Pset_hyper_vector_size(dxpl1, 5)) < 0)
         FAIL_STACK_ERROR
@@ -440,6 +442,11 @@ main(void)
     if((H5Pset_copy_object(ocpypl1, H5O_COPY_EXPAND_EXT_LINK_FLAG)) < 0)
         FAIL_STACK_ERROR
 
+    if((H5Padd_merge_committed_dtype_path(ocpypl1, "foo")) < 0)
+        FAIL_STACK_ERROR
+    if((H5Padd_merge_committed_dtype_path(ocpypl1, "bar")) < 0)
+        FAIL_STACK_ERROR
+
     {
         hid_t ocpypl2;		/* object copy prop. list */
         void *temp_buf = NULL;
@@ -485,7 +492,7 @@ main(void)
         FAIL_STACK_ERROR
     if((H5Pset_alignment(fapl1, 2, 1024)) < 0)
         FAIL_STACK_ERROR
-    if((H5Pset_cache(fapl1, 1024, 128, 10485760, 0.3)) < 0)
+    if((H5Pset_cache(fapl1, 1024, 128, 10485760, 0.3f)) < 0)
         FAIL_STACK_ERROR
     if((H5Pset_elink_file_cache_size(fapl1, 10485760)) < 0)
         FAIL_STACK_ERROR
@@ -588,6 +595,86 @@ main(void)
 
     /* release resource */
     if((H5Pclose(fcpl1)) < 0)
+        FAIL_STACK_ERROR
+
+    PASSED();
+
+    /******* ENCODE/DECODE STRCPLS *****/
+    TESTING("STRCPL Encoding/Decoding");
+
+    if((strcpl1 = H5Pcreate(H5P_STRING_CREATE)) < 0)
+        FAIL_STACK_ERROR
+
+    if((H5Pset_char_encoding(strcpl1, H5T_CSET_UTF8) < 0))
+         FAIL_STACK_ERROR
+
+    {
+        hid_t strcpl2;	        /* string create prop. list */
+        void *temp_buf = NULL;
+        size_t temp_size = 0;
+
+        /* first call to encode returns only the size of the buffer needed */
+        if(H5Pencode(strcpl1, TRUE, NULL, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        temp_buf = (uint8_t *)HDmalloc(temp_size);
+
+        if(H5Pencode(strcpl1, TRUE, temp_buf, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        if((strcpl2 = H5Pdecode(temp_buf)) < 0)
+            FAIL_STACK_ERROR
+        if(!H5Pequal(strcpl1, strcpl2))
+            FAIL_PUTS_ERROR("STRCPL encoding decoding failed\n")
+
+        if((H5Pclose(strcpl2)) < 0)
+            FAIL_STACK_ERROR
+
+        HDfree(temp_buf);
+    }
+
+    /* release resource */
+    if((H5Pclose(strcpl1)) < 0)
+        FAIL_STACK_ERROR
+
+    PASSED();
+
+    /******* ENCODE/DECODE ACPLS *****/
+    TESTING("ACPL Encoding/Decoding");
+
+    if((acpl1 = H5Pcreate(H5P_ATTRIBUTE_CREATE)) < 0)
+        FAIL_STACK_ERROR
+
+    if((H5Pset_char_encoding(acpl1, H5T_CSET_UTF8) < 0))
+         FAIL_STACK_ERROR
+
+    {
+        hid_t acpl2;	        /* string create prop. list */
+        void *temp_buf = NULL;
+        size_t temp_size = 0;
+
+        /* first call to encode returns only the size of the buffer needed */
+        if(H5Pencode(acpl1, TRUE, NULL, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        temp_buf = (uint8_t *)HDmalloc(temp_size);
+
+        if(H5Pencode(acpl1, TRUE, temp_buf, &temp_size) < 0)
+            FAIL_STACK_ERROR
+
+        if((acpl2 = H5Pdecode(temp_buf)) < 0)
+            FAIL_STACK_ERROR
+        if(!H5Pequal(acpl1, acpl2))
+            FAIL_PUTS_ERROR("ACPL encoding decoding failed\n")
+
+        if((H5Pclose(acpl2)) < 0)
+            FAIL_STACK_ERROR
+
+        HDfree(temp_buf);
+    }
+
+    /* release resource */
+    if((H5Pclose(acpl1)) < 0)
         FAIL_STACK_ERROR
 
     PASSED();

@@ -135,6 +135,7 @@ static herr_t H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_
 static herr_t H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value);
 static int H5P__dcrt_ext_file_list_cmp(const void *value1, const void *value2, size_t size);
 
+
 /*********************/
 /* Package Variables */
 /*********************/
@@ -662,7 +663,7 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
             if(H5T_encode(fill->type, NULL, &dt_size) < 0)
                 HGOTO_ERROR(H5E_DATATYPE, H5E_CANTENCODE, FAIL, "can't encode datatype")
 
-            /* Encode the size of a size_t*/
+            /* Encode the size of a size_t */
             enc_value = (uint64_t)dt_size;
             enc_size = H5V_limit_enc_size(enc_value);
             HDassert(enc_size < 256);
@@ -680,7 +681,7 @@ H5P__fill_value_enc(const void *value, uint8_t **pp, size_t *size)
     } /* end if */
 
     /* Calculate size needed for encoding */
-    *size += sizeof(uint8_t) * 2;
+    *size += 2;
     *size += sizeof(int64_t);
     if(fill->size > 0) {
         /* The size of the fill value buffer */

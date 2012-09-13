@@ -73,7 +73,7 @@
 #define H5F_ACS_DATA_CACHE_BYTE_SIZE_DEC        H5P__decode_size_t
 /* Definition for preemption read chunks first */
 #define H5F_ACS_PREEMPT_READ_CHUNKS_SIZE        sizeof(double)
-#define H5F_ACS_PREEMPT_READ_CHUNKS_DEF         0.75
+#define H5F_ACS_PREEMPT_READ_CHUNKS_DEF         0.75f
 #define H5F_ACS_PREEMPT_READ_CHUNKS_ENC         H5P__encode_double
 #define H5F_ACS_PREEMPT_READ_CHUNKS_DEC         H5P__decode_double
 /* Definition for threshold for alignment */
@@ -192,6 +192,7 @@ static herr_t H5P__facc_fclose_degree_enc(const void *value, uint8_t **pp, size_
 static herr_t H5P__facc_fclose_degree_dec(const uint8_t **pp, void *value);
 static herr_t H5P__facc_multi_type_enc(const void *value, uint8_t **pp, size_t *size);
 static herr_t H5P__facc_multi_type_dec(const uint8_t **pp, void *value);
+
 
 /*********************/
 /* Package Variables */
@@ -589,18 +590,18 @@ H5Pset_alignment(hid_t fapl_id, hsize_t threshold, hsize_t alignment)
     H5TRACE3("e", "ihh", fapl_id, threshold, alignment);
 
     /* Check args */
-    if (alignment<1)
-        HGOTO_ERROR (H5E_ARGS, H5E_BADVALUE, FAIL, "alignment must be positive");
+    if(alignment < 1)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "alignment must be positive")
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(fapl_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set values */
     if(H5P_set(plist, H5F_ACS_ALIGN_THRHD_NAME, &threshold) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set threshold");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set threshold")
     if(H5P_set(plist, H5F_ACS_ALIGN_NAME, &alignment) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set alignment");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set alignment")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -773,10 +774,10 @@ H5P_get_driver(H5P_genplist_t *plist)
     /* Get the current driver ID */
     if(TRUE == H5P_isa_class(plist->plist_id, H5P_FILE_ACCESS)) {
         if(H5P_get(plist, H5F_ACS_FILE_DRV_ID_NAME, &ret_value) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver ID");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get driver ID")
     } /* end if */
     else
-        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a file access property list")
 
     if(H5FD_VFD_DEFAULT == ret_value)
         ret_value = H5_DEFAULT_VFD;
@@ -1083,17 +1084,6 @@ done:
  * Programmer:	Robb Matzke
  *              Tuesday, May 19, 1998
  *
- * Modifications:
- *
- *		Raymond Lu
- *		Tuesday, Oct 23, 2001
- *		Changed the file access list to the new generic property list.
- *
- *		J. Mainzer
- *		Thurs. 3/17/05
- *		The mdc_nelmts entry is no more in the FAPL, so I modified
- * 		the code to ignore it.
- *
  *-------------------------------------------------------------------------
  */
 herr_t
@@ -1108,24 +1098,24 @@ H5Pset_cache(hid_t plist_id, int UNUSED mdc_nelmts,
              rdcc_w0);
 
     /* Check arguments */
-    if (rdcc_w0<0.0 || rdcc_w0>1.0)
-        HGOTO_ERROR (H5E_ARGS, H5E_BADVALUE, FAIL, "raw data cache w0 value must be between 0.0 and 1.0 inclusive");
+    if(rdcc_w0 < 0.0 || rdcc_w0 > 1.0)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "raw data cache w0 value must be between 0.0 and 1.0 inclusive")
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set sizes */
     if(H5P_set(plist, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, &rdcc_nslots) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET,FAIL, "can't set data cache number of slots");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET,FAIL, "can't set data cache number of slots")
     if(H5P_set(plist, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, &rdcc_nbytes) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET,FAIL, "can't set data cache byte size");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET,FAIL, "can't set data cache byte size")
     if(H5P_set(plist, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, &rdcc_w0) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET,FAIL, "can't set preempt read chunks");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET,FAIL, "can't set preempt read chunks")
 
 done:
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pset_cache() */
 
 
 /*-------------------------------------------------------------------------
@@ -1142,18 +1132,6 @@ done:
  * Programmer:	Robb Matzke
  *              Tuesday, May 19, 1998
  *
- * Modifications:
- *
- *		Raymond Lu
- *		Tuesday, Oct 23, 2001
- *		Changed the file access list to the new generic property
- *		list.
- *
- *		J Mainzer
- *		Thurs, 3/17/05
- *		The mdc_nelmts fapl entry is no more, so we now just
- *		return a constant when that value is requested.
- *
  *-------------------------------------------------------------------------
  */
 herr_t
@@ -1169,27 +1147,27 @@ H5Pget_cache(hid_t plist_id, int *mdc_nelmts,
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Get sizes */
 
     /* the mdc_nelmts FAPL entry no longer exists, so just return a constant */
-    if (mdc_nelmts)
+    if(mdc_nelmts)
         *mdc_nelmts = 0;
 
-    if (rdcc_nslots)
+    if(rdcc_nslots)
         if(H5P_get(plist, H5F_ACS_DATA_CACHE_NUM_SLOTS_NAME, rdcc_nslots) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET,FAIL, "can't get data cache number of slots");
-    if (rdcc_nbytes)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET,FAIL, "can't get data cache number of slots")
+    if(rdcc_nbytes)
         if(H5P_get(plist, H5F_ACS_DATA_CACHE_BYTE_SIZE_NAME, rdcc_nbytes) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET,FAIL, "can't get data cache byte size");
-    if (rdcc_w0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET,FAIL, "can't get data cache byte size")
+    if(rdcc_w0)
         if(H5P_get(plist, H5F_ACS_PREEMPT_READ_CHUNKS_NAME, rdcc_w0) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET,FAIL, "can't get preempt read chunks");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET,FAIL, "can't get preempt read chunks")
 
 done:
     FUNC_LEAVE_API(ret_value)
-}
+} /* end H5Pget_cache() */
 
 
 /*-------------------------------------------------------------------------
@@ -1329,11 +1307,11 @@ H5Pset_gc_references(hid_t plist_id, unsigned gc_ref)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set values */
     if(H5P_set(plist, H5F_ACS_GARBG_COLCT_REF_NAME, &gc_ref) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set garbage collect reference");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set garbage collect reference")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1371,12 +1349,12 @@ H5Pget_gc_references(hid_t plist_id, unsigned *gc_ref/*out*/)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Get values */
-    if (gc_ref)
+    if(gc_ref)
         if(H5P_get(plist, H5F_ACS_GARBG_COLCT_REF_NAME, gc_ref) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get garbage collect reference");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get garbage collect reference")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1494,11 +1472,11 @@ H5Pset_meta_block_size(hid_t plist_id, hsize_t size)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set values */
     if(H5P_set(plist, H5F_ACS_META_BLOCK_SIZE_NAME, &size) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set meta data block size");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set meta data block size")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1536,12 +1514,12 @@ H5Pget_meta_block_size(hid_t plist_id, hsize_t *size/*out*/)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Get values */
-    if (size) {
+    if(size) {
         if(H5P_get(plist, H5F_ACS_META_BLOCK_SIZE_NAME, size) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get meta data block size");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get meta data block size")
     } /* end if */
 
 done:
@@ -1589,11 +1567,11 @@ H5Pset_sieve_buf_size(hid_t plist_id, size_t size)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set values */
     if(H5P_set(plist, H5F_ACS_SIEVE_BUF_SIZE_NAME, &size) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set sieve buffer size");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set sieve buffer size")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1631,12 +1609,12 @@ H5Pget_sieve_buf_size(hid_t plist_id, size_t *size/*out*/)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Get values */
-    if (size)
+    if(size)
         if(H5P_get(plist, H5F_ACS_SIEVE_BUF_SIZE_NAME, size) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get sieve buffer size");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get sieve buffer size")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1678,11 +1656,11 @@ H5Pset_small_data_block_size(hid_t plist_id, hsize_t size)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Set values */
     if(H5P_set(plist, H5F_ACS_SDATA_BLOCK_SIZE_NAME, &size) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set 'small data' block size");
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "can't set 'small data' block size")
 
 done:
     FUNC_LEAVE_API(ret_value)
@@ -1715,12 +1693,12 @@ H5Pget_small_data_block_size(hid_t plist_id, hsize_t *size/*out*/)
 
     /* Get the plist structure */
     if(NULL == (plist = H5P_object_verify(plist_id,H5P_FILE_ACCESS)))
-        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID");
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
 
     /* Get values */
-    if (size) {
+    if(size) {
         if(H5P_get(plist, H5F_ACS_SDATA_BLOCK_SIZE_NAME, size) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get 'small data' block size");
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get 'small data' block size")
     } /* end if */
 
 done:
@@ -1992,7 +1970,7 @@ H5Pset_file_image(hid_t fapl_id, void *buf_ptr, size_t buf_len)
 
     /* validate parameters */
     if(!(((buf_ptr == NULL) && (buf_len == 0)) || ((buf_ptr != NULL) && (buf_len > 0))))
-        HGOTO_ERROR (H5E_ARGS, H5E_BADVALUE, FAIL, "inconsistant buf_ptr and buf_len");
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "inconsistant buf_ptr and buf_len")
    
     /* Get the plist structure */
     if(NULL == (fapl = H5P_object_verify(fapl_id, H5P_FILE_ACCESS)))
@@ -2480,7 +2458,7 @@ H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     if(NULL != *pp) {
-        /* encode type sizes */
+        /* Encode type sizes (as a safety check) */
         *(*pp)++ = (uint8_t)sizeof(unsigned);
         *(*pp)++ = (uint8_t)sizeof(double);
 
@@ -2574,22 +2552,22 @@ H5P__facc_cache_config_enc(const void *value, uint8_t **pp, size_t *size)
         INT32ENCODE(*pp, (int32_t)config->metadata_write_strategy);
     } /* end if */
 
-    enc_size = 0;
-
     /* Compute encoded size of variably-encoded values */
     enc_value = (uint64_t)config->initial_size;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    *size += 1 + H5V_limit_enc_size(enc_value);
     enc_value = (uint64_t)config->max_size;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    *size += 1 + H5V_limit_enc_size(enc_value);
     enc_value = (uint64_t)config->min_size;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    *size += 1 + H5V_limit_enc_size(enc_value);
     enc_value = (uint64_t)config->max_increment;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    *size += 1 + H5V_limit_enc_size(enc_value);
     enc_value = (uint64_t)config->max_decrement;
-    enc_size += 1 + H5V_limit_enc_size(enc_value);
+    *size += 1 + H5V_limit_enc_size(enc_value);
 
-    *size += (5 + sizeof(unsigned)*8 + sizeof(double)*8 + enc_size + sizeof(int32_t)*4 + 
-              sizeof(int64_t) + H5AC__MAX_TRACE_FILE_NAME_LEN + 1);
+    /* Compute encoded size of fixed-size values */
+    *size += (5 + (sizeof(unsigned) * 8) + (sizeof(double) * 8) +
+            (sizeof(int32_t) * 4) + sizeof(int64_t) +
+            H5AC__MAX_TRACE_FILE_NAME_LEN + 1);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__facc_cache_config_enc() */
@@ -2628,6 +2606,7 @@ H5P__facc_cache_config_dec(const uint8_t **pp, void *value)
 
     HDmemset(&config, 0, sizeof(H5AC_cache_config_t));
 
+    /* Decode type sizes */
     enc_size = *(*pp)++;
     if(enc_size != sizeof(unsigned))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")

@@ -33,6 +33,8 @@ test_plist_ed(void)
     hid_t ocpl1, ocpl2;	        /* object create prop. list */
     hid_t fapl1, fapl2;	       	/* file access prop. list */
     hid_t fcpl1, fcpl2;	       	/* file create prop. list */
+    hid_t strcpl1, strcpl2;	/* string create prop. list */
+    hid_t acpl1, acpl2;	       	/* attribute create prop. list */
 
     void *send_buf = NULL, *recv_buf = NULL;
     size_t send_size=0, recv_size=0;
@@ -129,7 +131,7 @@ test_plist_ed(void)
         ret = H5Pencode(dcpl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(dcpl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -139,7 +141,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         dcpl2 = H5Pdecode(recv_buf);
@@ -157,11 +159,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -181,7 +183,7 @@ test_plist_ed(void)
         ret = H5Pencode(dapl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(dapl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -191,7 +193,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         dapl2 = H5Pdecode(recv_buf);
@@ -209,11 +211,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -238,7 +240,7 @@ test_plist_ed(void)
         ret = H5Pencode(ocpl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(ocpl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -248,7 +250,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         ocpl2 = H5Pdecode(recv_buf);
@@ -266,11 +268,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -313,7 +315,7 @@ test_plist_ed(void)
         ret = H5Pencode(dxpl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(dxpl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -323,7 +325,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         dxpl2 = H5Pdecode(recv_buf);
@@ -341,11 +343,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -377,7 +379,7 @@ test_plist_ed(void)
         ret = H5Pencode(gcpl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(gcpl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -387,7 +389,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         gcpl2 = H5Pdecode(recv_buf);
@@ -405,11 +407,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -428,7 +430,7 @@ test_plist_ed(void)
         ret = H5Pencode(lcpl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(lcpl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -438,7 +440,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         lcpl2 = H5Pdecode(recv_buf);
@@ -456,11 +458,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -498,7 +500,7 @@ test_plist_ed(void)
         ret = H5Pencode(lapl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(lapl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -508,7 +510,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         lapl2 = H5Pdecode(recv_buf);
@@ -526,11 +528,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -544,12 +546,18 @@ test_plist_ed(void)
     ret = H5Pset_copy_object(ocpypl1, H5O_COPY_EXPAND_EXT_LINK_FLAG);
     VRFY((ret >= 0), "H5Pset_copy_object succeeded");
 
+    ret = H5Padd_merge_committed_dtype_path(ocpypl1, "foo");
+    VRFY((ret >= 0), "H5Padd_merge_committed_dtype_path succeeded");
+
+    ret = H5Padd_merge_committed_dtype_path(ocpypl1, "bar");
+    VRFY((ret >= 0), "H5Padd_merge_committed_dtype_path succeeded");
+
     if(mpi_rank == 0) {
         /* first call to encode returns only the size of the buffer needed */
         ret = H5Pencode(ocpypl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(ocpypl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -559,7 +567,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         ocpypl2 = H5Pdecode(recv_buf);
@@ -577,11 +585,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -633,7 +641,7 @@ test_plist_ed(void)
         ret = H5Pencode(fapl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(fapl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -643,7 +651,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         fapl2 = H5Pdecode(recv_buf);
@@ -661,11 +669,11 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
@@ -702,7 +710,7 @@ test_plist_ed(void)
         ret = H5Pencode(fcpl1, TRUE, NULL, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
-        send_buf = (uint8_t *)malloc(send_size);
+        send_buf = (uint8_t *)HDmalloc(send_size);
 
         ret = H5Pencode(fcpl1, TRUE, send_buf, &send_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
@@ -712,7 +720,7 @@ test_plist_ed(void)
     } /* end if */
     if(mpi_rank == recv_proc) {
         MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
-        recv_buf = (uint8_t *)malloc(recv_size);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
         MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
 
         fcpl2 = H5Pdecode(recv_buf);
@@ -730,16 +738,116 @@ test_plist_ed(void)
         MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
 
     if(NULL != send_buf) {
-        free(send_buf);
+        HDfree(send_buf);
         send_buf = NULL;
     } /* end if */
     if(NULL != recv_buf) {
-        free(recv_buf);
+        HDfree(recv_buf);
         recv_buf = NULL;
     } /* end if */
 
     MPI_Barrier(MPI_COMM_WORLD);
 
 
+    /******* ENCODE/DECODE STRCPLS *****/
+    strcpl1 = H5Pcreate(H5P_STRING_CREATE);
+    VRFY((strcpl1 >= 0), "H5Pcreate succeeded");
+
+    ret = H5Pset_char_encoding(strcpl1, H5T_CSET_UTF8);
+    VRFY((ret >= 0), "H5Pset_char_encoding succeeded");
+
+    if(mpi_rank == 0) {
+        /* first call to encode returns only the size of the buffer needed */
+        ret = H5Pencode(strcpl1, TRUE, NULL, &send_size);
+        VRFY((ret >= 0), "H5Pencode succeeded");
+
+        send_buf = (uint8_t *)HDmalloc(send_size);
+
+        ret = H5Pencode(strcpl1, TRUE, send_buf, &send_size);
+        VRFY((ret >= 0), "H5Pencode succeeded");
+
+        MPI_Isend(&send_size, 1, MPI_INT, recv_proc, 123, MPI_COMM_WORLD, &req[0]);
+        MPI_Isend(send_buf, (int)send_size, MPI_BYTE, recv_proc, 124, MPI_COMM_WORLD, &req[1]);
+    } /* end if */
+    if(mpi_rank == recv_proc) {
+        MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
+        MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
+
+        strcpl2 = H5Pdecode(recv_buf);
+        VRFY((strcpl2 >= 0), "H5Pdecode succeeded");
+
+        VRFY(H5Pequal(strcpl1, strcpl2), "STRCPLs Equal Succeeded");
+
+        ret = H5Pclose(strcpl2);
+        VRFY((ret >= 0), "H5Pclose succeeded");
+    } /* end if */
+    ret = H5Pclose(strcpl1);
+    VRFY((ret >= 0), "H5Pclose succeeded");
+
+    if(0 == mpi_rank)
+        MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
+
+    if(NULL != send_buf) {
+        HDfree(send_buf);
+        send_buf = NULL;
+    } /* end if */
+    if(NULL != recv_buf) {
+        HDfree(recv_buf);
+        recv_buf = NULL;
+    } /* end if */
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+
+    /******* ENCODE/DECODE ACPLS *****/
+    acpl1 = H5Pcreate(H5P_ATTRIBUTE_CREATE);
+    VRFY((acpl1 >= 0), "H5Pcreate succeeded");
+
+    ret = H5Pset_char_encoding(acpl1, H5T_CSET_UTF8);
+    VRFY((ret >= 0), "H5Pset_char_encoding succeeded");
+
+    if(mpi_rank == 0) {
+        /* first call to encode returns only the size of the buffer needed */
+        ret = H5Pencode(acpl1, TRUE, NULL, &send_size);
+        VRFY((ret >= 0), "H5Pencode succeeded");
+
+        send_buf = (uint8_t *)HDmalloc(send_size);
+
+        ret = H5Pencode(acpl1, TRUE, send_buf, &send_size);
+        VRFY((ret >= 0), "H5Pencode succeeded");
+
+        MPI_Isend(&send_size, 1, MPI_INT, recv_proc, 123, MPI_COMM_WORLD, &req[0]);
+        MPI_Isend(send_buf, (int)send_size, MPI_BYTE, recv_proc, 124, MPI_COMM_WORLD, &req[1]);
+    } /* end if */
+    if(mpi_rank == recv_proc) {
+        MPI_Recv(&recv_size, 1, MPI_INT, 0, 123, MPI_COMM_WORLD, &status);
+        recv_buf = (uint8_t *)HDmalloc(recv_size);
+        MPI_Recv(recv_buf, (int)recv_size, MPI_BYTE, 0, 124, MPI_COMM_WORLD, &status);
+
+        acpl2 = H5Pdecode(recv_buf);
+        VRFY((acpl2 >= 0), "H5Pdecode succeeded");
+
+        VRFY(H5Pequal(acpl1, acpl2), "ACPLs Equal Succeeded");
+
+        ret = H5Pclose(acpl2);
+        VRFY((ret >= 0), "H5Pclose succeeded");
+    } /* end if */
+    ret = H5Pclose(acpl1);
+    VRFY((ret >= 0), "H5Pclose succeeded");
+
+    if(0 == mpi_rank)
+        MPI_Waitall(2, req, MPI_STATUSES_IGNORE);
+
+    if(NULL != send_buf) {
+        HDfree(send_buf);
+        send_buf = NULL;
+    } /* end if */
+    if(NULL != recv_buf) {
+        HDfree(recv_buf);
+        recv_buf = NULL;
+    } /* end if */
+
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 

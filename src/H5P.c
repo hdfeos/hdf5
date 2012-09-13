@@ -867,6 +867,7 @@ H5Pencode(hid_t plist_id, hbool_t enc_all_prop, void *buf, size_t *nalloc)
     hid_t ret_value = SUCCEED;          /* return value */
 
     FUNC_ENTER_API(FAIL)
+    H5TRACE4("e", "ib*x*z", plist_id, enc_all_prop, buf, nalloc);
 
     /* Check arguments. */
     if(NULL == (plist = (H5P_genplist_t *)H5I_object_verify(plist_id, H5I_GENPROP_LST)))
@@ -910,6 +911,7 @@ H5Pdecode(const void *buf)
     hid_t ret_value = SUCCEED;          /* return value */
 
     FUNC_ENTER_API(FAIL)
+    H5TRACE1("i", "*x", buf);
 
     /* Call the internal decode routine */
     if((ret_value = H5P_decode(buf)) < 0)

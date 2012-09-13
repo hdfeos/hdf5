@@ -177,7 +177,8 @@ H5P_lacc_reg_prop(H5P_genclass_t *pclass)
 
     /* Register property for number of links traversed */
     if(H5P_register_real(pclass, H5L_ACS_NLINKS_NAME, H5L_ACS_NLINKS_SIZE, &nlinks, 
-            NULL, NULL, NULL, H5L_ACS_NLINKS_ENC, H5L_ACS_NLINKS_DEC, NULL, NULL, NULL, NULL) < 0)
+            NULL, NULL, NULL, H5L_ACS_NLINKS_ENC, H5L_ACS_NLINKS_DEC,
+            NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for external link prefix */
@@ -194,7 +195,8 @@ H5P_lacc_reg_prop(H5P_genclass_t *pclass)
 
     /* Register property for external link file access flags */
     if(H5P_register_real(pclass, H5L_ACS_ELINK_FLAGS_NAME, H5L_ACS_ELINK_FLAGS_SIZE, &elink_flags, 
-             NULL, NULL, NULL, H5L_ACS_ELINK_FLAGS_ENC, H5L_ACS_ELINK_FLAGS_DEC, NULL, NULL, NULL, NULL) < 0)
+             NULL, NULL, NULL, H5L_ACS_ELINK_FLAGS_ENC, H5L_ACS_ELINK_FLAGS_DEC,
+             NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for external link file traversal callback */

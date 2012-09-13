@@ -276,7 +276,7 @@ H5P__encode_hbool_t(const void *value, uint8_t **pp, size_t *size)
 
     if(NULL != *pp)
         /* Encode the value */
-        *(*pp)++ = *(const hbool_t *)value;
+        *(*pp)++ = (uint8_t)*(const hbool_t *)value;
 
     /* Set size needed for encoding */
     *size += 1;
@@ -333,8 +333,8 @@ H5P__encode_double(const void *value, uint8_t **pp, size_t *size)
         H5P_genprop_t *prop;        IN: Pointer to the property
         void *udata;                IN/OUT: Pointer to iteration data from user
  RETURNS
-    Success: 0
-    Fail: -1
+    Success: H5_ITER_CONT
+    Fail: H5_ITER_ERROR
  DESCRIPTION
     This routine encodes a property in a property list
  GLOBAL VARIABLES
@@ -346,7 +346,7 @@ static int
 H5P__encode_cb(H5P_genprop_t *prop, void *_udata)
 {
     H5P_enc_iter_ud_t *udata = (H5P_enc_iter_ud_t *)_udata;     /* Pointer to user data */
-    int ret_value = 0;          /* Return value */
+    int ret_value = H5_ITER_CONT;       /* Return value */
 
     FUNC_ENTER_STATIC
 
@@ -370,7 +370,7 @@ H5P__encode_cb(H5P_genprop_t *prop, void *_udata)
         /* Encode (or not, if *(udata->pp) is NULL) the property value */
         prop_value_len = 0;
         if((prop->encode)(prop->value, udata->pp, &prop_value_len) < 0)
-            HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "property encoding routine failed")
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, H5_ITER_ERROR, "property encoding routine failed")
         *(udata->enc_size_ptr) += prop_value_len;
     } /* end if */
 
@@ -475,6 +475,7 @@ herr_t
 H5P__decode_size_t(const uint8_t **pp, void *value)
 {
     uint64_t enc_value;                 /* Decoded property value */
+    size_t prop_value;                  /* Value to set */
     unsigned enc_size;                  /* Size of encoded property */
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -491,9 +492,10 @@ H5P__decode_size_t(const uint8_t **pp, void *value)
 
     /* Decode the value */
     UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    H5_ASSIGN_OVERFLOW(prop_value, enc_value, uint64_t, size_t);
 
     /* Set the value */
-    HDmemcpy(value, &enc_value, sizeof(uint64_t));
+    HDmemcpy(value, &prop_value, sizeof(size_t));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__decode_size_t() */
@@ -516,6 +518,7 @@ herr_t
 H5P__decode_hsize_t(const uint8_t **pp, void *value)
 {
     uint64_t enc_value;                 /* Decoded property value */
+    hsize_t prop_value;                 /* Value to set */
     unsigned enc_size;                  /* Size of encoded property */
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -532,9 +535,10 @@ H5P__decode_hsize_t(const uint8_t **pp, void *value)
 
     /* Decode the value */
     UINT64DECODE_VAR(*pp, enc_value, enc_size);
+    H5_ASSIGN_OVERFLOW(prop_value, enc_value, uint64_t, hsize_t);
 
     /* Set the value */
-    HDmemcpy(value, &enc_value, sizeof(uint64_t));
+    HDmemcpy(value, &prop_value, sizeof(hsize_t));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__decode_hsize_t() */

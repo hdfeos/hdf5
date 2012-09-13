@@ -21,9 +21,10 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "hdf5.h"
 
-static encode_plist(hid_t plist_id, int little_endian, const char *filename_le, const char *filename_be);
+static int encode_plist(hid_t plist_id, int little_endian, const char *filename_le, const char *filename_be);
 
 int
 main(void)
@@ -38,14 +39,16 @@ main(void)
     hid_t lapl1;	       	/* link access prop. list */
     hid_t fapl1;	       	/* file access prop. list */
     hid_t fcpl1;	       	/* file create prop. list */
+    hid_t strcpl1;	       	/* string create prop. list */
+    hid_t acpl1;	       	/* attribute create prop. list */
 
     herr_t ret = 0;
     hsize_t chunk_size = 16384;	/* chunk size */ 
-    int fill=2;            /* Fill value */
+    int fill = 2;            /* Fill value */
     hsize_t max_size[1];        /* data space maximum size */
-    size_t nslots = 521*2;
+    size_t nslots = 521 * 2;
     size_t nbytes = 1048576 * 10;
-    double w0 = 0.5;
+    double w0 = 0.5f;
     unsigned max_compact;
     unsigned min_dense;
     const char* c_to_f = "x+32";
@@ -59,26 +62,26 @@ main(void)
         1 /*TRUE*/,
         0 /*FALSE*/,
         ( 2 * 2048 * 1024),
-        0.3,
+        0.3f,
         (64 * 1024 * 1024),
         (4 * 1024 * 1024),
         60000,
         H5C_incr__threshold,
-        0.8,
-        3.0,
+        0.8f,
+        3.0f,
         1 /*TRUE*/,
         (8 * 1024 * 1024),
         H5C_flash_incr__add_space,
-        2.0,
-        0.25,
+        2.0f,
+        0.25f,
         H5C_decr__age_out_with_threshold,
-        0.997,
-        0.8,
+        0.997f,
+        0.8f,
         1 /*TRUE*/,
         (3 * 1024 * 1024),
         3,
         0 /*FALSE*/,
-        0.2,
+        0.2f,
         (256 * 2048),
         H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY};
 
@@ -151,7 +154,7 @@ main(void)
     /******* ENCODE/DECODE DXPLS *****/
     if((dxpl1 = H5Pcreate(H5P_DATASET_XFER)) < 0)
         assert(dxpl1 > 0);
-    if((ret = H5Pset_btree_ratios(dxpl1, 0.2, 0.6, 0.2)) < 0)
+    if((ret = H5Pset_btree_ratios(dxpl1, 0.2f, 0.6f, 0.2f)) < 0)
         assert(ret > 0);
     if((ret = H5Pset_hyper_vector_size(dxpl1, 5)) < 0)
         assert(ret > 0);
@@ -225,8 +228,14 @@ main(void)
     if((ocpypl1 = H5Pcreate(H5P_OBJECT_COPY)) < 0)
         assert(ocpypl1 > 0);
 
-    if((ret = H5Pset_copy_object(ocpypl1, H5O_COPY_EXPAND_EXT_LINK_FLAG)) < 0)
-        assert(ret > 0);
+    ret = H5Pset_copy_object(ocpypl1, H5O_COPY_EXPAND_EXT_LINK_FLAG);
+    assert(ret >= 0);
+
+    ret = H5Padd_merge_committed_dtype_path(ocpypl1, "foo");
+    assert(ret >= 0);
+
+    ret = H5Padd_merge_committed_dtype_path(ocpypl1, "bar");
+    assert(ret >= 0);
 
     if((ret = encode_plist(ocpypl1, little_endian, "plist_files/ocpypl_le", "plist_files/ocpypl_be")) < 0)
         assert(ret > 0);
@@ -300,7 +309,7 @@ main(void)
         assert(ret > 0);
     if((ret = H5Pset_alignment(fapl1, 2, 1024)) < 0)
         assert(ret > 0);
-    if((ret = H5Pset_cache(fapl1, 1024, 128, 10485760, 0.3)) < 0)
+    if((ret = H5Pset_cache(fapl1, 1024, 128, 10485760, 0.3f)) < 0)
         assert(ret > 0);
     if((ret = H5Pset_elink_file_cache_size(fapl1, 10485760)) < 0)
         assert(ret > 0);
@@ -356,23 +365,53 @@ main(void)
     if((ret = H5Pclose(fcpl1)) < 0)
         assert(ret > 0);
 
+    /******* ENCODE/DECODE STRCPLS *****/
+    strcpl1 = H5Pcreate(H5P_STRING_CREATE);
+    assert(strcpl1 > 0);
+
+    ret = H5Pset_char_encoding(strcpl1, H5T_CSET_UTF8);
+    assert(ret >= 0);
+
+    ret = encode_plist(strcpl1, little_endian, "plist_files/strcpl_le", "plist_files/strcpl_be");
+    assert(ret > 0);
+
+    /* release resource */
+    ret = H5Pclose(strcpl1);
+    assert(ret >= 0);
+
+    /******* ENCODE/DECODE ACPLS *****/
+    acpl1 = H5Pcreate(H5P_ATTRIBUTE_CREATE);
+    assert(acpl1 > 0);
+
+    ret = H5Pset_char_encoding(acpl1, H5T_CSET_UTF8);
+    assert(ret >= 0);
+
+    ret = encode_plist(acpl1, little_endian, "plist_files/acpl_le", "plist_files/acpl_be");
+    assert(ret > 0);
+
+    /* release resource */
+    ret = H5Pclose(acpl1);
+    assert(ret >= 0);
+
     return 0;
 }
 
-static encode_plist(hid_t plist_id, int little_endian, const char *filename_le, const char *filename_be)
+static int
+encode_plist(hid_t plist_id, int little_endian, const char *filename_le, const char *filename_be)
 {
     int fd = 0; /* file descriptor */
     herr_t ret = 0;
     void *temp_buf = NULL;
     size_t temp_size = 0;
+    ssize_t write_size;
 
     /* first call to encode returns only the size of the buffer needed */
-    if(ret = H5Pencode(plist_id, 1 /*TRUE*/, NULL, &temp_size) < 0)
+    if((ret = H5Pencode(plist_id, 1 /*TRUE*/, NULL, &temp_size)) < 0)
         assert(ret > 0);
 
     temp_buf = (void *)malloc(temp_size);
 
-    if(ret = H5Pencode(plist_id, 1 /*TRUE*/, temp_buf, &temp_size) < 0)
+    if((ret = H5Pencode(plist_id, 1 /*TRUE*/, temp_buf, &temp_size)) < 0)
         assert(ret > 0);
 
     if(little_endian)
@@ -381,8 +420,8 @@ static encode_plist(hid_t plist_id, int little_endian, const char *filename_le, 
         fd = open(filename_be, O_RDWR | O_CREAT | O_TRUNC, 0666);
     assert(fd > 0);
 
-    ret = write(fd, temp_buf, temp_size);
-    assert(ret == temp_size);
+    write_size = write(fd, temp_buf, temp_size);
+    assert(write_size == (ssize_t)temp_size);
 
     close(fd);
     
@@ -391,3 +430,4 @@ static encode_plist(hid_t plist_id, int little_endian, const char *filename_le, 
 
     return 1;
 }
+
