@@ -252,7 +252,7 @@ H5P_lacc_elink_fapl_enc(const void *value, uint8_t **pp, size_t *size)
     /* Encode the property list, if non-default */
     /* (if *pp == NULL, will only compute the size) */
     if(non_default_fapl) {
-        if(H5P_encode(fapl_plist, TRUE, *pp, &enc_size) < 0)
+        if(H5P__encode(fapl_plist, TRUE, *pp, &enc_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "can't encode property list")
         if(*pp)
             *pp += enc_size;
@@ -302,7 +302,7 @@ H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *value)
         size_t enc_size = 0;                /* Encoded size of property list */
 
         /* Decode the property list */
-        if((elink_fapl = H5P_decode(*pp)) < 0)
+        if((elink_fapl = H5P__decode(*pp)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "can't decode property")
 
         /* Get the property list object */
@@ -310,7 +310,7 @@ H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *value)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get property list")
 
         /* Compute the encoded size of the property list */
-        if(H5P_encode(fapl_plist, TRUE, NULL, &enc_size) < 0)
+        if(H5P__encode(fapl_plist, TRUE, NULL, &enc_size) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "can't compute encoded property list size")
 
         *pp += enc_size;

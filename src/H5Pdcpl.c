@@ -466,7 +466,7 @@ H5P__dcrt_layout_enc(const void *value, uint8_t **pp, size_t *size)
 static herr_t
 H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
 {
-    H5O_layout_t layout;         /* Layout information for property */
+    H5O_layout_t layout = H5D_CRT_LAYOUT_DEF;   /* Storage layout */
     H5O_layout_t chunk_layout;          /* Layout structure for chunk info */
     H5D_layout_t type;                  /* Layout type */
     herr_t ret_value = SUCCEED;         /* Return value */
@@ -477,11 +477,6 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
     HDassert(pp);
     HDassert(*pp);
     HDassert(value);
-
-    /* Reset layout property */
-    HDmemset(&layout, 0, sizeof(layout));
-    if(H5O_msg_reset(H5O_LAYOUT_ID, &layout) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset layout info")
 
     /* Decode layout type */
     type = (H5D_layout_t)*(*pp)++;
@@ -723,18 +718,13 @@ done:
 static herr_t
 H5P__fill_value_dec(const uint8_t **pp, void *value)
 {
-    H5O_fill_t fill; /* Create local aliases for values */
+    H5O_fill_t fill = H5D_CRT_FILL_VALUE_DEF;   /* Fill value */
     herr_t ret_value = SUCCEED;       /* Return value */
 
     FUNC_ENTER_STATIC
 
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
     HDcompile_assert(sizeof(ssize_t) <= sizeof(int64_t));
-
-    /* Reset fill value property */
-    HDmemset(&fill, 0, sizeof(fill));
-    if(H5O_msg_reset(H5O_FILL_ID, &fill) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset fill value info")
 
     /* Decode alloc and fill time */
     fill.alloc_time = (H5D_alloc_time_t)*(*pp)++;
@@ -940,7 +930,7 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
 static herr_t
 H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
 {
-    H5O_efl_t efl; /* Create local aliases for values */
+    H5O_efl_t efl = H5D_CRT_EXT_FILE_LIST_DEF;  /* External file list */
     size_t u, nused;
     unsigned enc_size;
     uint64_t enc_value;
@@ -955,11 +945,6 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
     HDcompile_assert(sizeof(off_t) <= sizeof(uint64_t));
     HDcompile_assert(sizeof(hsize_t) <= sizeof(uint64_t));
-
-    /* Reset EFL property */
-    HDmemset(&efl, 0, sizeof(efl));
-    if(H5O_msg_reset(H5O_EFL_ID, &efl) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset external file list info")
 
     /* Decode number of slots used */
     enc_size = *(*pp)++;

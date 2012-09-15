@@ -110,30 +110,30 @@ static int
 test_plists(const char *filename1, const char *filename2) 
 {
     int fd_le, fd_be;
-    size_t size_le=0, size_be=0;
-    void *buf_le=NULL, *buf_be=NULL;
+    size_t size_le = 0, size_be = 0;
+    void *buf_le = NULL, *buf_be = NULL;
     hid_t plist_le, plist_be;	       	/* dataset create prop. list */
     const char *testfile;
 
     testfile = H5_get_srcdir_filename(filename1);
-    if((fd_le = open(testfile, O_RDONLY)) < 0)
-        FAIL_STACK_ERROR
-    size_le = lseek(fd_le, 0, SEEK_END);
-    lseek(fd_le, 0, SEEK_SET);
+    if((fd_le = HDopen(testfile, O_RDONLY, 0666)) < 0)
+        TEST_ERROR
+    size_le = HDlseek(fd_le, (HDoff_t)0, SEEK_END);
+    HDlseek(fd_le, (HDoff_t)0, SEEK_SET);
     buf_le = (void *)HDmalloc(size_le);
-    if(read(fd_le, buf_le, size_le) < 0)
-        FAIL_STACK_ERROR
-    close(fd_le);
+    if(HDread(fd_le, buf_le, size_le) < 0)
+        TEST_ERROR
+    HDclose(fd_le);
 
     testfile = H5_get_srcdir_filename(filename2);
-    if((fd_be = open(testfile, O_RDONLY)) < 0)
-        FAIL_STACK_ERROR
-    size_be = lseek(fd_be, 0, SEEK_END);
-    lseek(fd_be, 0, SEEK_SET);
+    if((fd_be = HDopen(testfile, O_RDONLY, 0666)) < 0)
+        TEST_ERROR
+    size_be = HDlseek(fd_be, (HDoff_t)0, SEEK_END);
+    HDlseek(fd_be, (HDoff_t)0, SEEK_SET);
     buf_be = (void *)HDmalloc(size_be);
-    if(read(fd_be, buf_be, size_be) < 0)
-        FAIL_STACK_ERROR
-    close(fd_be);
+    if(HDread(fd_be, buf_be, size_be) < 0)
+        TEST_ERROR
+    HDclose(fd_be);
 
     if((plist_le = H5Pdecode(buf_le)) < 0)
         FAIL_STACK_ERROR

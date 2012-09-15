@@ -874,7 +874,7 @@ H5Pencode(hid_t plist_id, hbool_t enc_all_prop, void *buf, size_t *nalloc)
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Call the internal encode routine */
-    if((ret_value = H5P_encode(plist, enc_all_prop, buf, nalloc)) < 0)
+    if((ret_value = H5P__encode(plist, enc_all_prop, buf, nalloc)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "unable to encode property list");
 
 done:
@@ -914,7 +914,7 @@ H5Pdecode(const void *buf)
     H5TRACE1("i", "*x", buf);
 
     /* Call the internal decode routine */
-    if((ret_value = H5P_decode(buf)) < 0)
+    if((ret_value = H5P__decode(buf)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "unable to decode property list");
 
 done:

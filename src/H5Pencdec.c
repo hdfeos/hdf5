@@ -381,11 +381,11 @@ done:
 
 /*-------------------------------------------------------------------------
  NAME
-    H5P_encode
+    H5P__encode
  PURPOSE
     Internal routine to encode a property list into a binary buffer.
  USAGE
-    herr_t H5P_encode(plist, enc_all_prop, buf, nalloc)
+    herr_t H5P__encode(plist, enc_all_prop, buf, nalloc)
         const H5P_genplist_t *plist;  IN: Property list to encode
         hbool_t enc_all_prop;  IN: Whether to encode all properties (TRUE),
                 or just non-default (i.e. changed) properties (FALSE).
@@ -403,7 +403,7 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5P_encode(const H5P_genplist_t *plist, hbool_t enc_all_prop, void *buf,
+H5P__encode(const H5P_genplist_t *plist, hbool_t enc_all_prop, void *buf,
     size_t *nalloc)
 {
     H5P_enc_iter_ud_t udata;        /* User data for property iteration callback */
@@ -413,13 +413,13 @@ H5P_encode(const H5P_genplist_t *plist, hbool_t enc_all_prop, void *buf,
     hbool_t encode = TRUE;          /* Whether the property list should be encoded */
     herr_t ret_value = SUCCEED;     /* Return value */
 
-    FUNC_ENTER_NOAPI(FAIL)
+    FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     if(NULL == nalloc)
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "bad allocation size pointer")
 
-    /* If the buffer is NULL, then this call to H5P_encode will return how much
+    /* If the buffer is NULL, then this call to H5P__encode will return how much
      * space is needed to encode a property.
      */
     if(NULL == p)
@@ -455,7 +455,7 @@ H5P_encode(const H5P_genplist_t *plist, hbool_t enc_all_prop, void *buf,
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_encode() */
+} /* end H5P__encode() */
 
 
 /*-------------------------------------------------------------------------
@@ -702,11 +702,11 @@ done:
 
 /*-------------------------------------------------------------------------
  NAME
-    H5P_decode
+    H5P__decode
  PURPOSE
     Internal routine to decode a property list from a binary buffer.
  USAGE
-    H5P_genplist_t *H5P_decode(buf)
+    H5P_genplist_t *H5P__decode(buf)
         const void *buf;    IN: buffer that holds the encoded plist
  RETURNS
     Returns non-negative ID of new property list object on success, negative
@@ -724,7 +724,7 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 hid_t
-H5P_decode(const void *buf)
+H5P__decode(const void *buf)
 {
     H5P_genplist_t *plist;      /* Property list to decode into */
     void *value_buf = NULL;     /* Pointer to buffer to use when decoding values */
@@ -735,7 +735,7 @@ H5P_decode(const void *buf)
     uint8_t vers;               /* Version of encoded property list */
     hid_t ret_value;            /* Return value */
 
-    FUNC_ENTER_NOAPI(FAIL)
+    FUNC_ENTER_PACKAGE
 
     /* Sanity check */
     if(NULL == p)
@@ -811,5 +811,5 @@ done:
     } /* end if */
 
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5P_decode() */
+} /* end H5P__decode() */
 

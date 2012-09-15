@@ -125,10 +125,5 @@ H5_DLL herr_t H5P_fill_value_defined(H5P_genplist_t *plist,
 H5_DLL herr_t H5P_get_fill_value(H5P_genplist_t *plist, H5T_t *type,
     void *value, hid_t dxpl_id);
 
-/* private functions to encode/decode a plist */
-H5_DLL herr_t H5P_encode(const H5P_genplist_t *plist, hbool_t enc_all_prop,
-    void *buf, size_t *nalloc);
-H5_DLL hid_t H5P_decode(const void *buf);
-
 #endif /* _H5Pprivate_H */
 

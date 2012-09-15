@@ -1458,7 +1458,7 @@ H5P__ocrt_pipeline_enc(const void *value, uint8_t **pp, size_t *size)
 static herr_t 
 H5P__ocrt_pipeline_dec(const uint8_t **pp, void *value)
 {
-    H5O_pline_t pline;                  /* Property to set */
+    H5O_pline_t pline = H5O_CRT_PIPELINE_DEF;   /* Property to set */
     size_t nused;                       /* Number of filters used for pipeline */
     unsigned enc_size;                  /* Size of encoded value (in bytes) */
     uint64_t enc_value;                 /* Value to encode */
@@ -1468,11 +1468,6 @@ H5P__ocrt_pipeline_dec(const uint8_t **pp, void *value)
     FUNC_ENTER_STATIC
 
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
-
-    /* Reset pline property */
-    HDmemset(&pline, 0, sizeof(pline));
-    if(H5O_msg_reset(H5O_PLINE_ID, &pline) < 0)
-        HGOTO_ERROR(H5E_PLIST, H5E_CANTRESET, FAIL, "can't reset pline info")
 
     /* Decode the size of size_t */
     enc_size = *(*pp)++;

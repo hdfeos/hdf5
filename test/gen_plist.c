@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include "H5private.h"
 #include "hdf5.h"
 
 static int encode_plist(hid_t plist_id, int little_endian, const char *filename_le, const char *filename_be);
@@ -409,24 +410,24 @@ encode_plist(hid_t plist_id, int little_endian, const char *filename_le, const c
     if((ret = H5Pencode(plist_id, 1 /*TRUE*/, NULL, &temp_size)) < 0)
         assert(ret > 0);
 
-    temp_buf = (void *)malloc(temp_size);
+    temp_buf = (void *)HDmalloc(temp_size);
+    assert(temp_buf);
 
     if((ret = H5Pencode(plist_id, 1 /*TRUE*/, temp_buf, &temp_size)) < 0)
         assert(ret > 0);
 
     if(little_endian)
-        fd = open(filename_le, O_RDWR | O_CREAT | O_TRUNC, 0666);
+        fd = HDopen(filename_le, O_RDWR | O_CREAT | O_TRUNC, 0666);
     else
-        fd = open(filename_be, O_RDWR | O_CREAT | O_TRUNC, 0666);
+        fd = HDopen(filename_be, O_RDWR | O_CREAT | O_TRUNC, 0666);
     assert(fd > 0);
 
-    write_size = write(fd, temp_buf, temp_size);
+    write_size = HDwrite(fd, temp_buf, temp_size);
     assert(write_size == (ssize_t)temp_size);
 
-    close(fd);
+    HDclose(fd);
     
-    free(temp_buf);
-    temp_buf = NULL;
+    HDfree(temp_buf);
 
     return 1;
 }

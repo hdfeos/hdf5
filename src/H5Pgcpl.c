@@ -577,7 +577,7 @@ H5P__gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
 static herr_t 
 H5P__gcrt_group_info_dec(const uint8_t **pp, void *value)
 {
-    H5O_ginfo_t ginfo;
+    H5O_ginfo_t ginfo = H5G_CRT_GROUP_INFO_DEF;     /* Group info settings */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC_NOERR
@@ -667,10 +667,10 @@ H5P__gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
 static herr_t 
 H5P__gcrt_link_info_dec(const uint8_t **pp, void *value)
 {
-    H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;
+    H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;  /* Link info settings */
     unsigned crt_order_flags;
     unsigned enc_size;
-    herr_t ret_value = SUCCEED;
+    herr_t ret_value = SUCCEED;                 /* Return value */
 
     FUNC_ENTER_STATIC
 
