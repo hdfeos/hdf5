@@ -145,6 +145,13 @@ const H5P_libclass_t H5P_CLS_LACC[1] = {{
 /* Local Variables */
 /*******************/
 
+/* Property value defaults */
+static const size_t H5L_def_nlinks_g = H5L_ACS_NLINKS_DEF; 	   /* Default number of soft links to traverse */
+static const char *H5L_def_elink_prefix_g = H5L_ACS_ELINK_PREFIX_DEF; /* Default external link prefix string */
+static const hid_t H5L_def_fapl_id_g = H5L_ACS_ELINK_FAPL_DEF;    /* Default fapl for external link access */
+static const unsigned H5L_def_elink_flags_g = H5L_ACS_ELINK_FLAGS_DEF; /* Default file access flags for external link traversal */
+static const H5L_elink_cb_t H5L_def_elink_cb_g = H5L_ACS_ELINK_CB_DEF; /* Default external link traversal callback */
+
 
 
 /*-------------------------------------------------------------------------
@@ -166,43 +173,37 @@ const H5P_libclass_t H5P_CLS_LACC[1] = {{
 static herr_t
 H5P_lacc_reg_prop(H5P_genclass_t *pclass)
 {
-    size_t nlinks = H5L_ACS_NLINKS_DEF; 	   /* Default number of soft links to traverse */
-    char *elink_prefix = H5L_ACS_ELINK_PREFIX_DEF; /* Default external link prefix string */
-    hid_t def_fapl_id = H5L_ACS_ELINK_FAPL_DEF;    /* Default fapl for external link access */
-    unsigned elink_flags = H5L_ACS_ELINK_FLAGS_DEF; /* Default file access flags for external link traversal */
-    H5L_elink_cb_t elink_cb = H5L_ACS_ELINK_CB_DEF; /* Default external link traversal callback */
-
     herr_t ret_value = SUCCEED;         	   /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 
     /* Register property for number of links traversed */
-    if(H5P_register_real(pclass, H5L_ACS_NLINKS_NAME, H5L_ACS_NLINKS_SIZE, &nlinks, 
+    if(H5P_register_real(pclass, H5L_ACS_NLINKS_NAME, H5L_ACS_NLINKS_SIZE, &H5L_def_nlinks_g, 
             NULL, NULL, NULL, H5L_ACS_NLINKS_ENC, H5L_ACS_NLINKS_DEC,
             NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for external link prefix */
-    if(H5P_register_real(pclass, H5L_ACS_ELINK_PREFIX_NAME, H5L_ACS_ELINK_PREFIX_SIZE, &elink_prefix, 
+    if(H5P_register_real(pclass, H5L_ACS_ELINK_PREFIX_NAME, H5L_ACS_ELINK_PREFIX_SIZE, &H5L_def_elink_prefix_g, 
             NULL, NULL, NULL, H5L_ACS_ELINK_PREFIX_ENC, H5L_ACS_ELINK_PREFIX_DEC,
             H5L_ACS_ELINK_PREFIX_DEL, H5L_ACS_ELINK_PREFIX_COPY, H5L_ACS_ELINK_PREFIX_CMP, H5L_ACS_ELINK_PREFIX_CLOSE) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register fapl for link access */
-    if(H5P_register_real(pclass, H5L_ACS_ELINK_FAPL_NAME, H5L_ACS_ELINK_FAPL_SIZE, &def_fapl_id, 
+    if(H5P_register_real(pclass, H5L_ACS_ELINK_FAPL_NAME, H5L_ACS_ELINK_FAPL_SIZE, &H5L_def_fapl_id_g, 
              NULL, NULL, NULL, H5L_ACS_ELINK_FAPL_ENC, H5L_ACS_ELINK_FAPL_DEC,
              H5L_ACS_ELINK_FAPL_DEL, H5L_ACS_ELINK_FAPL_COPY, H5L_ACS_ELINK_FAPL_CMP, H5L_ACS_ELINK_FAPL_CLOSE) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for external link file access flags */
-    if(H5P_register_real(pclass, H5L_ACS_ELINK_FLAGS_NAME, H5L_ACS_ELINK_FLAGS_SIZE, &elink_flags, 
+    if(H5P_register_real(pclass, H5L_ACS_ELINK_FLAGS_NAME, H5L_ACS_ELINK_FLAGS_SIZE, &H5L_def_elink_flags_g, 
              NULL, NULL, NULL, H5L_ACS_ELINK_FLAGS_ENC, H5L_ACS_ELINK_FLAGS_DEC,
              NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for external link file traversal callback */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5L_ACS_ELINK_CB_NAME, H5L_ACS_ELINK_CB_SIZE, &elink_cb, 
+    if(H5P_register_real(pclass, H5L_ACS_ELINK_CB_NAME, H5L_ACS_ELINK_CB_SIZE, &H5L_def_elink_cb_g, 
              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
@@ -281,17 +282,17 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *value)
+H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *_value)
 {
+    hid_t *elink_fapl = (hid_t *)_value;        /* The elink FAPL value */
     hbool_t non_default_fapl;           /* Whether the FAPL is non-default */
-    hid_t elink_fapl;                   /* The elink FAPL value */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
 
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(elink_fapl);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     /* Determine if the FAPL is non-default */
@@ -302,11 +303,11 @@ H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *value)
         size_t enc_size = 0;                /* Encoded size of property list */
 
         /* Decode the property list */
-        if((elink_fapl = H5P__decode(*pp)) < 0)
+        if((*elink_fapl = H5P__decode(*pp)) < 0)
             HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "can't decode property")
 
         /* Get the property list object */
-        if(NULL == (fapl_plist = (H5P_genplist_t *)H5P_object_verify(elink_fapl, H5P_FILE_ACCESS)))
+        if(NULL == (fapl_plist = (H5P_genplist_t *)H5P_object_verify(*elink_fapl, H5P_FILE_ACCESS)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "can't get property list")
 
         /* Compute the encoded size of the property list */
@@ -316,10 +317,7 @@ H5P_lacc_elink_fapl_dec(const uint8_t **pp, void *value)
         *pp += enc_size;
     } /* end if */
     else
-        elink_fapl = H5P_DEFAULT;
-
-    /* Set the value */
-    HDmemcpy(value, &elink_fapl, sizeof(hid_t));
+        *elink_fapl = H5P_DEFAULT;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -552,19 +550,19 @@ H5P_lacc_elink_pref_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
+H5P_lacc_elink_pref_dec(const uint8_t **pp, void *_value)
 {
+    char **elink_pref = (char **)_value;
     size_t len;
     uint64_t enc_value;                 /* Decoded property value */
     unsigned enc_size;                  /* Size of encoded property */
-    char *elink_pref = NULL;
     herr_t ret_value = SUCCEED;
 
     FUNC_ENTER_NOAPI_NOINIT
 
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(elink_pref);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     /* Decode the size */
@@ -577,16 +575,15 @@ H5P_lacc_elink_pref_dec(const uint8_t **pp, void *value)
 
     if(0 != len) {
         /* Make a copy of the user's prefix string */
-        if(NULL == (elink_pref = (char *)H5MM_malloc(len + 1)))
+        if(NULL == (*elink_pref = (char *)H5MM_malloc(len + 1)))
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, FAIL, "memory allocation failed for prefix")
-        HDstrncpy(elink_pref, *(const char **)pp, len);
-        elink_pref[len] = '\0';
+        HDstrncpy(*elink_pref, *(const char **)pp, len);
+        (*elink_pref)[len] = '\0';
 
         *pp += len;
     } /* end if */
-
-    /* Set the value */
-    HDmemcpy(value, &elink_pref, sizeof(char *));
+    else
+        *elink_pref = NULL;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

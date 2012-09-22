@@ -164,6 +164,17 @@ const H5P_libclass_t H5P_CLS_DCRT[1] = {{
 /* Declare extern the free list to manage blocks of type conversion data */
 H5FL_BLK_EXTERN(type_conv);
 
+
+/***************************/
+/* Local Private Variables */
+/***************************/
+
+/* Property value defaults */
+static const H5O_layout_t H5D_def_layout_g = H5D_CRT_LAYOUT_DEF;        /* Default storage layout */
+static const H5O_fill_t H5D_def_fill_g = H5D_CRT_FILL_VALUE_DEF;        /* Default fill value */
+static const unsigned H5D_def_alloc_time_state_g = H5D_CRT_ALLOC_TIME_STATE_DEF;  /* Default allocation time state */
+static const H5O_efl_t H5D_def_efl_g = H5D_CRT_EXT_FILE_LIST_DEF;                 /* Default external file list */
+
 /* Defaults for each type of layout */
 #ifdef H5_HAVE_C99_DESIGNATED_INITIALIZER
 static const H5O_layout_t H5D_def_layout_compact_g = H5D_DEF_LAYOUT_COMPACT;
@@ -192,34 +203,30 @@ static hbool_t H5P_dcrt_def_layout_init_g = FALSE;
 static herr_t
 H5P__dcrt_reg_prop(H5P_genclass_t *pclass)
 {
-    H5O_layout_t layout = H5D_CRT_LAYOUT_DEF;          /* Default storage layout */
-    H5O_fill_t fill = H5D_CRT_FILL_VALUE_DEF;           /* Default fill value */
-    unsigned alloc_time_state = H5D_CRT_ALLOC_TIME_STATE_DEF;   /* Default allocation time state */
-    H5O_efl_t efl = H5D_CRT_EXT_FILE_LIST_DEF;          /* Default external file list */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Register the storage layout property */
-    if(H5P_register_real(pclass, H5D_CRT_LAYOUT_NAME, H5D_CRT_LAYOUT_SIZE, &layout, 
+    if(H5P_register_real(pclass, H5D_CRT_LAYOUT_NAME, H5D_CRT_LAYOUT_SIZE, &H5D_def_layout_g, 
             NULL, NULL, NULL, H5D_CRT_LAYOUT_ENC, H5D_CRT_LAYOUT_DEC,
             NULL, NULL, H5D_CRT_LAYOUT_CMP, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the fill value property */
-    if(H5P_register_real(pclass, H5D_CRT_FILL_VALUE_NAME, H5D_CRT_FILL_VALUE_SIZE, &fill, 
+    if(H5P_register_real(pclass, H5D_CRT_FILL_VALUE_NAME, H5D_CRT_FILL_VALUE_SIZE, &H5D_def_fill_g, 
             NULL, NULL, NULL, H5D_CRT_FILL_VALUE_ENC, H5D_CRT_FILL_VALUE_DEC,
             NULL, NULL, H5D_CRT_FILL_VALUE_CMP, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the space allocation time state property */
-    if(H5P_register_real(pclass, H5D_CRT_ALLOC_TIME_STATE_NAME, H5D_CRT_ALLOC_TIME_STATE_SIZE, &alloc_time_state, 
+    if(H5P_register_real(pclass, H5D_CRT_ALLOC_TIME_STATE_NAME, H5D_CRT_ALLOC_TIME_STATE_SIZE, &H5D_def_alloc_time_state_g, 
             NULL, NULL, NULL, H5D_CRT_ALLOC_TIME_STATE_ENC, H5D_CRT_ALLOC_TIME_STATE_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the external file list property */
-    if(H5P_register_real(pclass, H5D_CRT_EXT_FILE_LIST_NAME, H5D_CRT_EXT_FILE_LIST_SIZE, &efl, 
+    if(H5P_register_real(pclass, H5D_CRT_EXT_FILE_LIST_NAME, H5D_CRT_EXT_FILE_LIST_SIZE, &H5D_def_efl_g, 
             NULL, NULL, NULL, H5D_CRT_EXT_FILE_LIST_ENC, H5D_CRT_EXT_FILE_LIST_DEC,
             NULL, NULL, H5D_CRT_EXT_FILE_LIST_CMP, NULL) < 0)
        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
@@ -466,7 +473,7 @@ H5P__dcrt_layout_enc(const void *value, uint8_t **pp, size_t *size)
 static herr_t
 H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
 {
-    H5O_layout_t layout = H5D_CRT_LAYOUT_DEF;   /* Storage layout */
+    const H5O_layout_t *layout;         /* Storage layout */
     H5O_layout_t chunk_layout;          /* Layout structure for chunk info */
     H5D_layout_t type;                  /* Layout type */
     herr_t ret_value = SUCCEED;         /* Return value */
@@ -485,30 +492,28 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
      * decode the chunked structure and set chunked layout */
     switch(type) {
         case H5D_COMPACT:
-            layout = H5D_def_layout_compact_g;
+            layout = &H5D_def_layout_compact_g;
             break;
 
         case H5D_CONTIGUOUS:
-            layout = H5D_def_layout_contig_g;
+            layout = &H5D_def_layout_contig_g;
             break;
 
         case H5D_CHUNKED:
             {
-                unsigned ndims;         /* Number of chunk dimensions */
+                unsigned ndims;                 /* Number of chunk dimensions */
 
                 /* Decode the number of chunk dimensions */
                 ndims = *(*pp)++;
 
                 /* default chunk layout */
                 if(0 == ndims)
-                    layout = H5D_def_layout_chunk_g;
-                else {
-                    /* chunk layout structure is encoded*/
+                    layout = &H5D_def_layout_chunk_g;
+                else { /* chunk layout structure is encoded*/
                     unsigned u;             /* Local index variable */
 
-                    /* Initialize layout structure */
-                    HDmemcpy(&chunk_layout, &H5D_def_layout_chunk_g, sizeof(H5D_def_layout_chunk_g));
-                    HDmemset(&chunk_layout.u.chunk.dim, 0, sizeof(chunk_layout.u.chunk.dim));
+                    /* Initialize to default values */
+                    chunk_layout = H5D_def_layout_chunk_g;
 
                     /* Set rank & dimensions */
                     chunk_layout.u.chunk.ndims = (unsigned)ndims;
@@ -516,7 +521,7 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
                         UINT32DECODE(*pp, chunk_layout.u.chunk.dim[u])
 
                     /* Point at the newly set up struct */
-                    layout = chunk_layout;
+                    layout = &chunk_layout;
                 } /* end else */
             }
             break;
@@ -528,7 +533,7 @@ H5P__dcrt_layout_dec(const uint8_t **pp, void *value)
     } /* end switch */
 
     /* Set the value */
-    HDmemcpy(value, &layout, sizeof(H5O_layout_t));
+    HDmemcpy(value, layout, sizeof(H5O_layout_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -716,9 +721,9 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__fill_value_dec(const uint8_t **pp, void *value)
+H5P__fill_value_dec(const uint8_t **pp, void *_value)
 {
-    H5O_fill_t fill = H5D_CRT_FILL_VALUE_DEF;   /* Fill value */
+    H5O_fill_t *fill = (H5O_fill_t *)_value;   /* Fill value */
     herr_t ret_value = SUCCEED;       /* Return value */
 
     FUNC_ENTER_STATIC
@@ -726,24 +731,27 @@ H5P__fill_value_dec(const uint8_t **pp, void *value)
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
     HDcompile_assert(sizeof(ssize_t) <= sizeof(int64_t));
 
+    /* Set property to default value */
+    *fill = H5D_def_fill_g;
+
     /* Decode alloc and fill time */
-    fill.alloc_time = (H5D_alloc_time_t)*(*pp)++;
-    fill.fill_time = (H5D_fill_time_t)*(*pp)++;
+    fill->alloc_time = (H5D_alloc_time_t)*(*pp)++;
+    fill->fill_time = (H5D_fill_time_t)*(*pp)++;
 
     /* Decode fill size */
-    INT64DECODE(*pp, fill.size)
+    INT64DECODE(*pp, fill->size)
 
     /* Check if there's a fill value */
-    if(fill.size > 0) {
+    if(fill->size > 0) {
         size_t dt_size = 0;
         uint64_t enc_value;
         unsigned enc_size;
 
         /* Allocate fill buffer and copy the contents in it */
-        if(NULL == (fill.buf = H5MM_malloc((size_t)fill.size)))
+        if(NULL == (fill->buf = H5MM_malloc((size_t)fill->size)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTALLOC, FAIL, "memory allocation failed for fill value buffer")
-        HDmemcpy((uint8_t *)fill.buf, *pp, (size_t)fill.size);
-        *pp += fill.size;
+        HDmemcpy((uint8_t *)fill->buf, *pp, (size_t)fill->size);
+        *pp += fill->size;
 
         enc_size = *(*pp)++;
         HDassert(enc_size < 256);
@@ -753,13 +761,10 @@ H5P__fill_value_dec(const uint8_t **pp, void *value)
         dt_size = (size_t)enc_value;
 
         /* Decode type */
-        if(NULL == (fill.type = H5T_decode(*pp)))
+        if(NULL == (fill->type = H5T_decode(*pp)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTDECODE, FAIL, "can't decode fill value datatype")
         *pp += dt_size;
     } /* end if */
-
-    /* Set the value */
-    HDmemcpy(value, &fill, sizeof(H5O_fill_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -928,9 +933,9 @@ H5P__dcrt_ext_file_list_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
+H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *_value)
 {
-    H5O_efl_t efl = H5D_CRT_EXT_FILE_LIST_DEF;  /* External file list */
+    H5O_efl_t *efl = (H5O_efl_t *)_value;  /* External file list */
     size_t u, nused;
     unsigned enc_size;
     uint64_t enc_value;
@@ -941,10 +946,13 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
     /* Sanity check */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(efl);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
     HDcompile_assert(sizeof(off_t) <= sizeof(uint64_t));
     HDcompile_assert(sizeof(hsize_t) <= sizeof(uint64_t));
+
+    /* Set property to default value */
+    *efl = H5D_def_efl_g;
 
     /* Decode number of slots used */
     enc_size = *(*pp)++;
@@ -955,15 +963,15 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
     /* Decode information for each slot */
     for(u = 0; u < nused; u++) {
         size_t len;
-        if(efl.nused >= efl.nalloc) {
-            size_t na = efl.nalloc + H5O_EFL_ALLOC;
-            H5O_efl_entry_t *x = (H5O_efl_entry_t *)H5MM_realloc(efl.slot, 
+        if(efl->nused >= efl->nalloc) {
+            size_t na = efl->nalloc + H5O_EFL_ALLOC;
+            H5O_efl_entry_t *x = (H5O_efl_entry_t *)H5MM_realloc(efl->slot, 
                                                                  na * sizeof(H5O_efl_entry_t));
             if(!x)
                 HGOTO_ERROR(H5E_RESOURCE, H5E_CANTALLOC, FAIL, "memory allocation failed")
 
-            efl.nalloc = na;
-            efl.slot = x;
+            efl->nalloc = na;
+            efl->slot = x;
         } /* end if */
 
         /* Decode length of slot name */
@@ -973,27 +981,24 @@ H5P__dcrt_ext_file_list_dec(const uint8_t **pp, void *value)
         len = (size_t)enc_value;
 
         /* Allocate name buffer and decode the name into it */
-        efl.slot[u].name = H5MM_xstrdup((const char *)(*pp));
+        efl->slot[u].name = H5MM_xstrdup((const char *)(*pp));
         *pp += len;
 
         /* decode offset */
         enc_size = *(*pp)++;
         HDassert(enc_size < 256);
         UINT64DECODE_VAR(*pp, enc_value, enc_size);
-        efl.slot[u].offset = (off_t)enc_value;
+        efl->slot[u].offset = (off_t)enc_value;
 
         /* decode size */
         enc_size = *(*pp)++;
         HDassert(enc_size < 256);
         UINT64DECODE_VAR(*pp, enc_value, enc_size);
-        efl.slot[u].size = (hsize_t)enc_value;
+        efl->slot[u].size = (hsize_t)enc_value;
 
-        efl.slot[u].name_offset = 0; /*not entered into heap yet*/
-        efl.nused++;
+        efl->slot[u].name_offset = 0; /*not entered into heap yet*/
+        efl->nused++;
     } /* end for */
-
-    /* Set the value */
-    HDmemcpy(value, &efl, sizeof(H5O_efl_t));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1899,7 +1904,7 @@ done:
  * Function:	H5Pset_fill_value
  *
  * Purpose:	Set the fill value for a dataset creation property list. The
- *		VALUE is interpretted as being of type TYPE, which need not
+ *		VALUE is interpreted as being of type TYPE, which need not
  *		be the same type as the dataset but the library must be able
  *		to convert VALUE to the dataset type when the dataset is
  *		created.  If VALUE is NULL, it will be interpreted as
@@ -1909,13 +1914,6 @@ done:
  *
  * Programmer:	Robb Matzke
  *              Thursday, October  1, 1998
- *
- * Modifications:
- *
- *              Raymond Lu
- *              Tuesday, October 2, 2001
- *              Changed the way to check parameter and set property for
- *              generic property list.
  *
  *-------------------------------------------------------------------------
  */

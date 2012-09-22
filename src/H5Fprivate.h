@@ -164,11 +164,11 @@ typedef struct H5F_blk_aggr_t H5F_blk_aggr_t;
 }
 
 #  define INT32DECODE(p, i) {						      \
-   (i)	= (	     *(p) & 0xff);	  (p)++;			      \
-   (i) |= ((int32_t)(*(p) & 0xff) <<  8); (p)++;			      \
-   (i) |= ((int32_t)(*(p) & 0xff) << 16); (p)++;			      \
-   (i) |= ((int32_t)(((*(p) & 0xff) << 24) |                                  \
-                   ((*(p) & 0x80) ? ~0xffffffff : 0x0))); (p)++;	      \
+   (i)	= ((int32_t)(*(p) & (unsigned)0xff));	  (p)++;		      \
+   (i) |= ((int32_t)(*(p) & (unsigned)0xff) <<  8); (p)++;		      \
+   (i) |= ((int32_t)(*(p) & (unsigned)0xff) << 16); (p)++;		      \
+   (i) |= ((int32_t)(((*(p) & (unsigned)0xff) << 24) |                        \
+                   ((*(p) & (unsigned)0x80) ? (unsigned)(~0xffffffff) : (unsigned)0x0))); (p)++; \
 }
 
 #  define UINT32DECODE(p, i) {						      \
@@ -244,7 +244,7 @@ typedef struct H5F_blk_aggr_t H5F_blk_aggr_t;
     (p) += 8;								      \
     for(_u = 0; _u < sizeof(uint64_t); _u++)				      \
         _n = (_n << 8) | *(--p);					      \
-    HDmemcpy(&n, &_n, sizeof(double));					      \
+    HDmemcpy(&(n), &_n, sizeof(double));					      \
     (p) += 8;								      \
 }
 

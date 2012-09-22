@@ -122,6 +122,11 @@ const H5P_libclass_t H5P_CLS_OCPY[1] = {{
 /* Local Variables */
 /*******************/
 
+/* Property value defaults */
+static const unsigned H5O_def_ocpy_option_g = H5O_CPY_OPTION_DEF;  /* Default object copy flags */
+static const H5O_copy_dtype_merge_list_t *H5O_def_merge_comm_dtype_list_g = H5O_CPY_MERGE_COMM_DT_LIST_DEF; /* Default merge committed dtype list */
+static const H5O_mcdt_cb_info_t H5O_def_mcdt_cb_g = H5O_CPY_MCDT_SEARCH_CB_DEF; /* Default callback before searching the global list of committed datatypes at destination */
+
 /* Declare a free list to manage the H5O_copy_dtype_merge_list_t struct */
 H5FL_DEFINE(H5O_copy_dtype_merge_list_t);
 
@@ -141,28 +146,25 @@ H5FL_DEFINE(H5O_copy_dtype_merge_list_t);
 static herr_t
 H5P__ocpy_reg_prop(H5P_genclass_t *pclass)
 {
-    unsigned ocpy_option = H5O_CPY_OPTION_DEF;  /* Default object copy flags */
-    H5O_copy_dtype_merge_list_t *merge_comm_dtype_list = H5O_CPY_MERGE_COMM_DT_LIST_DEF; /* Default merge committed dtype list */
-    H5O_mcdt_cb_info_t mcdt_cb = H5O_CPY_MCDT_SEARCH_CB_DEF; /* Default callback before searching the global list of committed datatypes at destination */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Register copy options property */
-    if(H5P_register_real(pclass, H5O_CPY_OPTION_NAME, H5O_CPY_OPTION_SIZE, &ocpy_option, 
+    if(H5P_register_real(pclass, H5O_CPY_OPTION_NAME, H5O_CPY_OPTION_SIZE, &H5O_def_ocpy_option_g, 
             NULL, NULL, NULL, H5O_CPY_OPTION_ENC, H5O_CPY_OPTION_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register merge named dtype list property */
-    if(H5P_register_real(pclass, H5O_CPY_MERGE_COMM_DT_LIST_NAME, H5O_CPY_MERGE_COMM_DT_LIST_SIZE, &merge_comm_dtype_list, 
+    if(H5P_register_real(pclass, H5O_CPY_MERGE_COMM_DT_LIST_NAME, H5O_CPY_MERGE_COMM_DT_LIST_SIZE, &H5O_def_merge_comm_dtype_list_g, 
             NULL, NULL, NULL, H5O_CPY_MERGE_COMM_DT_LIST_ENC, H5O_CPY_MERGE_COMM_DT_LIST_DEC,
             NULL, H5O_CPY_MERGE_COMM_DT_LIST_COPY, H5O_CPY_MERGE_COMM_DT_LIST_CMP, H5O_CPY_MERGE_COMM_DT_LIST_CLOSE) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register property for callback when completing the search for a matching named datatype from the named dtype list */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5O_CPY_MCDT_SEARCH_CB_NAME, H5O_CPY_MCDT_SEARCH_CB_SIZE, &mcdt_cb, 
+    if(H5P_register_real(pclass, H5O_CPY_MCDT_SEARCH_CB_NAME, H5O_CPY_MCDT_SEARCH_CB_SIZE, &H5O_def_mcdt_cb_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
@@ -274,9 +276,9 @@ H5P__ocpy_merge_comm_dt_list_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t 
-H5P__ocpy_merge_comm_dt_list_dec(const uint8_t **pp, void *value)
+H5P__ocpy_merge_comm_dt_list_dec(const uint8_t **pp, void *_value)
 {
-    H5O_copy_dtype_merge_list_t *dt_list = NULL;        /* Pointer to merge named datatype list */
+    H5O_copy_dtype_merge_list_t **dt_list = (H5O_copy_dtype_merge_list_t **)_value;        /* Pointer to merge named datatype list */
     H5O_copy_dtype_merge_list_t *dt_list_tail = NULL, *tmp_dt_list = NULL; /* temporary merge named datatype lists */
     size_t len;                         /* Length of path component */
     herr_t ret_value = SUCCEED;         /* Return value */
@@ -286,7 +288,7 @@ H5P__ocpy_merge_comm_dt_list_dec(const uint8_t **pp, void *value)
     /* Sanity check */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(dt_list);
     
     /* Decode the string sequence */
     len = HDstrlen(*(const char **)pp);
@@ -305,7 +307,7 @@ H5P__ocpy_merge_comm_dt_list_dec(const uint8_t **pp, void *value)
             dt_list_tail = tmp_dt_list;
         } /* end if */
         else {
-            dt_list = tmp_dt_list;
+            *dt_list = tmp_dt_list;
             dt_list_tail = tmp_dt_list;
         } /* end else */
         tmp_dt_list = NULL;
@@ -317,12 +319,9 @@ H5P__ocpy_merge_comm_dt_list_dec(const uint8_t **pp, void *value)
     /* Advance past terminator for string sequence */
     *pp += 1;
 
-    /* Set the value */
-    HDmemcpy(value, &dt_list, sizeof(H5O_copy_dtype_merge_list_t *));
-
 done: 
     if(ret_value < 0) {
-        dt_list = H5P__free_merge_comm_dtype_list(dt_list);
+        *dt_list = H5P__free_merge_comm_dtype_list(*dt_list);
         if(tmp_dt_list) {
             tmp_dt_list->path = (char *)H5MM_xfree(tmp_dt_list->path);
             tmp_dt_list = H5FL_FREE(H5O_copy_dtype_merge_list_t, tmp_dt_list);

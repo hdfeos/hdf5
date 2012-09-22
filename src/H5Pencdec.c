@@ -472,10 +472,10 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P__decode_size_t(const uint8_t **pp, void *value)
+H5P__decode_size_t(const uint8_t **pp, void *_value)
 {
+    size_t *value = (size_t *)_value;   /* Property value to return */
     uint64_t enc_value;                 /* Decoded property value */
-    size_t prop_value;                  /* Value to set */
     unsigned enc_size;                  /* Size of encoded property */
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -492,10 +492,7 @@ H5P__decode_size_t(const uint8_t **pp, void *value)
 
     /* Decode the value */
     UINT64DECODE_VAR(*pp, enc_value, enc_size);
-    H5_ASSIGN_OVERFLOW(prop_value, enc_value, uint64_t, size_t);
-
-    /* Set the value */
-    HDmemcpy(value, &prop_value, sizeof(size_t));
+    H5_ASSIGN_OVERFLOW(*value, enc_value, uint64_t, size_t);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__decode_size_t() */
@@ -515,10 +512,10 @@ H5P__decode_size_t(const uint8_t **pp, void *value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P__decode_hsize_t(const uint8_t **pp, void *value)
+H5P__decode_hsize_t(const uint8_t **pp, void *_value)
 {
+    hsize_t *value = (hsize_t *)_value; /* Property value to return */
     uint64_t enc_value;                 /* Decoded property value */
-    hsize_t prop_value;                 /* Value to set */
     unsigned enc_size;                  /* Size of encoded property */
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -535,10 +532,7 @@ H5P__decode_hsize_t(const uint8_t **pp, void *value)
 
     /* Decode the value */
     UINT64DECODE_VAR(*pp, enc_value, enc_size);
-    H5_ASSIGN_OVERFLOW(prop_value, enc_value, uint64_t, hsize_t);
-
-    /* Set the value */
-    HDmemcpy(value, &prop_value, sizeof(hsize_t));
+    H5_ASSIGN_OVERFLOW(*value, enc_value, uint64_t, hsize_t);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__decode_hsize_t() */
@@ -558,10 +552,10 @@ H5P__decode_hsize_t(const uint8_t **pp, void *value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P__decode_unsigned(const uint8_t **pp, void *value)
+H5P__decode_unsigned(const uint8_t **pp, void *_value)
 {
+    unsigned *value = (unsigned *)_value; /* Property value to return */
     unsigned enc_size;          /* Size of encoded property */
-    unsigned enc_value;           /* Property value to decode */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -576,10 +570,7 @@ H5P__decode_unsigned(const uint8_t **pp, void *value)
     if(enc_size != sizeof(unsigned))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
 
-    H5_DECODE_UNSIGNED(*pp, enc_value)
-
-    /* Set the value */
-    HDmemcpy(value, &enc_value, sizeof(unsigned));
+    H5_DECODE_UNSIGNED(*pp, *value)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -600,9 +591,9 @@ done:
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P__decode_uint8_t(const uint8_t **pp, void *value)
+H5P__decode_uint8_t(const uint8_t **pp, void *_value)
 {
-    uint8_t enc_value;           /* Property value to decode */
+    uint8_t *value = (uint8_t *)_value; /* Property value to return */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -613,10 +604,7 @@ H5P__decode_uint8_t(const uint8_t **pp, void *value)
     HDassert(value);
 
     /* Decode the value */
-    enc_value = *(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &enc_value, sizeof(uint8_t));
+    *value = *(*pp)++;
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__decode_uint8_t() */
@@ -636,9 +624,9 @@ H5P__decode_uint8_t(const uint8_t **pp, void *value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P__decode_hbool_t(const uint8_t **pp, void *value)
+H5P__decode_hbool_t(const uint8_t **pp, void *_value)
 {
-    hbool_t enc_value;           /* Property value to decode */
+    hbool_t *value = (hbool_t *)_value; /* Property value to return */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE_NOERR
@@ -649,10 +637,7 @@ H5P__decode_hbool_t(const uint8_t **pp, void *value)
     HDassert(value);
 
     /* Decode the value */
-    enc_value = (hbool_t)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &enc_value, sizeof(hbool_t));
+    *value = (hbool_t)*(*pp)++;
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__decode_hbool_t() */
@@ -672,10 +657,10 @@ H5P__decode_hbool_t(const uint8_t **pp, void *value)
  *-------------------------------------------------------------------------
  */
 herr_t
-H5P__decode_double(const uint8_t **pp, void *value)
+H5P__decode_double(const uint8_t **pp, void *_value)
 {
+    double *value = (double *)_value; /* Property value to return */
     unsigned enc_size;          /* Size of encoded property */
-    double enc_value;           /* Property value to decode */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE
@@ -690,10 +675,7 @@ H5P__decode_double(const uint8_t **pp, void *value)
     if(enc_size != sizeof(double))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "double value can't be decoded")
 
-    H5_DECODE_DOUBLE(*pp, enc_value)
-
-    /* Set the value */
-    HDmemcpy(value, &enc_value, sizeof(double));
+    H5_DECODE_DOUBLE(*pp, *value)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

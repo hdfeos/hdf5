@@ -28,13 +28,13 @@ test_encode_decode(hid_t orig_pl)
     size_t temp_size = 0;       /* Size of encoding buffer */
 
     /* first call to encode returns only the size of the buffer needed */
-    if(H5Pencode(orig_pl, TRUE, NULL, &temp_size) < 0)
+    if(H5Pencode(orig_pl, NULL, &temp_size) < 0)
         STACK_ERROR
 
     if(NULL == (temp_buf = (void *)HDmalloc(temp_size)))
         TEST_ERROR
 
-    if(H5Pencode(orig_pl, TRUE, temp_buf, &temp_size) < 0)
+    if(H5Pencode(orig_pl, temp_buf, &temp_size) < 0)
         STACK_ERROR
 
     if((pl = H5Pdecode(temp_buf)) < 0)
@@ -76,7 +76,7 @@ main(void)
     hid_t strcpl;	/* string create prop. list */
     hid_t acpl;	       	/* attribute create prop. list */
 
-    hsize_t chunk_size = 16384;	/* chunk size */ 
+    hsize_t chunk_size[2] = {16384, 4};	/* chunk size */ 
     double fill = 2.7f;         /* Fill value */
     hsize_t max_size[1];        /* data space maximum size */
     size_t nslots = 521 * 2;
@@ -125,7 +125,7 @@ main(void)
     if((dcpl = H5Pcreate(H5P_DATASET_CREATE)) < 0)
         FAIL_STACK_ERROR
 
-    if((H5Pset_chunk(dcpl, 1, &chunk_size)) < 0)
+    if((H5Pset_chunk(dcpl, 2, &chunk_size)) < 0)
         FAIL_STACK_ERROR
 
     if((H5Pset_alloc_time(dcpl, H5D_ALLOC_TIME_LATE)) < 0)

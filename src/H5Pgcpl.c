@@ -103,6 +103,10 @@ const H5P_libclass_t H5P_CLS_GCRT[1] = {{
 /* Local Variables */
 /*******************/
 
+/* Property value defaults */
+static const H5O_ginfo_t H5G_def_ginfo_g = H5G_CRT_GROUP_INFO_DEF;     /* Default group info settings */
+static const H5O_linfo_t H5G_def_linfo_g = H5G_CRT_LINK_INFO_DEF;      /* Default link info settings */
+
 
 
 /*-------------------------------------------------------------------------
@@ -119,20 +123,18 @@ const H5P_libclass_t H5P_CLS_GCRT[1] = {{
 static herr_t
 H5P__gcrt_reg_prop(H5P_genclass_t *pclass)
 {
-    H5O_ginfo_t ginfo = H5G_CRT_GROUP_INFO_DEF;     /* Default group info settings */
-    H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;      /* Default link info settings */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Register group info property */
-    if(H5P_register_real(pclass, H5G_CRT_GROUP_INFO_NAME, H5G_CRT_GROUP_INFO_SIZE, &ginfo, 
+    if(H5P_register_real(pclass, H5G_CRT_GROUP_INFO_NAME, H5G_CRT_GROUP_INFO_SIZE, &H5G_def_ginfo_g, 
             NULL, NULL, NULL, H5G_CRT_GROUP_INFO_ENC, H5G_CRT_GROUP_INFO_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register link info property */
-    if(H5P_register_real(pclass, H5G_CRT_LINK_INFO_NAME, H5G_CRT_LINK_INFO_SIZE, &linfo, 
+    if(H5P_register_real(pclass, H5G_CRT_LINK_INFO_NAME, H5G_CRT_LINK_INFO_SIZE, &H5G_def_linfo_g, 
             NULL, NULL, NULL, H5G_CRT_LINK_INFO_ENC, H5G_CRT_LINK_INFO_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
@@ -575,34 +577,34 @@ H5P__gcrt_group_info_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t 
-H5P__gcrt_group_info_dec(const uint8_t **pp, void *value)
+H5P__gcrt_group_info_dec(const uint8_t **pp, void *_value)
 {
-    H5O_ginfo_t ginfo = H5G_CRT_GROUP_INFO_DEF;     /* Group info settings */
+    H5O_ginfo_t *ginfo = (H5O_ginfo_t *)_value;     /* Group info settings */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC_NOERR
 
-    UINT32DECODE(*pp, ginfo.lheap_size_hint)
-    UINT16DECODE(*pp, ginfo.max_compact)
-    UINT16DECODE(*pp, ginfo.min_dense)
-    UINT16DECODE(*pp, ginfo.est_num_entries)
-    UINT16DECODE(*pp, ginfo.est_name_len)      
+    /* Set property to default value */
+    *ginfo = H5G_def_ginfo_g;
+
+    UINT32DECODE(*pp, ginfo->lheap_size_hint)
+    UINT16DECODE(*pp, ginfo->max_compact)
+    UINT16DECODE(*pp, ginfo->min_dense)
+    UINT16DECODE(*pp, ginfo->est_num_entries)
+    UINT16DECODE(*pp, ginfo->est_name_len)      
 
     /* Update fields */
-    if(ginfo.max_compact != H5G_CRT_GINFO_MAX_COMPACT || 
-            ginfo.min_dense != H5G_CRT_GINFO_MIN_DENSE)
-        ginfo.store_link_phase_change = TRUE;
+    if(ginfo->max_compact != H5G_CRT_GINFO_MAX_COMPACT || 
+            ginfo->min_dense != H5G_CRT_GINFO_MIN_DENSE)
+        ginfo->store_link_phase_change = TRUE;
     else
-        ginfo.store_link_phase_change = FALSE;
+        ginfo->store_link_phase_change = FALSE;
 
-    if(ginfo.est_num_entries != H5G_CRT_GINFO_EST_NUM_ENTRIES || 
-            ginfo.est_name_len != H5G_CRT_GINFO_EST_NAME_LEN)
-        ginfo.store_est_entry_info = TRUE;
+    if(ginfo->est_num_entries != H5G_CRT_GINFO_EST_NUM_ENTRIES || 
+            ginfo->est_name_len != H5G_CRT_GINFO_EST_NAME_LEN)
+        ginfo->store_est_entry_info = TRUE;
     else
-        ginfo.store_est_entry_info = FALSE;
-
-    /* Set the value */
-    HDmemcpy(value, &ginfo, sizeof(ginfo));
+        ginfo->store_est_entry_info = FALSE;
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__gcrt_group_info_dec() */
@@ -665,9 +667,9 @@ H5P__gcrt_link_info_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t 
-H5P__gcrt_link_info_dec(const uint8_t **pp, void *value)
+H5P__gcrt_link_info_dec(const uint8_t **pp, void *_value)
 {
-    H5O_linfo_t linfo = H5G_CRT_LINK_INFO_DEF;  /* Link info settings */
+    H5O_linfo_t *linfo = (H5O_linfo_t *)_value;  /* Link info settings */
     unsigned crt_order_flags;
     unsigned enc_size;
     herr_t ret_value = SUCCEED;                 /* Return value */
@@ -678,14 +680,14 @@ H5P__gcrt_link_info_dec(const uint8_t **pp, void *value)
     if(enc_size != sizeof(unsigned))
         HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "unsigned value can't be decoded")
 
+    /* Set property to default value */
+    *linfo = H5G_def_linfo_g;
+
     H5_DECODE_UNSIGNED(*pp, crt_order_flags)
 
     /* Update fields */
-    linfo.track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
-    linfo.index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);
-
-    /* Set the value */
-    HDmemcpy(value, &linfo, sizeof(H5O_linfo_t));
+    linfo->track_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_TRACKED) ? TRUE : FALSE);
+    linfo->index_corder = (hbool_t)((crt_order_flags & H5P_CRT_ORDER_INDEXED) ? TRUE : FALSE);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

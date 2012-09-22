@@ -32,12 +32,12 @@ test_encode_decode(hid_t orig_pl, int mpi_rank, int recv_proc)
 
     if(mpi_rank == 0) {
         /* first call to encode returns only the size of the buffer needed */
-        ret = H5Pencode(orig_pl, TRUE, NULL, &buf_size);
+        ret = H5Pencode(orig_pl, NULL, &buf_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
         buf = (uint8_t *)HDmalloc(buf_size);
 
-        ret = H5Pencode(orig_pl, TRUE, buf, &buf_size);
+        ret = H5Pencode(orig_pl, buf, &buf_size);
         VRFY((ret >= 0), "H5Pencode succeeded");
 
         MPI_Isend(&buf_size, 1, MPI_INT, recv_proc, 123, MPI_COMM_WORLD, &req[0]);

@@ -102,6 +102,9 @@ const H5P_libclass_t H5P_CLS_STRCRT[1] = {{
 /* Local Variables */
 /*******************/
 
+/* Property value defaults */
+static const H5T_cset_t H5P_def_char_encoding_g = H5P_STRCRT_CHAR_ENCODING_DEF;  /* Default character set encoding */
+
 
 
 /*-------------------------------------------------------------------------
@@ -118,13 +121,12 @@ const H5P_libclass_t H5P_CLS_STRCRT[1] = {{
 static herr_t
 H5P__strcrt_reg_prop(H5P_genclass_t *pclass)
 {
-    H5T_cset_t char_encoding = H5P_STRCRT_CHAR_ENCODING_DEF;  /* Default character set encoding */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Register character encoding */
-    if(H5P_register_real(pclass, H5P_STRCRT_CHAR_ENCODING_NAME, H5P_STRCRT_CHAR_ENCODING_SIZE, &char_encoding, 
+    if(H5P_register_real(pclass, H5P_STRCRT_CHAR_ENCODING_NAME, H5P_STRCRT_CHAR_ENCODING_SIZE, &H5P_def_char_encoding_g, 
             NULL, NULL, NULL, H5P_STRCRT_CHAR_ENCODING_ENC, H5P_STRCRT_CHAR_ENCODING_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
@@ -258,22 +260,19 @@ H5P__strcrt_char_encoding_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__strcrt_char_encoding_dec(const uint8_t **pp, void *value)
+H5P__strcrt_char_encoding_dec(const uint8_t **pp, void *_value)
 {
-    H5T_cset_t encoding;            /* Character set encoding */
+    H5T_cset_t *encoding = (H5T_cset_t *)_value;            /* Character set encoding */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(encoding);
 
     /* Decode character set encoding */
-    encoding = (H5T_cset_t)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &encoding, sizeof(H5T_cset_t));
+    *encoding = (H5T_cset_t)*(*pp)++;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__strcrt_char_encoding_dec() */

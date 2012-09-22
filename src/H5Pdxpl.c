@@ -68,7 +68,7 @@
  * group's B-trees as well as chunked dataset's B-trees - QAK)
  */
 #define H5D_XFER_BTREE_SPLIT_RATIO_SIZE sizeof(double[3])
-#define H5D_XFER_BTREE_SPLIT_RATIO_DEF  {0.1, 0.5, 0.9}
+#define H5D_XFER_BTREE_SPLIT_RATIO_DEF  {0.1f, 0.5f, 0.9f}
 #define H5D_XFER_BTREE_SPLIT_RATIO_ENC  H5P__dxfr_btree_split_ratio_enc
 #define H5D_XFER_BTREE_SPLIT_RATIO_DEC  H5P__dxfr_btree_split_ratio_dec
 /* Definitions for vlen allocation function property */
@@ -223,6 +223,40 @@ const H5P_libclass_t H5P_CLS_DXFR[1] = {{
 /*****************************/
 
 
+/***************************/
+/* Local Private Variables */
+/***************************/
+
+/* Property value defaults */
+static const size_t H5D_def_max_temp_buf_g = H5D_XFER_MAX_TEMP_BUF_DEF;        /* Default value for maximum temp buffer size */
+static const void *H5D_def_tconv_buf_g = H5D_XFER_TCONV_BUF_DEF;               /* Default value for type conversion buffer */
+static const void *H5D_def_bkgr_buf_g = H5D_XFER_BKGR_BUF_DEF;                 /* Default value for background buffer */
+static const H5T_bkg_t H5D_def_bkgr_buf_type_g = H5D_XFER_BKGR_BUF_TYPE_DEF;
+static const double H5D_def_btree_split_ratio_g[3] = H5D_XFER_BTREE_SPLIT_RATIO_DEF;   /* Default value for B-tree node split ratios */
+static const H5MM_allocate_t H5D_def_vlen_alloc_g = H5D_XFER_VLEN_ALLOC_DEF;   /* Default value for vlen allocation function */
+static const void *H5D_def_vlen_alloc_info_g = H5D_XFER_VLEN_ALLOC_INFO_DEF;   /* Default value for vlen allocation information */
+static const H5MM_free_t H5D_def_vlen_free_g = H5D_XFER_VLEN_FREE_DEF;         /* Default value for vlen free function */
+static const void *H5D_def_vlen_free_info_g = H5D_XFER_VLEN_FREE_INFO_DEF;     /* Default value for vlen free information */
+static const size_t H5D_def_hyp_vec_size_g = H5D_XFER_HYPER_VECTOR_SIZE_DEF;   /* Default value for vector size */
+static const haddr_t H5D_def_metadata_tag_g = H5AC_METADATA_TAG_DEF;              /* Default value for metadata tag */
+static const H5FD_mpio_xfer_t H5D_def_io_xfer_mode_g = H5D_XFER_IO_XFER_MODE_DEF;      /* Default value for I/O transfer mode */
+static const H5FD_mpio_chunk_opt_t H5D_def_mpio_chunk_opt_mode_g = H5D_XFER_MPIO_CHUNK_OPT_HARD_DEF;
+static const H5FD_mpio_collective_opt_t H5D_def_mpio_collective_opt_mode_g = H5D_XFER_MPIO_COLLECTIVE_OPT_DEF;
+static const unsigned H5D_def_mpio_chunk_opt_num_g = H5D_XFER_MPIO_CHUNK_OPT_NUM_DEF;
+static const unsigned H5D_def_mpio_chunk_opt_ratio_g = H5D_XFER_MPIO_CHUNK_OPT_RATIO_DEF;
+static const H5D_mpio_actual_chunk_opt_mode_t H5D_def_mpio_actual_chunk_opt_mode_g = H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_DEF;
+static const H5D_mpio_actual_io_mode_t H5D_def_mpio_actual_io_mode_g = H5D_MPIO_ACTUAL_IO_MODE_DEF;
+static const H5D_mpio_no_collective_cause_t H5D_def_mpio_no_collective_cause_g = H5D_MPIO_NO_COLLECTIVE_CAUSE_DEF; 
+#ifdef H5_HAVE_PARALLEL
+static const MPI_Datatype H5D_def_btype_g = H5FD_MPI_XFER_MEM_MPI_TYPE_DEF;  /* Default value for MPI buffer type */
+static const MPI_Datatype H5D_def_ftype_g = H5FD_MPI_XFER_FILE_MPI_TYPE_DEF; /* Default value for MPI file type */
+#endif /* H5_HAVE_PARALLEL */
+static const H5Z_EDC_t H5D_def_enable_edc_g = H5D_XFER_EDC_DEF;            /* Default value for EDC property */
+static const H5Z_cb_t H5D_def_filter_cb_g = H5D_XFER_FILTER_CB_DEF;        /* Default value for filter callback */
+static const H5T_conv_cb_t H5D_def_conv_cb_g = H5D_XFER_CONV_CB_DEF;       /* Default value for datatype conversion callback */
+static const void *H5D_def_xfer_xform_g = H5D_XFER_XFORM_DEF;          /* Default value for data transform */
+
+
 
 /*-------------------------------------------------------------------------
  * Function:    H5P__dxfr_reg_prop
@@ -238,183 +272,156 @@ const H5P_libclass_t H5P_CLS_DXFR[1] = {{
 static herr_t
 H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
 {
-    size_t def_max_temp_buf = H5D_XFER_MAX_TEMP_BUF_DEF;        /* Default value for maximum temp buffer size */
-    void *def_tconv_buf = H5D_XFER_TCONV_BUF_DEF;               /* Default value for type conversion buffer */
-    void *def_bkgr_buf = H5D_XFER_BKGR_BUF_DEF;                 /* Default value for background buffer */
-    H5T_bkg_t def_bkgr_buf_type = H5D_XFER_BKGR_BUF_TYPE_DEF;
-    double def_btree_split_ratio[3] = H5D_XFER_BTREE_SPLIT_RATIO_DEF;   /* Default value for B-tree node split ratios */
-    H5MM_allocate_t def_vlen_alloc = H5D_XFER_VLEN_ALLOC_DEF;   /* Default value for vlen allocation function */
-    void *def_vlen_alloc_info = H5D_XFER_VLEN_ALLOC_INFO_DEF;   /* Default value for vlen allocation information */
-    H5MM_free_t def_vlen_free = H5D_XFER_VLEN_FREE_DEF;         /* Default value for vlen free function */
-    void *def_vlen_free_info = H5D_XFER_VLEN_FREE_INFO_DEF;     /* Default value for vlen free information */
-    size_t def_hyp_vec_size = H5D_XFER_HYPER_VECTOR_SIZE_DEF;   /* Default value for vector size */
-    haddr_t metadata_tag = H5AC_METADATA_TAG_DEF;              /* Default value for metadata tag */
-    H5FD_mpio_xfer_t def_io_xfer_mode = H5D_XFER_IO_XFER_MODE_DEF;      /* Default value for I/O transfer mode */
-    H5FD_mpio_chunk_opt_t def_mpio_chunk_opt_mode = H5D_XFER_MPIO_CHUNK_OPT_HARD_DEF;
-    H5FD_mpio_collective_opt_t def_mpio_collective_opt_mode = H5D_XFER_MPIO_COLLECTIVE_OPT_DEF;
-    unsigned def_mpio_chunk_opt_num = H5D_XFER_MPIO_CHUNK_OPT_NUM_DEF;
-    unsigned def_mpio_chunk_opt_ratio = H5D_XFER_MPIO_CHUNK_OPT_RATIO_DEF;
-    H5D_mpio_actual_chunk_opt_mode_t def_mpio_actual_chunk_opt_mode = H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_DEF;
-    H5D_mpio_actual_io_mode_t def_mpio_actual_io_mode = H5D_MPIO_ACTUAL_IO_MODE_DEF;
-    H5D_mpio_no_collective_cause_t def_mpio_no_collective_cause = H5D_MPIO_NO_COLLECTIVE_CAUSE_DEF; 
-#ifdef H5_HAVE_PARALLEL
-    MPI_Datatype btype = H5FD_MPI_XFER_MEM_MPI_TYPE_DEF;  /* Default value for MPI buffer type */
-    MPI_Datatype ftype = H5FD_MPI_XFER_FILE_MPI_TYPE_DEF; /* Default value for MPI file type */
-#endif /* H5_HAVE_PARALLEL */
-    H5Z_EDC_t enable_edc = H5D_XFER_EDC_DEF;            /* Default value for EDC property */
-    H5Z_cb_t filter_cb = H5D_XFER_FILTER_CB_DEF;        /* Default value for filter callback */
-    H5T_conv_cb_t conv_cb = H5D_XFER_CONV_CB_DEF;       /* Default value for datatype conversion callback */
-    void *def_xfer_xform = H5D_XFER_XFORM_DEF;          /* Default value for data transform */
     herr_t ret_value = SUCCEED;         /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Register the max. temp buffer size property */
-    if(H5P_register_real(pclass, H5D_XFER_MAX_TEMP_BUF_NAME, H5D_XFER_MAX_TEMP_BUF_SIZE, &def_max_temp_buf, 
+    if(H5P_register_real(pclass, H5D_XFER_MAX_TEMP_BUF_NAME, H5D_XFER_MAX_TEMP_BUF_SIZE, &H5D_def_max_temp_buf_g, 
             NULL, NULL, NULL, H5D_XFER_MAX_TEMP_BUF_ENC, H5D_XFER_MAX_TEMP_BUF_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the metadata tag property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5AC_METADATA_TAG_NAME, H5AC_METADATA_TAG_SIZE, &metadata_tag, 
+    if(H5P_register_real(pclass, H5AC_METADATA_TAG_NAME, H5AC_METADATA_TAG_SIZE, &H5D_def_metadata_tag_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the type conversion buffer property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_TCONV_BUF_NAME, H5D_XFER_TCONV_BUF_SIZE, &def_tconv_buf, 
+    if(H5P_register_real(pclass, H5D_XFER_TCONV_BUF_NAME, H5D_XFER_TCONV_BUF_SIZE, &H5D_def_tconv_buf_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the background buffer property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_BKGR_BUF_NAME, H5D_XFER_BKGR_BUF_SIZE, &def_bkgr_buf, 
+    if(H5P_register_real(pclass, H5D_XFER_BKGR_BUF_NAME, H5D_XFER_BKGR_BUF_SIZE, &H5D_def_bkgr_buf_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the background buffer type property */
-    if(H5P_register_real(pclass, H5D_XFER_BKGR_BUF_TYPE_NAME, H5D_XFER_BKGR_BUF_TYPE_SIZE, &def_bkgr_buf_type, 
+    if(H5P_register_real(pclass, H5D_XFER_BKGR_BUF_TYPE_NAME, H5D_XFER_BKGR_BUF_TYPE_SIZE, &H5D_def_bkgr_buf_type_g, 
              NULL, NULL, NULL, H5D_XFER_BKGR_BUF_TYPE_ENC, H5D_XFER_BKGR_BUF_TYPE_DEC,
              NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the B-Tree node splitting ratios property */
-    if(H5P_register_real(pclass, H5D_XFER_BTREE_SPLIT_RATIO_NAME, H5D_XFER_BTREE_SPLIT_RATIO_SIZE, def_btree_split_ratio, 
+    if(H5P_register_real(pclass, H5D_XFER_BTREE_SPLIT_RATIO_NAME, H5D_XFER_BTREE_SPLIT_RATIO_SIZE, H5D_def_btree_split_ratio_g, 
             NULL, NULL, NULL, H5D_XFER_BTREE_SPLIT_RATIO_ENC, H5D_XFER_BTREE_SPLIT_RATIO_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the vlen allocation function property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_VLEN_ALLOC_NAME, H5D_XFER_VLEN_ALLOC_SIZE, &def_vlen_alloc, 
+    if(H5P_register_real(pclass, H5D_XFER_VLEN_ALLOC_NAME, H5D_XFER_VLEN_ALLOC_SIZE, &H5D_def_vlen_alloc_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the vlen allocation information property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_VLEN_ALLOC_INFO_NAME, H5D_XFER_VLEN_ALLOC_INFO_SIZE, &def_vlen_alloc_info, 
+    if(H5P_register_real(pclass, H5D_XFER_VLEN_ALLOC_INFO_NAME, H5D_XFER_VLEN_ALLOC_INFO_SIZE, &H5D_def_vlen_alloc_info_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the vlen free function property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_VLEN_FREE_NAME, H5D_XFER_VLEN_FREE_SIZE, &def_vlen_free, 
+    if(H5P_register_real(pclass, H5D_XFER_VLEN_FREE_NAME, H5D_XFER_VLEN_FREE_SIZE, &H5D_def_vlen_free_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the vlen free information property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_VLEN_FREE_INFO_NAME, H5D_XFER_VLEN_FREE_INFO_SIZE, &def_vlen_free_info, 
+    if(H5P_register_real(pclass, H5D_XFER_VLEN_FREE_INFO_NAME, H5D_XFER_VLEN_FREE_INFO_SIZE, &H5D_def_vlen_free_info_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the vector size property */
-    if(H5P_register_real(pclass, H5D_XFER_HYPER_VECTOR_SIZE_NAME, H5D_XFER_HYPER_VECTOR_SIZE_SIZE, &def_hyp_vec_size, 
+    if(H5P_register_real(pclass, H5D_XFER_HYPER_VECTOR_SIZE_NAME, H5D_XFER_HYPER_VECTOR_SIZE_SIZE, &H5D_def_hyp_vec_size_g, 
             NULL, NULL, NULL, H5D_XFER_HYPER_VECTOR_SIZE_ENC, H5D_XFER_HYPER_VECTOR_SIZE_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the I/O transfer mode properties */
-    if(H5P_register_real(pclass, H5D_XFER_IO_XFER_MODE_NAME, H5D_XFER_IO_XFER_MODE_SIZE, &def_io_xfer_mode, 
+    if(H5P_register_real(pclass, H5D_XFER_IO_XFER_MODE_NAME, H5D_XFER_IO_XFER_MODE_SIZE, &H5D_def_io_xfer_mode_g, 
             NULL, NULL, NULL, H5D_XFER_IO_XFER_MODE_ENC, H5D_XFER_IO_XFER_MODE_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
-    if(H5P_register_real(pclass, H5D_XFER_MPIO_COLLECTIVE_OPT_NAME, H5D_XFER_MPIO_COLLECTIVE_OPT_SIZE, &def_mpio_collective_opt_mode, 
+    if(H5P_register_real(pclass, H5D_XFER_MPIO_COLLECTIVE_OPT_NAME, H5D_XFER_MPIO_COLLECTIVE_OPT_SIZE, &H5D_def_mpio_collective_opt_mode_g, 
             NULL, NULL, NULL, H5D_XFER_MPIO_COLLECTIVE_OPT_ENC, H5D_XFER_MPIO_COLLECTIVE_OPT_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
-    if(H5P_register_real(pclass, H5D_XFER_MPIO_CHUNK_OPT_HARD_NAME, H5D_XFER_MPIO_CHUNK_OPT_HARD_SIZE, &def_mpio_chunk_opt_mode, 
+    if(H5P_register_real(pclass, H5D_XFER_MPIO_CHUNK_OPT_HARD_NAME, H5D_XFER_MPIO_CHUNK_OPT_HARD_SIZE, &H5D_def_mpio_chunk_opt_mode_g, 
             NULL, NULL, NULL, H5D_XFER_MPIO_CHUNK_OPT_HARD_ENC, H5D_XFER_MPIO_CHUNK_OPT_HARD_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
-    if(H5P_register_real(pclass, H5D_XFER_MPIO_CHUNK_OPT_NUM_NAME, H5D_XFER_MPIO_CHUNK_OPT_NUM_SIZE, &def_mpio_chunk_opt_num, 
+    if(H5P_register_real(pclass, H5D_XFER_MPIO_CHUNK_OPT_NUM_NAME, H5D_XFER_MPIO_CHUNK_OPT_NUM_SIZE, &H5D_def_mpio_chunk_opt_num_g, 
             NULL, NULL, NULL, H5D_XFER_MPIO_CHUNK_OPT_NUM_ENC, H5D_XFER_MPIO_CHUNK_OPT_NUM_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
-    if(H5P_register_real(pclass, H5D_XFER_MPIO_CHUNK_OPT_RATIO_NAME, H5D_XFER_MPIO_CHUNK_OPT_RATIO_SIZE, &def_mpio_chunk_opt_ratio, 
+    if(H5P_register_real(pclass, H5D_XFER_MPIO_CHUNK_OPT_RATIO_NAME, H5D_XFER_MPIO_CHUNK_OPT_RATIO_SIZE, &H5D_def_mpio_chunk_opt_ratio_g, 
             NULL, NULL, NULL, H5D_XFER_MPIO_CHUNK_OPT_RATIO_ENC, H5D_XFER_MPIO_CHUNK_OPT_RATIO_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the chunk optimization mode property. */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_NAME, H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_SIZE, &def_mpio_actual_chunk_opt_mode, 
+    if(H5P_register_real(pclass, H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_NAME, H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_SIZE, &H5D_def_mpio_actual_chunk_opt_mode_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the actual I/O mode property. */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_MPIO_ACTUAL_IO_MODE_NAME, H5D_MPIO_ACTUAL_IO_MODE_SIZE, &def_mpio_actual_io_mode, 
+    if(H5P_register_real(pclass, H5D_MPIO_ACTUAL_IO_MODE_NAME, H5D_MPIO_ACTUAL_IO_MODE_SIZE, &H5D_def_mpio_actual_io_mode_g, 
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the local cause of broken collective I/O */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME, H5D_MPIO_NO_COLLECTIVE_CAUSE_SIZE, &def_mpio_actual_io_mode,
+    if(H5P_register_real(pclass, H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME, H5D_MPIO_NO_COLLECTIVE_CAUSE_SIZE, &H5D_def_mpio_actual_io_mode_g,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the global cause of broken collective I/O */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME, H5D_MPIO_NO_COLLECTIVE_CAUSE_SIZE, &def_mpio_actual_io_mode,
+    if(H5P_register_real(pclass, H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME, H5D_MPIO_NO_COLLECTIVE_CAUSE_SIZE, &H5D_def_mpio_actual_io_mode_g,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
 #ifdef H5_HAVE_PARALLEL
     /* Register the MPI memory type property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5FD_MPI_XFER_MEM_MPI_TYPE_NAME, H5FD_MPI_XFER_MEM_MPI_TYPE_SIZE, &btype,
+    if(H5P_register_real(pclass, H5FD_MPI_XFER_MEM_MPI_TYPE_NAME, H5FD_MPI_XFER_MEM_MPI_TYPE_SIZE, &H5D_def_btype_g,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the MPI file type property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5FD_MPI_XFER_FILE_MPI_TYPE_NAME, H5FD_MPI_XFER_FILE_MPI_TYPE_SIZE, &ftype,
+    if(H5P_register_real(pclass, H5FD_MPI_XFER_FILE_MPI_TYPE_NAME, H5FD_MPI_XFER_FILE_MPI_TYPE_SIZE, &H5D_def_ftype_g,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 #endif /* H5_HAVE_PARALLEL */
 
     /* Register the EDC property */
-    if(H5P_register_real(pclass, H5D_XFER_EDC_NAME, H5D_XFER_EDC_SIZE, &enable_edc, 
+    if(H5P_register_real(pclass, H5D_XFER_EDC_NAME, H5D_XFER_EDC_SIZE, &H5D_def_enable_edc_g,
             NULL, NULL, NULL, H5D_XFER_EDC_ENC, H5D_XFER_EDC_DEC,
             NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the filter callback property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_FILTER_CB_NAME, H5D_XFER_FILTER_CB_SIZE, &filter_cb, 
+    if(H5P_register_real(pclass, H5D_XFER_FILTER_CB_NAME, H5D_XFER_FILTER_CB_SIZE, &H5D_def_filter_cb_g,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the type conversion callback property */
     /* (Note: this property should not have an encode/decode callback -QAK) */
-    if(H5P_register_real(pclass, H5D_XFER_CONV_CB_NAME, H5D_XFER_CONV_CB_SIZE, &conv_cb, 
+    if(H5P_register_real(pclass, H5D_XFER_CONV_CB_NAME, H5D_XFER_CONV_CB_SIZE, &H5D_def_conv_cb_g,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
 
     /* Register the data transform property */
-    if(H5P_register_real(pclass, H5D_XFER_XFORM_NAME, H5D_XFER_XFORM_SIZE, &def_xfer_xform, 
+    if(H5P_register_real(pclass, H5D_XFER_XFORM_NAME, H5D_XFER_XFORM_SIZE, &H5D_def_xfer_xform_g,
             NULL, NULL, NULL, H5D_XFER_XFORM_ENC, H5D_XFER_XFORM_DEC, 
             H5D_XFER_XFORM_DEL, H5D_XFER_XFORM_COPY, H5D_XFER_XFORM_CMP, H5D_XFER_XFORM_CLOSE) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
@@ -477,22 +484,19 @@ H5P__dxfr_bkgr_buf_type_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_bkgr_buf_type_dec(const uint8_t **pp, void *value)
+H5P__dxfr_bkgr_buf_type_dec(const uint8_t **pp, void *_value)
 {
-    H5T_bkg_t bkgr_buf_type;            /* Background buffer type */
+    H5T_bkg_t *bkgr_buf_type = (H5T_bkg_t *)_value;     /* Background buffer type */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(bkgr_buf_type);
 
     /* Decode background buffer type */
-    bkgr_buf_type = (H5T_bkg_t)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &bkgr_buf_type, sizeof(H5T_bkg_t));
+    *bkgr_buf_type = (H5T_bkg_t)*(*pp)++;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_bkgr_buf_type_dec() */
@@ -563,9 +567,9 @@ H5P__dxfr_btree_split_ratio_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_btree_split_ratio_dec(const uint8_t **pp, void *value)
+H5P__dxfr_btree_split_ratio_dec(const uint8_t **pp, void *_value)
 {
-    double btree_split_ratio[3];        /* Background buffer type */
+    double *btree_split_ratio = (double *)_value;        /* B-tree split ratio */
     unsigned enc_size;                  /* Size of encoded property */
     herr_t ret_value = SUCCEED;         /* Return value */
 
@@ -574,7 +578,7 @@ H5P__dxfr_btree_split_ratio_dec(const uint8_t **pp, void *value)
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(btree_split_ratio);
 
     /* Decode the size */
     enc_size = *(*pp)++;
@@ -585,9 +589,6 @@ H5P__dxfr_btree_split_ratio_dec(const uint8_t **pp, void *value)
     H5_DECODE_DOUBLE(*pp, btree_split_ratio[0])
     H5_DECODE_DOUBLE(*pp, btree_split_ratio[1])
     H5_DECODE_DOUBLE(*pp, btree_split_ratio[2])
-
-    /* Set the value */
-    HDmemcpy(value, btree_split_ratio, sizeof(double[3]));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -612,7 +613,7 @@ done:
 static herr_t
 H5P__dxfr_xform_enc(const void *value, uint8_t **pp, size_t *size)
 {
-    const H5Z_data_xform_t *data_xform_prop = *(const H5Z_data_xform_t **)value; /* Create local alias for values */
+    const H5Z_data_xform_t *data_xform_prop = *(const H5Z_data_xform_t * const *)value; /* Create local alias for values */
     const char *pexp = NULL;            /* Pointer to transform expression */
     size_t	len = 0;                /* Length of transform expression */
     herr_t ret_value = SUCCEED;         /* Return value */
@@ -681,9 +682,9 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
+H5P__dxfr_xform_dec(const uint8_t **pp, void *_value)
 {
-    H5Z_data_xform_t *data_xform_prop = NULL;    /* New data xform property */
+    H5Z_data_xform_t **data_xform_prop = (H5Z_data_xform_t **)_value;    /* New data xform property */
     size_t len;                         /* Length of encoded string */
     unsigned enc_size;
     uint64_t enc_value;
@@ -694,7 +695,7 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(data_xform_prop);
     HDcompile_assert(sizeof(size_t) <= sizeof(uint64_t));
 
     /* Decode the length of xform expression */
@@ -704,13 +705,12 @@ H5P__dxfr_xform_dec(const uint8_t **pp, void *value)
     len = (size_t)enc_value;
 
     if(0 != len) {
-        if(NULL == (data_xform_prop = H5Z_xform_create((const char *)*pp)))
+        if(NULL == (*data_xform_prop = H5Z_xform_create((const char *)*pp)))
             HGOTO_ERROR(H5E_PLIST, H5E_CANTCREATE, FAIL, "unable to create data transform info")
         *pp += len;
     } /* end if */
-
-    /* Set the value */
-    HDmemcpy(value, &data_xform_prop, sizeof(H5Z_data_xform_t *));
+    else
+        *data_xform_prop = H5D_XFER_XFORM_DEF;
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1739,22 +1739,19 @@ H5P__dxfr_io_xfer_mode_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_io_xfer_mode_dec(const uint8_t **pp, void *value)
+H5P__dxfr_io_xfer_mode_dec(const uint8_t **pp, void *_value)
 {
-    H5FD_mpio_xfer_t xfer_mode;         /* I/O transfer mode */
+    H5FD_mpio_xfer_t *xfer_mode = (H5FD_mpio_xfer_t *)_value;         /* I/O transfer mode */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(xfer_mode);
 
     /* Decode I/O transfer mode */
-    xfer_mode = (H5FD_mpio_xfer_t)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &xfer_mode, sizeof(H5FD_mpio_xfer_t));
+    *xfer_mode = (H5FD_mpio_xfer_t)*(*pp)++;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_io_xfer_mode_dec() */
@@ -1813,22 +1810,19 @@ H5P__dxfr_mpio_collective_opt_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_mpio_collective_opt_dec(const uint8_t **pp, void *value)
+H5P__dxfr_mpio_collective_opt_dec(const uint8_t **pp, void *_value)
 {
-    H5FD_mpio_collective_opt_t coll_opt;         /* MPI-I/O collective optimization mode */
+    H5FD_mpio_collective_opt_t *coll_opt = (H5FD_mpio_collective_opt_t *)_value;         /* MPI-I/O collective optimization mode */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(coll_opt);
 
     /* Decode MPI-I/O collective optimization mode */
-    coll_opt = (H5FD_mpio_collective_opt_t)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &coll_opt, sizeof(H5FD_mpio_collective_opt_t));
+    *coll_opt = (H5FD_mpio_collective_opt_t)*(*pp)++;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_mpio_collective_opt_dec() */
@@ -1887,25 +1881,22 @@ H5P__dxfr_mpio_chunk_opt_hard_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_mpio_chunk_opt_hard_dec(const uint8_t **pp, void *value)
+H5P__dxfr_mpio_chunk_opt_hard_dec(const uint8_t **pp, void *_value)
 {
-    H5FD_mpio_chunk_opt_t chunk_opt;         /* MPI-I/O chunk optimization mode */
+    H5FD_mpio_chunk_opt_t *chunk_opt = (H5FD_mpio_chunk_opt_t *)_value;         /* MPI-I/O chunk optimization mode */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(chunk_opt);
 
     /* Decode MPI-I/O chunk optimization mode */
-    chunk_opt = (H5FD_mpio_chunk_opt_t)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &chunk_opt, sizeof(H5FD_mpio_chunk_opt_t));
+    *chunk_opt = (H5FD_mpio_chunk_opt_t)*(*pp)++;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5P__dxfr_mpio_chunk_opt_hard_enc() */
+} /* end H5P__dxfr_mpio_chunk_opt_hard_dec() */
 
 #ifdef H5_HAVE_PARALLEL
 
@@ -2073,22 +2064,19 @@ H5P__dxfr_edc_enc(const void *value, uint8_t **pp, size_t *size)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5P__dxfr_edc_dec(const uint8_t **pp, void *value)
+H5P__dxfr_edc_dec(const uint8_t **pp, void *_value)
 {
-    H5Z_EDC_t check;         /* EDC property */
+    H5Z_EDC_t *check = (H5Z_EDC_t *)_value;         /* EDC property */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Sanity checks */
     HDassert(pp);
     HDassert(*pp);
-    HDassert(value);
+    HDassert(check);
 
     /* Decode EDC property */
-    check = (H5Z_EDC_t)*(*pp)++;
-
-    /* Set the value */
-    HDmemcpy(value, &check, sizeof(H5Z_EDC_t));
+    *check = (H5Z_EDC_t)*(*pp)++;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_edc_dec() */

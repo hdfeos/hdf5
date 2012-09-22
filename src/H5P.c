@@ -843,10 +843,8 @@ done:
  PURPOSE
     Routine to convert the property values in a property list into a binary buffer
  USAGE
-    herr_t H5Pencode(plist_id, enc_all_prop, buf, nalloc)
+    herr_t H5Pencode(plist_id, buf, nalloc)
         hid_t plist_id;         IN: Identifier to property list to encode
-        hbool_t enc_all_prop;   IN: Whether to encode all properties (TRUE),
-                                    or just non-default (i.e. changed) properties (FALSE).
         void *buf:              OUT: buffer to gold the encoded plist
         size_t *nalloc;         IN/OUT: size of buffer needed to encode plist
  RETURNS
@@ -861,20 +859,20 @@ done:
  REVISION LOG
 --------------------------------------------------------------------------*/
 herr_t
-H5Pencode(hid_t plist_id, hbool_t enc_all_prop, void *buf, size_t *nalloc)
+H5Pencode(hid_t plist_id, void *buf, size_t *nalloc)
 {
     H5P_genplist_t	*plist;         /* Property list to query */
     hid_t ret_value = SUCCEED;          /* return value */
 
     FUNC_ENTER_API(FAIL)
-    H5TRACE4("e", "ib*x*z", plist_id, enc_all_prop, buf, nalloc);
+    H5TRACE3("e", "i*x*z", plist_id, buf, nalloc);
 
     /* Check arguments. */
     if(NULL == (plist = (H5P_genplist_t *)H5I_object_verify(plist_id, H5I_GENPROP_LST)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a property list");
 
     /* Call the internal encode routine */
-    if((ret_value = H5P__encode(plist, enc_all_prop, buf, nalloc)) < 0)
+    if((ret_value = H5P__encode(plist, TRUE, buf, nalloc)) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTENCODE, FAIL, "unable to encode property list");
 
 done:
