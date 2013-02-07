@@ -1,0 +1,21 @@
+HDF5 collective metadata read IO optimization feature branch
+
+This branch was created by Jonathan Kim on Feb 6, 2013. 
+
+This work involves updating H5Dopen() to do metadata IO collectively for fetching metadata info from disk.
+Currently H5Dopen() is allowed for independent read operation and this leads redundant matadata IO accesses in collective operation which causes performance slowdown by fetching the same metadata info for all processes individually.
+The improvement is to make one process fetch the metadata info one time and share with the rest of processes instead of fetching the same info individually
+
+The result of this work can be reused for other APIs accessing metadata cache to improve performance in parallel env.
+
+This branch is off of the trunk. All trunk changes through r23232 have been merged up to this feature branch.
+
+Feb 7,2013:
+ This task is paused until a couple of prerequisite features are ready.
+ 1. Serialized data pointer for metadata cache entry. (Quincey is working on it)
+  - This is needed to bcast, so receive processes can update local matadata 
+    cache.
+ 2. New internal APIs for receive side processes to update local meatadata 
+    cache entry with the received data.
+
+
