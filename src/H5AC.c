@@ -2595,6 +2595,587 @@ done:
 } /* H5AC_add_candidate() */
 #endif /* H5_HAVE_PARALLEL */
 
+#ifndef JK_WORK
+/*-------------------------------------------------------------------------
+ *
+ * Function:    H5AC_metadata_cache_collective_sync_begin()
+ *
+ * Purpose:     Begin metadata cache collective sync feature
+ *
+ * Return:      SUCCEED on success, and FAIL on failure.
+ *
+ * Programmer:  Jonathan Kim, 01/23/13
+ *
+ *-------------------------------------------------------------------------
+ */
+#ifdef H5_HAVE_PARALLEL
+herr_t 
+H5AC_metadata_cache_collective_sync_begin(H5F_t *file, hid_t dxpl_id)
+{
+
+    herr_t  ret_value = SUCCEED;    /* Return value */
+    MPI_Comm	 mpi_comm;
+    int		 mpi_rank;
+    int	 	 mpi_size;
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /*
+     * get MPI status 
+     */
+    HDassert(file);
+
+    if(H5F_HAS_FEATURE(file, H5FD_FEAT_HAS_MPI)) {
+        if(MPI_COMM_NULL == (mpi_comm = H5F_mpi_get_comm(file)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator")
+
+        if((mpi_rank = H5F_mpi_get_rank(file)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get mpi rank")
+
+        if((mpi_size = H5F_mpi_get_size(file)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get mpi size")
+
+        #ifdef JK_DBG
+        if(mpi_rank == 0) {
+            printf("JKDBG %s:%d sync_begin> pid: %d, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        }
+        else {
+            printf("JKDBG %s:%d sync_begin> pid: %d, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        }
+        fflush(stdout);
+        #endif
+    }
+
+    #ifdef JK_NOUSE_TRIAL1
+    //  TRIAL 1 - get MPI status---------------------------
+    /*
+    H5AC_t * cache_ptr = file->shared->cache;
+    H5AC_aux_t         * aux_ptr;
+
+    HDassert( cache_ptr != NULL );
+    HDassert( cache_ptr->magic == H5C__H5C_T_MAGIC );
+
+    aux_ptr = (H5AC_aux_t *)(cache_ptr->aux_ptr);
+    HDassert( aux_ptr != NULL );
+    HDassert( aux_ptr->magic == H5AC__H5AC_AUX_T_MAGIC );
+    HDassert( aux_ptr->mpi_rank == 0 );
+    //HDassert( aux_ptr->metadata_write_strategy ==
+    //          H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED );
+    //HDassert( aux_ptr->candidate_slist_ptr != NULL );
+
+    if(aux_ptr->mpi_rank == 0) {
+        printf("JKDBG> pid: %d, rank: %d\n", getpid(), aux_ptr->mpi_rank);
+    }
+    else {
+        printf("JKDBG> pid: %d, rank: %d\n", getpid(), aux_ptr->mpi_rank);
+    }
+    fflush(stdout);
+    */
+    #endif // JK_NOUSE_TRIAL1
+
+    // BEGIN : SUDO CODE ===============================================
+    //if (mpi_size > 1) {
+    //  if (mpi_rank == 0) {  // send process
+    //      copy dxpl_id to update (DONE outside)
+    //      cork the metadata cache (DONE)
+    //      init on a new DXPL property structure (DONE at registration)
+    //      set is_requested=TRUE  (DONE with cork)
+    //      H5C_protect() will build linked list for touched mcache entries (DONE)
+    //  }
+    //  else {  // other recv processes
+    //      cork the metadata cache (DONE)
+    //      wait for p0 to bcast and recv buf_size
+    //      wait for p0 to bcast and recv buffer
+    //      Parse the buffer's head
+    //      TEMP SOLUTION: use H5C_load_entry() to get data and use it instead of parsing the entry_data[] from received buffer.
+    //      Loop (entries) {
+    //          check if the entry exist in local metadata cache
+    //          If (not exist) {
+    //              // insert the received entry
+    //          }
+    //          else  { // exist  ONLY DBG purpose (use ifdef or assert)
+    //              check if local entry is clean
+    //              if (clean) { // clean
+    //                 // update/replace with the received entry
+    //              }
+    //              else {  // dirty
+    //                  throw error  (should be clean as synced)
+    //              }
+    //          }
+    //          // REAL CODE ----------------------------I
+    //          // REFER TO H5C_mark_entries_as_clean()
+    //          HDassert( H5F_addr_defined(addr) );
+    //          H5C__SEARCH_INDEX(cache_ptr, addr, entry_ptr, FAIL)
+    //          if ( entry_ptr == NULL ) {  // not exist
+    //              // entry is not in cache, insert it
+    //              H5AC_insert_entry()
+    //          } else { // exist
+    //              if ( ! entry_ptr->is_dirty ) {  // clean
+    //                 // update/replace with the received entry
+    //              }
+    //              else { // dirty
+    //                #if H5C_DO_SANITY_CHECKS
+    //                HDfprintf(stdout, "%s: entry %ld is dirty!?!\n", __FUNC__, (long)addr);
+    //                HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Listed entry dirty?! Should be clean.")
+    //                #endif /* H5C_DO_SANITY_CHECKS */
+    //             }
+    //          }
+    //          // ReadCode -----------------------------O
+    //      }
+    //  }
+    //}
+    // END : SUDO CODE ===============================================
+
+
+    // CORK Cache ----------------------I
+    { 
+    H5AC_collevtive_sync_t mcache_coll_sync_struct;
+    #ifdef JK_DBG
+    printf("JKDBG1 %s:%d pid=%d> GET CURR evictions_enabled:%d\n","_H5AC",__LINE__, getpid(), file->shared->cache->evictions_enabled);
+    #endif
+    /* get the dxpl property structure */
+    H5P_get_metadata_cache_coll_sync(dxpl_id, &mcache_coll_sync_struct);
+
+    /* init property structure */
+    mcache_coll_sync_struct.is_requested = TRUE;
+
+    /* backup evictions_enabled status */
+    mcache_coll_sync_struct.evictions_enabled_backup = file->shared->cache->evictions_enabled;
+    #ifdef JK_DBG
+    printf("JKDBG1 %s:%d pid=%d> SAVE to evictions_enabled_backup:%d\n","_H5AC",__LINE__, getpid(), mcache_coll_sync_struct.evictions_enabled_backup);
+    #endif
+    H5P_set_metadata_cache_coll_sync(dxpl_id, &mcache_coll_sync_struct);
+
+    /* cork the metadata cache */
+    file->shared->cache->evictions_enabled = FALSE;
+    #ifdef JK_DBG
+    printf("JKDBG1 %s:%d pid=%d> CORK evictions_enabled = 0:\n","_H5AC",__LINE__, getpid());
+    #endif
+    }
+    // CORK Cache ----------------------O
+
+    /* No need to sync with only one process running */
+    #ifdef JK_LATER
+    // TODO JK OPEN again if (mpi_size > 1) {
+    #else
+    if (mpi_size > 1) {
+    #endif
+        #ifdef JK_DBG
+        printf("JKDBG %s:%d sync_begin> DO-SYNC, pid: %d, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        fflush(stdout);
+        #endif
+    
+        // MAJOR CODE ---------------I
+        if (mpi_rank == 0) {  // send process
+        }
+        else {
+            H5AC_collective_sync_bcastbuf1_t recvbuf1;
+            unsigned char * recvbuf2;
+            H5AC_collective_sync_bcastbuf2_t * local_buf=NULL;
+            int mpi_result;
+            // handle recvbuf1 -----------------I
+            {
+            //size_t total_bufsize=0;
+
+            // JK TODO: need to decide which mpi_comm to use
+            //  if use mpi_comm, this code can run with one process.
+            //  if use aux_ptr->mpi_comm, this code fail with one process
+            //  because aux_ptr==NULL 
+            #ifdef JK_WORK_DECIDE
+            // TODO ask Quincey
+            H5AC_aux_t * aux_ptr;
+
+            HDassert( file->shared->cache->magic == H5C__H5C_T_MAGIC );
+
+            aux_ptr = (H5AC_aux_t *)(file->shared->cache->aux_ptr);
+
+            HDassert( aux_ptr != NULL );
+            HDassert( aux_ptr->magic == H5AC__H5AC_AUX_T_MAGIC );
+
+            /* First receive the total buf size so that we can set up a buffer 
+             * to receive them.  If there aren't any, we are done.
+             */
+            //mpi_result = MPI_Bcast(&total_bufsize, 1, MPI_INT, 0, aux_ptr->mpi_comm);
+            #else
+            //mpi_result = MPI_Bcast(&total_bufsize, 1, MPI_INT, 0, mpi_comm);
+            mpi_result = MPI_Bcast(&recvbuf1, sizeof(H5AC_collective_sync_bcastbuf1_t), MPI_BYTE, 0, mpi_comm);
+            #endif
+            if ( mpi_result != MPI_SUCCESS )
+                HMPI_GOTO_ERROR(FAIL, "MPI_Bcast failed 1", mpi_result)
+            #ifdef JK_DBG
+            printf("JKDBG %s:%d pid=%d> BCAST_RECV totalsize: %u, num_ent:%d\n","_H5AC",__LINE__, getpid(), recvbuf1.total_bufsize , recvbuf1.num_entry);
+            fflush(stdout);
+            #endif
+
+            }
+            // handle recvbuf1 -----------------O
+
+            // Handle recvbuf2  ---------------I
+            {
+            unsigned char * rbuf_ptr;
+            unsigned int i;
+
+            // prepare recvbuf2 --------------------I
+            recvbuf2 = (unsigned char*)H5MM_calloc (recvbuf1.total_bufsize);
+            // -------------------------------------O
+
+            // recv sendbuf2 ---------------------I
+            mpi_result = MPI_Bcast(recvbuf2, recvbuf1.total_bufsize, MPI_BYTE, 0, mpi_comm);
+            if ( mpi_result != MPI_SUCCESS )
+                printf("JK SEND ERROR: MPI_Bcast\n");
+            //------------------------------------O
+
+            // prepare local buf struct -------------------I
+            local_buf = (H5AC_collective_sync_bcastbuf2_t*)H5MM_calloc(recvbuf1.num_entry * sizeof(H5AC_collective_sync_bcastbuf2_t));
+            //---------------------------------------------I
+
+            // parse recvbuf2 into local_buf[] struct ----I
+            rbuf_ptr = recvbuf2;
+            #ifdef JK_DBG
+            printf("JK RECV DBG show recvbuf2[] ------I\n");
+            #endif
+            fflush(stdout);
+            for (i=0; i<recvbuf1.num_entry; i++)
+            {
+                // addr 
+                HDmemcpy(&(local_buf[i].addr), rbuf_ptr, sizeof(haddr_t));
+                #ifdef JK_DBG
+                printf("JK RECV pid=%d> addr[%d] : %llu\n",getpid(), i, local_buf[i].addr);
+                #endif
+                rbuf_ptr += sizeof(haddr_t);
+
+                // size
+                HDmemcpy(&(local_buf[i].size), rbuf_ptr, sizeof(hsize_t));
+                #ifdef JK_DBG
+                printf("JK RECV pid=%d> size[%d] : %u\n",getpid(), i, local_buf[i].size);
+                #endif
+                rbuf_ptr += sizeof(hsize_t);
+
+                // data
+                local_buf[i].data = (unsigned char*) H5MM_calloc((size_t)local_buf[i].size);
+                HDmemcpy((unsigned char*)local_buf[i].data, (unsigned char*)rbuf_ptr, (size_t) local_buf[i].size);
+                #ifdef JK_DBG
+                printf("JK RECV pid=%d> data[%d] : %s\n", getpid(), i, local_buf[i].data);
+                #endif
+                rbuf_ptr += local_buf[i].size;
+                fflush(stdout);
+            } 
+            #ifdef JK_DBG
+            printf("JK RECV DBG show recvbuf2[] ------O\n");
+            #endif
+            // --------------------------------------------O
+
+            // JK TODO
+            // Add or update received metadata cache entries from local_buf array struct
+            //
+
+
+            // free recvbuf2 ----I
+            if (recvbuf2 != NULL)
+                recvbuf2 = (unsigned char *)H5MM_xfree((void *)recvbuf2);
+            //-------------------O
+
+            // free local buf ---I
+            for (i=0; i < recvbuf1.num_entry; i++)
+            {
+                if(local_buf[i].data)
+                    local_buf[i].data = (unsigned char *)H5MM_xfree((void *)local_buf[i].data);
+            }
+
+            if(local_buf != NULL)
+                local_buf = (H5AC_collective_sync_bcastbuf2_t *)H5MM_xfree((void *)local_buf);
+            //-------------------O
+
+            } // handle recvbuf2 ---------------O
+        } // end of else
+        // MAJOR CODE ---------------O
+    #ifdef JK_LATER
+    //}
+    #else
+    }
+    #endif
+    #ifdef JK_DBG
+    else {
+        printf("JKDBG %s:%d sync_begin> NO-SYNC, pid: %d, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        fflush(stdout);
+    }
+    #endif
+
+    done:
+    #ifdef JK_WORK_TODO
+    // Free malloc buffers
+    // if (recvbuf2)
+        //H5MM_xfree(recvbuf2);
+    //}
+    #endif
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5AC_metadata_cache_collective_sync_begin */
+#endif /* H5_HAVE_PARALLEL */
+
+/*-------------------------------------------------------------------------
+ *
+ * Function:    H5AC_metadata_cache_collective_sync_end()
+ *
+ * Purpose:     Finish metadata cache collective sync feature
+ *
+ * Return:      SUCCEED on success, and FAIL on failure.
+ *
+ * Programmer:  Jonathan Kim, 01/23/13
+ *
+ *-------------------------------------------------------------------------
+ */
+#ifdef H5_HAVE_PARALLEL
+herr_t 
+H5AC_metadata_cache_collective_sync_end(H5F_t *file, hid_t dxpl_id)
+{
+    herr_t  ret_value = SUCCEED;    /* Return value */
+    MPI_Comm	 mpi_comm;
+    int		 mpi_rank;
+    int	 	 mpi_size;
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* get MPI status */
+    HDassert(file);
+
+    if(H5F_HAS_FEATURE(file, H5FD_FEAT_HAS_MPI)) {
+
+        if(MPI_COMM_NULL == (mpi_comm = H5F_mpi_get_comm(file)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator")
+
+        if((mpi_rank = H5F_mpi_get_rank(file)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get mpi rank")
+
+        if((mpi_size = H5F_mpi_get_size(file)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get mpi size")
+
+        #ifdef JK_DBG
+        if(mpi_rank == 0) {
+            printf("JKDBG %s:%d sync_end> pid: %d, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        }
+        else {
+            printf("JKDBG %s:%d sync_end> pid: %d, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        }
+        fflush(stdout);
+        #endif
+    }
+    //
+    // BEGIN: SUDO CODE ===============================================
+    //if (mpi_size > 1) {
+    //  if (mpi_rank == 0) {  // send process
+    //      Get the new DXPL property structure has touched list by now (DONE)
+    //      Build send buffer from the new DXPL property structure
+    //       - unsigned num_entries;
+    //       - haddr_t  addr[num_entries];
+    //       - size_t  size[num_entries];
+    //       - unsigned char  entry_data[unsigned total_entry_size];
+    //       - TEMP SOLUTION: don't build entry_data[] part, just ignore now.
+    //      Bcast the sizes of buffer to send
+    //      Bcast the buffer to send; refer to 'H5AC_broadcast_clean_list'
+    //      Set touched_next = NULL in linked list
+    //      Free sent bcast buffer.
+    //      uncork the metadata cache (DONE)
+    //      Close the new DXPL id to remove it's property struct (DONE outside)
+    //  }
+    //  else {  // other recv processes
+    //      uncork the metadata cache  (DONE)
+    //  }
+    // }
+    // END : SUDO CODE ===============================================
+
+    /* No need to sync with only one process running */
+    #ifdef JK_LATER
+    // JK TODO OPEN AGAIN - if (mpi_size > 1) {
+    #else
+    if (mpi_size > 1) {
+    #endif
+        #ifdef JK_DBG
+        printf("JKDBG %s:%d pid:%d sync_end> DO-SYNC, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        fflush(stdout);
+        #endif
+
+        // MAJOR CODE ---------------I
+        if (mpi_rank == 0) {  // send process
+            H5AC_collective_sync_bcastbuf1_t sendbuf1;
+            H5AC_collevtive_sync_t mcache_coll_sync_struct;
+            unsigned char *sendbuf2=NULL;
+            int mpi_result;
+            // Get the new DXPL property structure has touched list by now
+            H5P_get_metadata_cache_coll_sync(dxpl_id, &mcache_coll_sync_struct);
+
+            #ifdef JK_DBG
+            // Show touched linked list addrs and others
+            {
+            H5C_cache_entry_t *tmp_entry_ptr = mcache_coll_sync_struct.head_ptr;
+            int i=0;
+            printf("\nSTART SEND %s:%d JKDBG touched linked list addr & others ---------I\n","_H5AC",__LINE__);
+            while(tmp_entry_ptr)
+            {
+                printf("JKDBG %s:%d pid=%d> touched linked-addr[%d] : 0x%x, num_ent:5\n","_H5AC",__LINE__, getpid(), i++, (unsigned int)tmp_entry_ptr, i); 
+                fflush(stdout);
+                tmp_entry_ptr = tmp_entry_ptr->touched_next;
+            }
+            printf("JKDBG %s:%d  pid=%d> num_entry: %d, total_entry_size:%d\n","_H5AC",__LINE__, getpid(), mcache_coll_sync_struct.num_entry , mcache_coll_sync_struct.total_entry_size);
+            fflush(stdout);
+            printf("END SEND %s:%d  JKDBG touched linked list addr & others ---------O\n\n","_H5AC",__LINE__);
+            }
+            #endif
+
+            // bcast to send sendbuf1 -------------------I
+            {
+
+            //sendbuf1.num_entry = 333;
+            sendbuf1.num_entry = mcache_coll_sync_struct.num_entry;
+            //sendbuf1.total_bufsize = 777; // DEBUG
+            sendbuf1.total_bufsize = (sizeof(haddr_t) * sendbuf1.num_entry) + (sizeof(hsize_t) * sendbuf1.num_entry) + mcache_coll_sync_struct.total_entry_size;;
+            #ifdef JK_DBG
+            printf("JKDBG %s:%d pid=%d> BCAST_SEND totalsize: %u, num_ent:%d\n","_H5AC",__LINE__, getpid(), sendbuf1.total_bufsize , sendbuf1.num_entry);
+            fflush(stdout);
+            #endif
+
+            // JK TODO: need to decide which mpi_comm to use
+            //  if use mpi_comm, this code can run with one process.
+            //  if use aux_ptr->mpi_comm, this code fail with one process
+            //  because aux_ptr==NULL 
+            #ifdef JK_WORK_DECIDE
+            H5AC_aux_t * aux_ptr;
+
+            HDassert( file->shared->cache->magic == H5C__H5C_T_MAGIC );
+
+            aux_ptr = (H5AC_aux_t *)(file->shared->cache->aux_ptr);
+
+            HDassert( aux_ptr != NULL );
+            HDassert( aux_ptr->magic == H5AC__H5AC_AUX_T_MAGIC );
+
+            mpi_result = MPI_Bcast(&sendbuf1, sizeof(H5AC_collective_sync_bcastbuf1_t), MPI_BYTE, 0, mpi_comm);
+            #else
+            mpi_result = MPI_Bcast(&sendbuf1, sizeof(H5AC_collective_sync_bcastbuf1_t), MPI_BYTE, 0, mpi_comm);
+            #endif
+
+            if ( mpi_result != MPI_SUCCESS )
+                HMPI_GOTO_ERROR(FAIL, "MPI_Bcast failed 1", mpi_result)
+
+            }
+            //--sendbuf1----------------------------------O
+
+            // bcast to send sendbuf2 -------------------I
+            // now I can refer bcast struct like ABOVE!!!
+            {
+            unsigned char *buf2_ptr;
+            H5C_cache_entry_t *tmp_entry_ptr = mcache_coll_sync_struct.head_ptr;
+            int i=0;
+            #ifndef JK_DEBUG_TODO
+            // TODO: use data pointer from Quincey fix instead of entry_data
+            unsigned char *entry_data=NULL; 
+            #endif
+
+            // build sendbuf2 as contiguous memory to send entry data
+            sendbuf2 = (unsigned char*)H5MM_calloc(sendbuf1.total_bufsize);
+            buf2_ptr = sendbuf2;
+
+            while(tmp_entry_ptr)
+            {
+                // copy addr
+                HDmemcpy(buf2_ptr, &(tmp_entry_ptr->addr), sizeof(haddr_t));
+                buf2_ptr += sizeof(haddr_t);
+                #ifdef JK_DBG
+                printf("JKDBG SEND %s:%d pid=%d> addr[%d]:%llu\n","_H5AC",__LINE__, getpid(),i,tmp_entry_ptr->addr);
+                #endif
+
+                // copy size
+                HDmemcpy((unsigned char *)buf2_ptr, (unsigned char *)&(tmp_entry_ptr->size), sizeof(hsize_t));
+                buf2_ptr += sizeof(hsize_t);
+                #ifdef JK_DBG
+                printf("JKDBG SEND %s:%d pid=%d> size[%d]:%u\n","_H5AC",__LINE__, getpid(),i,tmp_entry_ptr->size);
+                #endif
+
+                // copy data
+                #ifndef JK_BEDUG_TODO 
+                // TODO: use data pointer from Quincey fix instead of entry_data
+                // TEST Purpose
+                entry_data = (unsigned char*)H5MM_calloc(tmp_entry_ptr->size);
+                HDmemset((unsigned char *)entry_data, 'A', tmp_entry_ptr->size);
+                *(entry_data + tmp_entry_ptr->size - 1) = '\0';
+                #endif
+                
+                HDmemcpy((unsigned char*)buf2_ptr, (unsigned char*) entry_data, tmp_entry_ptr->size);
+                buf2_ptr += tmp_entry_ptr->size;
+
+                #ifdef JK_DBG
+                printf("JKDBG SEND %s:%d pid=%d> data[%d]:%s\n","_H5AC",__LINE__, getpid(),i,entry_data);
+                #endif
+
+                tmp_entry_ptr = tmp_entry_ptr->touched_next;
+                i++;
+                fflush(stdout);
+                
+                if(entry_data != NULL)
+                    entry_data = (unsigned char *)H5MM_xfree((void *)entry_data);
+            } // while
+
+            // send sendbuf2
+            mpi_result = MPI_Bcast(sendbuf2, sendbuf1.total_bufsize, MPI_BYTE, 0, mpi_comm);
+            if ( mpi_result != MPI_SUCCESS )
+                printf("JK SEND ERROR: MPI_Bcast\n");
+
+            // free the buffer
+            if(sendbuf2 != NULL)
+                sendbuf2 = (unsigned char *)H5MM_xfree((void *)sendbuf2);
+          }
+          // --sendbuf2 --------------------------------------O
+
+        }
+        else {  // pn process
+        }
+        // MAJOR CODE ---------------O
+    #ifdef JK_LATER
+    //}
+    #else
+    }
+    #endif
+    #ifdef JK_DBG
+    else {
+        printf("JKDBG %s:%d  sync_end> NO-SYNC, pid: %d, rank: %d, size: %d\n","_H5AC",__LINE__, getpid(), mpi_rank, mpi_size);
+        fflush(stdout);
+    }
+    #endif
+    
+    // UNCORK cache ---------------------------I
+    { 
+    H5AC_collevtive_sync_t mcache_coll_sync_struct;
+    #ifdef JK_DBG
+    printf("JKDBG2 %s:%d pid=%d> GET CURR evictions_enabled:%d\n","_H5AC",__LINE__, getpid(), file->shared->cache->evictions_enabled);
+    #endif
+    /* get the dxpl property structure */
+    H5P_get_metadata_cache_coll_sync(dxpl_id, &mcache_coll_sync_struct);
+
+    #ifdef JK_DBG
+    printf("JKDBG2 %s:%d  pid=%d> GET SAVED evictions_enabled_backup:%d\n","_H5AC",__LINE__, getpid(), mcache_coll_sync_struct.evictions_enabled_backup);
+    #endif
+    
+    /* uncork the metadata cache */
+    file->shared->cache->evictions_enabled = mcache_coll_sync_struct.evictions_enabled_backup;
+    #ifdef JK_DBG
+    printf("JKDBG2 %s:%d  pid=%d> UNCORK evictions_enabled:%d\n","_H5AC",__LINE__, getpid(), mcache_coll_sync_struct.evictions_enabled_backup);
+    #endif
+    }
+    // UNCORK cache ---------------------------O
+
+
+    done:
+    #ifdef JK_WORK_TODO
+    // JK TODO  free mallocs by p0
+    // if(mpi_rank == 0)
+    // {
+    //  Free malloc buffers
+    // }
+    #endif
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5AC_metadata_cache_collective_sync_end */
+#endif /* H5_HAVE_PARALLEL */
+
+#endif
+
 
 /*************************************************************************/
 /**************************** Private Functions: *************************/
@@ -2800,7 +3381,7 @@ H5AC_broadcast_clean_list(H5AC_t * cache_ptr)
          */
         if ( aux_ptr->sync_point_done != NULL ) {
 
-            addr_buf_ptr = H5MM_malloc((size_t)(num_entries * sizeof(haddr_t)));
+            addr_buf_ptr = (haddr_t*)H5MM_malloc((size_t)(num_entries * sizeof(haddr_t)));
 
             if ( addr_buf_ptr == NULL ) {
 

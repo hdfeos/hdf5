@@ -811,3 +811,88 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5P__decode() */
 
+
+#ifndef JK_WORK_MOVE_FROM
+// JK moved&renamed from H5Pdxpl.c
+// TODO: Moved to H5Plaps.c for test
+/*-------------------------------------------------------------------------
+ * Function:       H5P__io_xfer_mode_enc
+ *
+ * Purpose:        Callback routine which is called whenever the I/O transfer
+ *                 mode property in the dataset transfer property list
+ *                 is encoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Friday, August 3, 2012
+ * Note: 
+ *   This used to be located in H5Pdxpl.c. We moved to here to make it more
+ *   General. Previous name was H5P__dxfr_io_xfer_mode_enc.
+ *   - Jonathan Kim 02/08/2013
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__io_xfer_mode_enc(const void *value, void **_pp, size_t *size)
+{
+    const H5FD_mpio_xfer_t *xfer_mode = (const H5FD_mpio_xfer_t *)value; /* Create local alias for values */
+    uint8_t **pp = (uint8_t **)_pp;
+
+    FUNC_ENTER_STATIC_NOERR
+
+    /* Sanity check */
+    HDassert(xfer_mode);
+    HDassert(size);
+
+    if(NULL != *pp)
+        /* Encode I/O transfer mode */
+        *(*pp)++ = (uint8_t)*xfer_mode;
+
+    /* Size of I/O transfer mode */
+    (*size)++;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__io_xfer_mode_enc() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:       H5P__io_xfer_mode_dec
+ *
+ * Purpose:        Callback routine which is called whenever the I/O transfer
+ *                 mode property in the dataset transfer property list
+ *                 is decoded.
+ *
+ * Return:	   Success:	Non-negative
+ *		   Failure:	Negative
+ *
+ * Programmer:     Quincey Koziol
+ *                 Friday, August 3, 2012
+ * Note: 
+ *   This used to be located in H5Pdxpl.c. We moved to here to make it more
+ *   General. Previous name was H5P__dxfr_io_xfer_mode_dec.
+ *   - Jonathan Kim 02/08/2013
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P__io_xfer_mode_dec(const void **_pp, void *_value)
+{
+    H5FD_mpio_xfer_t *xfer_mode = (H5FD_mpio_xfer_t *)_value;         /* I/O transfer mode */
+    const uint8_t **pp = (const uint8_t **)_pp;
+
+    FUNC_ENTER_STATIC_NOERR
+
+    /* Sanity checks */
+    HDassert(pp);
+    HDassert(*pp);
+    HDassert(xfer_mode);
+
+    /* Decode I/O transfer mode */
+    *xfer_mode = (H5FD_mpio_xfer_t)*(*pp)++;
+
+    FUNC_LEAVE_NOAPI(SUCCEED)
+} /* end H5P__io_xfer_mode_dec() */
+
+#endif // JK_WORK_MOVE_FROM

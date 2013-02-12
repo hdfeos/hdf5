@@ -220,6 +220,14 @@ H5_DLL herr_t H5P__decode_uint8_t(const void **_pp, void *value);
 H5_DLL herr_t H5P__decode_hbool_t(const void **_pp, void *value);
 H5_DLL herr_t H5P__decode_double(const void **_pp, void *value);
 
+#ifndef JK_WORK_MOVED_FROM
+// JK moved&renamed from H5Pdxpl.c
+/* I/O transfer mode routines */
+H5_DLL herr_t H5P__io_xfer_mode_enc(const void *value, void **pp, size_t *size);
+H5_DLL herr_t H5P__io_xfer_mode_dec(const void **pp, void *value);
+#endif //JK_WORK_MOVED_FROM
+
+
 /* Testing functions */
 #ifdef H5P_TESTING
 H5_DLL char *H5P_get_class_path_test(hid_t pclass_id);

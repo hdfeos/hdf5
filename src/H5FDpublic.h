@@ -22,12 +22,28 @@
 
 #include "H5public.h"
 #include "H5Fpublic.h"		/*for H5F_close_degree_t */
+#ifndef JK_WORK
+/* Types of allocation requests: see H5Fpublic.h  */
+typedef enum H5F_mem_t	H5FD_mem_t;
+#endif
+
+#ifndef JK_WORK_MOVE_FROM // hdf5.h
+/* file driver headers */
+#include "H5FDcore.h"       /* Files stored entirely in memory  */
+#include "H5FDdirect.h"     /* Linux direct I/O */
+#include "H5FDfamily.h"     /* File families    */
+#include "H5FDlog.h"        /* sec2 driver with I/O logging (for debugging) */
+#include "H5FDmpi.h"        /* MPI-based file drivers   */
+#include "H5FDmulti.h"      /* Usage-partitioned file family    */
+#include "H5FDsec2.h"       /* POSIX unbuffered file I/O    */
+#include "H5FDstdio.h"      /* Standard C buffered I/O  */
+#ifdef H5_HAVE_WINDOWS
+#include "H5FDwindows.h"    /* Windows buffered I/O */
+#endif
+#endif // JK_WORK_MOVE
 
 #define H5_HAVE_VFL 1 /*define a convenient app feature test*/
 #define H5FD_VFD_DEFAULT 0   /* Default VFL driver value */
-
-/* Types of allocation requests: see H5Fpublic.h  */
-typedef enum H5F_mem_t	H5FD_mem_t;
 
 /* Map "fractal heap" header blocks to 'ohdr' type file memory, since its
  * a fair amount of work to add a new kind of file memory and they are similar

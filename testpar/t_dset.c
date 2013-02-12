@@ -880,6 +880,9 @@ dataset_readAll(void)
     hid_t fid;                  /* HDF5 file ID */
     hid_t acc_tpl;		/* File access templates */
     hid_t xfer_plist;		/* Dataset transfer properties list */
+    #ifndef JK_TEST
+    hid_t xfer_dapl;		/* Transfer dataset access properties list */
+    #endif
     hid_t file_dataspace;	/* File dataspace ID */
     hid_t mem_dataspace;	/* memory dataspace ID */
     hid_t dataset1, dataset2;	/* Dataset ID */
@@ -927,7 +930,22 @@ dataset_readAll(void)
     ret = H5Pclose(acc_tpl);
     VRFY((ret >= 0), "");
 
+#ifndef JK_TEST
+    /* set up the collective transfer properties list */
+    xfer_dapl = H5Pcreate (H5P_DATASET_ACCESS);
+    VRFY((xfer_dapl >= 0), "");
+    ret = H5Pset_obj_acc_mpi_mode(xfer_dapl, H5FD_MPIO_COLLECTIVE);
+    VRFY((ret >= 0), "H5Pcreate xfer succeeded");
 
+    /* open the dataset1 collectively */
+    dataset1 = H5Dopen2(fid, DATASETNAME1, xfer_dapl);
+    VRFY((dataset1 >= 0), "H5Dopen2 succeeded");
+
+    /* open another dataset collectively */
+    dataset2 = H5Dopen2(fid, DATASETNAME2, xfer_dapl);
+    VRFY((dataset2 >= 0), "H5Dopen2 2 succeeded");
+
+#else // JK ORI
     /* --------------------------
      * Open the datasets in it
      * ------------------------- */
@@ -939,6 +957,7 @@ dataset_readAll(void)
     dataset2 = H5Dopen2(fid, DATASETNAME2, H5P_DEFAULT);
     VRFY((dataset2 >= 0), "H5Dopen2 2 succeeded");
 
+#endif
     /*
      * Set up dimensions of the slab this process accesses.
      */
@@ -1010,6 +1029,9 @@ dataset_readAll(void)
     H5Sclose(file_dataspace);
     H5Sclose(mem_dataspace);
     H5Pclose(xfer_plist);
+    #ifndef JK_TEST
+    H5Pclose(xfer_dapl);
+    #endif
 
     /* Dataset2: each process takes a block of rows. */
     slab_set(mpi_rank, mpi_size, start, count, stride, block, BYROW);

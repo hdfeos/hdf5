@@ -634,6 +634,13 @@ typedef struct H5C_cache_entry_t
     struct H5C_cache_entry_t *	aux_next;
     struct H5C_cache_entry_t *	aux_prev;
 
+    #ifndef JK_WORK
+    #ifdef H5_HAVE_PARALLEL
+    /* link list for metadata cache entry just touched */
+    struct H5C_cache_entry_t *	touched_next;
+    #endif /* H5_HAVE_PARALLEL */
+    #endif // JK_WORK
+
 #if H5C_COLLECT_CACHE_ENTRY_STATS
 
     /* cache entry stats fields */

@@ -34,6 +34,9 @@
 #include "H5private.h"		/* Generic Functions			*/
 #include "H5Cprivate.h"		/* Cache				*/
 #include "H5Fprivate.h"		/* File access				*/
+#ifndef JK_WORK
+#include "H5Gprivate.h"     /* Groups				*/
+#endif
 
 #ifdef H5_METADATA_TRACE_FILE
 #define H5AC__TRACE_FILE_ENABLED	1
@@ -172,6 +175,27 @@ typedef H5C_class_t			H5AC_class_t;
 
 typedef H5C_cache_entry_t		H5AC_info_t;
 
+#ifndef JK_WORK
+/* for xfer property H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_NAME */
+typedef struct H5AC_collevtive_sync_t {
+    hbool_t is_requested;
+    H5C_cache_entry_t   *head_ptr;
+    unsigned num_entry;
+    unsigned total_entry_size;
+    hbool_t evictions_enabled_backup;
+} H5AC_collevtive_sync_t;
+
+typedef struct H5AC_collective_sync_bcastbuf1_t {
+    size_t total_bufsize;
+    unsigned num_entry;
+} H5AC_collective_sync_bcastbuf1_t;
+
+typedef struct H5AC_collective_sync_bcastbuf2_t {
+    haddr_t addr;
+    size_t size;
+    unsigned char *data;
+} H5AC_collective_sync_bcastbuf2_t;
+#endif
 
 /*===----------------------------------------------------------------------===
  *                             Protect Types
@@ -408,6 +432,10 @@ H5_DLL herr_t H5AC_ignore_tags(H5F_t * f);
 
 #ifdef H5_HAVE_PARALLEL
 H5_DLL herr_t H5AC_add_candidate(H5AC_t * cache_ptr, haddr_t addr);
+#ifndef JK_WORK
+H5_DLL herr_t H5AC_metadata_cache_collective_sync_begin(H5F_t *file, hid_t dxpl_id);
+H5_DLL herr_t H5AC_metadata_cache_collective_sync_end(H5F_t *file, hid_t dxpl_id);
+#endif
 #endif /* H5_HAVE_PARALLEL */
 
 #endif /* !_H5ACprivate_H */

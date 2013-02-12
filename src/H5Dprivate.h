@@ -75,6 +75,9 @@
 #define H5D_MPIO_ACTUAL_IO_MODE_NAME    "actual_io_mode"
 #define H5D_MPIO_LOCAL_NO_COLLECTIVE_CAUSE_NAME "local_no_collective_cause"  /* cause of broken collective I/O in each process */
 #define H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME "global_no_collective_cause"  /* cause of broken collective I/O in all processes */
+#ifndef JK_WORK
+#define H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_NAME "metadata_cache_collective_sync" /* metadata cache sync collectively  */
+#endif
 #define H5D_XFER_EDC_NAME               "err_detect"    /* EDC */
 #define H5D_XFER_FILTER_CB_NAME         "filter_cb"     /* Filter callback function */
 #define H5D_XFER_CONV_CB_NAME           "type_conv_cb"  /* Type conversion callback function */

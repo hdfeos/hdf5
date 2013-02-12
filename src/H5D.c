@@ -31,6 +31,9 @@
 #include "H5Eprivate.h"		/* Error handling		  	*/
 #include "H5FLprivate.h"	/* Free lists                           */
 #include "H5Iprivate.h"		/* IDs			  		*/
+#ifndef JK_WORK
+#include "H5Lprivate.h"     /* Links    */
+#endif
 
 
 /****************/
@@ -306,6 +309,15 @@ H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id)
     H5O_type_t   obj_type;              /* Type of object at location */
     hbool_t      loc_found = FALSE;     /* Location at 'name' found */
     hid_t        dxpl_id = H5AC_dxpl_id;    /* dxpl to use to open datset */
+    #ifndef JK_WORK
+    #ifdef H5_HAVE_PARALLEL
+    hid_t dxpl_id_ori;
+    hid_t dxpl_id_copy;
+    H5F_t *file;
+    H5FD_mpio_xfer_t xfer_mode;
+    H5P_genplist_t *dapl;
+    #endif /* H5_HAVE_PARALLEL */
+    #endif
     hid_t        ret_value;
 
     FUNC_ENTER_API(FAIL)
@@ -329,6 +341,50 @@ H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id)
     dset_loc.path = &path;
     H5G_loc_reset(&dset_loc);
 
+    #ifndef JK_WORK
+    #ifdef H5_HAVE_PARALLEL
+    file = loc.oloc->file;
+    if(H5F_HAS_FEATURE(file, H5FD_FEAT_HAS_MPI)) {
+        #ifdef JK_DBG
+        printf("JKDBG> H5Dopen2() YES MPI\n");
+        #endif
+    }
+    else
+    {
+        #ifdef JK_DBG
+        printf("JKDBG> H5Dopen2() NO MPI DETECT\n");
+        #endif
+    }
+    #endif /* H5_HAVE_PARALLEL */
+    #endif
+
+    #ifndef JK_WORK
+    #ifdef H5_HAVE_PARALLEL
+    /* Get mpi transfer mode */
+    if(NULL == (dapl = (H5P_genplist_t *)H5I_object(dapl_id)))
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for fapl ID");
+
+    if(H5P_get(dapl, H5L_ACS_IO_XFER_MODE_NAME, &xfer_mode) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "unable to query property value")
+
+    if (xfer_mode == H5FD_MPIO_COLLECTIVE) {
+        /* make backup */
+        dxpl_id_ori = dxpl_id;
+        /* copy dxpl to use and close later in this functions */
+        // JK TODO ask Quincey to convert H5Pcopy to internal code?
+        if((dxpl_id_copy = H5Pcopy(dxpl_id)) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTCOPY, FAIL, "can't copy property list")
+        #ifdef JK_DBG
+        printf("JKDBG> BEGIN &loc: %x\n", &loc);
+        #endif
+        dxpl_id = dxpl_id_copy;
+        // JK TODO: API name?, H5E_CANTTAG or other?, fail message?
+        if(H5AC_metadata_cache_collective_sync_begin(file, dxpl_id) < 0)
+            HGOTO_ERROR(H5E_CACHE, H5E_CANTTAG, FAIL, "failed on beginning metadata cache collective sync")
+    }
+    #endif /* H5_HAVE_PARALLEL */
+    #endif
+
     /* Find the dataset object */
     if(H5G_loc_find(&loc, name, &dset_loc, dapl_id, dxpl_id) < 0)
         HGOTO_ERROR(H5E_DATASET, H5E_NOTFOUND, FAIL, "not found")
@@ -349,6 +405,30 @@ H5Dopen2(hid_t loc_id, const char *name, hid_t dapl_id)
         HGOTO_ERROR(H5E_ATOM, H5E_CANTREGISTER, FAIL, "can't register dataset atom")
 
 done:
+    #ifndef JK_WORK
+    #ifdef H5_HAVE_PARALLEL
+        #ifdef JK_DBG
+        printf("JKDBG> END &loc: %x\n", &loc);
+        fflush(stdout);
+        #endif
+    /* Get mpi transfer mode */
+    if(H5P_get(dapl, H5L_ACS_IO_XFER_MODE_NAME, &xfer_mode) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, NULL, "unable to query property value")
+
+    if (xfer_mode == H5FD_MPIO_COLLECTIVE) {
+        // JK TODO: API name?, H5E_CANTTAG or other?, fail message?
+        if(H5AC_metadata_cache_collective_sync_end(file, dxpl_id) < 0)
+            HDONE_ERROR(H5E_CACHE, H5E_CANTTAG, FAIL, "failed on ending metadata cache collective sync")
+        /* Close the property list */
+        // JK TODO ask Quincey to convert H5Pclose to internal code?
+        if(H5Pclose(dxpl_id) < 0)
+            HDONE_ERROR(H5E_PLIST, H5E_CANTFREE, FAIL, "can't close")
+        /* restore */
+        dxpl_id = dxpl_id_ori;
+    }
+    #endif /* H5_HAVE_PARALLEL */
+    #endif
+
     if(ret_value < 0) {
         if(dset) {
             if(H5D_close(dset) < 0)

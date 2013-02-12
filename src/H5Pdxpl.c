@@ -101,8 +101,13 @@
 /* Definitions for I/O transfer mode property */
 #define H5D_XFER_IO_XFER_MODE_SIZE      sizeof(H5FD_mpio_xfer_t)
 #define H5D_XFER_IO_XFER_MODE_DEF       H5FD_MPIO_INDEPENDENT
+#ifndef JK_WORK_
+#define H5D_XFER_IO_XFER_MODE_ENC       H5P__io_xfer_mode_enc
+#define H5D_XFER_IO_XFER_MODE_DEC       H5P__io_xfer_mode_dec
+#else // ORI
 #define H5D_XFER_IO_XFER_MODE_ENC       H5P__dxfr_io_xfer_mode_enc
 #define H5D_XFER_IO_XFER_MODE_DEC       H5P__dxfr_io_xfer_mode_dec
+#endif
 /* Definitions for optimization of MPI-IO transfer mode property */
 #define H5D_XFER_MPIO_COLLECTIVE_OPT_SIZE       sizeof(H5FD_mpio_collective_opt_t)
 #define H5D_XFER_MPIO_COLLECTIVE_OPT_DEF        H5FD_MPIO_COLLECTIVE_IO
@@ -129,6 +134,10 @@
 /* Definitions for cause of broken collective io property */
 #define H5D_MPIO_NO_COLLECTIVE_CAUSE_SIZE   sizeof(uint32_t)
 #define H5D_MPIO_NO_COLLECTIVE_CAUSE_DEF   H5D_MPIO_COLLECTIVE 
+#ifndef JK_WORK
+#define H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_SIZE    sizeof(H5AC_collevtive_sync_t)
+#define H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_DEF {FALSE,NULL,0,0,FALSE}
+#endif
 #ifdef H5_HAVE_PARALLEL
 /* Definitions for memory MPI type property */
 #define H5FD_MPI_XFER_MEM_MPI_TYPE_SIZE        sizeof(MPI_Datatype)
@@ -190,8 +199,11 @@ static herr_t H5P__dxfr_bkgr_buf_type_enc(const void *value, void **pp, size_t *
 static herr_t H5P__dxfr_bkgr_buf_type_dec(const void **pp, void *value);
 static herr_t H5P__dxfr_btree_split_ratio_enc(const void *value, void **pp, size_t *size);
 static herr_t H5P__dxfr_btree_split_ratio_dec(const void **pp, void *value);
+#ifdef JK_WORK_MOVED
+// JK moved to H5Pencdec.c
 static herr_t H5P__dxfr_io_xfer_mode_enc(const void *value, void **pp, size_t *size);
 static herr_t H5P__dxfr_io_xfer_mode_dec(const void **pp, void *value);
+#endif //JK_WORK_MOVED
 static herr_t H5P__dxfr_mpio_collective_opt_enc(const void *value, void **pp, size_t *size);
 static herr_t H5P__dxfr_mpio_collective_opt_dec(const void **pp, void *value);
 static herr_t H5P__dxfr_mpio_chunk_opt_hard_enc(const void *value, void **pp, size_t *size);
@@ -256,6 +268,9 @@ static const unsigned H5D_def_mpio_chunk_opt_ratio_g = H5D_XFER_MPIO_CHUNK_OPT_R
 static const H5D_mpio_actual_chunk_opt_mode_t H5D_def_mpio_actual_chunk_opt_mode_g = H5D_MPIO_ACTUAL_CHUNK_OPT_MODE_DEF;
 static const H5D_mpio_actual_io_mode_t H5D_def_mpio_actual_io_mode_g = H5D_MPIO_ACTUAL_IO_MODE_DEF;
 static const H5D_mpio_no_collective_cause_t H5D_def_mpio_no_collective_cause_g = H5D_MPIO_NO_COLLECTIVE_CAUSE_DEF; 
+#ifndef JK_WORK
+static const H5AC_collevtive_sync_t H5D_def_metacache_coll_sync_g = H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_DEF;
+#endif
 #ifdef H5_HAVE_PARALLEL
 static const MPI_Datatype H5D_def_btype_g = H5FD_MPI_XFER_MEM_MPI_TYPE_DEF;  /* Default value for MPI buffer type */
 static const MPI_Datatype H5D_def_ftype_g = H5FD_MPI_XFER_FILE_MPI_TYPE_DEF; /* Default value for MPI file type */
@@ -399,6 +414,22 @@ H5P__dxfr_reg_prop(H5P_genclass_t *pclass)
     if(H5P_register_real(pclass, H5D_MPIO_GLOBAL_NO_COLLECTIVE_CAUSE_NAME, H5D_MPIO_NO_COLLECTIVE_CAUSE_SIZE, &H5D_def_mpio_no_collective_cause_g,
             NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
         HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+#ifndef JK_WORK
+    /* Register the matadata cache collective sync property */
+    if(H5P_register_real(pclass, H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_NAME, H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_SIZE, &H5D_def_metacache_coll_sync_g,
+            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+#endif
+
+#ifdef JK_DBG_TEST
+    {
+    H5AC_collevtive_sync_t mcache_coll_sync_struct;
+    if(H5P_get(pclass, H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_NAME, &mcache_coll_sync_struct) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value")
+     printf("JKDBG REG> is_requested: %d, num_entry:%d, total_entry_size:%d, evictions_enabled:%d\n", mcache_coll_sync_struct.is_requested, mcache_coll_sync_struct.num_entry, mcache_coll_sync_struct.total_entry_size, mcache_coll_sync_struct.evictions_enabled_backup);
+
+    }
+#endif
 
 #ifdef H5_HAVE_PARALLEL
     /* Register the MPI memory type property */
@@ -1727,6 +1758,8 @@ done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_hyper_vector_size() */
 
+#ifdef JK_WORK_MOVED_TO
+// JK moved to H5Pencdec.c
 
 /*-------------------------------------------------------------------------
  * Function:       H5P__dxfr_io_xfer_mode_enc
@@ -1799,6 +1832,7 @@ H5P__dxfr_io_xfer_mode_dec(const void **_pp, void *_value)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5P__dxfr_io_xfer_mode_dec() */
+#endif // JK_WORK_MOVED_TO
 
 
 /*-------------------------------------------------------------------------
@@ -2054,6 +2088,111 @@ H5Pget_mpio_no_collective_cause(hid_t plist_id, uint32_t *local_no_collective_ca
 done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_mpio_no_collective_cause() */
+
+
+#ifndef JK_WORK
+
+/*-------------------------------------------------------------------------
+ * Function:
+ *
+ * Purpose: This is created for internal use.
+ *          Build the structure before pass in.
+ *
+ * Return:	Non-negative on success/Negative on failure
+ *
+ * Programmer:	Jonathan Kim, Jan 25, 2013
+ *
+ * Modifications:
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P_set_metadata_cache_coll_sync(hid_t plist_id,H5AC_collevtive_sync_t *mcache_coll_sync_struct)
+{
+    H5P_genplist_t      *plist;      /* Property list pointer */
+    herr_t              ret_value=SUCCEED;   /* return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+    #ifdef JK_TODO
+    //H5TRACE2("e", "ix*x", mcache_coll_sync_struct);
+    #endif
+
+    /* Get the plist structure */
+    if(NULL == (plist = H5P_object_verify(plist_id,H5P_DATASET_XFER)))
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
+
+    if (H5P_set(plist,H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_NAME,mcache_coll_sync_struct)<0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end of H5P_set_metadata_cache_coll_sync() */
+#ifdef JK_TRY1
+H5P_set_metadata_cache_coll_sync(hbool_t is_requested, H5C_cache_entry_t *headp, unsigned num_entry, unsigned total_entry_size, hbool_t evictions_enabled_backup)
+{
+    H5P_genplist_t      *plist;      /* Property list pointer */
+    herr_t              ret_value=SUCCEED;   /* return value */
+    H5AC_collevtive_sync_t mcache_coll_sync_struct;
+
+    FUNC_ENTER_NOAPI(FAIL)
+    #ifdef JK_TODO
+    //H5TRACE5("e", "ix*x", is_requested, headp, num_entry, total_entry_size, evictions_enabled_backup);
+    #endif
+
+    /* Get the plist structure */
+    if(NULL == (plist = H5P_object_verify(plist_id,H5P_DATASET_XFER)))
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
+
+    /* Update property list */
+    mcache_coll_sync_struct.is_requested = is_requested;
+    mcache_coll_sync_struct.head_ptr = headp;
+    mcache_coll_sync_struct.num_entry = num_entry;
+    mcache_coll_sync_struct.total_entry_size = total_entry_size;
+    mcache_coll_sync_struct.evictions_enabled_backup = evictions_enabled_backup;
+
+    if (H5P_set(plist,H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_NAME,&mcache_coll_sync_struct)<0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+}  /* end of H5P_set_metacache_coll_sync() */
+#endif // JK_TRY1
+
+/*-------------------------------------------------------------------------
+ * Function:
+ *
+ * Purpose:	
+ *
+ * Return:	Success:
+ *		    Failure:	Negative
+ *
+ * Programmer:	Jonathan Kim, Jan 25, 2013
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5P_get_metadata_cache_coll_sync(hid_t plist_id,H5AC_collevtive_sync_t *mcache_coll_sync_struct_out)
+{
+    H5P_genplist_t *plist;              /* Property list pointer */
+    herr_t ret_value = SUCCEED;         /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+    #ifdef JK_TODO
+    //H5TRACE2("e", "ixxx", plist_id, mcache_coll_sync_struct_out);
+    #endif
+
+    /* Get the plist structure */
+    if(NULL == (plist = H5P_object_verify(plist_id, H5P_DATASET_XFER)))
+        HGOTO_ERROR(H5E_ATOM, H5E_BADATOM, FAIL, "can't find object for ID")
+
+    /* Get the structure */
+    if(H5P_get(plist, H5D_XFER_METADATA_CACHE_COLLECTIVE_SYNC_NAME, mcache_coll_sync_struct_out) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTGET, FAIL, "unable to get value")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_get_metacache_coll_sync() */
+#endif // JK_WORK
 
 
 #endif /* H5_HAVE_PARALLEL */

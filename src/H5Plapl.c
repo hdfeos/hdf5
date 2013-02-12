@@ -82,6 +82,14 @@
 #define H5L_ACS_ELINK_CB_SIZE           sizeof(H5L_elink_cb_t)
 #define H5L_ACS_ELINK_CB_DEF            {NULL,NULL}
 
+#ifndef JK_WORK
+/* Definitions for I/O transfer mode property */
+#define H5L_ACS_IO_XFER_MODE_SIZE      sizeof(H5FD_mpio_xfer_t)
+#define H5L_ACS_IO_XFER_MODE_DEF       H5FD_MPIO_INDEPENDENT
+#define H5L_ACS_IO_XFER_MODE_ENC       H5P__io_xfer_mode_enc
+#define H5L_ACS_IO_XFER_MODE_DEC       H5P__io_xfer_mode_dec
+#endif
+
 
 /******************/
 /* Local Typedefs */
@@ -151,6 +159,11 @@ static const char *H5L_def_elink_prefix_g = H5L_ACS_ELINK_PREFIX_DEF; /* Default
 static const hid_t H5L_def_fapl_id_g = H5L_ACS_ELINK_FAPL_DEF;    /* Default fapl for external link access */
 static const unsigned H5L_def_elink_flags_g = H5L_ACS_ELINK_FLAGS_DEF; /* Default file access flags for external link traversal */
 static const H5L_elink_cb_t H5L_def_elink_cb_g = H5L_ACS_ELINK_CB_DEF; /* Default external link traversal callback */
+#ifndef JK_WORK
+static const H5FD_mpio_xfer_t H5L_def_io_xfer_mode_g = H5L_ACS_IO_XFER_MODE_DEF;
+ /* Default value for I/O transfer mode */
+#endif
+
 
 
 
@@ -206,6 +219,13 @@ H5P_lacc_reg_prop(H5P_genclass_t *pclass)
     if(H5P_register_real(pclass, H5L_ACS_ELINK_CB_NAME, H5L_ACS_ELINK_CB_SIZE, &H5L_def_elink_cb_g, 
              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL) < 0)
          HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+#ifndef JK_WORK
+    /* Register the I/O transfer mode properties */
+    if(H5P_register_real(pclass, H5L_ACS_IO_XFER_MODE_NAME, H5L_ACS_IO_XFER_MODE_SIZE, &H5L_def_io_xfer_mode_g, 
+            NULL, NULL, NULL, H5L_ACS_IO_XFER_MODE_ENC, H5L_ACS_IO_XFER_MODE_DEC,
+            NULL, NULL, NULL, NULL) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTINSERT, FAIL, "can't insert property into class")
+#endif
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -1154,4 +1174,162 @@ done:
     FUNC_LEAVE_API(ret_value)
 } /* end H5Pget_elink_cb() */
 
-
+#ifndef JK_WORK
+#ifdef H5_HAVE_PARALLEL
+/*-------------------------------------------------------------------------
+ * Function:	H5Pset_obj_acc_mpi_mode
+ *
+ * Purpose:	Set the data transfer property list LAPL_ID to use transfer
+ *		mode XFER_MODE. The property list can then be used to control
+ *		the I/O transfer mode during data I/O operations. The valid
+ *		transfer modes are:
+ *
+ * 		H5FD_MPIO_INDEPENDENT:
+ *			Use independent I/O access (the default).
+ *
+ * 		H5FD_MPIO_COLLECTIVE:
+ *			Use collective I/O access.
+ *
+ * Return:	Success:	Non-negative
+ * 		Failure:	Negative
+ *
+ * Programmer:	Jonathan Kim, Feb 11, 2013
+ *
+ * Note: H5Pset_dxpl_mpio() does same for DXPL line. The name of this function
+ *       doesn't state property, so it can be used for general purpose as necessary
+ *       in the future.
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5Pset_obj_acc_mpi_mode(hid_t lapl_id, H5FD_mpio_xfer_t xfer_mode)
+{
+    H5P_genplist_t *plist;      /* Property list pointer */
+    herr_t ret_value = SUCCEED; /* Return value */
+
+    FUNC_ENTER_API(FAIL)
+    // JK TODO check iDt
+    H5TRACE2("e", "iDt", lapl_id, xfer_mode);
+
+    if(lapl_id == H5P_DEFAULT)
+        HGOTO_ERROR(H5E_PLIST, H5E_BADVALUE, FAIL, "can't set values in default property list")
+
+    /* Check arguments */
+    if(NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a dxpl")
+    if(H5FD_MPIO_INDEPENDENT != xfer_mode && H5FD_MPIO_COLLECTIVE != xfer_mode)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "incorrect xfer_mode")
+
+    /* Set the transfer mode */
+    if(H5P_set(plist, H5L_ACS_IO_XFER_MODE_NAME, &xfer_mode) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to set value")
+
+done:
+    FUNC_LEAVE_API(ret_value)
+} /* end H5Pset_obj_acc_mpi_mode() */
+
+/*-------------------------------------------------------------------------
+ * Function:	H5Pget_obj_acc_mpi_mode
+ *
+ * Purpose:	Queries the transfer mode current set in the data transfer
+ *		property list DAPL_ID. This is not collective.
+ *
+ * Return:	Success:	Non-negative, with the transfer mode returned
+ *				through the XFER_MODE argument if it is
+ *				non-null.
+ *
+ * 		Failure:	Negative
+ *
+ * Programmer:	Jonathan Kim, Feb 11, 2013
+ *
+ * Note: H5Pget_dxpl_mpio() does same for DXPL line. The name of this function
+ *       doesn't state property, so it can be used for general purpose as necessary
+ *       in the future.
+ *
+ *-------------------------------------------------------------------------
+ */
+#ifndef JK_WORK
+herr_t
+H5Pget_obj_acc_mpi_mode(hid_t lapl_id, H5FD_mpio_xfer_t *xfer_mode/*out*/)
+{
+    H5P_genplist_t *plist;              /* Property list pointer */
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_API(FAIL)
+    // JK TODO double check
+    H5TRACE2("e", "ix", lapl_id, xfer_mode);
+
+    if(NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a lapl")
+
+    /* Get the transfer mode */
+    if(xfer_mode)
+        if(H5P_get(plist, H5L_ACS_IO_XFER_MODE_NAME, xfer_mode) < 0)
+            HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to get value")
+
+done:
+    FUNC_LEAVE_API(ret_value)
+} /* end H5Pget_obj_acc_mpi_mode() */
+#else  // Trial for internal&external funcs
+// Maybe Later for both internal and external 
+// Refer to H5P_set_driver & H5Pset_driver in H5Pfapl.c
+herr_t
+H5P_get_obj_acc_mpi_mode1(H5P_genplist_t *plist, H5FD_mpio_xfer_t *xfer_mode/*out*/)
+{
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    /* Get the transfer mode */
+    if(H5P_get(plist, H5L_ACS_IO_XFER_MODE_NAME, xfer_mode) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to get value")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_get_obj_acc_mpi_mode() */
+
+
+herr_t
+H5P_get_obj_acc_mpi_mode2(hid_t lapl_id,H5FD_mpio_xfer_t *xfer_mode/*out*/)
+{
+    herr_t      ret_value = SUCCEED;    /* Return value */
+    H5P_genplist_t *plist;
+
+    FUNC_ENTER_NOAPI(FAIL)
+
+    if(NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a lapl")
+
+    /* Get the transfer mode */
+    if(H5P_get(plist, H5L_ACS_IO_XFER_MODE_NAME, xfer_mode) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to get value")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5P_get_obj_acc_mpi_mode() */
+
+herr_t
+H5Pget_obj_acc_mpi_mode(hid_t lapl_id, H5FD_mpio_xfer_t *xfer_mode/*out*/)
+{
+    H5P_genplist_t *plist;              /* Property list pointer */
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_API(FAIL)
+    H5TRACE2("e", "ix", lapl_id, xfer_mode);
+
+    if(NULL == (plist = H5P_object_verify(lapl_id, H5P_LINK_ACCESS)))
+        HGOTO_ERROR(H5E_PLIST, H5E_BADTYPE, FAIL, "not a lapl")
+
+    if(NULL == xfer_mode)
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "NULL pointer")
+
+    if ((ret_value = H5P_get_obj_acc_mpi_mode1(plist, xfer_mode)) < 0)
+        HGOTO_ERROR(H5E_PLIST, H5E_CANTSET, FAIL, "unable to get value")
+
+done:
+    FUNC_LEAVE_API(ret_value)
+}
+#endif
+#endif /* H5_HAVE_PARALLEL */
+#endif
+

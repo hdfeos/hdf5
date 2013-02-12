@@ -3682,6 +3682,244 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C_pin_protected_entry() */
 
+#ifndef JK_WORK
+#ifdef H5_HAVE_PARALLEL
+/*-------------------------------------------------------------------------
+ * Function:    static H5C_build_touched_entry_list()
+ *
+ * Purpose:	
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ * Programmer:  Jonathan Kim, 01/23/2013
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5C_build_touched_entry_list (H5F_t *file, hid_t dxpl_id ,  H5C_cache_entry_t * entry_ptr )
+{
+    herr_t              ret_value = SUCCEED;    /* Return value */
+    MPI_Comm	 mpi_comm;
+    int		 mpi_rank=0;
+    int	 	 mpi_size=1;
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /* 
+     * get MPI status 
+     */
+    HDassert(file);
+
+    if(H5F_HAS_FEATURE(file, H5FD_FEAT_HAS_MPI)) {
+
+        if(MPI_COMM_NULL == (mpi_comm = H5F_mpi_get_comm(file)))
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get MPI communicator")
+
+        if((mpi_rank = H5F_mpi_get_rank(file)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get mpi rank")
+
+        if((mpi_size = H5F_mpi_get_size(file)) < 0)
+            HGOTO_ERROR(H5E_VFL, H5E_CANTGET, FAIL, "can't get mpi size")
+    }
+
+
+    #ifdef JK_TRIAL1_NOT
+    /* Get MPI Status
+    // This fail when run with just 1 process because aux_ptr==NULL.
+    // So get MPI info directly from H5F_t.
+    {
+    H5AC_t             * cache_ptr;
+    H5AC_aux_t         * aux_ptr;
+
+    HDassert( entry_ptr );
+    //HDassert( entry_ptr->is_dirty == FALSE );
+
+    cache_ptr = entry_ptr->cache_ptr;
+
+    HDassert( cache_ptr != NULL );
+    HDassert( cache_ptr->magic == H5C__H5C_T_MAGIC );
+
+    aux_ptr = (H5AC_aux_t *)(cache_ptr->aux_ptr);
+
+    HDassert( aux_ptr != NULL ); 
+    HDassert( aux_ptr->magic == H5AC__H5AC_AUX_T_MAGIC );
+
+    if (aux_ptr->mpi_size > 1)
+    {
+        #ifndef JK_DBG
+        printf("JKDBG build-list> DO-BUILD pid: %d, rank: %d, size:%d\n", getpid(), aux_ptr->mpi_rank,aux_ptr->mpi_size);
+        fflush(stdout);
+        #endif
+        if ( aux_ptr->mpi_rank == 0 ) {
+            #ifdef JK_DBG
+            printf("JKDBG build-list> ROOT pid: %d, rank: %d\n", getpid(), aux_ptr->mpi_rank);
+            fflush(stdout);
+            #endif
+        }
+        else {
+            #ifdef JK_DBG
+            printf("JKDBG build-list> NO-ROOT pid: %d, rank: %d\n", getpid(), aux_ptr->mpi_rank);
+            fflush(stdout);
+            #endif
+        }
+    }
+    else
+    {
+        #ifndef JK_DBG
+        printf("JKDBG build-list> NO-BUILD pid: %d, rank: %d, size:%d\n", getpid(), aux_ptr->mpi_rank,aux_ptr->mpi_size);
+        fflush(stdout);
+        #endif
+    }
+    }
+    */
+    #endif // JK_TRIAL1_NOT
+
+    // BEGIN : SUDO CODE ===============================================
+    // JK: Main part is DONE
+    //if (mpi_size > 1) {
+    //  // Only P0 need to keep track touched entries, so it can be build
+    //  // by P0 in H5AC_metadata_cache_collective_sync_end() to bcast
+    //  if (mpi_rank == 0) {  
+    //    Get the new DXPL property
+    //    if (DXPL_prop->is_requested == TRUE) //    JK: may move this to out of this function
+    //    {
+    //      if (DXPL_prop->head_ptr == NULL) {
+    //        Set DXPL_prop->head_ptr = entry_ptr;
+    //        prev_entry_ptr = entry_ptr;
+    //        DXPL_prop->num_entry++;
+    //        DXPL_prop->total_entry_size += entry_ptr->size;
+    //      }
+    //      else {//    not NULL
+    //        prev_entry_ptr->touched_next = entry_ptr;
+    //        prev_entry_ptr = entry_ptr;
+    //        DXPL_prop->num_entry++;
+    //        DXPL_prop->total_entry_size += entry_ptr->size;
+    //      }
+    //      Set it back to property
+    //    }
+    //  }
+    //}
+    // END : SUDO CODE ===============================================
+
+    /* No need to sync with only one process running */
+    #ifdef JK_LATER
+    //JK TODO OPEN LATER if (mpi_size > 1) {
+    #else
+    if (mpi_size > 1) {
+    #endif
+        #ifndef JK_DBG
+        printf("JKDBG %s:%d build-list> DO-BULD, pid: %d, rank: %d, size: %d\n","_H5C",__LINE__, getpid(), mpi_rank, mpi_size);
+        fflush(stdout);
+        #endif
+
+        // MAJOR CODE ---------------I
+        if(mpi_rank==0) {
+            H5AC_collevtive_sync_t mcache_coll_sync_struct;
+            /* static to keep value from previous run */
+            static H5C_cache_entry_t *prev_entry_ptr;
+            #ifdef JK_DBG
+            printf("JKDBG3 %s:%d pid=%d> GET CURR evictions_enabled:%d\n","_H5C",__LINE__, getpid(), file->shared->cache->evictions_enabled);
+            #endif
+            /* get the dxpl property structure */
+            H5P_get_metadata_cache_coll_sync(dxpl_id, &mcache_coll_sync_struct);
+            #ifdef JK_DBG
+            printf("JKDBG3 %s:%d pid=%d> GET evictions_enabled_backup:%d\n","_H5C",__LINE__, getpid(), mcache_coll_sync_struct.evictions_enabled_backup);
+            printf("JKDBG3 %s:%d pid=%d> GET is_requested:%d\n","_H5C",__LINE__, getpid(), mcache_coll_sync_struct.is_requested);
+            #endif
+        
+            
+            if(mcache_coll_sync_struct.is_requested)
+            {
+                int is_linked=0;
+
+                if (mcache_coll_sync_struct.head_ptr == NULL) {
+                    #ifdef JK_DBG
+                    printf("JKDBG %s:%d pid=%d> head_ptr==NULL, entry_ptr:%llu, entry_addr:%llu, entry_size:%d \n","_H5C",__LINE__, getpid(),(haddr_t)entry_ptr, (haddr_t)entry_ptr->addr,entry_ptr->size );
+                    //#error
+                    #endif
+                    mcache_coll_sync_struct.head_ptr = entry_ptr;
+                    prev_entry_ptr = entry_ptr;
+                    entry_ptr->touched_next = NULL; /* indicate end */
+                    mcache_coll_sync_struct.num_entry++;
+                    mcache_coll_sync_struct.total_entry_size += entry_ptr->size;
+                }
+                else {  /* head already exist */
+                    H5C_cache_entry_t *tmp_entry_ptr = mcache_coll_sync_struct.head_ptr;
+                    /* check if the entry already linked */
+                    while(tmp_entry_ptr) {
+                        // JK VERIFY: should compare entry_ptr or entryptr->addr?
+                        // - THINK1: we only care for the result status of p0's 
+                        //   mcache, if so, need to compare entry_ptr, because 
+                        //   whatever the contents is touched obj
+                        // - THINK2: if we compare entryptr->addr (obj addr)
+                        //   there can be an issue if mcache is full and entry
+                        //   is replaced. in this case the entry will be relinked
+                        //   again and possibly cut the linked list by 
+                        //   'entry_ptr->touched_next = NULL;'
+                        if (tmp_entry_ptr == entry_ptr) {
+                            /* already added */
+                            is_linked=1;
+                            break;
+                        }
+                        tmp_entry_ptr = tmp_entry_ptr->touched_next;
+                    }
+
+                    /* only add to linked list if not linked before */
+                    if(0==is_linked)
+                    {
+                        #ifdef JK_DBG
+                        printf("JKDBG %s:%d pid=%d> head_ptr!=NULL, entry_ptr:%llu, entry_addr:%llu,entry_size:%d \n","_H5C",__LINE__, getpid(),(haddr_t)entry_ptr, (haddr_t)entry_ptr->addr,entry_ptr->size );
+                        //#error
+                        #endif
+                        prev_entry_ptr->touched_next = entry_ptr;
+                        prev_entry_ptr = entry_ptr;
+                        entry_ptr->touched_next = NULL; /* indicate end */
+                        mcache_coll_sync_struct.num_entry++;
+                        mcache_coll_sync_struct.total_entry_size += entry_ptr->size;
+                    }
+                }
+
+                /* update the dxpl property structure */
+                H5P_set_metadata_cache_coll_sync(dxpl_id, &mcache_coll_sync_struct);
+                #ifdef JK_DBG
+                // Show touched linked list addrs 
+                if (0==is_linked) 
+                {
+                H5C_cache_entry_t *tmp_entry_ptr = mcache_coll_sync_struct.head_ptr;
+                int i=0;
+                printf("\nSTART %s:%d JKDBG touched linked list addr ---------I\n","_H5C",__LINE__);
+                while(tmp_entry_ptr)
+                {
+                    printf("JKDBG %s:%d pid=%d> touched linked-addr[%d]: %lu, num_ent:%d \n", "_H5C",__LINE__,getpid(), i++,(unsigned int)tmp_entry_ptr, i); 
+                    fflush(stdout);
+                    tmp_entry_ptr = tmp_entry_ptr->touched_next;
+                }
+                printf("JKDBG %s:%d pid=%d> num_entry: %d, total_entry_size:%d\n","_H5C",__LINE__, getpid(), mcache_coll_sync_struct.num_entry , mcache_coll_sync_struct.total_entry_size);
+                printf("END %s:%d JKDBG touched linked list addr ---------O\n\n","_H5C",__LINE__);
+                }
+                #endif
+            }
+        } // mpi_rank==0
+        // MAJOR CODE ---------------O
+
+    #ifdef JK_LATER
+    //}  //JK TODO OPEN LATER
+    #else
+    }
+    #endif
+    #ifdef JK_DBG
+    else {
+        printf("JKDBG %s:%d build-list> NO-BUILD, pid: %d, rank: %d, size: %d\n", "_H5C",__LINE__, getpid(), mpi_rank, mpi_size);
+        fflush(stdout);
+    }
+    #endif
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* H5C_unpin_entry_from_client() */
+#endif /* H5_HAVE_PARALLEL */
+#endif
+
 
 /*-------------------------------------------------------------------------
  * Function:    H5C_protect
@@ -3789,6 +4027,9 @@ H5C_protect(H5F_t *		f,
     H5C__SEARCH_INDEX(cache_ptr, addr, entry_ptr, NULL)
 
     if ( entry_ptr != NULL ) {
+    #ifdef JK_DBG
+    printf("JKDBG %s:%d > Cache Hit!\n","_H5C",__LINE__);
+    #endif
 
         /* Check for trying to load the wrong type of entry from an address */
         if(entry_ptr->type != type)
@@ -3823,6 +4064,9 @@ H5C_protect(H5F_t *		f,
         thing = (void *)entry_ptr;
 
     } else {
+    #ifdef JK_DBG
+    printf("JKDBG %s:%d> Cache NOT Hit!\n","_H5C",__LINE__);
+    #endif
 
         /* must try to load the entry from disk. */
 
@@ -4127,6 +4371,15 @@ H5C_protect(H5F_t *		f,
             }
         }
     }
+
+    #ifndef JK_WORK
+    #ifdef H5_HAVE_PARALLEL
+    // JK TO CONSIDER: If get entry from Hit one vs. from disk. Is this both touched entry? Any different handling need?
+    // JK TODO: API name?, H5E_CANTTAG or other?, fail message?
+    if(H5C_build_touched_entry_list(f,primary_dxpl_id, entry_ptr) < 0)
+        HGOTO_ERROR(H5E_CACHE, H5E_CANTTAG, FAIL, "failed on building touched entry list")
+    #endif /* H5_HAVE_PARALLEL */
+    #endif
 
 done:
 

@@ -240,6 +240,11 @@ file_image_daisy_chain_test(void)
             if(vector_ptr[i] != i)
                 vector_ok = FALSE;
         VRFY((vector_ok), "verified received vector.");
+        #ifndef JK_WORK
+        // JK: this caused memory leak on phdf5 test
+        HDfree(vector_ptr);
+        vector_ptr = NULL;
+        #endif
  
 	/* 7) closes the core file and exit. */
 

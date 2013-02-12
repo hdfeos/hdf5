@@ -636,6 +636,16 @@ void coll_write_test(int chunk_factor)
 
   VRFY((ret >= 0),"H5D irregular collective write succeed");
 
+  #ifndef JK_WORK // This is also updated for HDFFV-8244
+  /* free memory buffer */
+  if (matrix_out) 
+    HDfree(matrix_out);
+  if (matrix_out1) 
+    HDfree(matrix_out1);
+  if (vector) 
+    HDfree(vector);
+  #endif
+
   /*
    * Close memory file and memory dataspaces.
    */
@@ -903,6 +913,14 @@ coll_read_test(int chunk_factor)
       if(ret < 0) break;
   }
   VRFY((ret >= 0),"H5D contiguous irregular collective read succeed");
+
+  #ifndef JK_WORK // This is also updated for HDFFV-8244
+  /* free memory buffer */
+  if (matrix_out) 
+    HDfree(matrix_out);
+  if (matrix_out1) 
+    HDfree(matrix_out1);
+  #endif
 
   /*
    * Close memory file and memory dataspaces.

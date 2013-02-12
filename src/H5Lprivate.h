@@ -44,6 +44,9 @@
 #define H5L_ACS_ELINK_FAPL_NAME    "external link fapl"     /* file access property list for external link access */
 #define H5L_ACS_ELINK_FLAGS_NAME   "external link flags"    /* file access flags for external link traversal */
 #define H5L_ACS_ELINK_CB_NAME      "external link callback" /*  callback function for external link traversal */
+#ifndef JK_WORK
+#define H5L_ACS_IO_XFER_MODE_NAME   "link_io_xfer_mode"  /* link I/O transfer mode */
+#endif
 
 
 /****************************/

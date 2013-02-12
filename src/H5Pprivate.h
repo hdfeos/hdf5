@@ -119,6 +119,14 @@ H5_DLL hid_t H5P_peek_hid_t(H5P_genplist_t *plist, const char *name);
 H5_DLL void *H5P_peek_voidp(H5P_genplist_t *plist, const char *name);
 H5_DLL size_t H5P_peek_size_t(H5P_genplist_t *plist, const char *name);
 
+#ifndef JK_WORK
+#ifdef H5_HAVE_PARALLEL
+/* Private DXPL routines */
+H5_DLL herr_t H5P_set_metadata_cache_coll_sync(hid_t plist_id,H5AC_collevtive_sync_t *mcache_coll_sync_struct);
+H5_DLL herr_t H5P_get_metadata_cache_coll_sync(hid_t plist_id,H5AC_collevtive_sync_t *mcache_coll_sync_struct_out);
+#endif /* H5_HAVE_PARALLEL */
+#endif
+
 /* Private DCPL routines */
 H5_DLL herr_t H5P_fill_value_defined(H5P_genplist_t *plist,
     H5D_fill_value_t *status);
