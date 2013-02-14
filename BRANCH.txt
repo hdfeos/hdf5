@@ -8,7 +8,7 @@ The improvement is to make one process fetch the metadata info one time and shar
 
 The result of this work can be reused for other APIs accessing metadata cache to improve performance in parallel env.
 
-This branch is off of the trunk. All trunk changes through r23232 have been merged up to this feature branch.
+This branch is off of the HDF5 trunk revision r23232. 
 
 Feb 7,2013:
  This task is paused until a couple of prerequisite features are ready.
