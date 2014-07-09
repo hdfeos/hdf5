@@ -1,0 +1,3 @@
+[submodule "config/cmake_ext_mod"]
+	path = config/cmake_ext_mod
+	url = https://github.com/soumagne/conf_cmake.git
