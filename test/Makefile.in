@@ -195,7 +195,7 @@ am__EXEEXT_1 = testhdf5$(EXEEXT) lheap$(EXEEXT) ohdr$(EXEEXT) \
 	dtransform$(EXEEXT) reserved$(EXEEXT) cross_read$(EXEEXT) \
 	freespace$(EXEEXT) mf$(EXEEXT) farray$(EXEEXT) earray$(EXEEXT) \
 	btree2$(EXEEXT) fheap$(EXEEXT) file_image$(EXEEXT) \
-	unregister$(EXEEXT)
+	unregister$(EXEEXT) query$(EXEEXT)
 @HAVE_SHARED_CONDITIONAL_TRUE@am__EXEEXT_2 = plugin$(EXEEXT)
 am__EXEEXT_3 = gen_bad_ohdr$(EXEEXT) gen_bogus$(EXEEXT) \
 	gen_cross$(EXEEXT) gen_deflate$(EXEEXT) gen_filters$(EXEEXT) \
@@ -468,6 +468,10 @@ pool_SOURCES = pool.c
 pool_OBJECTS = pool.$(OBJEXT)
 pool_LDADD = $(LDADD)
 pool_DEPENDENCIES = libh5test.la $(LIBHDF5)
+query_SOURCES = query.c
+query_OBJECTS = query.$(OBJEXT)
+query_LDADD = $(LDADD)
+query_DEPENDENCIES = libh5test.la $(LIBHDF5)
 reserved_SOURCES = reserved.c
 reserved_OBJECTS = reserved.$(OBJEXT)
 reserved_LDADD = $(LDADD)
@@ -571,7 +575,7 @@ SOURCES = $(libdynlib1_la_SOURCES) $(libdynlib2_la_SOURCES) \
 	gen_sizes_lheap.c gen_specmetaread.c gen_udlinks.c getname.c \
 	gheap.c hyperslab.c istore.c lheap.c links.c links_env.c mf.c \
 	mount.c mtime.c ntypes.c objcopy.c ohdr.c plugin.c pool.c \
-	reserved.c set_extent.c space_overflow.c stab.c \
+	query.c reserved.c set_extent.c space_overflow.c stab.c \
 	tcheck_version.c $(testhdf5_SOURCES) testmeta.c \
 	$(ttsafe_SOURCES) unlink.c unregister.c vfd.c
 DIST_SOURCES = $(am__libdynlib1_la_SOURCES_DIST) \
@@ -590,7 +594,7 @@ DIST_SOURCES = $(am__libdynlib1_la_SOURCES_DIST) \
 	gen_sizes_lheap.c gen_specmetaread.c gen_udlinks.c getname.c \
 	gheap.c hyperslab.c istore.c lheap.c links.c links_env.c mf.c \
 	mount.c mtime.c ntypes.c objcopy.c ohdr.c plugin.c pool.c \
-	reserved.c set_extent.c space_overflow.c stab.c \
+	query.c reserved.c set_extent.c space_overflow.c stab.c \
 	tcheck_version.c $(testhdf5_SOURCES) testmeta.c \
 	$(ttsafe_SOURCES) unlink.c unregister.c vfd.c
 am__can_run_installinfo = \
@@ -1123,7 +1127,8 @@ TEST_PROG = testhdf5 lheap ohdr stab gheap cache cache_api cache_tagging \
            big mtime fillval mount flush1 flush2 app_ref enum \
            set_extent ttsafe enc_dec_plist enc_dec_plist_with_endianess\
            getname vfd ntypes dangle dtransform reserved cross_read \
-           freespace mf farray earray btree2 fheap file_image unregister
+           freespace mf farray earray btree2 fheap file_image unregister \
+           query
 
 
 # These programs generate test files for the tests.  They don't need to be
@@ -1569,6 +1574,10 @@ pool$(EXEEXT): $(pool_OBJECTS) $(pool_DEPENDENCIES) $(EXTRA_pool_DEPENDENCIES)
 	@rm -f pool$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pool_OBJECTS) $(pool_LDADD) $(LIBS)
 
+query$(EXEEXT): $(query_OBJECTS) $(query_DEPENDENCIES) $(EXTRA_query_DEPENDENCIES) 
+	@rm -f query$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(query_OBJECTS) $(query_LDADD) $(LIBS)
+
 reserved$(EXEEXT): $(reserved_OBJECTS) $(reserved_DEPENDENCIES) $(EXTRA_reserved_DEPENDENCIES) 
 	@rm -f reserved$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(reserved_OBJECTS) $(reserved_LDADD) $(LIBS)
@@ -1689,6 +1698,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ohdr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pool.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/query.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reserved.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/set_extent.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/space_overflow.Po@am__quote@
@@ -2292,6 +2302,13 @@ file_image.log: file_image$(EXEEXT)
 unregister.log: unregister$(EXEEXT)
 	@p='unregister$(EXEEXT)'; \
 	b='unregister'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+query.log: query$(EXEEXT)
+	@p='query$(EXEEXT)'; \
+	b='query'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
