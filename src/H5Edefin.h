@@ -49,6 +49,7 @@ hid_t H5E_DATATYPE_g       = FAIL;      /* Datatype */
 hid_t H5E_OHDR_g           = FAIL;      /* Object header */
 hid_t H5E_ATOM_g           = FAIL;      /* Object atom */
 hid_t H5E_NONE_MAJOR_g     = FAIL;      /* No error */
+hid_t H5E_INDEX_g          = FAIL;      /* Index */
 hid_t H5E_SLIST_g          = FAIL;      /* Skip Lists */
 hid_t H5E_ARGS_g           = FAIL;      /* Invalid arguments to routine */
 hid_t H5E_EARRAY_g         = FAIL;      /* Extensible Array */

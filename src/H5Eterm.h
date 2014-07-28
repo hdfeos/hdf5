@@ -50,6 +50,7 @@ H5E_DATATYPE_g=
 H5E_OHDR_g=    
 H5E_ATOM_g=    
 H5E_NONE_MAJOR_g=    
+H5E_INDEX_g=    
 H5E_SLIST_g=    
 H5E_ARGS_g=    
 H5E_EARRAY_g=    
