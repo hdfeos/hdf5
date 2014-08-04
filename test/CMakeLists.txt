@@ -223,6 +223,7 @@ set (H5_TESTS
     enc_dec_plist_with_endianess
     unregister
     query
+    index
 )
 
 foreach (test ${H5_TESTS})
