@@ -149,6 +149,9 @@ H5HF_man_dblock_create(hid_t dxpl_id, H5HF_hdr_t *hdr, H5HF_indirect_t *par_iblo
 HDmemset(dblock->blk, 0, dblock->size);
 #endif /* H5_CLEAR_MEMORY */
 
+    dblock->write_buf = NULL;
+    dblock->write_size = 0;
+
     /* Allocate [temporary] space for the direct block on disk */
     if(H5F_USE_TMP_SPACE(hdr->f)) {
         if(HADDR_UNDEF == (dblock_addr = H5MF_alloc_tmp(hdr->f, (hsize_t)dblock->size)))

@@ -146,7 +146,7 @@ H5B2_create(H5F_t *f, hid_t dxpl_id, const H5B2_create_t *cparam, void *ctx_udat
     HDcompile_assert(H5B2_NUM_BTREE_ID == NELMTS(H5B2_client_class_g));
 
     /* Create shared v2 B-tree header */
-    if(HADDR_UNDEF == (hdr_addr = H5B2_hdr_create(f, dxpl_id, cparam, ctx_udata)))
+    if(HADDR_UNDEF == (hdr_addr = H5B2__hdr_create(f, dxpl_id, cparam, ctx_udata)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTINIT, NULL, "can't create v2 B-tree header")
 
     /* Create v2 B-tree wrapper */
@@ -155,17 +155,18 @@ H5B2_create(H5F_t *f, hid_t dxpl_id, const H5B2_create_t *cparam, void *ctx_udat
 
     /* Look up the B-tree header */
     cache_udata.f = f;
+    cache_udata.addr = hdr_addr;
     cache_udata.ctx_udata = ctx_udata;
     if(NULL == (hdr = (H5B2_hdr_t *)H5AC_protect(f, dxpl_id, H5AC_BT2_HDR, hdr_addr, &cache_udata, H5AC_WRITE)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, NULL, "unable to load B-tree header")
 
     /* Point v2 B-tree wrapper at header and bump it's ref count */
     bt2->hdr = hdr;
-    if(H5B2_hdr_incr(bt2->hdr) < 0)
+    if(H5B2__hdr_incr(bt2->hdr) < 0)
         HGOTO_ERROR(H5E_BTREE, H5E_CANTINC, NULL, "can't increment reference count on shared v2 B-tree header")
 
     /* Increment # of files using this v2 B-tree header */
-    if(H5B2_hdr_fuse_incr(bt2->hdr) < 0)
+    if(H5B2__hdr_fuse_incr(bt2->hdr) < 0)
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTINC, NULL, "can't increment file reference count on shared v2 B-tree header")
 
     /* Set file pointer for this v2 B-tree open context */
@@ -215,6 +216,7 @@ H5B2_open(H5F_t *f, hid_t dxpl_id, haddr_t addr, void *ctx_udata)
 
     /* Look up the B-tree header */
     cache_udata.f = f;
+    cache_udata.addr = addr;
     cache_udata.ctx_udata = ctx_udata;
     if(NULL == (hdr = (H5B2_hdr_t *)H5AC_protect(f, dxpl_id, H5AC_BT2_HDR, addr, &cache_udata, H5AC_READ)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, NULL, "unable to load B-tree header")
@@ -229,11 +231,11 @@ H5B2_open(H5F_t *f, hid_t dxpl_id, haddr_t addr, void *ctx_udata)
 
     /* Point v2 B-tree wrapper at header */
     bt2->hdr = hdr;
-    if(H5B2_hdr_incr(bt2->hdr) < 0)
+    if(H5B2__hdr_incr(bt2->hdr) < 0)
         HGOTO_ERROR(H5E_BTREE, H5E_CANTINC, NULL, "can't increment reference count on shared v2 B-tree header")
 
     /* Increment # of files using this v2 B-tree header */
-    if(H5B2_hdr_fuse_incr(bt2->hdr) < 0)
+    if(H5B2__hdr_fuse_incr(bt2->hdr) < 0)
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTINC, NULL, "can't increment file reference count on shared v2 B-tree header")
 
     /* Set file pointer for this v2 B-tree open context */
@@ -287,28 +289,28 @@ H5B2_insert(H5B2_t *bt2, hid_t dxpl_id, void *udata)
     /* Check if the root node is allocated yet */
     if(!H5F_addr_defined(hdr->root.addr)) {
         /* Create root node as leaf node in B-tree */
-        if(H5B2_create_leaf(hdr, dxpl_id, &(hdr->root)) < 0)
+        if(H5B2__create_leaf(hdr, dxpl_id, &(hdr->root)) < 0)
 	    HGOTO_ERROR(H5E_BTREE, H5E_CANTINIT, FAIL, "unable to create root node")
     } /* end if */
     /* Check if we need to split the root node (equiv. to a 1->2 node split) */
     else if(hdr->root.node_nrec == hdr->node_info[hdr->depth].split_nrec) {
         /* Split root node */
-        if(H5B2_split_root(hdr, dxpl_id) < 0)
+        if(H5B2__split_root(hdr, dxpl_id) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTSPLIT, FAIL, "unable to split root node")
     } /* end if */
 
     /* Attempt to insert record into B-tree */
     if(hdr->depth > 0) {
-        if(H5B2_insert_internal(hdr, dxpl_id, hdr->depth, NULL, &hdr->root, udata) < 0)
+        if(H5B2__insert_internal(hdr, dxpl_id, hdr->depth, NULL, &hdr->root, udata) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTINSERT, FAIL, "unable to insert record into B-tree internal node")
     } /* end if */
     else {
-        if(H5B2_insert_leaf(hdr, dxpl_id, &hdr->root, udata) < 0)
+        if(H5B2__insert_leaf(hdr, dxpl_id, &hdr->root, udata) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTINSERT, FAIL, "unable to insert record into B-tree leaf node")
     } /* end else */
 
     /* Mark B-tree header as dirty */
-    if(H5B2_hdr_dirty(hdr) < 0)
+    if(H5B2__hdr_dirty(hdr) < 0)
         HGOTO_ERROR(H5E_BTREE, H5E_CANTMARKDIRTY, FAIL, "unable to mark B-tree header dirty")
 
 done:
@@ -385,7 +387,7 @@ H5B2_iterate(H5B2_t *bt2, hid_t dxpl_id, H5B2_operator_t op, void *op_data)
     /* Iterate through records */
     if(hdr->root.node_nrec > 0) {
         /* Iterate through nodes */
-        if((ret_value = H5B2_iterate_node(hdr, dxpl_id, hdr->depth, &hdr->root, op, op_data)) < 0)
+        if((ret_value = H5B2__iterate_node(hdr, dxpl_id, hdr->depth, &hdr->root, op, op_data)) < 0)
             HERROR(H5E_BTREE, H5E_CANTLIST, "node iteration failed");
     } /* end if */
 
@@ -422,7 +424,7 @@ H5B2_find(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_found_t op,
 {
     H5B2_hdr_t	*hdr;                   /* Pointer to the B-tree header */
     H5B2_node_ptr_t curr_node_ptr;      /* Node pointer info for current node */
-    unsigned    depth;                  /* Current depth of the tree */
+    uint16_t    depth;                  /* Current depth of the tree */
     int         cmp;                    /* Comparison value of records */
     unsigned    idx;                    /* Location of record which matches key */
     htri_t	ret_value = TRUE;       /* Return value */
@@ -455,11 +457,11 @@ H5B2_find(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_found_t op,
         H5B2_node_ptr_t next_node_ptr;      /* Node pointer info for next node */
 
         /* Lock B-tree current node */
-        if(NULL == (internal = H5B2_protect_internal(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, depth, H5AC_READ)))
+        if(NULL == (internal = H5B2__protect_internal(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, depth, H5AC_READ)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to load B-tree internal node")
 
         /* Locate node pointer for child */
-        cmp = H5B2_locate_record(hdr->cls, internal->nrec, hdr->nat_off, internal->int_native, udata, &idx);
+        cmp = H5B2__locate_record(hdr->cls, internal->nrec, hdr->nat_off, internal->int_native, udata, &idx);
         if(cmp > 0)
             idx++;
 
@@ -500,11 +502,11 @@ H5B2_find(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_found_t op,
         H5B2_leaf_t *leaf;          /* Pointer to leaf node in B-tree */
 
         /* Lock B-tree leaf node */
-        if(NULL == (leaf = H5B2_protect_leaf(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, H5AC_READ)))
+        if(NULL == (leaf = H5B2__protect_leaf(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, H5AC_READ)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to protect B-tree leaf node")
 
         /* Locate record */
-        cmp = H5B2_locate_record(hdr->cls, leaf->nrec, hdr->nat_off, leaf->leaf_native, udata, &idx);
+        cmp = H5B2__locate_record(hdr->cls, leaf->nrec, hdr->nat_off, leaf->leaf_native, udata, &idx);
 
         if(cmp != 0) {
             /* Unlock leaf node */
@@ -559,7 +561,7 @@ H5B2_index(H5B2_t *bt2, hid_t dxpl_id, H5_iter_order_t order, hsize_t idx,
 {
     H5B2_hdr_t	*hdr;                   /* Pointer to the B-tree header */
     H5B2_node_ptr_t curr_node_ptr;      /* Node pointer info for current node */
-    unsigned    depth;                  /* Current depth of the tree */
+    uint16_t    depth;                  /* Current depth of the tree */
     herr_t	ret_value = SUCCEED;    /* Return value */
 
     FUNC_ENTER_NOAPI(FAIL)
@@ -599,7 +601,7 @@ H5B2_index(H5B2_t *bt2, hid_t dxpl_id, H5_iter_order_t order, hsize_t idx,
         unsigned u;                         /* Local index variable */
 
         /* Lock B-tree current node */
-        if(NULL == (internal = H5B2_protect_internal(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, depth, H5AC_READ)))
+        if(NULL == (internal = H5B2__protect_internal(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, depth, H5AC_READ)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to load B-tree internal node")
 
         /* Search for record with correct index */
@@ -671,7 +673,7 @@ H5B2_index(H5B2_t *bt2, hid_t dxpl_id, H5_iter_order_t order, hsize_t idx,
         H5B2_leaf_t *leaf;          /* Pointer to leaf node in B-tree */
 
         /* Lock B-tree leaf node */
-        if(NULL == (leaf = H5B2_protect_leaf(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, H5AC_READ)))
+        if(NULL == (leaf = H5B2__protect_leaf(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, H5AC_READ)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to protect B-tree leaf node")
 
         /* Sanity check index */
@@ -735,7 +737,7 @@ H5B2_remove(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_remove_t op,
     if(hdr->depth > 0) {
         hbool_t depth_decreased = FALSE;  /* Flag to indicate whether the depth of the B-tree decreased */
 
-        if(H5B2_remove_internal(hdr, dxpl_id, &depth_decreased, NULL, hdr->depth,
+        if(H5B2__remove_internal(hdr, dxpl_id, &depth_decreased, NULL, hdr->depth,
                 &(hdr->cache_info), NULL, &hdr->root, udata, op, op_data) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDELETE, FAIL, "unable to remove record from B-tree internal node")
 
@@ -754,7 +756,7 @@ H5B2_remove(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_remove_t op,
         } /* end for */
     } /* end if */
     else {
-        if(H5B2_remove_leaf(hdr, dxpl_id, &hdr->root, udata, op, op_data) < 0)
+        if(H5B2__remove_leaf(hdr, dxpl_id, &hdr->root, udata, op, op_data) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDELETE, FAIL, "unable to remove record from B-tree leaf node")
     } /* end else */
 
@@ -762,7 +764,7 @@ H5B2_remove(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_remove_t op,
     hdr->root.all_nrec--;
 
     /* Mark B-tree header as dirty */
-    if(H5B2_hdr_dirty(hdr) < 0)
+    if(H5B2__hdr_dirty(hdr) < 0)
         HGOTO_ERROR(H5E_BTREE, H5E_CANTMARKDIRTY, FAIL, "unable to mark B-tree header dirty")
 
 done:
@@ -817,7 +819,7 @@ H5B2_remove_by_idx(H5B2_t *bt2, hid_t dxpl_id, H5_iter_order_t order,
     if(hdr->depth > 0) {
         hbool_t depth_decreased = FALSE;  /* Flag to indicate whether the depth of the B-tree decreased */
 
-        if(H5B2_remove_internal_by_idx(hdr, dxpl_id, &depth_decreased, NULL, hdr->depth,
+        if(H5B2__remove_internal_by_idx(hdr, dxpl_id, &depth_decreased, NULL, hdr->depth,
                 &(hdr->cache_info), NULL, &hdr->root, idx, op, op_data) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDELETE, FAIL, "unable to remove record from B-tree internal node")
 
@@ -836,7 +838,7 @@ H5B2_remove_by_idx(H5B2_t *bt2, hid_t dxpl_id, H5_iter_order_t order,
         } /* end for */
     } /* end if */
     else {
-        if(H5B2_remove_leaf_by_idx(hdr, dxpl_id, &hdr->root, (unsigned)idx, op, op_data) < 0)
+        if(H5B2__remove_leaf_by_idx(hdr, dxpl_id, &hdr->root, (unsigned)idx, op, op_data) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDELETE, FAIL, "unable to remove record from B-tree leaf node")
     } /* end else */
 
@@ -844,7 +846,7 @@ H5B2_remove_by_idx(H5B2_t *bt2, hid_t dxpl_id, H5_iter_order_t order,
     hdr->root.all_nrec--;
 
     /* Mark B-tree header as dirty */
-    if(H5B2_hdr_dirty(hdr) < 0)
+    if(H5B2__hdr_dirty(hdr) < 0)
         HGOTO_ERROR(H5E_BTREE, H5E_CANTMARKDIRTY, FAIL, "unable to mark B-tree header dirty")
 
 done:
@@ -931,11 +933,11 @@ H5B2_neighbor(H5B2_t *bt2, hid_t dxpl_id, H5B2_compare_t range, void *udata,
 
     /* Attempt to find neighbor record in B-tree */
     if(hdr->depth > 0) {
-        if(H5B2_neighbor_internal(hdr, dxpl_id, hdr->depth, &hdr->root, NULL, range, udata, op, op_data) < 0)
+        if(H5B2__neighbor_internal(hdr, dxpl_id, hdr->depth, &hdr->root, NULL, range, udata, op, op_data) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_NOTFOUND, FAIL, "unable to find neighbor record in B-tree internal node")
     } /* end if */
     else {
-        if(H5B2_neighbor_leaf(hdr, dxpl_id, &hdr->root, NULL, range, udata, op, op_data) < 0)
+        if(H5B2__neighbor_leaf(hdr, dxpl_id, &hdr->root, NULL, range, udata, op, op_data) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_NOTFOUND, FAIL, "unable to find neighbor record in B-tree leaf node")
     } /* end else */
 
@@ -970,7 +972,7 @@ H5B2_modify(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_modify_t op,
 {
     H5B2_hdr_t	*hdr;                   /* Pointer to the B-tree header */
     H5B2_node_ptr_t curr_node_ptr;      /* Node pointer info for current node */
-    unsigned    depth;                  /* Current depth of the tree */
+    uint16_t    depth;                  /* Current depth of the tree */
     int         cmp;                    /* Comparison value of records */
     unsigned    idx;                    /* Location of record which matches key */
     herr_t	ret_value = SUCCEED;    /* Return value */
@@ -1005,11 +1007,11 @@ H5B2_modify(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_modify_t op,
         H5B2_node_ptr_t next_node_ptr;      /* Node pointer info for next node */
 
         /* Lock B-tree current node */
-        if(NULL == (internal = H5B2_protect_internal(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, depth, H5AC_WRITE)))
+        if(NULL == (internal = H5B2__protect_internal(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, depth, H5AC_WRITE)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to load B-tree internal node")
 
         /* Locate node pointer for child */
-        cmp = H5B2_locate_record(hdr->cls, internal->nrec, hdr->nat_off, internal->int_native, udata, &idx);
+        cmp = H5B2__locate_record(hdr->cls, internal->nrec, hdr->nat_off, internal->int_native, udata, &idx);
         if(cmp > 0)
             idx++;
 
@@ -1059,11 +1061,11 @@ H5B2_modify(H5B2_t *bt2, hid_t dxpl_id, void *udata, H5B2_modify_t op,
         hbool_t changed = FALSE;/* Whether the 'modify' callback changed the record */
 
         /* Lock B-tree leaf node */
-        if(NULL == (leaf = H5B2_protect_leaf(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, H5AC_WRITE)))
+        if(NULL == (leaf = H5B2__protect_leaf(hdr, dxpl_id, curr_node_ptr.addr, curr_node_ptr.node_nrec, H5AC_WRITE)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to protect B-tree leaf node")
 
         /* Locate record */
-        cmp = H5B2_locate_record(hdr->cls, leaf->nrec, hdr->nat_off, leaf->leaf_native, udata, &idx);
+        cmp = H5B2__locate_record(hdr->cls, leaf->nrec, hdr->nat_off, leaf->leaf_native, udata, &idx);
 
         if(cmp != 0) {
             /* Unlock leaf node */
@@ -1134,7 +1136,7 @@ H5B2_close(H5B2_t *bt2, hid_t dxpl_id)
     HDassert(bt2->f);
 
     /* Decrement file reference & check if this is the last open v2 B-tree using the shared B-tree header */
-    if(0 == H5B2_hdr_fuse_decr(bt2->hdr)) {
+    if(0 == H5B2__hdr_fuse_decr(bt2->hdr)) {
         /* Set the shared v2 B-tree header's file context for this operation */
         bt2->hdr->f = bt2->f;
 
@@ -1179,22 +1181,22 @@ H5B2_close(H5B2_t *bt2, hid_t dxpl_id)
         hdr->f = bt2->f;
 
         /* Decrement the reference count on the B-tree header */
-        /* (don't put in H5B2_hdr_fuse_decr() as the B-tree header may be evicted
+        /* (don't put in H5B2__hdr_fuse_decr() as the B-tree header may be evicted
          *  immediately -QAK)
          */
-        if(H5B2_hdr_decr(bt2->hdr) < 0)
+        if(H5B2__hdr_decr(bt2->hdr) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDEC, FAIL, "can't decrement reference count on shared v2 B-tree header")
 
         /* Delete v2 B-tree, starting with header (unprotects header) */
-        if(H5B2_hdr_delete(hdr, dxpl_id) < 0)
+        if(H5B2__hdr_delete(hdr, dxpl_id) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDELETE, FAIL, "unable to delete v2 B-tree")
     } /* end if */
     else {
         /* Decrement the reference count on the B-tree header */
-        /* (don't put in H5B2_hdr_fuse_decr() as the B-tree header may be evicted
+        /* (don't put in H5B2__hdr_fuse_decr() as the B-tree header may be evicted
          *  immediately -QAK)
          */
-        if(H5B2_hdr_decr(bt2->hdr) < 0)
+        if(H5B2__hdr_decr(bt2->hdr) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDEC, FAIL, "can't decrement reference count on shared v2 B-tree header")
 
     } /* end else */
@@ -1248,6 +1250,7 @@ H5B2_delete(H5F_t *f, hid_t dxpl_id, haddr_t addr, void *ctx_udata,
 HDfprintf(stderr, "%s: addr = %a\n", FUNC, addr);
 #endif /* QAK */
     cache_udata.f = f;
+    cache_udata.addr = addr;
     cache_udata.ctx_udata = ctx_udata;
     if(NULL == (hdr = (H5B2_hdr_t *)H5AC_protect(f, dxpl_id, H5AC_BT2_HDR, addr, &cache_udata, H5AC_WRITE)))
         HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to protect v2 B-tree header")
@@ -1264,7 +1267,7 @@ HDfprintf(stderr, "%s: addr = %a\n", FUNC, addr);
         hdr->f = f;
 
         /* Delete v2 B-tree now, starting with header (unprotects header) */
-        if(H5B2_hdr_delete(hdr, dxpl_id) < 0)
+        if(H5B2__hdr_delete(hdr, dxpl_id) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDELETE, FAIL, "unable to delete v2 B-tree")
         hdr = NULL;
     } /* end if */

@@ -78,6 +78,7 @@ typedef enum {
     H5AC_FARRAY_DBLOCK_ID, /*fixed array data block	     	     */
     H5AC_FARRAY_DBLK_PAGE_ID, /*fixed array data block page          */
     H5AC_SUPERBLOCK_ID, /* file superblock                           */
+    H5AC_DRVRINFO_ID,   /* driver info block (supplements superblock)*/
     H5AC_TEST_ID,	/*test entry -- not used for actual files    */
     H5AC_NTYPES		/* Number of types, must be last             */
 } H5AC_type_t;
@@ -112,65 +113,37 @@ typedef enum {
 /*
  * Class methods pertaining to caching.	 Each type of cached object will
  * have a constant variable with permanent life-span that describes how
- * to cache the object.	 That variable will be of type H5AC_class_t and
- * have the following required fields...
- *
- * LOAD:	Loads an object from disk to memory.  The function
- *		should allocate some data structure and return it.
- *
- * FLUSH:	Writes some data structure back to disk.  It would be
- *		wise for the data structure to include dirty flags to
- *		indicate whether it really needs to be written.	 This
- *		function is also responsible for freeing memory allocated
- *		by the LOAD method if the DEST argument is non-zero (by
- *              calling the DEST method).
- *
- * DEST:	Just frees memory allocated by the LOAD method.
- *
- * CLEAR:	Just marks object as non-dirty.
- *
- * NOTIFY:	Notify client that an action on an entry has taken/will take
- *              place
- *
- * SIZE:	Report the size (on disk) of the specified cache object.
- *		Note that the space allocated on disk may not be contiguous.
+ * to cache the object.
  */
 
-#define H5AC_CALLBACK__NO_FLAGS_SET             H5C_CALLBACK__NO_FLAGS_SET
-#define H5AC_CALLBACK__SIZE_CHANGED_FLAG	H5C_CALLBACK__SIZE_CHANGED_FLAG
-#define H5AC_CALLBACK__MOVED_FLAG             H5C_CALLBACK__MOVED_FLAG
+#define H5AC__SERIALIZE_RESIZED_FLAG	H5C__SERIALIZE_RESIZED_FLAG
+#define H5AC__SERIALIZE_MOVED_FLAG	H5C__SERIALIZE_MOVED_FLAG
 
 /* Aliases for 'notify action' type & values */
 typedef H5C_notify_action_t     H5AC_notify_action_t;
 #define H5AC_NOTIFY_ACTION_AFTER_INSERT H5C_NOTIFY_ACTION_AFTER_INSERT
 #define H5AC_NOTIFY_ACTION_BEFORE_EVICT H5C_NOTIFY_ACTION_BEFORE_EVICT
 
-typedef H5C_load_func_t		H5AC_load_func_t;
-typedef H5C_flush_func_t	H5AC_flush_func_t;
-typedef H5C_dest_func_t		H5AC_dest_func_t;
-typedef H5C_clear_func_t	H5AC_clear_func_t;
-typedef H5C_notify_func_t	H5AC_notify_func_t;
-typedef H5C_size_func_t		H5AC_size_func_t;
+#define H5AC__CLASS_NO_FLAGS_SET 	H5C__CLASS_NO_FLAGS_SET
+#define H5AC__CLASS_SPECULATIVE_LOAD_FLAG H5C__CLASS_SPECULATIVE_LOAD_FLAG
+#define H5AC__CLASS_COMPRESSED_FLAG	 H5C__CLASS_COMPRESSED_FLAG
+
+typedef H5C_get_load_size_func_t	H5AC_get_load_size_func_t;
+typedef H5C_deserialize_func_t		H5AC_deserialize_func_t;
+typedef H5C_image_len_func_t		H5AC_image_len_func_t;
+
+#define H5AC__SERIALIZE_NO_FLAGS_SET    H5C__SERIALIZE_NO_FLAGS_SET
+#define H5AC__SERIALIZE_RESIZED_FLAG    H5C__SERIALIZE_RESIZED_FLAG
+#define H5AC__SERIALIZE_MOVED_FLAG      H5C__SERIALIZE_MOVED_FLAG
+
+typedef H5C_pre_serialize_func_t	H5AC_pre_serialize_func_t;
+typedef H5C_serialize_func_t		H5AC_serialize_func_t;
+typedef H5C_notify_func_t		H5AC_notify_func_t;
+typedef H5C_free_icr_func_t		H5AC_free_icr_func_t;
 
 typedef H5C_class_t			H5AC_class_t;
 
-
-/* The H5AC_NSLOTS #define is now obsolete, as the metadata cache no longer
- * uses slots.  However I am leaving it in for now to avoid modifying the
- * interface between the metadata cache and the rest of HDF.  It should
- * be removed when we get to dealing with the size_hint parameter in
- * H5AC_create().
- *						JRM - 5/20/04
- *
- * Old comment on H5AC_NSLOTS follows:
- *
- * A cache has a certain number of entries.  Objects are mapped into a
- * cache entry by hashing the object's file address.  Each file has its
- * own cache, an array of slots.
- */
-#define H5AC_NSLOTS     10330           /* The library "likes" this number... */
-
-
+/* Cache entry info */
 typedef H5C_cache_entry_t		H5AC_info_t;
 
 
@@ -349,7 +322,7 @@ H5_DLLVAR hid_t H5AC_ind_dxpl_id;
 H5_DLL herr_t H5AC_init(void);
 H5_DLL herr_t H5AC_create(const H5F_t *f, H5AC_cache_config_t *config_ptr);
 H5_DLL herr_t H5AC_get_entry_status(const H5F_t *f, haddr_t addr,
-				    unsigned * status_ptr);
+    unsigned *status_ptr);
 H5_DLL herr_t H5AC_insert_entry(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type,
     haddr_t addr, void *thing, unsigned int flags);
 H5_DLL herr_t H5AC_pin_protected_entry(void *thing);
@@ -359,57 +332,31 @@ H5_DLL void * H5AC_protect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type,
 H5_DLL herr_t H5AC_resize_entry(void *thing, size_t new_size);
 H5_DLL herr_t H5AC_unpin_entry(void *thing);
 H5_DLL herr_t H5AC_destroy_flush_dependency(void *parent_thing, void *child_thing);
-H5_DLL herr_t H5AC_unprotect(H5F_t *f, hid_t dxpl_id,
-                             const H5AC_class_t *type, haddr_t addr,
-			     void *thing, unsigned flags);
+H5_DLL herr_t H5AC_unprotect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type,
+    haddr_t addr, void *thing, unsigned flags);
 H5_DLL herr_t H5AC_flush(H5F_t *f, hid_t dxpl_id);
 H5_DLL herr_t H5AC_mark_entry_dirty(void *thing);
 H5_DLL herr_t H5AC_move_entry(H5F_t *f, const H5AC_class_t *type,
-			   haddr_t old_addr, haddr_t new_addr);
-
+    haddr_t old_addr, haddr_t new_addr);
 H5_DLL herr_t H5AC_dest(H5F_t *f, hid_t dxpl_id);
-
 H5_DLL herr_t H5AC_expunge_entry(H5F_t *f, hid_t dxpl_id,
-                                 const H5AC_class_t *type, haddr_t addr,
-                                 unsigned flags);
-
-H5_DLL herr_t H5AC_set_sync_point_done_callback(H5C_t *cache_ptr,
-    void (*sync_point_done)(int num_writes, haddr_t *written_entries_tbl));
-
-H5_DLL herr_t H5AC_set_write_done_callback(H5C_t * cache_ptr,
-                                           void (* write_done)(void));
+    const H5AC_class_t *type, haddr_t addr, unsigned flags);
 H5_DLL herr_t H5AC_stats(const H5F_t *f);
-
 H5_DLL herr_t H5AC_dump_cache(const H5F_t *f);
-
 H5_DLL herr_t H5AC_get_cache_auto_resize_config(const H5AC_t * cache_ptr,
-                                               H5AC_cache_config_t *config_ptr);
-
-H5_DLL herr_t H5AC_get_cache_size(H5AC_t * cache_ptr,
-                                  size_t * max_size_ptr,
-                                  size_t * min_clean_size_ptr,
-                                  size_t * cur_size_ptr,
-                                  int32_t * cur_num_entries_ptr);
-
-H5_DLL herr_t H5AC_get_cache_hit_rate(H5AC_t * cache_ptr,
-                                      double * hit_rate_ptr);
-
-H5_DLL herr_t H5AC_reset_cache_hit_rate_stats(H5AC_t * cache_ptr);
-
+    H5AC_cache_config_t *config_ptr);
+H5_DLL herr_t H5AC_get_cache_size(H5AC_t *cache_ptr, size_t *max_size_ptr,
+    size_t *min_clean_size_ptr, size_t *cur_size_ptr, int32_t *cur_num_entries_ptr);
+H5_DLL herr_t H5AC_get_cache_hit_rate(H5AC_t *cache_ptr, double *hit_rate_ptr);
+H5_DLL herr_t H5AC_reset_cache_hit_rate_stats(H5AC_t *cache_ptr);
 H5_DLL herr_t H5AC_set_cache_auto_resize_config(H5AC_t *cache_ptr,
-                                               H5AC_cache_config_t *config_ptr);
-
-H5_DLL herr_t H5AC_validate_config(H5AC_cache_config_t * config_ptr);
-
-H5_DLL herr_t H5AC_close_trace_file( H5AC_t * cache_ptr);
-
-H5_DLL herr_t H5AC_open_trace_file(H5AC_t * cache_ptr,
-		                   const char * trace_file_name);
-
+    H5AC_cache_config_t *config_ptr);
+H5_DLL herr_t H5AC_validate_config(H5AC_cache_config_t *config_ptr);
+H5_DLL hbool_t H5AC_validate_cache_config_ver(int version_num);
+H5_DLL herr_t H5AC_close_trace_file(H5AC_t *cache_ptr);
+H5_DLL herr_t H5AC_open_trace_file(H5AC_t *cache_ptr, const char *trace_file_name);
 H5_DLL herr_t H5AC_tag(hid_t dxpl_id, haddr_t metadata_tag, haddr_t * prev_tag);
-
 H5_DLL herr_t H5AC_retag_copied_metadata(H5F_t * f, haddr_t metadata_tag);
-
 H5_DLL herr_t H5AC_ignore_tags(H5F_t * f);
 
 #ifdef H5_HAVE_PARALLEL

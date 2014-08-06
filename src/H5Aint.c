@@ -92,7 +92,7 @@ typedef struct {
 
 static herr_t H5A__compact_build_table_cb(H5O_t *oh, H5O_mesg_t *mesg/*in,out*/,
     unsigned sequence, unsigned *oh_flags_ptr, void *_udata/*in,out*/);
-static herr_t H5A_dense_build_table_cb(const H5A_t *attr, void *_udata);
+static herr_t H5A__dense_build_table_cb(const H5A_t *attr, void *_udata);
 static int H5A__attr_cmp_name_inc(const void *attr1, const void *attr2);
 static int H5A__attr_cmp_name_dec(const void *attr1, const void *attr2);
 static int H5A__attr_cmp_corder_inc(const void *attr1, const void *attr2);
@@ -1347,7 +1347,7 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:	H5A_dense_build_table_cb
+ * Function:	H5A__dense_build_table_cb
  *
  * Purpose:	Callback routine for building table of attributes from dense
  *              attribute storage.
@@ -1362,12 +1362,12 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5A_dense_build_table_cb(const H5A_t *attr, void *_udata)
+H5A__dense_build_table_cb(const H5A_t *attr, void *_udata)
 {
     H5A_dense_bt_ud_t *udata = (H5A_dense_bt_ud_t *)_udata;     /* 'User data' passed in */
     herr_t ret_value = H5_ITER_CONT;   /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
     /* check arguments */
     HDassert(attr);
@@ -1387,7 +1387,7 @@ H5A_dense_build_table_cb(const H5A_t *attr, void *_udata)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5A_dense_build_table_cb() */
+} /* end H5A__dense_build_table_cb() */
 
 
 /*-------------------------------------------------------------------------
@@ -1453,7 +1453,7 @@ H5A_dense_build_table(H5F_t *f, hid_t dxpl_id, const H5O_ainfo_t *ainfo,
 
         /* Build iterator operator */
         attr_op.op_type = H5A_ATTR_OP_LIB;
-        attr_op.u.lib_op = H5A_dense_build_table_cb;
+        attr_op.u.lib_op = H5A__dense_build_table_cb;
 
         /* Iterate over the links in the group, building a table of the link messages */
         if(H5A_dense_iterate(f, dxpl_id, (hid_t)0, ainfo, H5_INDEX_NAME,
@@ -1689,7 +1689,7 @@ H5A_attr_iterate_table(const H5A_attr_table_t *atable, hsize_t skip,
                 H5A_info_t ainfo;               /* Info for attribute */
 
                 /* Get the attribute information */
-                if(H5A_get_info(atable->attrs[u], &ainfo) < 0)
+                if(H5A__get_info(atable->attrs[u], &ainfo) < 0)
                     HGOTO_ERROR(H5E_ATTR, H5E_CANTGET, H5_ITER_ERROR, "unable to get attribute info")
 
                 /* Make the application callback */
@@ -2253,7 +2253,7 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5A_dense_post_copy_file_cb
+ * Function:    H5A__dense_post_copy_file_cb
  *
  * Purpose:     Callback routine for copying a dense attribute from SRC to DST.
  *
@@ -2267,13 +2267,13 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5A_dense_post_copy_file_cb(const H5A_t *attr_src, void *_udata)
+H5A__dense_post_copy_file_cb(const H5A_t *attr_src, void *_udata)
 {
     H5A_dense_file_cp_ud_t *udata = (H5A_dense_file_cp_ud_t *)_udata;
     H5A_t *attr_dst = NULL;
     herr_t ret_value = H5_ITER_CONT;   /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
     /* check arguments */
     HDassert(attr_src);
@@ -2309,7 +2309,7 @@ done:
         HDONE_ERROR(H5E_ATTR, H5E_CLOSEERROR, FAIL, "can't close destination attribute")
 
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5A_dense_post_copy_file_cb() */
+} /* end H5A__dense_post_copy_file_cb() */
 
 
 /*-------------------------------------------------------------------------
@@ -2350,7 +2350,7 @@ H5A_dense_post_copy_file_all(const H5O_loc_t *src_oloc, const H5O_ainfo_t *ainfo
     udata.oloc_dst = dst_oloc;
 
     attr_op.op_type = H5A_ATTR_OP_LIB;
-    attr_op.u.lib_op = H5A_dense_post_copy_file_cb;
+    attr_op.u.lib_op = H5A__dense_post_copy_file_cb;
 
 
      if(H5A_dense_iterate(src_oloc->file, dxpl_id, (hid_t)0, ainfo_src, H5_INDEX_NAME,

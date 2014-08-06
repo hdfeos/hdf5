@@ -129,34 +129,34 @@ H5_trace(const double *returning, const char *func, const char *type, ...)
     void		*vp = NULL;
     FILE		*out = H5_debug_g.trace;
     H5_timer_t          event_time;
-    static H5_timer_t   first_time = {0.0, 0.0, 0.0};
+    static H5_timer_t   first_time = {0.0f, 0.0f, 0.0f};
     static int          current_depth = 0;
     static int          last_call_depth = 0;
 
     /* FUNC_ENTER() should not be called */
 
     if(!out)
-        return 0.0;	/*tracing is off*/
+        return 0.0f;	/*tracing is off*/
     va_start(ap, type);
 
     if(H5_debug_g.ttop) {
         if(returning) {
             if(current_depth > 1) {
                 --current_depth;
-                return 0.0;
+                return 0.0f;
             } /* end if */
         } /* end if */
         else {
             if(current_depth > 0) {
                 /*do not update last_call_depth*/
                 current_depth++;
-                return 0.0;
+                return 0.0f;
             } /* end if */
         } /* end else */
     } /* end if */
 
     /* Get tim for event */
-    if(HDfabs(first_time.etime) < 0.0000000001)
+    if(HDfabs(first_time.etime) < (double)0.0000000001f)
         /* That is == 0.0, but direct comparison between floats is bad */
         H5_timer_begin(&first_time);
     if(H5_debug_g.ttimes)
@@ -2348,7 +2348,7 @@ H5_trace(const double *returning, const char *func, const char *type, ...)
                             unsigned long iul = va_arg(ap, unsigned long); /*lint !e732 Loss of sign not really occuring */
 
                             fprintf(out, "%lu", iul);
-                            asize[argno] = iul;
+                            asize[argno] = (hssize_t)iul;
                         } /* end else */
                         break;
 
@@ -2372,7 +2372,7 @@ H5_trace(const double *returning, const char *func, const char *type, ...)
                             unsigned long long iull = va_arg(ap, unsigned long long); /*lint !e732 Loss of sign not really occuring */
 
                             fprintf(out, "%llu", iull);
-                            asize[argno] = iull;
+                            asize[argno] = (hssize_t)iull;
                         } /* end else */
                         break;
 

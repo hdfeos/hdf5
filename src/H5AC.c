@@ -449,6 +449,7 @@ static const char * H5AC_entry_type_names[H5AC_NTYPES] =
     "fixed array data block",
     "fixed array data block pages",
     "superblock",
+    "driver info",
     "test entry"	/* for testing only -- not used for actual files */
 };
 
@@ -689,7 +690,7 @@ H5AC_dest(H5F_t *f, hid_t dxpl_id)
 #endif /* H5_HAVE_PARALLEL */
 
     /* Destroy the cache */
-    if(H5C_dest(f, dxpl_id, H5AC_noblock_dxpl_id) < 0)
+    if(H5C_dest(f, dxpl_id) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFREE, FAIL, "can't destroy cache")
     f->shared->cache = NULL;
 
@@ -746,8 +747,7 @@ H5AC_expunge_entry(H5F_t *f,
     HDassert(f->shared);
     HDassert(f->shared->cache);
     HDassert(type);
-    HDassert(type->clear);
-    HDassert(type->dest);
+    HDassert(type->serialize);
     HDassert(H5F_addr_defined(addr));
 
 #if H5AC__TRACE_FILE_ENABLED
@@ -771,7 +771,6 @@ H5AC_expunge_entry(H5F_t *f,
 
     result = H5C_expunge_entry(f,
 		               dxpl_id,
-                               H5AC_noblock_dxpl_id,
                                type,
                                addr,
                                flags);
@@ -850,7 +849,7 @@ H5AC_flush(H5F_t *f, hid_t dxpl_id)
 #endif /* H5_HAVE_PARALLEL */
 
     /* Flush the cache */
-    if(H5C_flush_cache(f, dxpl_id, H5AC_noblock_dxpl_id, H5AC__NO_FLAGS_SET) < 0)
+    if(H5C_flush_cache(f, dxpl_id, H5AC__NO_FLAGS_SET) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't flush cache.")
 
 done:
@@ -961,8 +960,7 @@ H5AC_insert_entry(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type, haddr_t add
     HDassert(f->shared);
     HDassert(f->shared->cache);
     HDassert(type);
-    HDassert(type->flush);
-    HDassert(type->size);
+    HDassert(type->serialize);
     HDassert(H5F_addr_defined(addr));
     HDassert(thing);
 
@@ -992,7 +990,7 @@ H5AC_insert_entry(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type, haddr_t add
 #endif /* H5AC__TRACE_FILE_ENABLED */
 
     /* Insert entry into metadata cache */
-    if(H5C_insert_entry(f, dxpl_id, H5AC_noblock_dxpl_id, type, addr, thing, flags) < 0)
+    if(H5C_insert_entry(f, dxpl_id, type, addr, thing, flags) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTINS, FAIL, "H5C_insert_entry() failed")
 
 #if H5AC__TRACE_FILE_ENABLED
@@ -1329,8 +1327,7 @@ H5AC_protect(H5F_t *f,
     HDassert(f->shared);
     HDassert(f->shared->cache);
     HDassert(type);
-    HDassert(type->flush);
-    HDassert(type->load);
+    HDassert(type->serialize);
     HDassert(H5F_addr_defined(addr));
 
     /* Check for invalid access request */
@@ -1378,7 +1375,6 @@ H5AC_protect(H5F_t *f,
 
     thing = H5C_protect(f,
 		        dxpl_id,
-                        H5AC_noblock_dxpl_id,
 			type,
 			addr,
 			udata,
@@ -1640,8 +1636,8 @@ H5AC_unprotect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type, haddr_t addr,
     HDassert(f->shared);
     HDassert(f->shared->cache);
     HDassert(type);
-    HDassert(type->clear);
-    HDassert(type->flush);
+    HDassert(type->deserialize);
+    HDassert(type->image_len);
     HDassert(H5F_addr_defined(addr));
     HDassert(thing);
     HDassert( ((H5AC_info_t *)thing)->addr == addr );
@@ -1674,7 +1670,7 @@ H5AC_unprotect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type, haddr_t addr,
     if(dirtied && !deleted) {
         size_t		curr_size = 0;
 
-        if((type->size)(f, thing, &curr_size) < 0)
+        if((type->image_len)(thing, &curr_size) < 0)
             HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGETSIZE, FAIL, "Can't get size of thing")
 
         if(((H5AC_info_t *)thing)->size != curr_size)
@@ -1696,7 +1692,7 @@ H5AC_unprotect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type, haddr_t addr,
     } /* end if */
 #endif /* H5_HAVE_PARALLEL */
 
-    if(H5C_unprotect(f, dxpl_id, H5AC_noblock_dxpl_id, type, addr, thing, flags) < 0)
+    if(H5C_unprotect(f, dxpl_id, type, addr, thing, flags) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTUNPROTECT, FAIL, "H5C_unprotect() failed.")
 
 #ifdef H5_HAVE_PARALLEL
@@ -4988,7 +4984,7 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
              */
             aux_ptr->write_permitted = TRUE;
 
-            result = H5C_flush_to_min_clean(f, dxpl_id, H5AC_noblock_dxpl_id);
+            result = H5C_flush_to_min_clean(f, dxpl_id);
 
             aux_ptr->write_permitted = FALSE;
 

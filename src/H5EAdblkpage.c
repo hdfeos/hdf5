@@ -169,7 +169,7 @@ HDfprintf(stderr, "%s: Called, addr = %a\n", FUNC, addr);
 
     /* Set info about data block page on disk */
     dblk_page->addr = addr;
-    dblk_page->size = H5EA_DBLK_PAGE_SIZE(dblk_page);
+    dblk_page->size = H5EA_DBLK_PAGE_SIZE(hdr);
 #ifdef QAK
 HDfprintf(stderr, "%s: dblk_page->size = %Zu\n", FUNC, dblk_page->size);
 #endif /* QAK */
@@ -226,6 +226,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     /* Set up user data */
     udata.hdr = hdr;
     udata.parent = parent;
+    udata.dblk_page_addr = dblk_page_addr;
 
     /* Protect the data block page */
     if(NULL == (ret_value = (H5EA_dblk_page_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_EARRAY_DBLK_PAGE, dblk_page_addr, &udata, rw)))

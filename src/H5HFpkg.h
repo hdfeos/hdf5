@@ -424,6 +424,31 @@ typedef struct H5HF_direct_t {
     size_t      size;           /* Size of direct block                       */
     hsize_t     file_size;      /* Size of direct block in file (only valid when block's space is being freed) */
     uint8_t     *blk;           /* Pointer to buffer containing block data    */
+    uint8_t	*write_buf;	/* Pointer to buffer containing the block data */
+                                /* in form ready to copy to the metadata       */
+                                /* cache's image buffer.                       */
+                                /*                                             */
+                                /* This field is used by                       */
+                                /* H5HF_cache_dblock_pre_serialize() to pass   */
+                                /* the serialized image of the direct block to */
+                                /* H5HF_cache_dblock_serialize().  It should   */
+                                /* NULL at all other times.                    */
+                                /*                                             */
+                                /* If I/O filters are enabled, the pre-        */
+                                /* the pre-serialize function will allocate    */
+                                /* a buffer, copy the filtered version of the  */
+                                /* direct block image into it, and place the   */
+                                /* base address of the buffer in this field.   */
+                                /* The serialize function must discard this    */
+                                /* buffer after it copies the contents into    */
+                                /* the image buffer provided by the metadata   */
+                                /* cache.                                      */
+                                /*                                             */
+                                /* If I/O filters are not enabled, the         */
+                                /* write_buf field is simply set equal to the  */
+                                /* blk field by the pre-serialize function,    */
+                                /* and back to NULL by the serialize function. */
+    size_t	write_size;     /* size of the buffer pointed to by write_buf. */
 
     /* Stored values */
     hsize_t     block_off;      /* Offset of the block within the heap's address space */

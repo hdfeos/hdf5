@@ -294,6 +294,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     udata.hdr = hdr;
     udata.parent = parent;
     udata.sblk_idx = sblk_idx;
+    udata.sblk_addr = sblk_addr;
 
     /* Protect the super block */
     if(NULL == (ret_value = (H5EA_sblock_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_EARRAY_SBLOCK, sblk_addr, &udata, rw)))
@@ -412,7 +413,6 @@ H5EA__sblock_dest(H5EA_sblock_t *sblock))
 
     /* Sanity check */
     HDassert(sblock);
-    HDassert(sblock->rc == 0);
 #ifdef QAK
 HDfprintf(stderr, "%s: sblock->hdr->dblk_page_nelmts = %Zu, sblock->ndblks = %Zu, sblock->dblk_nelmts = %Zu\n", FUNC, sblock->hdr->dblk_page_nelmts, sblock->ndblks, sblock->dblk_nelmts);
 #endif /* QAK */

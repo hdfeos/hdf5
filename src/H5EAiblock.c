@@ -436,7 +436,6 @@ H5EA__iblock_dest(H5EA_iblock_t *iblock))
 
     /* Sanity check */
     HDassert(iblock);
-    HDassert(iblock->rc == 0);
 
     /* Check if shared header field has been initialized */
     if(iblock->hdr) {

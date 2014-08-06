@@ -148,7 +148,7 @@ H5FA__hdr_init(H5FA_hdr_t *hdr, void *ctx_udata))
     HDassert(hdr);
 
     /* Set size of header on disk (locally and in statistics) */
-    hdr->stats.hdr_size = hdr->size = H5FA_HEADER_SIZE(hdr);
+    hdr->stats.hdr_size = hdr->size = H5FA_HEADER_SIZE_HDR(hdr);
 
     /* Set number of elements for Fixed Array in statistics */
     hdr->stats.nelmts = hdr->cparam.nelmts;
@@ -390,6 +390,76 @@ H5FA__hdr_modified(H5FA_hdr_t *hdr))
 CATCH
 
 END_FUNC(PKG)   /* end H5FA__hdr_modified() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5FA__hdr_protect
+ *
+ * Purpose:	Convenience wrapper around protecting fixed array header
+ *
+ * Return:	Non-NULL pointer to index block on success/NULL on failure
+ *
+ * Programmer:	Quincey Koziol
+ *		koziol@hdfgroup.org
+ *		Aug 12 2013
+ *
+ *-------------------------------------------------------------------------
+ */
+BEGIN_FUNC(PKG, ERR,
+H5FA_hdr_t *, NULL, NULL,
+H5FA__hdr_protect(H5F_t *f, hid_t dxpl_id, haddr_t fa_addr, void *ctx_udata,
+    H5AC_protect_t rw))
+
+    /* Local variables */
+    H5FA_hdr_cache_ud_t udata;  /* User data for cache callbacks */
+
+    /* Sanity check */
+    HDassert(f);
+    HDassert(H5F_addr_defined(fa_addr));
+
+    /* Set up user data for cache callbacks */
+    udata.f = f;
+    udata.addr = fa_addr;
+    udata.ctx_udata = ctx_udata;
+
+    /* Protect the header */
+    if(NULL == (ret_value = (H5FA_hdr_t *)H5AC_protect(f, dxpl_id, H5AC_FARRAY_HDR, fa_addr, &udata, rw)))
+        H5E_THROW(H5E_CANTPROTECT, "unable to protect fix array header, address = %llu", (unsigned long long)fa_addr)
+
+CATCH
+
+END_FUNC(PKG)   /* end H5FA__hdr_protect() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5FA__hdr_unprotect
+ *
+ * Purpose:	Convenience wrapper around unprotecting fixed array header
+ *
+ * Return:	Non-negative on success/Negative on failure
+ *
+ * Programmer:	Quincey Koziol
+ *		koziol@hdfgroup.org
+ *		Aug 12 2013
+ *
+ *-------------------------------------------------------------------------
+ */
+BEGIN_FUNC(PKG, ERR,
+herr_t, SUCCEED, FAIL,
+H5FA__hdr_unprotect(H5FA_hdr_t *hdr, hid_t dxpl_id, unsigned cache_flags))
+
+    /* Local variables */
+
+    /* Sanity check */
+    HDassert(hdr);
+
+    /* Unprotect the header */
+    if(H5AC_unprotect(hdr->f, dxpl_id, H5AC_FARRAY_HDR, hdr->addr, hdr, cache_flags) < 0)
+        H5E_THROW(H5E_CANTUNPROTECT, "unable to unprotect fixed array hdr, address = %llu", (unsigned long long)hdr->addr)
+
+CATCH
+
+END_FUNC(PKG)   /* end H5EA__hdr_unprotect() */
 
 
 /*-------------------------------------------------------------------------

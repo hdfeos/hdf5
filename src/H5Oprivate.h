@@ -35,6 +35,7 @@
 #include "H5Spublic.h"		/* Dataspace functions			*/
 
 /* Private headers needed by this file */
+#include "H5private.h"          /* Generic Functions                    */
 #include "H5ACprivate.h"        /* Metadata cache                       */
 #include "H5Fprivate.h"		/* File access				*/
 #include "H5SLprivate.h"	/* Skip lists				*/
@@ -337,7 +338,11 @@ typedef struct H5O_link_t {
 typedef struct H5O_efl_entry_t {
     size_t	name_offset;		/*offset of name within heap	     */
     char	*name;			/*malloc'd name			     */
+#if 0 /* original code */ /* JRM */
+    HDoff_t	offset;			/*offset of data within file	     */
+#else /* modified to bypass a possible configure issue */ /* JRM */
     off_t	offset;			/*offset of data within file	     */
+#endif /* JRM */
     hsize_t	size;			/*size allocated within file	     */
 } H5O_efl_entry_t;
 

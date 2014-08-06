@@ -137,7 +137,7 @@ done:
 static herr_t
 H5O_bogus_encode(H5F_t UNUSED *f, hbool_t UNUSED disable_shared, uint8_t *p, const void UNUSED *mesg)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5O_bogus_encode)
+    FUNC_ENTER_NOAPI_NOINIT
 
     /* check args */
     HDassert(f);
@@ -172,7 +172,7 @@ H5O_bogus_encode(H5F_t UNUSED *f, hbool_t UNUSED disable_shared, uint8_t *p, con
 static size_t
 H5O_bogus_size(const H5F_t UNUSED *f, hbool_t UNUSED disable_shared, const void UNUSED *mesg)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5O_bogus_size)
+    FUNC_ENTER_NOAPI_NOINIT
 
     FUNC_LEAVE_NOAPI(4)
 } /* end H5O_bogus_size() */
@@ -199,7 +199,7 @@ H5O_bogus_debug(H5F_t UNUSED *f, hid_t UNUSED dxpl_id, const void *_mesg, FILE *
 {
     const H5O_bogus_t	*mesg = (const H5O_bogus_t *)_mesg;
 
-    FUNC_ENTER_NOAPI_NOINIT_NOFUNC(H5O_bogus_debug)
+    FUNC_ENTER_NOAPI_NOINIT
 
     /* check args */
     HDassert(f);

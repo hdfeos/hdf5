@@ -40,7 +40,7 @@
 #include "H5HFpkg.h"		/* Fractal heaps			*/
 #include "H5MFprivate.h"	/* File memory management		*/
 #include "H5MMprivate.h"	/* Memory management			*/
-#include "H5VMprivate.h"		/* Vectors and arrays 			*/
+#include "H5VMprivate.h"	/* Vectors and arrays 			*/
 #include "H5WBprivate.h"        /* Wrapped Buffers                      */
 
 
@@ -78,6 +78,106 @@
 static herr_t H5HF_dtable_encode(H5F_t *f, uint8_t **pp, const H5HF_dtable_t *dtable);
 static herr_t H5HF_dtable_decode(H5F_t *f, const uint8_t **pp, H5HF_dtable_t *dtable);
 
+#if 1 /* V3 cache callbacks declarations */
+/* Metadata cache (H5AC) callbacks */
+
+/* header callbacks */
+
+static herr_t H5HF_cache_hdr_get_load_size(const void *udata_ptr,
+                                           size_t *image_len_ptr);
+
+static void *H5HF_cache_hdr_deserialize(const void *image_ptr,
+                                        size_t len,
+                                        void *udata_ptr,
+                                        hbool_t *dirty_ptr);
+
+static herr_t H5HF_cache_hdr_image_len(const void *thing,
+                                       size_t *image_len_ptr);
+
+static herr_t H5HF_cache_hdr_pre_serialize(const H5F_t *f,
+                                           hid_t dxpl_id,
+                                           void *thing,
+                                           haddr_t addr,
+                                           size_t len,
+                                           haddr_t *new_addr_ptr,
+                                           size_t *new_len_ptr,
+                                           unsigned *flags_ptr);
+
+static herr_t H5HF_cache_hdr_serialize(const H5F_t *f,
+                                       void *image_ptr,
+                                       size_t len,
+                                       void *thing);
+
+static herr_t H5HF_cache_hdr_free_icr(void *thing);
+
+
+/* iblock callbacks */
+
+static herr_t H5HF_cache_iblock_get_load_size(const void *udata_ptr,
+                                              size_t *image_len_ptr);
+
+static void *H5HF_cache_iblock_deserialize(const void *image_ptr,
+                                           size_t len,
+                                           void *udata_ptr,
+                                           hbool_t *dirty_ptr);
+
+static herr_t H5HF_cache_iblock_image_len(const void *thing,
+                                          size_t *image_len_ptr);
+
+static herr_t H5HF_cache_iblock_pre_serialize(const H5F_t *f,
+                                              hid_t dxpl_id,
+                                              void *thing,
+                                              haddr_t addr,
+                                              size_t len,
+                                              haddr_t *new_addr_ptr,
+                                              size_t *new_len_ptr,
+                                              unsigned *flags_ptr);
+
+static herr_t H5HF_cache_iblock_serialize(const H5F_t *f,
+                                          void *image_ptr,
+                                          size_t len,
+                                          void *thing);
+
+static herr_t H5HF_cache_iblock_notify(H5C_notify_action_t action,
+                                       void *thing);
+
+static herr_t H5HF_cache_iblock_free_icr(void *thing);
+
+
+/* dblock callbacks */
+
+static herr_t H5HF_cache_dblock_get_load_size(const void *udata_ptr,
+                                              size_t *image_len_ptr);
+
+static void *H5HF_cache_dblock_deserialize(const void *image_ptr,
+                                           size_t len,
+                                           void *udata_ptr,
+                                           hbool_t *dirty_ptr);
+
+static herr_t H5HF_cache_dblock_image_len(const void *thing,
+                                          size_t *image_len_ptr);
+
+static herr_t H5HF_cache_dblock_pre_serialize(const H5F_t *f,
+                                              hid_t dxpl_id,
+                                              void *thing,
+                                              haddr_t addr,
+                                              size_t len,
+                                              haddr_t *new_addr_ptr,
+                                              size_t *new_len_ptr,
+                                              unsigned *flags_ptr);
+
+static herr_t H5HF_cache_dblock_serialize(const H5F_t *f,
+                                          void *image_ptr,
+                                          size_t len,
+                                          void *thing);
+
+static herr_t H5HF_cache_dblock_notify(H5C_notify_action_t action,
+                                       void *thing);
+
+static herr_t H5HF_cache_dblock_free_icr(void *thing);
+
+#else /* V2 cache callback declarations */
+
 /* Metadata cache (H5AC) callbacks */
 static H5HF_hdr_t *H5HF_cache_hdr_load(H5F_t *f, hid_t dxpl_id, haddr_t addr, void *udata);
 static herr_t H5HF_cache_hdr_flush(H5F_t *f, hid_t dxpl_id, hbool_t destroy, haddr_t addr, H5HF_hdr_t *hdr, unsigned UNUSED * flags_ptr);
@@ -96,6 +196,8 @@ static herr_t H5HF_cache_dblock_dest(H5F_t *f, H5HF_direct_t *dblock);
 static herr_t H5HF_cache_dblock_clear(H5F_t *f, H5HF_direct_t *dblock, hbool_t destroy);
 static herr_t H5HF_cache_dblock_notify(H5C_notify_action_t action, H5HF_direct_t *dblock);
 static herr_t H5HF_cache_dblock_size(const H5F_t *f, const H5HF_direct_t *dblock, size_t *size_ptr);
+
+#endif /* end V2 cache callback declarations */
 
 
 /*********************************/
@@ -126,6 +228,52 @@ static herr_t H5HF_cache_verify_descendant_iblocks_clean(H5F_t *f,
 /*********************/
 /* Package Variables */
 /*********************/
+
+#if 1 /* V3 cache H5AC_class_t definitions */
+
+const H5AC_class_t H5AC_FHEAP_HDR[1] = {{
+/* id            */ H5AC_FHEAP_HDR_ID,
+/* name          */ "fractal heap header",
+/* mem_type      */ H5FD_MEM_FHEAP_HDR,
+/* flags         */ H5AC__CLASS_SPECULATIVE_LOAD_FLAG,
+/* get_load_size */ (H5AC_get_load_size_func_t)H5HF_cache_hdr_get_load_size,
+/* deserialize   */ (H5AC_deserialize_func_t)H5HF_cache_hdr_deserialize,
+/* image_len     */ (H5AC_image_len_func_t)H5HF_cache_hdr_image_len,
+/* pre_serialize */ (H5AC_pre_serialize_func_t)H5HF_cache_hdr_pre_serialize,
+/* serialize     */ (H5AC_serialize_func_t)H5HF_cache_hdr_serialize,
+/* notify        */ (H5AC_notify_func_t)NULL,
+/* free_icr      */ (H5AC_free_icr_func_t)H5HF_cache_hdr_free_icr,
+}};
+
+const H5AC_class_t H5AC_FHEAP_IBLOCK[1] = {{
+/* id            */ H5AC_FHEAP_IBLOCK_ID,
+/* name          */ "fractal heap indirect block",
+/* mem_type      */ H5FD_MEM_FHEAP_IBLOCK,
+/* flags         */ H5AC__CLASS_NO_FLAGS_SET,
+/* get_load_size */ (H5AC_get_load_size_func_t)H5HF_cache_iblock_get_load_size,
+/* deserialize   */ (H5AC_deserialize_func_t)H5HF_cache_iblock_deserialize,
+/* image_len     */ (H5AC_image_len_func_t)H5HF_cache_iblock_image_len,
+/* pre_serialize */ (H5AC_pre_serialize_func_t)H5HF_cache_iblock_pre_serialize,
+/* serialize     */ (H5AC_serialize_func_t)H5HF_cache_iblock_serialize,
+/* notify        */ (H5AC_notify_func_t)H5HF_cache_iblock_notify,
+/* free_icr      */ (H5AC_free_icr_func_t)H5HF_cache_iblock_free_icr,
+}};
+
+const H5AC_class_t H5AC_FHEAP_DBLOCK[1] = {{
+/* id            */ H5AC_FHEAP_IBLOCK_ID,
+/* name          */ "fractal heap direct block",
+/* mem_type      */ H5FD_MEM_FHEAP_DBLOCK,
+/* flags         */ H5AC__CLASS_NO_FLAGS_SET,
+/* get_load_size */ (H5AC_get_load_size_func_t)H5HF_cache_dblock_get_load_size,
+/* deserialize   */ (H5AC_deserialize_func_t)H5HF_cache_dblock_deserialize,
+/* image_len     */ (H5AC_image_len_func_t)H5HF_cache_dblock_image_len,
+/* pre_serialize */ (H5AC_pre_serialize_func_t)H5HF_cache_dblock_pre_serialize,
+/* serialize     */ (H5AC_serialize_func_t)H5HF_cache_dblock_serialize,
+/* notify        */ (H5AC_notify_func_t)H5HF_cache_dblock_notify,
+/* free_icr      */ (H5AC_free_icr_func_t)H5HF_cache_dblock_free_icr,
+}};
+
+#else /* V2 cache H6AC_class_t definitions */
 
 /* H5HF header inherits cache-like properties from H5AC */
 const H5AC_class_t H5AC_FHEAP_HDR[1] = {{
@@ -159,6 +307,8 @@ const H5AC_class_t H5AC_FHEAP_DBLOCK[1] = {{
     (H5AC_notify_func_t)H5HF_cache_dblock_notify,
     (H5AC_size_func_t)H5HF_cache_dblock_size,
 }};
+
+#endif /* end V2 cache H5AC_class_t definitions */
 
 
 /*****************************/
@@ -273,6 +423,3718 @@ H5HF_dtable_encode(H5F_t *f, uint8_t **pp, const H5HF_dtable_t *dtable)
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5HF_dtable_encode() */
+
+#if 1 /* V3 cache callback definitions */
+
+/**************************************************/
+/* metadata cache callback definitions for header */
+/**************************************************/
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_hdr_get_load_size()
+ *
+ * Purpose: Determine the size of the fractal heap header on disk,
+ *	and set *image_len_ptr to this value.
+ *
+ *	This code is based on the old H5HF_cache_hdr_load() routine
+ *	that was used with the version 2 metadata cache.  Note the 
+ *	use of a dummy header to compute the on disk size of the header.
+ *
+ *	Note also that the value returned by this function presumes that 
+ *	there is no I/O filtering data in the header.  If there is, the 
+ *	size reported will be too small, and H5C_load_entry()
+ *	will have to make two tries to load the fractal heap header.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      This function must be able to determine the size of a disk image for
+ *      a metadata cache entry, given the 'udata' that will be passed to the
+ *      'deserialize' callback.
+ *
+ *      The typedef for the deserialize callback is as follows:
+ *
+ *         typedef herr_t (*H5C_get_load_size_func_t)(void *udata_ptr,
+ *                                                 size_t *image_len_ptr);
+ *
+ *      The parameters of the deserialize callback are as follows:
+ *
+ *      udata_ptr: Pointer to user data provided in the protect call, which
+ *              will also be passed through to the deserialize callback.
+ *
+ *      image_len_ptr: Length in bytes of the in file image to be deserialized.
+ *
+ *              This parameter is used by the cache to determine the size of
+ *              the disk image for the metadata, in order to read the disk
+ *              image from the file.
+ *
+ *      Processing in the get_load_size function should proceed as follows:
+ *
+ *      If successful, the function will place the length of the on disk
+ *      image associated with the in core representation provided in the
+ *      thing parameter in *image_len_ptr, and then return SUCCEED.
+ *
+ *      On failure, the function must return FAIL and push error information
+ *      onto the error stack with the error API routines, without modifying
+ *      the value pointed to by the image_len_ptr.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static herr_t 
+H5HF_cache_hdr_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
+{
+    size_t		size;		/* size of header on disk */
+    H5HF_hdr_cache_ud_t *udata;		/* pointer to user data */
+    H5HF_hdr_t  	dummy_hdr; 	/* dummy header -- to compute size */
+    herr_t      	ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    HDassert(udata_ptr);
+    HDassert(image_len_ptr);
+
+    udata = (H5HF_hdr_cache_ud_t *)udata_ptr;
+
+    /* Set the internal parameters for the heap */
+    dummy_hdr.f = udata->f;
+    dummy_hdr.sizeof_size = H5F_SIZEOF_SIZE(udata->f);
+    dummy_hdr.sizeof_addr = H5F_SIZEOF_ADDR(udata->f);
+
+    /* Compute the 'base' size of the fractal heap header on disk */
+    size = (size_t)H5HF_HEADER_SIZE(&dummy_hdr);
+
+    /* report header disk load image size */
+    *image_len_ptr = size;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_hdr_get_load_size() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_hdr_deserialize
+ *
+ * Purpose: Given a buffer containing an on disk image of a fractal heap
+ *	header block, allocate an instance of H5HF_hdr_t, load the contents
+ *      of the buffer into into the new instance of H5HF_hdr_t, and then
+ *	return a pointer to the new instance.
+ *
+ *	Since H5HF_cache_hdr_get_load_size() reports header on disk size 
+ *	base on the assumption that the header contains no I/O filtering 
+ *	data, it is possible that the provided image will be too small.
+ *
+ *	In this case, we DO NOT flag an error when this is discovered.
+ *	Instead, we make note of the correct image size, and report 
+ *	success.
+ *
+ *	Since H5HF_cache_hdr_image_len() callback is defined, 
+ *	H5C_load_entry() will call H5HF_cache_hdr_image_len() and 
+ *	obtain the correct image length.  
+ *
+ *	Since the H5AC__CLASS_SPECULATIVE_LOAD_FLAG is set, 
+ *	H5C_load_entry() will load an image of the correct size, and 
+ *	then call this function again to deserialize it.  Before doing 
+ *	so, it will also call H5HF_cache_hdr_free_icr() to discard the 
+ *	result of the first deserialize call.
+ *
+ *	Note that the version 2 BTree and free space manager associated 
+ *	with the fractal heap (roots stored in the huge_bt2 and fspace 
+ *	fields respectively) are not loaded at this time.  As best I can
+ *	tell from reviewing the code, they are loaded or created when 
+ *	they are accessed.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      This function must be able to read an on disk image of a metadata
+ *      cache entry, allocate and load the equivalent in core representation,
+ *      and return a pointer to that representation.
+ *
+ *      The typedef for the deserialize callback is as follows:
+ *
+ *         typedef void *(*H5C_deserialize_func_t)(const void * image_ptr,
+ *                                                 size_t len,
+ *                                                 void * udata_ptr,
+ *                                                 boolean * dirty_ptr);
+ *
+ *      The parameters of the deserialize callback are as follows:
+ *
+ *      image_ptr: Pointer to a buffer of length len containing the
+ *              contents of the file starting at addr and continuing
+ *              for len bytes.
+ *
+ *      len:    Length in bytes of the in file image to be deserialized.
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      udata_ptr: Pointer to user data provided in the protect call, which
+ *              must be passed through to the deserialize callback.
+ *
+ *      dirty_ptr:  Pointer to boolean which the deserialize function
+ *              must use to mark the entry dirty if it has to modify
+ *              the entry to clean up file corruption left over from
+ *              an old bug in the HDF5 library.
+ *
+ *      Processing in the deserialize function should proceed as follows:
+ *
+ *      If the image contains valid data, and is of the correct length,
+ *      the deserialize function must allocate space for an in core
+ *      representation of that data, load the contents of the image into
+ *      the space allocated for the in core representation, and return
+ *      a pointer to the in core representation.  Observe that an
+ *      instance of H5C_cache_entry_t must be the first item in this
+ *      representation.  It will have to be initialized appropriately
+ *      after the callback returns.
+ *
+ *      Note that the structure of the in core representation is otherwise
+ *      up to the cache client.  All that is required is that the pointer
+ *      returned be sufficient for the clients purposes when it is returned
+ *      on a protect call.
+ *
+ *      If the deserialize function has to clean up file corruption
+ *      left over from an old bug in the HDF5 library, it must set
+ *      *dirty_ptr to TRUE.  If it doesn't, no action is needed as
+ *      *dirty_ptr will be set to FALSE before the deserialize call.
+ *
+ *      If the operation fails for any reason (i.e. bad data in buffer, bad
+ *      buffer length, malloc failure, etc.) the function must return NULL and
+ *      push error information on the error stack with the error API routines.
+ *
+ *      If the protect call which occasioned the call to the deserialize
+ *      callback had the check length flag set, after the deserialize call
+ *      returns, the cache must call the image_len callback (see below) and
+ *      update its on disk image length accordingly.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	Pointer to in core representation
+ *		Failure:	NULL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *
+H5HF_cache_hdr_deserialize(const void *image_ptr,
+                           size_t len,
+                           void *udata_ptr,
+                           hbool_t *dirty_ptr)
+{
+    H5HF_hdr_t          *hdr = NULL;     /* Fractal heap info */
+    H5HF_hdr_cache_ud_t *udata;
+    const uint8_t       *p;             /* Pointer into into supplied image */
+    size_t              size;           /* Header size */
+    uint32_t            stored_chksum;  /* Stored metadata checksum value */
+    uint32_t            computed_chksum; /* Computed metadata checksum value */
+    uint8_t             heap_flags;     /* Status flags for heap */
+    void *              ret_value;      /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    HDassert(image_ptr);
+    HDassert(len > 0 );
+    HDassert(udata_ptr);
+    HDassert(dirty_ptr);
+
+    udata = (H5HF_hdr_cache_ud_t *)udata_ptr;
+
+    /* Allocate space for the fractal heap data structure */
+    if(NULL == (hdr = H5HF_hdr_alloc(udata->f)))
+        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
+
+    /* Compute the 'base' size of the fractal heap header on disk */
+    size = (size_t)H5HF_HEADER_SIZE(hdr);
+
+    /* the size we have just calculated presumes that there is no I/O 
+     * filter information in the header.  If there is no filter information,
+     * the deserialize operation should succeed.
+     *
+     * If there is filter information, the first attempt to deserialize 
+     * the header will reveal this.  In this case, we will be unable to 
+     * deserialize the header as the supplied image will be too small.
+     * However, we will make note of the correct size and report success 
+     * anyway.  
+     *
+     * When H5C_load_entry() calls H5HF_cache_hdr_image_len(), we will report 
+     * the correct size.  Since the H5C__CLASS_SPECULATIVE_LOAD_FLAG is set,
+     * this will prompt H5C_load_entry() to load the correct size image,
+     * discard the result of the first attempt at deserialization, and 
+     * call this routine a second time to deserialize the correct size 
+     * buffer.
+     */
+    HDassert(size <= len);
+
+    /* Get temporary pointer to serialized header */
+    p = (uint8_t *)image_ptr;
+
+    /* Magic number */
+    if(HDmemcmp(p, H5HF_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTLOAD, NULL, \
+                    "wrong fractal heap header signature")
+    p += H5_SIZEOF_MAGIC;
+
+    /* Version */
+    if(*p++ != H5HF_HDR_VERSION)
+        HGOTO_ERROR(H5E_HEAP, H5E_VERSION, NULL, \
+                    "wrong fractal heap header version")
+
+    /* General heap information */
+    UINT16DECODE(p, hdr->id_len);              /* Heap ID length */
+    UINT16DECODE(p, hdr->filter_len);          /* I/O filters' encoded length */
+
+    /* Heap status flags */
+    /* (bit 0: "huge" object IDs have wrapped) */
+    /* (bit 1: checksum direct blocks) */
+    heap_flags = *p++;
+    hdr->huge_ids_wrapped = heap_flags & H5HF_HDR_FLAGS_HUGE_ID_WRAPPED;
+    hdr->checksum_dblocks = heap_flags & H5HF_HDR_FLAGS_CHECKSUM_DBLOCKS;
+
+    /* "Huge" object information */
+    UINT32DECODE(p, hdr->max_man_size);     /* Max. size of "managed" objects */
+    H5F_DECODE_LENGTH(udata->f, p, hdr->huge_next_id); /* Next ID to use for  */
+                                                       /* "huge" object */
+    H5F_addr_decode(udata->f, &p, &hdr->huge_bt2_addr); /* Address of "huge"  */
+                                                     /* object tracker B-tree */
+
+    /* "Managed" object free space information */
+    H5F_DECODE_LENGTH(udata->f, p, hdr->total_man_free); /* Internal free */
+                                            /* space in managed direct blocks */
+    H5F_addr_decode(udata->f, &p, &hdr->fs_addr);  /* Address of free section */
+                                                   /* header */
+
+    /* Heap statistics */
+    H5F_DECODE_LENGTH(udata->f, p, hdr->man_size);
+    H5F_DECODE_LENGTH(udata->f, p, hdr->man_alloc_size);
+    H5F_DECODE_LENGTH(udata->f, p, hdr->man_iter_off);
+    H5F_DECODE_LENGTH(udata->f, p, hdr->man_nobjs);
+    H5F_DECODE_LENGTH(udata->f, p, hdr->huge_size);
+    H5F_DECODE_LENGTH(udata->f, p, hdr->huge_nobjs);
+    H5F_DECODE_LENGTH(udata->f, p, hdr->tiny_size);
+    H5F_DECODE_LENGTH(udata->f, p, hdr->tiny_nobjs);
+
+    /* Managed objects' doubling-table info */
+    if(H5HF_dtable_decode(hdr->f, &p, &(hdr->man_dtable)) < 0)
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTENCODE, NULL, \
+                    "unable to encode managed obj. doubling table info")
+
+    /* Sanity check */
+    /* (allow for checksum not decoded yet) */
+    HDassert((size_t)(p - (const uint8_t *)image_ptr) == \
+                     (size - H5HF_SIZEOF_CHKSUM));
+
+    /* Check for I/O filter information to decode */
+    if(hdr->filter_len > 0) {
+        size_t filter_info_size;    /* Size of filter information */
+        H5O_pline_t *pline;         /* Pipeline information from the header */
+                                    /* on disk */
+
+        /* Compute the size of the extra filter information */
+        filter_info_size = (size_t)(hdr->sizeof_size     /* Size of size for */
+                                                /* filtered root direct block */
+            + (unsigned)4		/* Size of filter mask for filtered */
+					/* root direct block */
+            + hdr->filter_len);         /* Size of encoded I/O filter info */
+
+        /* Compute the heap header's size */
+        hdr->heap_size = size + filter_info_size;
+
+        if ( size == len ) 
+	    /* we were supplied with too small a buffer -- goto done
+             * and let H5C_load_entry() retry with a larger buffer
+             */
+	    HGOTO_DONE((void *)hdr)
+
+	else if ( (size + filter_info_size) != len )
+
+            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, NULL, "bad image len")
+
+        /* Decode the size of a filtered root direct block */
+        H5F_DECODE_LENGTH(udata->f, p, hdr->pline_root_direct_size);
+
+        /* Decode the filter mask for a filtered root direct block */
+        UINT32DECODE(p, hdr->pline_root_direct_filter_mask);
+
+        /* Decode I/O filter information */
+        if(NULL == (pline = (H5O_pline_t *)H5O_msg_decode(hdr->f, 
+                                      udata->dxpl_id, NULL, H5O_PLINE_ID, p)))
+            HGOTO_ERROR(H5E_HEAP, H5E_CANTDECODE, NULL, \
+                        "can't decode I/O pipeline filters")
+
+        p += hdr->filter_len;
+
+        /* Copy the information into the header's I/O pipeline structure */
+        if(NULL == H5O_msg_copy(H5O_PLINE_ID, pline, &(hdr->pline)))
+            HGOTO_ERROR(H5E_HEAP, H5E_CANTCOPY, NULL, \
+                        "can't copy I/O filter pipeline")
+
+        /* Release the space allocated for the I/O pipeline filters */
+        H5O_msg_free(H5O_PLINE_ID, pline);
+    } /* end if */
+    else
+        /* Set the heap header's size */
+        hdr->heap_size = size;
+
+    /* Compute checksum on entire header */
+    /* (including the filter information, if present) */
+    computed_chksum = H5_checksum_metadata(image_ptr, 
+				(size_t)(p - (const uint8_t *)image_ptr), 0);
+
+    /* Metadata checksum */
+    UINT32DECODE(p, stored_chksum);
+
+    /* Sanity check */
+    HDassert((size_t)(p - (const uint8_t *)image_ptr) == hdr->heap_size);
+
+    /* Verify checksum */
+    if(stored_chksum != computed_chksum)
+        HGOTO_ERROR(H5E_HEAP, H5E_BADVALUE, NULL, \
+                    "incorrect metadata checksum for fractal heap header")
+
+    /* Finish initialization of heap header */
+    if(H5HF_hdr_finish_init(hdr) < 0)
+        HGOTO_ERROR(H5E_RESOURCE, H5E_CANTINIT, NULL, 
+                    "can't finish initializing shared fractal heap header")
+
+    /* Set return value */
+    ret_value = (void *)hdr;
+
+
+done:
+
+    if(!ret_value && hdr)
+        if(H5HF_hdr_free(hdr) < 0)
+            HDONE_ERROR(H5E_HEAP, H5E_CANTRELEASE, NULL, \
+                        "unable to release fractal heap header")
+
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_hdr_deserialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_hdr_image_len
+ *
+ * Purpose: Return the actual size of the fractal heap header on 
+ *	disk image.  
+ *
+ *	If the header contains filter information, this size will be 
+ *	larger than the value returned by H5HF_cache_hdr_get_load_size().  
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      In the best of all possible worlds, we would not have this callback.
+ *      It exists to allow clients to reduce the size of the on disk image of
+ *      an entry in the deserialize callback.
+ *
+ *      The typedef for the image_len callback is as follows:
+ *
+ *      typedef herr_t (*H5C_image_len_func_t)(void *thing,
+ *                                             size_t *image_len_ptr);
+ *
+ *      The parameters of the image_len callback are as follows:
+ *
+ *      thing:  Pointer to the in core representation of the entry.
+ *
+ *      image_len_ptr: Pointer to size_t in which the callback will return
+ *              the length of the on disk image of the cache entry.
+ *
+ *      Processing in the image_len function should proceed as follows:
+ *
+ *      If successful, the function will place the length of the on disk
+ *      image associated with the in core representation provided in the
+ *      thing parameter in *image_len_ptr, and then return SUCCEED.
+ *
+ *      On failure, the function must return FAIL and push error information
+ *      onto the error stack with the error API routines, without modifying
+ *      the value pointed to by the image_len_ptr.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_hdr_image_len(const void *thing, size_t *image_len_ptr)
+{
+    H5HF_hdr_t  *hdr = NULL;     	/* Fractal heap info */
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+    HDassert(image_len_ptr);
+
+    hdr = (H5HF_hdr_t *)thing;
+
+    HDassert(hdr);
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
+              &(H5AC_FHEAP_HDR[0]));
+
+    *image_len_ptr = hdr->heap_size;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_hdr_image_len() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_hdr_pre_serialize
+ *
+ * Purpose: As best I can tell, fractal heap header blocks are always 
+ *	allocated in real file space.  Thus this routine simply verifies
+ *	this, verifies that the len parameter contains the expected
+ *	value, and returns an error if either of these checks fail.
+ *
+ *	When compiled in debug mode, the function also verifies that all
+ *	indirect and direct blocks that are children of the header are 
+ *	either clean, or not in the metadata cache.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The pre-serialize callback is invoked by the metadata cache before
+ *      it needs a current on-disk image of the metadata entry for purposes
+ *      either constructing a journal or flushing the entry to disk.
+ *
+ *      If the client needs to change the address or length of the entry on
+ *      disk, or re-allocate the image pointer, the pre-serialize callback
+ *      is responsible for those actions, so that the actual serialize
+ *      callback (described below) is only responsible for serializing the
+ *      data structure, not moving it on disk or resizing it.
+ *
+ *      One would think that the base address and length of
+ *      the length of the entry's image on disk would be well known.
+ *      However, that need not be the case as fractal heap blocks can
+ *      change size (and therefor possible location as well) on
+ *      serialization if compression is enabled.  In the old H5C code,
+ *      this happened on a flush, and occasioned a move in the midst
+ *      of the flush.  To avoid this in H5C, the pre-serialize callback
+ *      will return the new base address, length, and image pointer to
+ *      the caller when necessary.  The caller must then update the
+ *      metadata cache's internal structures accordingly.
+ *
+ *      The typedef for the pre-serialize callback is as follows:
+ *
+ *      typedef herr_t (*H5C_pre_serialize_func_t)(const H5F_t *f,
+ *                                             hid_t dxpl_id,
+ *                                             void * thing,
+ *                                             haddr_t addr,
+ *                                             size_t len,
+ *                                             unsigned * flags_ptr,
+ *                                             haddr_t * new_addr_ptr,
+ *                                             size_t * new_len_ptr);
+ *
+ *      The parameters of the pre-serialize callback are as follows:
+ *
+ *      f:      File pointer -- needed if other metadata cache entries
+ *              must be modified in the process of serializing the
+ *              target entry.
+ *
+ *      dxpl_id: dxpl_id passed with the file pointer to the cache, and
+ *              passed on to the callback.  Necessary as some callbacks
+ *              revise the size and location of the target entry, or
+ *              possibly other entries on serialize.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.
+ *              This is the same pointer returned by a protect of the
+ *              addr and len given above.
+ *
+ *      addr:   Base address in file of the entry to be serialized.
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      len:    Length in bytes of the in file image of the entry to be
+ *              serialized.  Also the size of *image_ptr (below).
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      flags_ptr:  Pointer to an unsigned integer used to return flags
+ *              indicating whether the resize function resized or moved
+ *              the entry.  If the entry was neither resized or moved,
+ *              the serialize function must set *flags_ptr to zero.
+ *              H5C__SERIALIZE_RESIZED_FLAG and H5C__SERIALIZE_MOVED_FLAG
+ *              must be set to indicate a resize and a move respectively.
+ *
+ *              If the H5C__SERIALIZE_RESIZED_FLAG is set, the new length
+ *              and image pointer must be stored in *new_len_ptr and
+ *              *new_image_ptr_ptr respectively.
+ *
+ *              If the H5C__SERIALIZE_MOVED_FLAG flag is also set, the
+ *              new image base address must be stored in *new_addr_ptr.
+ *              Observe that the H5C__SERIALIZE_MOVED_FLAG must not
+ *              appear without the H5C__SERIALIZE_RESIZED_FLAG.
+ *
+ *              Except as noted above, the locations pointed to by the
+ *              remaining parameters are undefined, and should be ignored
+ *              by the caller.
+ *
+ *      new_addr_ptr:  Pointer to haddr_t.  If the entry is moved by
+ *              the serialize function, the new on disk base address must
+ *              be stored in *new_addr_ptr.  If the entry is not moved
+ *              by the serialize function, *new_addr_ptr is undefined.
+ *
+ *      new_len_ptr:  Pointer to size_t.  If the entry is resized by the
+ *              serialize function, the new length of the on disk image
+ *              must be stored in *new_len_ptr.  If the entry is not
+ *              resized by the serialize function, *new_len_ptr is
+ *              undefined.
+ *
+ *      Processing in the pre-serialize function should proceed as follows:
+ *
+ *      The pre-serialize function must examine the in core representation
+ *      indicated by the thing parameter, if the pre-serialize function does
+ *      not need to change the size or location of the on-disk image, it must
+ *      set *flags_ptr to zero.
+ *
+ *      If the size of the on-disk image must be changed, the pre-serialize
+ *      function must load the length of the new image into *new_len_ptr,
+ *      and set the H5C__SERIALIZE_RESIZED_FLAG in *flags_ptr.
+ *
+ *      If the base address of the on disk image must be changed, the
+ *      pre-serialize function must set *new_addr_ptr to the new base address,
+ *      and set the H5C__SERIALIZE_MOVED_FLAG in *flags_ptr.
+ *
+ *      If it is successful, the function must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_hdr_pre_serialize(const H5F_t *f,
+                             hid_t dxpl_id,
+                             void *thing,
+                             haddr_t addr,
+                             size_t len,
+                             haddr_t *new_addr_ptr,
+                             size_t *new_len_ptr,
+                             unsigned *flags_ptr)
+{
+    H5HF_hdr_t *hdr;
+#ifndef NDEBUG
+    hbool_t descendants_clean = TRUE;
+#endif /* NDEBUG */
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(f);
+    HDassert(thing);
+    HDassert(H5F_addr_defined(addr));
+    HDassert(new_addr_ptr);
+    HDassert(new_len_ptr);
+    HDassert(flags_ptr);
+
+    hdr = (H5HF_hdr_t *)thing;
+
+    HDassert(hdr);
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
+              &(H5AC_FHEAP_HDR[0]));
+    HDassert(addr == hdr->heap_addr);
+
+#ifndef NDEBUG
+    /* verify that flush dependencies are working correctly.  Do this
+     * by verifying that either:
+     *
+     * 1) the header has a root iblock, and that the root iblock and all
+     *    of its children are clean, or
+     *
+     * 2) The header has a root dblock, which is clean, or
+     *
+     * 3) The heap is empty, and thus the header has neither a root
+     *    iblock no a root dblock.  In this case, the flush ordering
+     *    constraint is met by default.
+     *
+     * Do this with a call to H5HF_cache_verify_hdr_descendants_clean().
+     */
+    hbool_t descendants_clean = TRUE;
+
+    if ( H5HF_cache_verify_hdr_descendants_clean((H5F_t *)f, dxpl_id, hdr,
+                                                 &descendants_clean) < 0 )
+
+         HGOTO_ERROR(H5E_HEAP, H5E_SYSTEM, FAIL, \
+                     "can't verify hdr descendants clean.")
+
+    HDassert( descendants_clean );
+
+#endif /* NDEBUG */
+
+    if ( H5F_IS_TMP_ADDR(f, addr) )
+        HGOTO_ERROR(H5E_HEAP, H5E_BADVALUE, FAIL, "addr in temporary space?!?.");
+
+    if ( len != hdr->heap_size )
+        HGOTO_ERROR(H5E_HEAP, H5E_BADVALUE, FAIL, "unexpected image len.");
+
+    *flags_ptr = 0;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_hdr_pre_serialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_hdr_serialize
+ *
+ * Purpose: Construct the on disk image of the header, and place it in 
+ *	the buffer pointed to by image_ptr.  Return SUCCEED on success,
+ *	and FAIL on failure.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The serialize callback is invoked by the metadata cache whenever
+ *      it needs a current on disk image of the metadata entry for purposes
+ *      either constructing a journal or flushing the entry to disk.
+ *
+ *      At this point, the base address and length of the entry's image on
+ *      disk must be well known and not change during the serialization
+ *      process.
+ *
+ *      The typedef for the serialize callback is as follows:
+ *
+ *      typedef herr_t (*H5C_serialize_func_t)(const H5F_t *f,
+ *                                             void * image_ptr,
+ *                                             size_t len,
+ *                                             void * thing);
+ *
+ *      The parameters of the serialize callback are as follows:
+ *
+ *      f:      File pointer -- needed if other metadata cache entries
+ *              must be modified in the process of serializing the
+ *              target entry.
+ *
+ *      image_ptr: Pointer to a buffer of length len bytes into which a
+ *              serialized image of the target metadata cache entry is
+ *              to be written.
+ *
+ *              Note that this buffer will not in general be initialized
+ *              to any particular value.  Thus the serialize function may
+ *              not assume any initial value and must set each byte in
+ *              the buffer.
+ *
+ *      len:    Length in bytes of the in file image of the entry to be
+ *              serialized.  Also the size of *image_ptr (below).
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.
+ *              This is the same pointer returned by a protect of the
+ *              addr and len given above.
+ *
+ *      Processing in the serialize function should proceed as follows:
+ *
+ *      The serialize function must examine the in core representation
+ *      indicated by the thing parameter, and write a serialized image
+ *      of its contents into the provided buffer.
+ *
+ *      If it is successful, the function must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_hdr_serialize(const H5F_t *f,
+                         void *image_ptr,
+                         size_t len,
+                         void *thing)
+{
+    H5HF_hdr_t *hdr;
+    uint8_t    *p;             /* Pointer into raw data buffer */
+    size_t  	size;           /* Header size on disk */
+    uint8_t 	heap_flags;     /* Status flags for heap */
+    uint32_t 	metadata_chksum; /* Computed metadata checksum value */
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(f);
+    HDassert(image_ptr);
+    HDassert(thing);
+
+    hdr = (H5HF_hdr_t *)thing;
+
+    HDassert(hdr);
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
+              &(H5AC_FHEAP_HDR[0]));
+    HDassert(len == hdr->heap_size);
+
+    /* Get temporary pointer to serialized header */
+    p = (uint8_t *)image_ptr;
+
+    /* Magic number */
+    HDmemcpy(p, H5HF_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    p += H5_SIZEOF_MAGIC;
+
+    /* Version # */
+    *p++ = H5HF_HDR_VERSION;
+
+    /* General heap information */
+    UINT16ENCODE(p, hdr->id_len);           /* Heap ID length */
+    UINT16ENCODE(p, hdr->filter_len);       /* I/O filters' encoded length */
+
+    /* Heap status flags */
+    /* (bit 0: "huge" object IDs have wrapped) */
+    /* (bit 1: checksum direct blocks) */
+    heap_flags = 0;
+    heap_flags |= (hdr->huge_ids_wrapped ? H5HF_HDR_FLAGS_HUGE_ID_WRAPPED : 0);
+    heap_flags |= (hdr->checksum_dblocks ? H5HF_HDR_FLAGS_CHECKSUM_DBLOCKS : 0);
+    *p++ = heap_flags;
+
+    /* "Huge" object information */
+    UINT32ENCODE(p, hdr->max_man_size);   /* Max. size of "managed" objects */
+    H5F_ENCODE_LENGTH(f, p, hdr->huge_next_id); 
+				/* Next ID to use for "huge" object */
+    H5F_addr_encode(f, &p, hdr->huge_bt2_addr);     
+				/* Address of "huge" object tracker B-tree */
+
+    /* "Managed" object free space information */
+    H5F_ENCODE_LENGTH(f, p, hdr->total_man_free); /* Internal free space in */
+					          /* managed direct blocks */
+    H5F_addr_encode(f, &p, hdr->fs_addr); /* Address of free section header */
+
+    /* Heap statistics */
+    H5F_ENCODE_LENGTH(f, p, hdr->man_size);
+    H5F_ENCODE_LENGTH(f, p, hdr->man_alloc_size);
+    H5F_ENCODE_LENGTH(f, p, hdr->man_iter_off);
+    H5F_ENCODE_LENGTH(f, p, hdr->man_nobjs);
+    H5F_ENCODE_LENGTH(f, p, hdr->huge_size);
+    H5F_ENCODE_LENGTH(f, p, hdr->huge_nobjs);
+    H5F_ENCODE_LENGTH(f, p, hdr->tiny_size);
+    H5F_ENCODE_LENGTH(f, p, hdr->tiny_nobjs);
+
+
+    /* Managed objects' doubling-table info */
+    if(H5HF_dtable_encode(hdr->f, &p, &(hdr->man_dtable)) < 0)
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTENCODE, FAIL, \
+		    "unable to encode managed obj. doubling table info")
+
+    /* Check for I/O filter information to encode */
+    if(hdr->filter_len > 0) {
+        /* Encode the size of a filtered root direct block */
+        H5F_ENCODE_LENGTH(f, p, hdr->pline_root_direct_size);
+
+        /* Encode the filter mask for a filtered root direct block */
+        UINT32ENCODE(p, hdr->pline_root_direct_filter_mask);
+
+        /* Encode I/O filter information */
+        if(H5O_msg_encode(hdr->f, H5O_PLINE_ID, FALSE, p, &(hdr->pline)) < 0)
+            HGOTO_ERROR(H5E_HEAP, H5E_CANTENCODE, FAIL, \
+			"can't encode I/O pipeline fiters")
+        p += hdr->filter_len;
+    } /* end if */
+
+    /* Compute metadata checksum */
+    metadata_chksum = H5_checksum_metadata(image_ptr, 
+					(size_t)(p - (uint8_t *)image_ptr), 0);
+
+    /* Metadata checksum */
+    UINT32ENCODE(p, metadata_chksum);
+
+    /* sanity check */
+    HDassert((size_t)(p - (uint8_t *)image_ptr) == len);
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_hdr_serialize() */
+
+/***************************************/
+/* no H5HF_cache_hdr_notify() function */
+/***************************************/
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_hdr_free_icr
+ *
+ * Purpose: Free the in core representation of the fractal heap header.
+ *
+ *	Note that this routine frees just the header itself, not the 
+ *	associated version 2 B-Tree, the associated Free Space Manager,
+ *	nor the indirect/direct block tree that is rooted in the header.
+ *
+ *	Note also that the routine does not free the file space that may
+ *	be allocated to the header.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The free ICR callback is invoked by the metadata cache when it
+ *      wishes to evict an entry, and needs the client to free the memory
+ *      allocated for the in core representation.
+ *
+ *      The typedef for the free ICR callback is as follows:
+ *
+ *      typedef herr_t (*H5C_free_icr_func_t)(void * thing);
+ *
+ *      The parameters of the free ICR callback are as follows:
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.  This
+ *              is the same pointer that would be returned by a protect
+ *              of the addr and len above.
+ *
+ *      Processing in the free ICR function should proceed as follows:
+ *
+ *      The free ICR function must free all memory allocated to the
+ *      in core representation.
+ *
+ *      If the function is successful, it must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *      At least when compiled with debug, it would be useful if the
+ *      free ICR call would fail if the in core representation has been
+ *      modified since the last serialize of clear callback.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_hdr_free_icr(void *thing)
+{
+    H5HF_hdr_t *hdr;
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+
+    hdr = (H5HF_hdr_t *)thing;
+
+    HDassert(hdr);
+
+    /* the metadata cache sets cache_info.magic to 
+     * H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling the 
+     * free_icr routine.  Hence the following assert:
+     */
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
+              &(H5AC_FHEAP_HDR[0]));
+    HDassert(hdr->rc == 0);
+
+    if ( H5HF_hdr_free(hdr) < 0 )
+	 HGOTO_ERROR(H5E_HEAP, H5E_CANTRELEASE, FAIL, \
+		     "unable to release fractal heap header")
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_hdr_free_icr() */
+
+
+/***********************************************************/
+/* metadata cache callback definitions for indirect blocks */
+/***********************************************************/
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_iblock_get_load_size()
+ *
+ * Purpose: Compute the size of the on disk image of the indirect 
+ *	block, and place this value in *image_len_ptr.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      This function must be able to determing the size of a disk image for
+ *      a metadata cache entry, given the 'udata' that will be passed to the
+ *      'deserialize' callback.
+ *
+ *      The typedef for the deserialize callback is as follows:
+ *
+ *         typedef herr_t (*H5C_get_load_size_func_t)(void *udata_ptr,
+ *                                                 size_t *image_len_ptr);
+ *
+ *      The parameters of the deserialize callback are as follows:
+ *
+ *      udata_ptr: Pointer to user data provided in the protect call, which
+ *              will also be passed through to the deserialize callback.
+ *
+ *      image_len_ptr: Length in bytes of the in file image to be deserialized.
+ *
+ *              This parameter is used by the cache to determine the size of
+ *              the disk image for the metadata, in order to read the disk
+ *              image from the file.
+ *
+ *      Processing in the get_load_size function should proceed as follows:
+ *
+ *      If successful, the function will place the length of the on disk
+ *      image associated with the in core representation provided in the
+ *      thing parameter in *image_len_ptr, and then return SUCCEED.
+ *
+ *      On failure, the function must return FAIL and push error information
+ *      onto the error stack with the error API routines, without modifying
+ *      the value pointed to by the image_len_ptr.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ *		At present, this function should always succeed.
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static herr_t 
+H5HF_cache_iblock_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
+{
+    H5HF_iblock_cache_ud_t     *udata;
+    H5HF_hdr_t                 *hdr;     /* Shared fractal heap information */
+    size_t			size;
+    herr_t      		ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    HDassert(udata_ptr);
+    HDassert(image_len_ptr);
+
+    udata = (H5HF_iblock_cache_ud_t *)udata_ptr;
+
+    hdr = udata->par_info->hdr;
+   
+    /* the version 2 metadata cache version of this calculation sets 
+     * hdr->f equal to udata->f.  However, the following calculation
+     * of the size of the iblock doesn't seem to use this value, so 
+     * I have omitted the assignment in this function.
+     *
+     *						JRM -- 6/29/14
+     */
+
+    size = H5HF_MAN_INDIRECT_SIZE(hdr, *udata->nrows);
+
+    *image_len_ptr = size;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_iblock_get_load_size() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_iblock_deserialize
+ *
+ * Purpose: Given a buffer containing the on disk image of the indirect 
+ *	block, allocate an instance of H5HF_indirect_t, load the data 
+ *	in the buffer into this new instance, and return a pointer to 
+ *	it.
+ *
+ *	As best I can tell, the size of the indirect block image is fully
+ *	know before the image is loaded, so this function should succeed
+ *	unless the image is corrupt or memory allocation fails.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      This function must be able to read an on disk image of a metadata
+ *      cache entry, allocate and load the equivalent in core representation,
+ *      and return a pointer to that representation.
+ *
+ *      The typedef for the deserialize callback is as follows:
+ *
+ *         typedef void *(*H5C_deserialize_func_t)(const void * image_ptr,
+ *                                                 size_t len,
+ *                                                 void * udata_ptr,
+ *                                                 boolean * dirty_ptr);
+ *
+ *      The parameters of the deserialize callback are as follows:
+ *
+ *      image_ptr: Pointer to a buffer of length len containing the
+ *              contents of the file starting at addr and continuing
+ *              for len bytes.
+ *
+ *      len:    Length in bytes of the in file image to be deserialized.
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      udata_ptr: Pointer to user data provided in the protect call, which
+ *              must be passed through to the deserialize callback.
+ *
+ *      dirty_ptr:  Pointer to boolean which the deserialize function
+ *              must use to mark the entry dirty if it has to modify
+ *              the entry to clean up file corruption left over from
+ *              an old bug in the HDF5 library.
+ *
+ *      Processing in the deserialize function should proceed as follows:
+ *
+ *      If the image contains valid data, and is of the correct length,
+ *      the deserialize function must allocate space for an in core
+ *      representation of that data, load the contents of the image into
+ *      the space allocated for the in core representation, and return
+ *      a pointer to the in core representation.  Observe that an
+ *      instance of H5C_cache_entry_t must be the first item in this
+ *      representation.  It will have to be initialized appropriately
+ *      after the callback returns.
+ *
+ *      Note that the structure of the in core representation is otherwise
+ *      up to the cache client.  All that is required is that the pointer
+ *      returned be sufficient for the clients purposes when it is returned
+ *      on a protect call.
+ *
+ *      If the deserialize function has to clean up file corruption
+ *      left over from an old bug in the HDF5 library, it must set
+ *      *dirty_ptr to TRUE.  If it doesn't, no action is needed as
+ *      *dirty_ptr will be set to FALSE before the deserialize call.
+ *
+ *      If the operation fails for any reason (i.e. bad data in buffer, bad
+ *      buffer length, malloc failure, etc.) the function must return NULL and
+ *      push error information on the error stack with the error API routines.
+ *
+ *      If the protect call which occasioned the call to the deserialize
+ *      callback had the check length flag set, after the deserialize call
+ *      returns, the cache must call the image_len callback (see below) and
+ *      update its on disk image length accordingly.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	Pointer to in core representation
+ *		Failure:	NULL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *
+H5HF_cache_iblock_deserialize(const void *image_ptr,
+                              size_t len,
+                              void *udata_ptr,
+                              hbool_t *dirty_ptr)
+{
+    H5HF_hdr_t          *hdr;           /* Shared fractal heap information */
+    H5HF_iblock_cache_ud_t *udata;      /* user data for callback */
+    H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
+    const uint8_t       *p;             /* Pointer into raw data buffer */
+    haddr_t             heap_addr;      /* Address of heap header in the file */
+    uint32_t            stored_chksum;  /* Stored metadata checksum value */
+    uint32_t            computed_chksum; /* Computed metadata checksum value */
+    unsigned            u;              /* Local index variable */
+    void *              ret_value;      /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    HDassert(image_ptr);
+    HDassert(udata_ptr);
+    HDassert(dirty_ptr);
+
+    udata = (H5HF_iblock_cache_ud_t *)udata_ptr;
+
+    hdr = udata->par_info->hdr;
+
+    HDassert(hdr->f);
+
+    /* Set the shared heap header's file context for this operation */
+    hdr->f = udata->f;	/* Is this necessary for the V3 cache? */
+
+    /* Allocate space for the fractal heap indirect block */
+    if(NULL == (iblock = H5FL_CALLOC(H5HF_indirect_t)))
+        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
+
+    /* Share common heap information */
+    iblock->hdr = hdr;
+    if(H5HF_hdr_incr(hdr) < 0)
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTINC, NULL, \
+		    "can't increment reference count on shared heap header")
+
+    /* Set block's internal information */
+    iblock->rc = 0;
+    iblock->nrows = *udata->nrows;
+    iblock->nchildren = 0;
+
+    /* Compute size of indirect block */
+    iblock->size = H5HF_MAN_INDIRECT_SIZE(hdr, iblock->nrows);
+
+    /* sanity check */
+    HDassert(iblock->size == len);
+
+    /* Get temporary pointer to serialized indirect block */
+    p = (uint8_t *)image_ptr;
+
+    /* Magic number */
+    if(HDmemcmp(p, H5HF_IBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTLOAD, NULL, \
+		    "wrong fractal heap indirect block signature")
+    p += H5_SIZEOF_MAGIC;
+
+    /* Version */
+    if(*p++ != H5HF_IBLOCK_VERSION)
+        HGOTO_ERROR(H5E_HEAP, H5E_VERSION, NULL, \
+                    "wrong fractal heap direct block version")
+
+    /* Address of heap that owns this block */
+    H5F_addr_decode(udata->f, &p, &heap_addr);
+    if(H5F_addr_ne(heap_addr, hdr->heap_addr))
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTLOAD, NULL, \
+		    "incorrect heap header address for direct block")
+
+    /* Address of parent block */
+    iblock->parent = udata->par_info->iblock;
+    /* this copy of the parent pointer is needed by the notify callback so */
+    /* that it can take down flush dependencies on eviction even if        */
+    /* the parent pointer has been nulled out.             JRM -- 5/18/14  */
+    iblock->fd_parent = udata->par_info->iblock;
+    iblock->par_entry = udata->par_info->entry;
+    if(iblock->parent) {
+        /* Share parent block */
+        if(H5HF_iblock_incr(iblock->parent) < 0)
+            HGOTO_ERROR(H5E_HEAP, H5E_CANTINC, NULL, \
+		     "can't increment reference count on shared indirect block")
+
+        /* Set max. # of rows in this block */
+        iblock->max_rows = iblock->nrows;
+    } /* end if */
+    else {
+        /* Set max. # of rows in this block */
+        iblock->max_rows = hdr->man_dtable.max_root_rows;
+    } /* end else */
+
+    /* Offset of heap within the heap's address space */
+    UINT64DECODE_VAR(p, iblock->block_off, hdr->heap_off_size);
+
+    /* Allocate & decode child block entry tables */
+    HDassert(iblock->nrows > 0);
+
+    if(NULL == (iblock->ents = H5FL_SEQ_MALLOC(H5HF_indirect_ent_t, 
+                    (size_t)(iblock->nrows * hdr->man_dtable.cparam.width))))
+        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, \
+                    "memory allocation failed for direct entries")
+
+    if(hdr->filter_len > 0) {
+        unsigned dir_rows;   /* Number of direct rows in this indirect block */
+
+        /* Compute the number of direct rows for this indirect block */
+        dir_rows = MIN(iblock->nrows, hdr->man_dtable.max_direct_rows);
+
+        /* Allocate indirect block filtered entry array */
+        if(NULL == (iblock->filt_ents = 
+                     H5FL_SEQ_MALLOC(H5HF_indirect_filt_ent_t, 
+                            (size_t)(dir_rows * hdr->man_dtable.cparam.width))))
+            HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, \
+			"memory allocation failed for block entries")
+    } /* end if */
+    else
+        iblock->filt_ents = NULL;
+
+    for(u = 0; u < (iblock->nrows * hdr->man_dtable.cparam.width); u++) {
+
+        /* Decode child block address */
+        H5F_addr_decode(udata->f, &p, &(iblock->ents[u].addr));
+
+        /* Check for heap with I/O filters */
+        if(hdr->filter_len > 0) {
+            /* Sanity check */
+            HDassert(iblock->filt_ents);
+
+            /* Decode extra information for direct blocks */
+            if(u < (hdr->man_dtable.max_direct_rows * 
+                         hdr->man_dtable.cparam.width)) {
+
+                /* Size of filtered direct block */
+                H5F_DECODE_LENGTH(udata->f, p, iblock->filt_ents[u].size);
+
+                /* Sanity check */
+                /* (either both the address & size are defined or both are
+                 *  not defined)
+                 */
+                HDassert((H5F_addr_defined(iblock->ents[u].addr) && \
+                          iblock->filt_ents[u].size) \
+                    || (!H5F_addr_defined(iblock->ents[u].addr) && \
+                         iblock->filt_ents[u].size == 0));
+
+                /* I/O filter mask for filtered direct block */
+                UINT32DECODE(p, iblock->filt_ents[u].filter_mask);
+            } /* end if */
+        } /* end if */
+
+        /* Count child blocks */
+        if(H5F_addr_defined(iblock->ents[u].addr)) {
+            iblock->nchildren++;
+            iblock->max_child = u;
+        } /* end if */
+    } /* end for */
+
+    /* Sanity check */
+    HDassert(iblock->nchildren);   /* indirect blocks w/no children should */
+                                   /* have been deleted */
+
+    /* Compute checksum on indirect block */
+    computed_chksum = H5_checksum_metadata((const uint8_t *)image_ptr, 
+                                   (size_t)(p - (const uint8_t *)image_ptr), 0);
+
+    /* Metadata checksum */
+    UINT32DECODE(p, stored_chksum);
+
+    /* Sanity check */
+    HDassert((size_t)(p - (const uint8_t *)image_ptr) == iblock->size);
+
+    /* Verify checksum */
+    if(stored_chksum != computed_chksum)
+        HGOTO_ERROR(H5E_HEAP, H5E_BADVALUE, NULL, \
+                 "incorrect metadata checksum for fractal heap indirect block")
+
+    /* Check if we have any indirect block children */
+    if(iblock->nrows > hdr->man_dtable.max_direct_rows) {
+
+        unsigned indir_rows;/* Number of indirect rows in this indirect block */
+
+        /* Compute the number of indirect rows for this indirect block */
+        indir_rows = iblock->nrows - hdr->man_dtable.max_direct_rows;
+
+        /* Allocate & initialize child indirect block pointer array */
+        if(NULL == (iblock->child_iblocks = H5FL_SEQ_CALLOC(H5HF_indirect_ptr_t,
+                          (size_t)(indir_rows * hdr->man_dtable.cparam.width))))
+            HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, NULL, \
+                        "memory allocation failed for block entries")
+    } /* end if */
+    else
+        iblock->child_iblocks = NULL;
+
+    /* Set return value */
+    ret_value = (void *)iblock;
+
+done:
+    if(!ret_value && iblock)
+        if(H5HF_man_iblock_dest(iblock) < 0)
+            HDONE_ERROR(H5E_HEAP, H5E_CANTFREE, NULL, \
+		        "unable to destroy fractal heap indirect block")
+
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_iblock_deserialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_iblock_image_len
+ *
+ * Purpose:	
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      In the best of all possible worlds, we would not have this callback.
+ *      It exists to allow clients to reduce the size of the on disk image of
+ *      an entry in the deserialize callback.
+ *
+ *      The typedef for the image_len callback is as follows:
+ *
+ *      typedef herr_t (*H5C_image_len_func_t)(void *thing,
+ *                                             size_t *image_len_ptr);
+ *
+ *      The parameters of the image_len callback are as follows:
+ *
+ *      thing:  Pointer to the in core representation of the entry.
+ *
+ *      image_len_ptr: Pointer to size_t in which the callback will return
+ *              the length of the on disk image of the cache entry.
+ *
+ *      Processing in the image_len function should proceed as follows:
+ *
+ *      If successful, the function will place the length of the on disk
+ *      image associated with the in core representation provided in the
+ *      thing parameter in *image_len_ptr, and then return SUCCEED.
+ *
+ *      On failure, the function must return FAIL and push error information
+ *      onto the error stack with the error API routines, without modifying
+ *      the value pointed to by the image_len_ptr.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_iblock_image_len(const void *thing, size_t *image_len_ptr)
+{
+    H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
+    herr_t      	 ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+    HDassert(image_len_ptr);
+
+    iblock = (H5HF_indirect_t *)thing;
+
+    HDassert(iblock);
+    HDassert(iblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(iblock->cache_info.type) == \
+              &(H5AC_FHEAP_IBLOCK[0]));
+
+    *image_len_ptr = iblock->size;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_iblock_image_len() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_iblock_pre_serialize
+ *
+ * Purpose: The primary objective of this function is to determine if the
+ *	indirect block is currently allocated in temporary file space,
+ *	and if so, to move it to real file space before the entry is 
+ *	serialized.
+ *
+ *	In debug compiles, this function also verifies that all children
+ *	of this indirect block are either clean or are not in cache.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The pre-serialize callback is invoked by the metadata cache before
+ *      it needs a current on-disk image of the metadata entry for purposes
+ *      either constructing a journal or flushing the entry to disk.
+ *
+ *      If the client needs to change the address or length of the entry on
+ *      disk, or re-allocate the image pointer, the pre-serialize callback
+ *      is responsible for those actions, so that the actual serialize
+ *      callback (described below) is only responsible for serializing the
+ *      data structure, not moving it on disk or resizing it.
+ *
+ *      One would think that the base address and length of
+ *      the length of the entry's image on disk would be well known.
+ *      However, that need not be the case as fractal heap blocks can
+ *      change size (and therefor possible location as well) on
+ *      serialization if compression is enabled.  In the old H5C code,
+ *      this happened on a flush, and occasioned a move in the midst
+ *      of the flush.  To avoid this in H5C, the pre-serialize callback
+ *      will return the new base address, length, and image pointer to
+ *      the caller when necessary.  The caller must then update the
+ *      metadata cache's internal structures accordingly.
+ *
+ *      The typedef for the pre-serialize callback is as follows:
+ *
+ *      typedef herr_t (*H5C_pre_serialize_func_t)(const H5F_t *f,
+ *                                             hid_t dxpl_id,
+ *                                             void * thing,
+ *                                             haddr_t addr,
+ *                                             size_t len,
+ *                                             unsigned * flags_ptr,
+ *                                             haddr_t * new_addr_ptr,
+ *                                             size_t * new_len_ptr);
+ *
+ *      The parameters of the pre-serialize callback are as follows:
+ *
+ *      f:      File pointer -- needed if other metadata cache entries
+ *              must be modified in the process of serializing the
+ *              target entry.
+ *
+ *      dxpl_id: dxpl_id passed with the file pointer to the cache, and
+ *              passed on to the callback.  Necessary as some callbacks
+ *              revise the size and location of the target entry, or
+ *              possibly other entries on serialize.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.
+ *              This is the same pointer returned by a protect of the
+ *              addr and len given above.
+ *
+ *      addr:   Base address in file of the entry to be serialized.
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      len:    Length in bytes of the in file image of the entry to be
+ *              serialized.  Also the size of *image_ptr (below).
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      flags_ptr:  Pointer to an unsigned integer used to return flags
+ *              indicating whether the resize function resized or moved
+ *              the entry.  If the entry was neither resized or moved,
+ *              the serialize function must set *flags_ptr to zero.
+ *              H5C__SERIALIZE_RESIZED_FLAG and H5C__SERIALIZE_MOVED_FLAG
+ *              must be set to indicate a resize and a move respectively.
+ *
+ *              If the H5C__SERIALIZE_RESIZED_FLAG is set, the new length
+ *              and image pointer must be stored in *new_len_ptr and
+ *              *new_image_ptr_ptr respectively.
+ *
+ *              If the H5C__SERIALIZE_MOVED_FLAG flag is also set, the
+ *              new image base address must be stored in *new_addr_ptr.
+ *              Observe that the H5C__SERIALIZE_MOVED_FLAG must not
+ *              appear without the H5C__SERIALIZE_RESIZED_FLAG.
+ *
+ *              Except as noted above, the locations pointed to by the
+ *              remaining parameters are undefined, and should be ignored
+ *              by the caller.
+ *
+ *      new_addr_ptr:  Pointer to haddr_t.  If the entry is moved by
+ *              the serialize function, the new on disk base address must
+ *              be stored in *new_addr_ptr.  If the entry is not moved
+ *              by the serialize function, *new_addr_ptr is undefined.
+ *
+ *      new_len_ptr:  Pointer to size_t.  If the entry is resized by the
+ *              serialize function, the new length of the on disk image
+ *              must be stored in *new_len_ptr.  If the entry is not
+ *              resized by the serialize function, *new_len_ptr is
+ *              undefined.
+ *
+ *      Processing in the pre-serialize function should proceed as follows:
+ *
+ *      The pre-serialize function must examine the in core representation
+ *      indicated by the thing parameter, if the pre-serialize function does
+ *      not need to change the size or location of the on-disk image, it must
+ *      set *flags_ptr to zero.
+ *
+ *      If the size of the on-disk image must be changed, the pre-serialize
+ *      function must load the length of the new image into *new_len_ptr,
+ *      and set the H5C__SERIALIZE_RESIZED_FLAG in *flags_ptr.
+ *
+ *      If the base address of the on disk image must be changed, the
+ *      pre-serialize function must set *new_addr_ptr to the new base address,
+ *      and set the H5C__SERIALIZE_MOVED_FLAG in *flags_ptr.
+ *
+ *      If it is successful, the function must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_iblock_pre_serialize(const H5F_t *f,
+                                hid_t dxpl_id,
+                                void *thing,
+                                haddr_t addr,
+                                size_t len,
+                                haddr_t *new_addr_ptr,
+                                size_t *new_len_ptr,
+                                unsigned *flags_ptr)
+{
+    H5HF_hdr_t          *hdr;           /* Shared fractal heap information */
+    H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
+    herr_t      	 ret_value = SUCCEED;    /* Return value */
+#ifndef NDEBUG
+    hbool_t 		 descendants_clean = TRUE;
+    unsigned 		 iblock_status;
+#endif /* NDEBUG */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(f);
+    HDassert(thing);
+    HDassert(H5F_addr_defined(addr));
+    HDassert(new_addr_ptr);
+    HDassert(new_len_ptr);
+    HDassert(flags_ptr);
+
+    iblock = (H5HF_indirect_t *)thing;
+
+    HDassert(iblock);
+    HDassert(iblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(iblock->cache_info.type) == \
+              &(H5AC_FHEAP_IBLOCK[0]));
+    HDassert(H5F_addr_eq(iblock->addr, addr));
+    HDassert(iblock->cache_info.size == iblock->size);
+
+    hdr = iblock->hdr;
+
+    HDassert(hdr);
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(iblock->cache_info.type) == \
+              &(H5AC_FHEAP_HDR[0]));
+
+#ifndef NDEBUG
+    /* verify that flush dependencies are working correctly.  Do this
+     * by verifying that all children of this iblock are clean.
+     */
+
+    if ( H5AC_get_entry_status(f, iblock->addr, &iblock_status) < 0 )
+
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTGET, FAIL, "can't get iblock status")
+
+    /* since the current iblock is the guest of honor in a flush, we know
+     * that it is locked into the cache for the duration of the call.  Hence
+     * there is no need to check to see if it is pinned or protected, or to
+     * protect it if it is not.
+     */
+
+    if ( H5HF_cache_verify_iblock_descendants_clean((H5F_t *)f, dxpl_id, 
+						    iblock, &iblock_status,
+                                                    &descendants_clean) < 0 )
+
+         HGOTO_ERROR(H5E_HEAP, H5E_SYSTEM, FAIL, \
+                     "can't verify descendants clean.")
+
+    HDassert(descendants_clean);
+
+#endif /* NDEBUG */
+
+    /* check to see if we must re-allocate the iblock from temporary to 
+     * normal (AKA real) file space.
+     */
+    if(H5F_IS_TMP_ADDR(f, addr)) {
+
+        haddr_t new_addr;
+
+        /* Allocate 'normal' space for the new indirect block on disk */
+        if(HADDR_UNDEF == (new_addr = H5MF_alloc((H5F_t *)f, 
+						 H5FD_MEM_FHEAP_IBLOCK, dxpl_id,
+					         (hsize_t)iblock->size)))
+
+            HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, FAIL, \
+		      "file allocation failed for fractal heap indirect block")
+
+        /* Sanity check */
+        HDassert(!H5F_addr_eq(iblock->addr, new_addr));
+
+        /* Let the metadata cache know the block moved */
+        if(H5AC_move_entry((H5F_t *)f, H5AC_FHEAP_IBLOCK, 
+			   iblock->addr, new_addr) < 0)
+
+            HGOTO_ERROR(H5E_HEAP, H5E_CANTMOVE, FAIL, \
+			"unable to move indirect block")
+
+        /* Update the internal address for the block */
+        iblock->addr = new_addr;
+
+        /* Check for root indirect block */
+        if(NULL == iblock->parent) {
+
+            /* Update information about indirect block's location */
+            hdr->man_dtable.table_addr = addr;
+
+            /* Mark that heap header was modified */
+            if(H5HF_hdr_dirty(hdr) < 0)
+
+                HGOTO_ERROR(H5E_HEAP, H5E_CANTDIRTY, FAIL, \
+			    "can't mark heap header as dirty")
+
+        } /* end if */
+        else {
+
+            H5HF_indirect_t *par_iblock;    /* Parent indirect block */
+            unsigned par_entry;             /* Entry in parent indirect block */
+
+            /* Get parent information */
+            par_iblock = iblock->parent;
+            par_entry = iblock->par_entry;
+
+            /* Update information about indirect block's location */
+            par_iblock->ents[par_entry].addr = addr;
+
+            /* Mark that parent was modified */
+            if(H5HF_iblock_dirty(par_iblock) < 0)
+
+                HGOTO_ERROR(H5E_HEAP, H5E_CANTDIRTY, FAIL, \
+			    "can't mark heap header as dirty")
+
+        } /* end if */
+
+	*new_addr_ptr = new_addr;
+        *flags_ptr = H5C__SERIALIZE_MOVED_FLAG;
+
+    } else {
+
+	*flags_ptr = 0;
+
+    }
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_iblock_pre_serialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_iblock_serialize
+ *
+ * Purpose: Given a pointer to an iblock, and a pointer to a buffer of 
+ *	the appropriate size, write the contents of the iblock to the 
+ *	buffer in format appropriate for writing to disk.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The serialize callback is invoked by the metadata cache whenever
+ *      it needs a current on disk image of the metadata entry for purposes
+ *      either constructing a journal or flushing the entry to disk.
+ *
+ *      At this point, the base address and length of the entry's image on
+ *      disk must be well known and not change during the serialization
+ *      process.
+ *
+ *      The typedef for the serialize callback is as follows:
+ *
+ *      typedef herr_t (*H5C_serialize_func_t)(const H5F_t *f,
+ *                                             void * image_ptr,
+ *                                             size_t len,
+ *                                             void * thing);
+ *
+ *      The parameters of the serialize callback are as follows:
+ *
+ *      f:      File pointer -- needed if other metadata cache entries
+ *              must be modified in the process of serializing the
+ *              target entry.
+ *
+ *      image_ptr: Pointer to a buffer of length len bytes into which a
+ *              serialized image of the target metadata cache entry is
+ *              to be written.
+ *
+ *              Note that this buffer will not in general be initialized
+ *              to any particular value.  Thus the serialize function may
+ *              not assume any initial value and must set each byte in
+ *              the buffer.
+ *
+ *      len:    Length in bytes of the in file image of the entry to be
+ *              serialized.  Also the size of *image_ptr (below).
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.
+ *              This is the same pointer returned by a protect of the
+ *              addr and len given above.
+ *
+ *      Processing in the serialize function should proceed as follows:
+ *
+ *      The serialize function must examine the in core representation
+ *      indicated by the thing parameter, and write a serialized image
+ *      of its contents into the provided buffer.
+ *
+ *      If it is successful, the function must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_iblock_serialize(const H5F_t *f,
+                            void *image_ptr,
+                            size_t len,
+                            void *thing)
+{
+    H5HF_hdr_t 		*hdr;           /* Shared fractal heap information */
+    H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
+    uint8_t 		*p;             /* Pointer into raw data buffer */
+#ifndef NDEBUG
+    unsigned 		 nchildren = 0; /* Track # of children */
+    unsigned		 max_child = 0; /* Track max. child entry used */
+#endif /* NDEBUG */
+    uint32_t		 metadata_chksum; /* Computed metadata checksum value */
+    size_t 		 u;             /* Local index variable */
+    herr_t               ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(f);
+    HDassert(image_ptr);
+    HDassert(thing);
+
+    iblock = (H5HF_indirect_t *)thing;
+
+    HDassert(iblock);
+    HDassert(iblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(iblock->cache_info.type) == \
+              &(H5AC_FHEAP_IBLOCK[0]));
+    HDassert(iblock->cache_info.size == iblock->size);
+    HDassert(len == iblock->size);
+
+    /* Indirect block must be in 'normal' file space */
+    HDassert(!H5F_IS_TMP_ADDR(f, iblock->addr));
+    HDassert(H5F_addr_eq(iblock->addr, iblock->cache_info.addr));
+
+    /* Get the pointer to the shared heap header */
+    hdr = iblock->hdr;
+
+    /* The version 2 cache H5HF_cache_iblock_flush() call used to set 
+     * hdr->f = f at this point.  However, it doesn't seem to be needed
+     * in this function, so I have omitted the assignment.
+     */
+
+    /* Get temporary pointer to buffer for serialized indirect block */
+    p = (uint8_t *)image_ptr;
+
+    /* Magic number */
+    HDmemcpy(p, H5HF_IBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    p += H5_SIZEOF_MAGIC;
+
+    /* Version # */
+    *p++ = H5HF_IBLOCK_VERSION;
+
+    /* Address of heap header for heap which owns this block */
+    H5F_addr_encode(f, &p, hdr->heap_addr);
+
+    /* Offset of block in heap */
+    UINT64ENCODE_VAR(p, iblock->block_off, hdr->heap_off_size);
+
+    /* Encode indirect block-specific fields */
+    for(u = 0; u < (iblock->nrows * hdr->man_dtable.cparam.width); u++) {
+
+        /* Encode child block address */
+        H5F_addr_encode(f, &p, iblock->ents[u].addr);
+
+        /* Check for heap with I/O filters */
+        if(hdr->filter_len > 0) {
+
+            /* Sanity check */
+            HDassert(iblock->filt_ents);
+
+            /* Encode extra information for direct blocks */
+            if(u < (hdr->man_dtable.max_direct_rows * 
+                    hdr->man_dtable.cparam.width)) {
+
+                /* Sanity check */
+                /* (either both the address & size are defined or both are
+                 *  not defined)
+                  */
+                HDassert((H5F_addr_defined(iblock->ents[u].addr) && \
+                          iblock->filt_ents[u].size) \
+                        || (!H5F_addr_defined(iblock->ents[u].addr) && \
+                            iblock->filt_ents[u].size == 0));
+
+                /* Size of filtered direct block */
+                H5F_ENCODE_LENGTH(f, p, iblock->filt_ents[u].size);
+
+                /* I/O filter mask for filtered direct block */
+                UINT32ENCODE(p, iblock->filt_ents[u].filter_mask);
+            } /* end if */
+        } /* end if */
+
+#ifndef NDEBUG
+        /* Count child blocks */
+        if(H5F_addr_defined(iblock->ents[u].addr)) {
+
+            nchildren++;
+            if(u > max_child)
+                max_child = u;
+
+        } /* end if */
+#endif /* NDEBUG */
+    } /* end for */
+
+    /* Compute checksum */
+    metadata_chksum = H5_checksum_metadata((uint8_t *)image_ptr, 
+					(size_t)(p - (uint8_t *)image_ptr), 0);
+
+    /* Metadata checksum */
+    UINT32ENCODE(p, metadata_chksum);
+
+    /* Sanity checks */
+    HDassert((size_t)(p - (uint8_t *)image_ptr) == iblock->size);
+#ifndef NDEBUG
+    HDassert(nchildren == iblock->nchildren);
+    HDassert(max_child == iblock->max_child);
+#endif /* NDEBUG */
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_iblock_serialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_iblock_notify
+ *
+ * Purpose: This function is used to create and destroy flush dependency 
+ *	relationships between iblocks and their parents as indirect blocks
+ *	are loaded / inserted and evicted from the metadata cache.
+ *
+ *	In general, the parent will be another iblock, but it may be the 
+ *	header if the iblock in question is the root iblock.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The notify callback is invoked by the metadata cache when a cache
+ *      action on an entry has taken/will take place and the client indicates
+ *      it wishes to be notified about the action.
+ *
+ *      The typedef for the notify callback is as follows:
+ *
+ *      typedef herr_t (*H5C_notify_func_t)(H5C_notify_action_t action,
+ *                                          void *thing);
+ *
+ *      The parameters of the notify callback are as follows:
+ *
+ *      action: An enum indicating the metadata cache action that has taken/
+ *              will take place.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.  This
+ *              is the same pointer that would be returned by a protect
+ *              of the addr and len above.
+ *
+ *      Processing in the notify function should proceed as follows:
+ *
+ *      The notify function may perform any action it would like, including
+ *      metadata cache calls.
+ *
+ *      If the function is successful, it must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_iblock_notify(H5C_notify_action_t action, void *thing)
+{
+    H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
+    herr_t      	 ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /*
+     * Check arguments.
+     */
+    HDassert(thing);
+
+    iblock = (H5HF_indirect_t *)thing;
+
+    HDassert(iblock);
+    HDassert(iblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(iblock->cache_info.type) == \
+              &(H5AC_FHEAP_IBLOCK[0]));
+    HDassert(iblock->hdr);
+
+    if ( action == H5C_NOTIFY_ACTION_BEFORE_EVICT )
+        HDassert((iblock->parent == iblock->fd_parent) ||
+                 ((NULL == iblock->parent) && (iblock->fd_parent)));
+    else
+        HDassert(iblock->parent == iblock->fd_parent);
+
+    /* further sanity checks */
+    if ( iblock->parent == NULL ) {
+
+        /* Either this is the root iblock, or the parent pointer is     */
+        /* invalid.  Since we save a copy of the parent pointer on      */
+        /* the insertion event, it doesn't matter if the parent pointer */
+        /* is invalid just before eviction.  However, we will not be    */
+        /* able to function if it is invalid on the insertion event.    */
+        /* Scream and die if this is the case.                          */
+
+        HDassert((action == H5C_NOTIFY_ACTION_BEFORE_EVICT) ||
+                 (iblock->block_off == 0));
+
+        /* pointer from hdr to root iblock will not be set up unless */
+        /* the fractal heap has already pinned the hdr.  Do what     */
+        /* sanity checking we can.                                   */
+
+        if ( ( iblock->block_off == 0 ) &&
+             ( iblock->hdr->root_iblock_flags & H5HF_ROOT_IBLOCK_PINNED ) )
+           HDassert(iblock->hdr->root_iblock == iblock);
+
+    } else {
+
+        /* if this is a child iblock, verify that the pointers are */
+        /* either uninitialized or set up correctly.               */
+        H5HF_indirect_t *par_iblock = iblock->parent;
+        unsigned indir_idx;  /* Index in parent's child iblock pointer array */
+
+        /* Sanity check */
+        HDassert(par_iblock->child_iblocks);
+        HDassert(iblock->par_entry >= (iblock->hdr->man_dtable.max_direct_rows
+                * iblock->hdr->man_dtable.cparam.width));
+
+        /* Compute index in parent's child iblock pointer array */
+        indir_idx = iblock->par_entry -
+                    (iblock->hdr->man_dtable.max_direct_rows
+                     * iblock->hdr->man_dtable.cparam.width);
+
+        /* The pointer to iblock in the parent may not be set yet -- */
+        /* verify that it is either NULL, or that it has been set to */
+        /* iblock.                                                   */
+        HDassert((NULL == par_iblock->child_iblocks[indir_idx]) ||
+                 (par_iblock->child_iblocks[indir_idx] == iblock));
+    }
+
+    switch ( action )
+    {
+        case H5C_NOTIFY_ACTION_AFTER_INSERT:
+            if ( iblock->parent ) /* this is a child iblock */
+            {
+                /* create flush dependency with parent iblock */
+                if(H5AC_create_flush_dependency(iblock->parent, iblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDEPEND, FAIL, \
+                                "unable to create flush dependency")
+            }
+            else /* this is the root iblock */
+            {
+                /* create flush dependency with header */
+                if(H5AC_create_flush_dependency(iblock->hdr, iblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDEPEND, FAIL, \
+                                "unable to create flush dependency")
+            }
+            break;
+
+        case H5C_NOTIFY_ACTION_BEFORE_EVICT:
+            if ( iblock->fd_parent ) /* this is a child iblock */
+            {
+                /* destroy flush dependency with parent iblock */
+                if(H5AC_destroy_flush_dependency(iblock->fd_parent,
+                                                 iblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTUNDEPEND, FAIL, \
+                                "unable to destroy flush dependency")
+            }
+            else /* this is the root iblock */
+            {
+                /* destroy flush dependency with header */
+                if(H5AC_destroy_flush_dependency(iblock->hdr, iblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTUNDEPEND, FAIL, \
+                                "unable to destroy flush dependency")
+
+            }
+            break;
+
+        default:
+            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, \
+                        "unknown action from metadata cache")
+            break;
+    }
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_iblock_notify() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_iblock_free_icr
+ *
+ * Purpose: Unlink the supplied instance of H5HF_indirect_t from the 
+ *	fractal and free its memory.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The free ICR callback is invoked by the metadata cache when it
+ *      wishes to evict an entry, and needs the client to free the memory
+ *      allocated for the in core representation.
+ *
+ *      The typedef for the free ICR callback is as follows:
+ *
+ *      typedef herr_t (*H5C_free_icr_func_t)(void * thing);
+ *
+ *      The parameters of the free ICR callback are as follows:
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.  This
+ *              is the same pointer that would be returned by a protect
+ *              of the addr and len above.
+ *
+ *      Processing in the free ICR function should proceed as follows:
+ *
+ *      The free ICR function must free all memory allocated to the
+ *      in core representation.
+ *
+ *      If the function is successful, it must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *      At least when compiled with debug, it would be useful if the
+ *      free ICR call would fail if the in core representation has been
+ *      modified since the last serialize of clear callback.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_iblock_free_icr(void *thing)
+{
+    H5HF_indirect_t	*iblock;
+    herr_t      	 ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+
+    iblock = (H5HF_indirect_t *)thing;
+
+    HDassert(iblock);
+
+    /* the metadata cache sets cache_info.magic to 
+     * H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling the 
+     * free_icr routine.  Hence the following assert:
+     */
+    HDassert(iblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
+    HDassert((const H5AC_class_t *)(iblock->cache_info.type) == \
+              &(H5AC_FHEAP_IBLOCK[0]));
+    HDassert(iblock->rc == 0);
+    HDassert(iblock->hdr);
+
+    /* Destroy fractal heap indirect block */
+    if(H5HF_man_iblock_dest(iblock) < 0)
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTFREE, FAIL, \
+		    "unable to destroy fractal heap indirect block")
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_iblock_free_icr() */
+
+
+/*********************************************************/
+/* metadata cache callback definitions for direct blocks */
+/*********************************************************/
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_dblock_get_load_size()
+ *
+ * Purpose: Determine the size of the direct block on disk image, and 
+ *	return it in *image_len_ptr.
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      This function must be able to determing the size of a disk image for
+ *      a metadata cache entry, given the 'udata' that will be passed to the
+ *      'deserialize' callback.
+ *
+ *      The typedef for the deserialize callback is as follows:
+ *
+ *         typedef herr_t (*H5C_get_load_size_func_t)(void *udata_ptr,
+ *                                                 size_t *image_len_ptr);
+ *
+ *      The parameters of the deserialize callback are as follows:
+ *
+ *      udata_ptr: Pointer to user data provided in the protect call, which
+ *              will also be passed through to the deserialize callback.
+ *
+ *      image_len_ptr: Length in bytes of the in file image to be deserialized.
+ *
+ *              This parameter is used by the cache to determine the size of
+ *              the disk image for the metadata, in order to read the disk
+ *              image from the file.
+ *
+ *      Processing in the get_load_size function should proceed as follows:
+ *
+ *      If successful, the function will place the length of the on disk
+ *      image associated with the in core representation provided in the
+ *      thing parameter in *image_len_ptr, and then return SUCCEED.
+ *
+ *      On failure, the function must return FAIL and push error information
+ *      onto the error stack with the error API routines, without modifying
+ *      the value pointed to by the image_len_ptr.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+
+static herr_t 
+H5HF_cache_dblock_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
+{
+    H5HF_dblock_cache_ud_t     *udata;
+    H5HF_parent_t              *par_info; /* Pointer to parent information */
+    H5HF_hdr_t                 *hdr;     /* Shared fractal heap information */
+    size_t                      size;
+    herr_t                      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    HDassert(udata_ptr);
+    HDassert(image_len_ptr);
+
+    udata = (H5HF_dblock_cache_ud_t *)udata_ptr;
+
+    HDassert(udata);
+
+    par_info = (H5HF_parent_t *)(&(udata->par_info));
+
+    HDassert(par_info);
+
+    hdr = par_info->hdr;
+
+    HDassert(hdr);
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
+	      &(H5AC_FHEAP_HDR[0]));
+    HDassert(par_info);
+
+    /* Check for I/O filters on this heap */
+    if(hdr->filter_len > 0) {
+
+        /* Check for root direct block */
+        if(par_info->iblock == NULL) {
+
+            size = hdr->pline_root_direct_size;
+
+        } else {
+
+            size = par_info->iblock->filt_ents[par_info->entry].size;
+
+        }
+    } else {
+
+        size = udata->dblock_size;
+    }
+
+    *image_len_ptr = size;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_dblock_get_load_size() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_dblock_deserialize
+ *
+ * Purpose: Given a buffer containing the on disk image of a direct
+ *      block, allocate an instance of H5HF_direct_t, load the data
+ *      in the buffer into this new instance, and return a pointer to
+ *      it.
+ *
+ *      As best I can tell, the size of the direct block image is fully
+ *      know before the image is loaded, so this function should succeed
+ *      unless the image is corrupt or memory allocation fails.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      This function must be able to read an on disk image of a metadata
+ *      cache entry, allocate and load the equivalent in core representation,
+ *      and return a pointer to that representation.
+ *
+ *      The typedef for the deserialize callback is as follows:
+ *
+ *         typedef void *(*H5C_deserialize_func_t)(const void * image_ptr,
+ *                                                 size_t len,
+ *                                                 void * udata_ptr,
+ *                                                 boolean * dirty_ptr);
+ *
+ *      The parameters of the deserialize callback are as follows:
+ *
+ *      image_ptr: Pointer to a buffer of length len containing the
+ *              contents of the file starting at addr and continuing
+ *              for len bytes.
+ *
+ *      len:    Length in bytes of the in file image to be deserialized.
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      udata_ptr: Pointer to user data provided in the protect call, which
+ *              must be passed through to the deserialize callback.
+ *
+ *      dirty_ptr:  Pointer to boolean which the deserialize function
+ *              must use to mark the entry dirty if it has to modify
+ *              the entry to clean up file corruption left over from
+ *              an old bug in the HDF5 library.
+ *
+ *      Processing in the deserialize function should proceed as follows:
+ *
+ *      If the image contains valid data, and is of the correct length,
+ *      the deserialize function must allocate space for an in core
+ *      representation of that data, load the contents of the image into
+ *      the space allocated for the in core representation, and return
+ *      a pointer to the in core representation.  Observe that an
+ *      instance of H5C_cache_entry_t must be the first item in this
+ *      representation.  It will have to be initialized appropriately
+ *      after the callback returns.
+ *
+ *      Note that the structure of the in core representation is otherwise
+ *      up to the cache client.  All that is required is that the pointer
+ *      returned be sufficient for the clients purposes when it is returned
+ *      on a protect call.
+ *
+ *      If the deserialize function has to clean up file corruption
+ *      left over from an old bug in the HDF5 library, it must set
+ *      *dirty_ptr to TRUE.  If it doesn't, no action is needed as
+ *      *dirty_ptr will be set to FALSE before the deserialize call.
+ *
+ *      If the operation fails for any reason (i.e. bad data in buffer, bad
+ *      buffer length, malloc failure, etc.) the function must return NULL and
+ *      push error information on the error stack with the error API routines.
+ *
+ *      If the protect call which occasioned the call to the deserialize
+ *      callback had the check length flag set, after the deserialize call
+ *      returns, the cache must call the image_len callback (see below) and
+ *      update its on disk image length accordingly.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	Pointer to in core representation
+ *		Failure:	NULL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static void *
+H5HF_cache_dblock_deserialize(const void *image_ptr,
+                              size_t len,
+                              void *udata_ptr,
+                              hbool_t *dirty_ptr)
+{
+    H5HF_hdr_t          *hdr;           /* Shared fractal heap information */
+    H5HF_dblock_cache_ud_t *udata;      /* user data for callback */
+    H5HF_parent_t       *par_info;      /* Pointer to parent information */
+    H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
+    H5HF_direct_t       *dblock = NULL; /* Direct block info */
+    const uint8_t       *p;             /* Pointer into raw data buffer */
+    haddr_t             heap_addr;      /* Address of heap header in the file */
+    uint32_t            stored_chksum;  /* Stored metadata checksum value */
+    uint32_t            computed_chksum; /* Computed metadata checksum value */
+    unsigned            u;              /* Local index variable */
+    void *              ret_value;      /* Return value */
+
+    FUNC_ENTER_NOAPI(NULL)
+
+    HDassert(image_ptr);
+    HDassert(udata_ptr);
+    HDassert(dirty_ptr);
+
+    udata = (H5HF_dblock_cache_ud_t *)udata_ptr;
+
+    HDassert(udata);
+
+    par_info = (H5HF_parent_t *)(&(udata->par_info));
+
+    HDassert(par_info);
+
+    hdr = par_info->hdr;
+
+    HDassert(hdr);
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
+              &(H5AC_FHEAP_HDR[0]));
+    HDassert(par_info);
+
+    /* Allocate space for the fractal heap direct block */
+    if(NULL == (dblock = H5FL_MALLOC(H5HF_direct_t)))
+
+        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
+
+    HDmemset(&dblock->cache_info, 0, sizeof(H5AC_info_t));
+
+    /**** do we need this? ****/
+    /* Set the shared heap header's file context for this operation */
+    hdr->f = udata->f;
+
+    /* Share common heap information */
+    dblock->hdr = hdr;
+
+    if(H5HF_hdr_incr(hdr) < 0)
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTINC, NULL, \
+		    "can't increment reference count on shared heap header")
+
+    /* Set block's internal information */
+    dblock->size = udata->dblock_size;
+    dblock->file_size = 0;
+
+    /* initialize fields used in serialization */
+    dblock->write_buf = NULL;
+    dblock->write_size = 0;
+
+    /* Allocate block buffer */
+    /* XXX: Change to using free-list factories */
+    if(NULL == (dblock->blk = H5FL_BLK_MALLOC(direct_block, 
+                                              (size_t)dblock->size)))
+
+        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
+
+
+    /* Check for I/O filters on this heap */
+    if(hdr->filter_len > 0) {
+
+        H5Z_cb_t filter_cb = {NULL, NULL};  /* Filter callback structure */
+        size_t nbytes;          /* Number of bytes used in buffer, after */
+                                /* applying reverse filters */
+        void *read_buf;         /* Pointer to buffer to read in */
+        size_t read_size;       /* Size of filtered direct block to read */
+        unsigned filter_mask;   /* Excluded filters for direct block */
+
+        /* Check for root direct block */
+        if(par_info->iblock == NULL) {
+
+#if 0 /* delete this eventually -- don't have addr to do test */
+            /* Sanity check */
+            HDassert(H5F_addr_eq(hdr->man_dtable.table_addr, addr));
+#endif /* JRM */
+
+            /* Set up parameters to read filtered direct block */
+            read_size = hdr->pline_root_direct_size;
+        } /* end if */
+        else {
+#if 0 /* delete this eventually -- don't have addr to do test */
+            /* Sanity check */
+            HDassert(H5F_addr_eq(par_info->iblock->ents[par_info->entry].addr, addr));
+#endif /* JRM */
+
+            /* Set up parameters to read filtered direct block */
+            read_size = par_info->iblock->filt_ents[par_info->entry].size;
+        } /* end else */
+
+        HDassert(len == read_size);
+
+        /* Allocate buffer to perform I/O filtering on and copy image into
+         * it.  Must do this as H5Z_pipeline() may re-sized the buffer 
+         * provided to it.
+         */
+        if(NULL == (read_buf = H5MM_malloc(read_size)))
+
+            HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, NULL, \
+                        "memory allocation failed for pipeline buffer")
+
+        HDmemcpy(read_buf, image_ptr, len);
+
+        /* Push direct block data through I/O filter pipeline */
+        nbytes = read_size;
+        filter_mask = udata->filter_mask;
+        if(H5Z_pipeline(&(hdr->pline), H5Z_FLAG_REVERSE, &filter_mask, 
+                        H5Z_ENABLE_EDC, filter_cb, &nbytes, &read_size, 
+                        &read_buf) < 0)
+
+            HGOTO_ERROR(H5E_HEAP, H5E_CANTFILTER, NULL, \
+                        "output pipeline failed")
+
+        /* Sanity check */
+        HDassert(nbytes == dblock->size);
+
+        /* Copy un-filtered data into block's buffer */
+        HDmemcpy(dblock->blk, read_buf, dblock->size);
+
+        /* Release the read buffer */
+        H5MM_xfree(read_buf);
+
+    } /* end if */
+    else {
+
+        /* copy image to dblock->blk */
+        HDassert(dblock->size == len);
+        HDmemcpy(dblock->blk, image_ptr, dblock->size);
+
+    } /* end else */
+
+    /* Start decoding direct block */
+    p = dblock->blk;
+
+    /* Magic number */
+    if(HDmemcmp(p, H5HF_DBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTLOAD, NULL, \
+                    "wrong fractal heap direct block signature")
+
+    p += H5_SIZEOF_MAGIC;
+
+    /* Version */
+    if(*p++ != H5HF_DBLOCK_VERSION)
+
+        HGOTO_ERROR(H5E_HEAP, H5E_VERSION, NULL, \
+                    "wrong fractal heap direct block version")
+
+    /* Address of heap that owns this block (just for file integrity checks) */
+    H5F_addr_decode(udata->f, &p, &heap_addr);
+
+    if(H5F_addr_ne(heap_addr, hdr->heap_addr))
+
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTLOAD, NULL, \
+                    "incorrect heap header address for direct block")
+
+    /* Address of parent block */
+    dblock->parent = par_info->iblock;
+    dblock->fd_parent = par_info->iblock;
+    dblock->par_entry = par_info->entry;
+
+    if(dblock->parent) {
+
+        /* Share parent block */
+        if(H5HF_iblock_incr(dblock->parent) < 0)
+
+            HGOTO_ERROR(H5E_HEAP, H5E_CANTINC, NULL, \
+                     "can't increment reference count on shared indirect block")
+    } /* end if */
+
+    /* Offset of heap within the heap's address space */
+    UINT64DECODE_VAR(p, dblock->block_off, hdr->heap_off_size);
+
+    /* Decode checksum on direct block, if requested */
+    if(hdr->checksum_dblocks) {
+        uint32_t stored_chksum;         /* Metadata checksum value */
+        uint32_t computed_chksum;       /* Computed metadata checksum value */
+
+        /* Metadata checksum */
+        UINT32DECODE(p, stored_chksum);
+
+        /* Reset checksum field, for computing the checksum */
+        /* (Casting away const OK - QAK) */
+        HDmemset((uint8_t *)p - H5HF_SIZEOF_CHKSUM, 0, 
+                 (size_t)H5HF_SIZEOF_CHKSUM);
+
+        /* Compute checksum on entire direct block */
+        computed_chksum = H5_checksum_metadata(dblock->blk, dblock->size, 0);
+
+        /* Verify checksum */
+        if(stored_chksum != computed_chksum)
+
+            HGOTO_ERROR(H5E_HEAP, H5E_BADVALUE, NULL, \
+                    "incorrect metadata checksum for fractal heap direct block")
+    } /* end if */
+
+    /* Sanity check */
+    HDassert((size_t)(p - dblock->blk) == \
+             (size_t)H5HF_MAN_ABS_DIRECT_OVERHEAD(hdr));
+
+    /* Set return value */
+    ret_value = (void *)dblock;
+
+done:
+
+    if(!ret_value && dblock)
+        if(H5HF_man_dblock_dest(dblock) < 0)
+            HDONE_ERROR(H5E_HEAP, H5E_CANTFREE, NULL, \
+                        "unable to destroy fractal heap direct block")
+
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_dblock_deserialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_dblock_image_len
+ *
+ * Purpose:  Report the nominal size of the direct block image on disk.
+ *	Note that this value will probably be incorrect if compression 
+ *	is enabled.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      In the best of all possible worlds, we would not have this callback.
+ *      It exists to allow clients to reduce the size of the on disk image of
+ *      an entry in the deserialize callback.
+ *
+ *      The typedef for the image_len callback is as follows:
+ *
+ *      typedef herr_t (*H5C_image_len_func_t)(void *thing,
+ *                                             size_t *image_len_ptr);
+ *
+ *      The parameters of the image_len callback are as follows:
+ *
+ *      thing:  Pointer to the in core representation of the entry.
+ *
+ *      image_len_ptr: Pointer to size_t in which the callback will return
+ *              the length of the on disk image of the cache entry.
+ *
+ *      Processing in the image_len function should proceed as follows:
+ *
+ *      If successful, the function will place the length of the on disk
+ *      image associated with the in core representation provided in the
+ *      thing parameter in *image_len_ptr, and then return SUCCEED.
+ *
+ *      On failure, the function must return FAIL and push error information
+ *      onto the error stack with the error API routines, without modifying
+ *      the value pointed to by the image_len_ptr.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_dblock_image_len(const void *thing, size_t *image_len_ptr)
+{
+    H5HF_direct_t       *dblock = NULL; /* Direct block info */
+    herr_t               ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+    HDassert(image_len_ptr);
+
+    dblock = (H5HF_direct_t *)thing;
+
+    HDassert(dblock);
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_FHEAP_DBLOCK[0]));
+
+    *image_len_ptr = dblock->size;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_dblock_image_len() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_dblock_pre_serialize
+ *
+ * Purpose: In principle, the purpose of this function is to determine
+ *	the size and location of the disk image of the target direct block.
+ *
+ *	This is a bit sticky in the case of a direct block when I/O 
+ *	filters are enabled, as the size of the on disk image is not known
+ *	until the direct block has been run through the filters.  Further,
+ *	the location of the on disk image may change if the size of the 
+ *	image changes as well.
+ *
+ *	To complicate matters further, the direct block may have been 
+ *	initially allocated in temporary (AKA imaginary) file space. In 
+ *	this case, we must relocate the direct block's on disk image to 
+ *	real file space regardless of whether it has changed size.
+ *
+ *	One simplifying factor is the direct block's "blk" field, which 
+ *	contains a pointer to a buffer which (with the exception of a small
+ *	header) contains the on disk image in uncompressed form.
+ *
+ *	To square this particular circle, this function does everything 
+ *	the serialize function usually does, with the exception of copying
+ *	the image into the image buffer provided to the serialize 
+ *	function by the metadata cache.  The data to copy is provided to 
+ *	the serialize function in a buffer pointed to by the write_buf 
+ *      field.
+ *
+ *      If I/O filters are enabled, on exit, 
+ *	H5HF_cache_dblock_pre_serialize() sets the write_buf field to 
+ *	point to a buffer containing the filtered image of the direct
+ *	block.  The serialize function should free this block, and set
+ *	the write_buf field to NULL after copying it into the image 
+ *	buffer provided by the metadata cache.
+ *
+ *	If I/O filters are not enabled, this function prepares 
+ *	the buffer pointed to by the blk field for copying to the 
+ *	image buffer provided by the metadata cache, and sets the 
+ *	write_buf field equal to the blk field.  In this case, the 
+ *	serialize function should simply set the write_buf field to 
+ *	NULL after copying the direct block image into the image buffer.
+ *
+ *	In both of the above cases, the length of the buffer pointed to 
+ *	by write_buf is provided in the write_len field.  This field must 
+ *	contain 0 on entry to this function, and should be set back to 0
+ *	at the end of the serialize function.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The pre-serialize callback is invoked by the metadata cache before
+ *      it needs a current on-disk image of the metadata entry for purposes
+ *      either constructing a journal or flushing the entry to disk.
+ *
+ *      If the client needs to change the address or length of the entry on
+ *      disk, or re-allocate the image pointer, the pre-serialize callback
+ *      is responsible for those actions, so that the actual serialize
+ *      callback (described below) is only responsible for serializing the
+ *      data structure, not moving it on disk or resizing it.
+ *
+ *      One would think that the base address and length of
+ *      the length of the entry's image on disk would be well known.
+ *      However, that need not be the case as fractal heap blocks can
+ *      change size (and therefor possible location as well) on
+ *      serialization if compression is enabled.  In the old H5C code,
+ *      this happened on a flush, and occasioned a move in the midst
+ *      of the flush.  To avoid this in H5C, the pre-serialize callback
+ *      will return the new base address, length, and image pointer to
+ *      the caller when necessary.  The caller must then update the
+ *      metadata cache's internal structures accordingly.
+ *
+ *      The typedef for the pre-serialize callback is as follows:
+ *
+ *      typedef herr_t (*H5C_pre_serialize_func_t)(const H5F_t *f,
+ *                                             hid_t dxpl_id,
+ *                                             void * thing,
+ *                                             haddr_t addr,
+ *                                             size_t len,
+ *                                             unsigned * flags_ptr,
+ *                                             haddr_t * new_addr_ptr,
+ *                                             size_t * new_len_ptr);
+ *
+ *      The parameters of the pre-serialize callback are as follows:
+ *
+ *      f:      File pointer -- needed if other metadata cache entries
+ *              must be modified in the process of serializing the
+ *              target entry.
+ *
+ *      dxpl_id: dxpl_id passed with the file pointer to the cache, and
+ *              passed on to the callback.  Necessary as some callbacks
+ *              revise the size and location of the target entry, or
+ *              possibly other entries on serialize.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.
+ *              This is the same pointer returned by a protect of the
+ *              addr and len given above.
+ *
+ *      addr:   Base address in file of the entry to be serialized.
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      len:    Length in bytes of the in file image of the entry to be
+ *              serialized.  Also the size of *image_ptr (below).
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      flags_ptr:  Pointer to an unsigned integer used to return flags
+ *              indicating whether the resize function resized or moved
+ *              the entry.  If the entry was neither resized or moved,
+ *              the serialize function must set *flags_ptr to zero.
+ *              H5C__SERIALIZE_RESIZED_FLAG and H5C__SERIALIZE_MOVED_FLAG
+ *              must be set to indicate a resize and a move respectively.
+ *
+ *              If the H5C__SERIALIZE_RESIZED_FLAG is set, the new length
+ *              and image pointer must be stored in *new_len_ptr and
+ *              *new_image_ptr_ptr respectively.
+ *
+ *              If the H5C__SERIALIZE_MOVED_FLAG flag is also set, the
+ *              new image base address must be stored in *new_addr_ptr.
+ *              Observe that the H5C__SERIALIZE_MOVED_FLAG must not
+ *              appear without the H5C__SERIALIZE_RESIZED_FLAG.
+ *
+ *              Except as noted above, the locations pointed to by the
+ *              remaining parameters are undefined, and should be ignored
+ *              by the caller.
+ *
+ *      new_addr_ptr:  Pointer to haddr_t.  If the entry is moved by
+ *              the serialize function, the new on disk base address must
+ *              be stored in *new_addr_ptr.  If the entry is not moved
+ *              by the serialize function, *new_addr_ptr is undefined.
+ *
+ *      new_len_ptr:  Pointer to size_t.  If the entry is resized by the
+ *              serialize function, the new length of the on disk image
+ *              must be stored in *new_len_ptr.  If the entry is not
+ *              resized by the serialize function, *new_len_ptr is
+ *              undefined.
+ *
+ *      Processing in the pre-serialize function should proceed as follows:
+ *
+ *      The pre-serialize function must examine the in core representation
+ *      indicated by the thing parameter, if the pre-serialize function does
+ *      not need to change the size or location of the on-disk image, it must
+ *      set *flags_ptr to zero.
+ *
+ *      If the size of the on-disk image must be changed, the pre-serialize
+ *      function must load the length of the new image into *new_len_ptr,
+ *      and set the H5C__SERIALIZE_RESIZED_FLAG in *flags_ptr.
+ *
+ *      If the base address of the on disk image must be changed, the
+ *      pre-serialize function must set *new_addr_ptr to the new base address,
+ *      and set the H5C__SERIALIZE_MOVED_FLAG in *flags_ptr.
+ *
+ *      If it is successful, the function must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_dblock_pre_serialize(const H5F_t *f,
+                                hid_t dxpl_id,
+                                void *thing,
+                                haddr_t addr,
+                                size_t len,
+                                haddr_t *new_addr_ptr,
+                                size_t *new_len_ptr,
+                                unsigned *flags_ptr)
+{
+    hbool_t 		 at_tmp_addr;  /* Flag to indicate direct block is */
+				       /* at temporary address */
+    haddr_t		 new_addr;
+    H5HF_hdr_t          *hdr;           /* Shared fractal heap information */
+    H5HF_direct_t       *dblock = NULL; /* Direct block info */
+    H5HF_indirect_t 	*par_iblock;    /* Parent indirect block */
+    unsigned		 par_entry;   /* Entry in parent indirect block */
+    void 		*write_buf;   /* Pointer to buffer to write out */
+    size_t 		 write_size;  /* Size of buffer to write out */
+    uint8_t 		*p;           /* Pointer into raw data buffer */
+    unsigned		 flags = 0;
+    herr_t               ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(f);
+    HDassert(thing);
+    HDassert(H5F_addr_defined(addr));
+    HDassert(new_addr_ptr);
+    HDassert(new_len_ptr);
+    HDassert(flags_ptr);
+
+    new_addr = addr; /* will update new_addr if we move the block */
+
+    dblock = (H5HF_direct_t *)thing;
+
+    HDassert(dblock);
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_FHEAP_DBLOCK[0]));
+    HDassert(dblock->cache_info.size == dblock->size);
+    HDassert(dblock->write_buf == NULL);
+    HDassert(dblock->write_size == 0);
+
+    hdr = dblock->hdr;
+
+    /* Do we need this? */
+    /* Set the shared heap header's file context for this operation */
+    hdr->f = (H5F_t *)f;
+
+    HDassert(hdr);
+    HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
+              &(H5AC_FHEAP_HDR[0]));
+
+    if ( dblock->parent ) {
+
+	/* this is the common case, in which the direct block is the child 
+         * of an indirect block.  Set up the convenience variables we will
+         * need if the address and/or size of the on disk image of the 
+         * direct block changes, and do some sanity checking in passing.
+         */
+
+        par_iblock = dblock->parent;
+	par_entry = dblock->par_entry;
+
+	HDassert(par_iblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+	HDassert((const H5AC_class_t *)(par_iblock->cache_info.type) == \
+                 &(H5AC_FHEAP_IBLOCK[0]));
+        HDassert(H5F_addr_eq(par_iblock->ents[par_entry].addr, addr));
+
+    } else {
+
+	/* the direct block is a root direct block -- just set par_iblock
+         * to NULL, as the field will not be used.
+         */
+	par_iblock = NULL;
+    }
+
+    at_tmp_addr = H5F_IS_TMP_ADDR(f, addr);
+
+    /* Begin by preping the direct block to be written to disk.  Do
+     * this by writing the correct magic number, the dblock version, 
+     * the address of the header, the offset of the block in the heap, 
+     * and the checksum at the beginning of the block.
+     */
+
+    HDassert(dblock->blk);
+    p = dblock->blk;
+
+    /* Magic number */
+    HDmemcpy(p, H5HF_DBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    p += H5_SIZEOF_MAGIC;
+
+    /* Version # */
+    *p++ = H5HF_DBLOCK_VERSION;
+
+    /* Address of heap header for heap which owns this block */
+    H5F_addr_encode(f, &p, hdr->heap_addr);
+
+    /* Offset of block in heap */
+    UINT64ENCODE_VAR(p, dblock->block_off, hdr->heap_off_size);
+
+    /* Metadata checksum */
+    if(hdr->checksum_dblocks) {
+        uint32_t metadata_chksum;       /* Computed metadata checksum value */
+
+        /* Clear the checksum field, to compute the checksum */
+        HDmemset(p, 0, (size_t)H5HF_SIZEOF_CHKSUM);
+
+        /* Compute checksum on entire direct block */
+        metadata_chksum = H5_checksum_metadata(dblock->blk, dblock->size, 0);
+
+        /* Metadata checksum */
+        UINT32ENCODE(p, metadata_chksum);
+    } /* end if */
+
+    /* at this point, dblock->blk should point to an uncompressed image of 
+     * the direct block.  If I/O filters are not enabled, this image should
+     * be ready to hand off to the metadata cache.
+
+    /* Sanity check */
+    HDassert((size_t)(p - dblock->blk) == \
+	     (size_t)H5HF_MAN_ABS_DIRECT_OVERHEAD(hdr));
+
+    /* If I/O filters are enabled on this heap, we must run the direct block
+     * image through the filters to obtain the image that we will hand off
+     * to the metadata cache.
+     */
+
+    /* Check for I/O filters on this heap */
+    if(hdr->filter_len > 0) {
+
+        H5Z_cb_t filter_cb = {NULL, NULL};  /* Filter callback structure */
+        size_t nbytes;                      /* Number of bytes used */
+        unsigned filter_mask = 0;           /* Filter mask for block */
+
+        /* Allocate buffer to perform I/O filtering on */
+        write_size = dblock->size;
+
+        if(NULL == (write_buf = H5MM_malloc(write_size)))
+
+            HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, FAIL, \
+		"memory allocation failed for pipeline buffer")
+
+        HDmemcpy(write_buf, dblock->blk, write_size);
+
+        /* Push direct block data through I/O filter pipeline */
+        nbytes = write_size;
+
+        if(H5Z_pipeline(&(hdr->pline), 0, &filter_mask, H5Z_ENABLE_EDC, 
+			filter_cb, &nbytes, &write_size, &write_buf) < 0)
+
+            HGOTO_ERROR(H5E_HEAP, H5E_WRITEERROR, FAIL, \
+			"output pipeline failed")
+
+        /* Use the compressed number of bytes as the size to write */
+        write_size = nbytes;
+
+        /* If the size and/or location of the on disk image of the 
+         * direct block changes, we must touch up its parent to reflect
+         * these changes.  Do this defferently depending on whether the
+         * direct block's parent is an indirect block or (rarely) the 
+         * fractal heap header.  In this case, the direct block is known
+         * as a root direct block.
+         */
+
+        /* Check for root direct block */
+        if(dblock->parent == NULL) {
+
+            hbool_t hdr_changed = FALSE; /* Whether the header info changed */
+
+            /* Sanity check */
+            HDassert(H5F_addr_eq(hdr->man_dtable.table_addr, addr));
+            HDassert(hdr->pline_root_direct_size > 0);
+
+            /* Check if the filter mask changed */
+            if(hdr->pline_root_direct_filter_mask != filter_mask) {
+
+                hdr->pline_root_direct_filter_mask = filter_mask;
+                hdr_changed = TRUE;
+
+            } /* end if */
+
+            /* Check if we need to re-size the block on disk */
+            if(hdr->pline_root_direct_size != write_size || at_tmp_addr) {
+
+                /* Check if the direct block is NOT currently allocated 
+                 * in temp. file space 
+                 *
+                 * (temp. file space does not need to be freed) 
+                 */
+                if(!at_tmp_addr) {
+
+                    /* Release direct block's current disk space */
+                    if(H5MF_xfree(f, H5FD_MEM_FHEAP_DBLOCK, dxpl_id, addr, 
+                                  (hsize_t)hdr->pline_root_direct_size) < 0)
+
+                        HGOTO_ERROR(H5E_HEAP, H5E_CANTFREE, FAIL, \
+                                    "unable to free fractal heap direct block")
+
+                } /* end if */
+
+                /* Allocate space for the compressed direct block */
+                if(HADDR_UNDEF == (new_addr = H5MF_alloc((H5F_t *)f, 
+                                                 H5FD_MEM_FHEAP_DBLOCK, dxpl_id,
+                                                 (hsize_t)write_size)))
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, FAIL, \
+			"file allocation failed for fractal heap direct block")
+
+                /* Let the metadata cache know, if the block moved */
+                if(!H5F_addr_eq(hdr->man_dtable.table_addr, new_addr))
+
+                    if(H5AC_move_entry((H5F_t *)f, H5AC_FHEAP_DBLOCK, 
+                                     hdr->man_dtable.table_addr, new_addr) < 0)
+
+                        HGOTO_ERROR(H5E_HEAP, H5E_CANTMOVE, FAIL, \
+                                    "unable to move direct block")
+
+                /* Update information about compressed direct block's 
+                 * location & size 
+                 */
+                hdr->man_dtable.table_addr = new_addr;
+                hdr->pline_root_direct_size = write_size;
+
+                /* Note that heap header was modified */
+                hdr_changed = TRUE;
+            } /* end if */
+
+            /* Check if heap header was modified */
+            if(hdr_changed)
+
+                if(H5HF_hdr_dirty(hdr) < 0)
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDIRTY, FAIL, \
+                                "can't mark heap header as dirty")
+
+        } /* end if */
+        else { /* the direct block's parent is an indirect block */
+
+            hbool_t par_changed = FALSE;  /* Whether the parent's infochanged */
+
+            /* Sanity check */
+            HDassert(par_iblock);
+            HDassert(par_iblock->filt_ents[par_entry].size > 0);
+
+            /* Check if the filter mask changed */
+            if(par_iblock->filt_ents[par_entry].filter_mask != filter_mask) {
+
+                par_iblock->filt_ents[par_entry].filter_mask = filter_mask;
+                par_changed = TRUE;
+
+            } /* end if */
+
+            /* Check if we need to re-size the block on disk */
+            if(par_iblock->filt_ents[par_entry].size != write_size || 
+               at_tmp_addr) {
+
+                /* Check if the direct block is NOT currently allocated 
+                 * in temp. file space 
+                 *
+                 * (temp. file space does not need to be freed) 
+                 */
+
+                if(!at_tmp_addr) {
+
+                    /* Release direct block's current disk space */
+                    if(H5MF_xfree(f, H5FD_MEM_FHEAP_DBLOCK, dxpl_id, addr, 
+                            (hsize_t)par_iblock->filt_ents[par_entry].size) < 0)
+
+                        HGOTO_ERROR(H5E_HEAP, H5E_CANTFREE, FAIL, \
+                                    "unable to free fractal heap direct block")
+
+                } /* end if */
+
+                /* Allocate space for the compressed direct block */
+                if(HADDR_UNDEF == (new_addr = H5MF_alloc((H5F_t *)f, 
+                                                H5FD_MEM_FHEAP_DBLOCK, 
+                                                dxpl_id, (hsize_t)write_size)))
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, FAIL, \
+                         "file allocation failed for fractal heap direct block")
+
+                /* Let the metadata cache know, if the block moved */
+                if(!H5F_addr_eq(par_iblock->ents[par_entry].addr, new_addr))
+
+                    if(H5AC_move_entry((H5F_t *)f, H5AC_FHEAP_DBLOCK, 
+                                       par_iblock->ents[par_entry].addr, 
+                                       new_addr) < 0)
+
+                        HGOTO_ERROR(H5E_HEAP, H5E_CANTMOVE, FAIL, \
+                                    "unable to move direct block")
+
+                /* Update information about compressed direct block's 
+                 * location & size 
+                 */
+                par_iblock->ents[par_entry].addr = new_addr;
+                par_iblock->filt_ents[par_entry].size = write_size;
+
+                /* Note that parent was modified */
+                par_changed = TRUE;
+            } /* end if */
+
+            /* Check if parent was modified */
+            if(par_changed)
+
+                if(H5HF_iblock_dirty(par_iblock) < 0)
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDIRTY, FAIL, \
+                                "can't mark heap header as dirty")
+
+        } /* end else */
+    } /* end if */
+    else {
+        /* I/O filters are not enabled -- thus all we need to do is check to 
+         * see if the direct block is in temporary (AKA imaginary) file 
+         * space, and move it to real file space if it is.
+         *
+         * As in the I/O filters case above, we will have to touch up the 
+         * direct blocks parent if the direct block is relocated.
+         *
+         * Recall that temporary file space need not be freed, which 
+         * simplifies matters slightly.
+         */
+        write_buf = dblock->blk;
+        write_size = dblock->size;
+
+        /* Check to see if we must re-allocate direct block from 'temp.' 
+         * to 'normal' file space 
+         */
+        if(at_tmp_addr) {
+
+            /* Check for root direct block */
+            if(NULL == dblock->parent) {
+
+                /* Sanity check */
+                HDassert(H5F_addr_eq(hdr->man_dtable.table_addr, addr));
+
+                /* Allocate 'normal' space for the direct block */
+                if(HADDR_UNDEF == (new_addr = H5MF_alloc((H5F_t *)f, 
+                                                H5FD_MEM_FHEAP_DBLOCK, 
+                                                dxpl_id, (hsize_t)write_size)))
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, FAIL, \
+                         "file allocation failed for fractal heap direct block")
+
+                /* Sanity check */
+                HDassert(!H5F_addr_eq(hdr->man_dtable.table_addr, new_addr));
+
+                /* Let the metadata cache know the block moved */
+                if(H5AC_move_entry((H5F_t *)f, H5AC_FHEAP_DBLOCK, 
+                                   hdr->man_dtable.table_addr, new_addr) < 0)
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTMOVE, FAIL, \
+                                 "unable to move direct block")
+
+                /* Update information about direct block's location */
+                hdr->man_dtable.table_addr = new_addr;
+
+                /* Mark that heap header was modified */
+                if(H5HF_hdr_dirty(hdr) < 0)
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDIRTY, FAIL, \
+                                "can't mark heap header as dirty")
+
+            } /* end if */
+            else { /* the direct block's parent is an indirect block */
+
+                /* Sanity check */
+                HDassert(par_iblock);
+                HDassert(H5F_addr_eq(par_iblock->ents[par_entry].addr, addr));
+
+                /* Allocate 'normal' space for the direct block */
+                if(HADDR_UNDEF == (new_addr = H5MF_alloc((H5F_t *)f, 
+                                                H5FD_MEM_FHEAP_DBLOCK, 
+                                                dxpl_id, (hsize_t)write_size)))
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_NOSPACE, FAIL, \
+                         "file allocation failed for fractal heap direct block")
+
+                /* Sanity check */
+                HDassert(!H5F_addr_eq(par_iblock->ents[par_entry].addr, \
+                                      new_addr));
+
+                /* Let the metadata cache know the block moved */
+                if(H5AC_move_entry((H5F_t *)f, H5AC_FHEAP_DBLOCK, 
+                                   par_iblock->ents[par_entry].addr, 
+                                   new_addr) < 0)
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTMOVE, FAIL, \
+                                "unable to move direct block")
+
+                /* Update information about direct block's location */
+                par_iblock->ents[par_entry].addr = new_addr;
+
+                /* Mark that parent was modified */
+                if(H5HF_iblock_dirty(par_iblock) < 0)
+
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDIRTY, FAIL, \
+                                "can't mark heap header as dirty")
+
+            } /* end else */
+        } /* end if */
+    } /* end else */
+
+    /* At this point, write_buf points to a buffer containing the image 
+     * of the direct block that is ready to copy into the image buffer,
+     * and write_size contains the length of this buffer. 
+     *
+     * Also, if image size or address has changed, the direct block's
+     * parent has been modified to reflect the change.
+     *
+     * Now, make note of the pointer and length of the above buffer for
+     * use by the serialize function.
+     */
+
+    dblock->write_buf = write_buf;
+    dblock->write_size = write_size;
+
+    /* finally, pass data back to the metadata cache as appropriate */
+
+    if ( ! H5F_addr_eq(addr, new_addr) ) {
+
+        flags != H5C__SERIALIZE_MOVED_FLAG;
+        *new_addr_ptr = new_addr;
+    }
+
+    if ( len != write_size ) {
+ 
+        flags != H5C__SERIALIZE_RESIZED_FLAG;
+        *new_len_ptr = write_size;
+    }
+
+    *flags_ptr = flags;
+
+    /* final sanity check */
+    HDassert(dblock->write_buf);
+    HDassert(dblock->write_size > 0);
+
+done:
+
+    /* discard the write buf if we have an error */
+    if ( ( write_buf ) && ( write_buf != dblock->blk ) && 
+         ( dblock->write_buf == NULL ) )
+
+	H5MM_xfree(write_buf);
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_dblock_pre_serialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_dblock_serialize
+ *
+ * Purpose: In principle, this function is supposed to construct the on 
+ *	disk image of the direct block, and place that image in the 
+ *	image buffer provided by the metadata cache.
+ *
+ *	However, since there are cases in which the pre_serialize 
+ *	function has to construct the on disk image to determine its size 
+ *	and address, this function simply copies the image prepared by
+ *	the pre-serialize function into the supplied image buffer, and 
+ *	discards a buffer if necessary.
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The serialize callback is invoked by the metadata cache whenever
+ *      it needs a current on disk image of the metadata entry for purposes
+ *      either constructing a journal or flushing the entry to disk.
+ *
+ *      At this point, the base address and length of the entry's image on
+ *      disk must be well known and not change during the serialization
+ *      process.
+ *
+ *      The typedef for the serialize callback is as follows:
+ *
+ *      typedef herr_t (*H5C_serialize_func_t)(const H5F_t *f,
+ *                                             void * image_ptr,
+ *                                             size_t len,
+ *                                             void * thing);
+ *
+ *      The parameters of the serialize callback are as follows:
+ *
+ *      f:      File pointer -- needed if other metadata cache entries
+ *              must be modified in the process of serializing the
+ *              target entry.
+ *
+ *      image_ptr: Pointer to a buffer of length len bytes into which a
+ *              serialized image of the target metadata cache entry is
+ *              to be written.
+ *
+ *              Note that this buffer will not in general be initialized
+ *              to any particular value.  Thus the serialize function may
+ *              not assume any initial value and must set each byte in
+ *              the buffer.
+ *
+ *      len:    Length in bytes of the in file image of the entry to be
+ *              serialized.  Also the size of *image_ptr (below).
+ *
+ *              This parameter is supplied mainly for sanity checking.
+ *              Sanity checks should be performed when compiled in debug
+ *              mode, but the parameter may be unused when compiled in
+ *              production mode.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.
+ *              This is the same pointer returned by a protect of the
+ *              addr and len given above.
+ *
+ *      Processing in the serialize function should proceed as follows:
+ *
+ *      The serialize function must examine the in core representation
+ *      indicated by the thing parameter, and write a serialized image
+ *      of its contents into the provided buffer.
+ *
+ *      If it is successful, the function must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_dblock_serialize(const H5F_t *f,
+                            void *image_ptr,
+                            size_t len,
+                            void *thing)
+{
+    H5HF_direct_t       *dblock = NULL; /* Direct block info */
+    herr_t               ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
+
+    HDassert(f);
+    HDassert(image_ptr);
+    HDassert(len > 0);
+    HDassert(thing);
+
+    dblock = (H5HF_direct_t *)thing;
+
+    HDassert(dblock);
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_FHEAP_DBLOCK[0]));
+    HDassert(dblock->cache_info.size == dblock->size);
+    HDassert(dblock->write_buf);
+    HDassert(dblock->write_size > 0);
+    HDassert((dblock->blk != dblock->write_buf) || \
+             (dblock->write_size == dblock->size));
+    HDassert(dblock->write_size == len);
+
+    /* copy the image from *(dblock->write_buf) to *image_ptr */
+
+    HDmemcpy(image_ptr, dblock->write_buf, dblock->write_size);
+
+    /* free *(dblock->write_buf) if it was allocated by the 
+     * pre-serialize function 
+     */
+    if(dblock->write_buf != dblock->blk)
+
+        H5MM_xfree(dblock->write_buf);
+
+    /* reset the write_buf and write_size fields */
+    dblock->write_buf = NULL;
+    dblock->write_size = 0;
+
+    HDassert(dblock->write_buf == NULL);
+    HDassert(dblock->write_size == 0);
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_dblock_serialize() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_dblock_notify
+ *
+ * Purpose: Setup / takedown flush dependencies as direct blocks
+ *      are loaded / inserted and evicted from the metadata cache.
+ *
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The notify callback is invoked by the metadata cache when a cache
+ *      action on an entry has taken/will take place and the client indicates
+ *      it wishes to be notified about the action.
+ *
+ *      The typedef for the notify callback is as follows:
+ *
+ *      typedef herr_t (*H5C_notify_func_t)(H5C_notify_action_t action,
+ *                                          void *thing);
+ *
+ *      The parameters of the notify callback are as follows:
+ *
+ *      action: An enum indicating the metadata cache action that has taken/
+ *              will take place.
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.  This
+ *              is the same pointer that would be returned by a protect
+ *              of the addr and len above.
+ *
+ *      Processing in the notify function should proceed as follows:
+ *
+ *      The notify function may perform any action it would like, including
+ *      metadata cache calls.
+ *
+ *      If the function is successful, it must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_dblock_notify(H5C_notify_action_t action, void *thing)
+{
+    H5HF_direct_t 	*dblock;
+    herr_t 		 ret_value = SUCCEED;         /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    /*
+     * Check arguments.
+     */
+    HDassert(thing);
+
+    dblock = (H5HF_direct_t *)thing;
+
+    HDassert(dblock);
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_FHEAP_DBLOCK[0]));
+    HDassert(dblock->hdr);
+    HDassert((dblock->fd_parent) ||
+             ((dblock->hdr->man_dtable.curr_root_rows == 0) &&
+              (dblock->block_off == (hsize_t)0)));
+
+    switch ( action )
+    {
+        case H5C_NOTIFY_ACTION_AFTER_INSERT:
+            HDassert(dblock->parent == dblock->fd_parent);
+
+            if ( dblock->parent ) /* this is a leaf dblock */
+            {
+                /* create flush dependency with parent iblock */
+                if(H5AC_create_flush_dependency(dblock->parent, dblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDEPEND, FAIL, \
+                                "unable to create flush dependency")
+            }
+            else /* this is a root dblock */
+            {
+                /* create flush dependency with header */
+                if(H5AC_create_flush_dependency(dblock->hdr, dblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTDEPEND, FAIL, \
+                                "unable to create flush dependency")
+            }
+            break;
+
+        case H5C_NOTIFY_ACTION_BEFORE_EVICT:
+            HDassert((dblock->parent == dblock->fd_parent) ||
+                     ((NULL == dblock->parent) && (dblock->fd_parent)));
+            if ( dblock->fd_parent ) /* this is a leaf dblock */
+            {
+                /* destroy flush dependency with parent iblock */
+                if(H5AC_destroy_flush_dependency(dblock->fd_parent,
+                                                 dblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTUNDEPEND, FAIL, \
+                                "unable to destroy flush dependency")
+            }
+            else /* this is a root dblock */
+            {
+                /* destroy flush dependency with header */
+                if(H5AC_destroy_flush_dependency(dblock->hdr, dblock) < 0)
+                    HGOTO_ERROR(H5E_HEAP, H5E_CANTUNDEPEND, FAIL, \
+                                "unable to destroy flush dependency")
+
+            }
+            break;
+
+        default:
+            HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, \
+                        "unknown action from metadata cache")
+            break;
+    }
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_dblock_notify() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5HF_cache_dblock_free_icr
+ *
+ * Purpose: Free the in core memory allocated to the supplied direct
+ *	block.
+ *
+ *      The generic discussion of metadata cache callbacks of this type
+ *	is reproduced below from the discussion in H5Cprivate.h:
+ *
+ *	==================================================================
+ *
+ *      The free ICR callback is invoked by the metadata cache when it
+ *      wishes to evict an entry, and needs the client to free the memory
+ *      allocated for the in core representation.
+ *
+ *      The typedef for the free ICR callback is as follows:
+ *
+ *      typedef herr_t (*H5C_free_icr_func_t)(void * thing);
+ *
+ *      The parameters of the free ICR callback are as follows:
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.  This
+ *              is the same pointer that would be returned by a protect
+ *              of the addr and len above.
+ *
+ *      Processing in the free ICR function should proceed as follows:
+ *
+ *      The free ICR function must free all memory allocated to the
+ *      in core representation.
+ *
+ *      If the function is successful, it must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
+ *      At least when compiled with debug, it would be useful if the
+ *      free ICR call would fail if the in core representation has been
+ *      modified since the last serialize of clear callback.
+ *
+ *	==================================================================
+ *
+ * Return:	Success:	SUCCEED
+ *		Failure:	FAIL
+ *
+ * Programmer:	John Mainzer
+ *		6/21/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t 
+H5HF_cache_dblock_free_icr(void *thing)
+{
+    H5HF_direct_t       *dblock;
+    herr_t      	 ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+
+    dblock = (H5HF_direct_t *)thing;
+
+    HDassert(dblock);
+
+    /* the metadata cache sets cache_info.magic to 
+     * H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before the call to the free_icr
+     * routine.  Hence the following assert:
+     */
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
+
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_FHEAP_DBLOCK[0]));
+
+
+    /* Destroy fractal heap direct block */
+    if(H5HF_man_dblock_dest(dblock) < 0)
+
+        HGOTO_ERROR(H5E_HEAP, H5E_CANTFREE, FAIL, \
+                    "unable to destroy fractal heap direct block")
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5HF_cache_dblock_free_icr() */
+
+#else /* V2 cache callback definitions */
 
 
 /*-------------------------------------------------------------------------
@@ -2060,6 +5922,8 @@ H5HF_cache_dblock_size(const H5F_t UNUSED *f, const H5HF_direct_t *dblock, size_
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* H5HF_cache_dblock_size() */
 
+#endif /* V2 cache callback definitions */
+
 
 
 /*------------------------------------------------------------------------
@@ -2668,10 +6532,10 @@ done:
 #ifndef NDEBUG
 static herr_t
 H5HF_cache_verify_descendant_iblocks_clean(H5F_t *f, 
-                                          hid_t dxpl_id,
-                                          H5HF_indirect_t * iblock, 
-                                          hbool_t *clean_ptr,
-                                          hbool_t *has_iblocks_ptr)
+                                           hid_t dxpl_id,
+                                           H5HF_indirect_t * iblock, 
+                                           hbool_t *clean_ptr,
+                                           hbool_t *has_iblocks_ptr)
 {
     hbool_t	      unprotect_child_iblock;
     unsigned	      i;

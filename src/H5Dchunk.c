@@ -304,8 +304,9 @@ H5FL_BLK_DEFINE_STATIC(chunk);
  *-------------------------------------------------------------------------
  */
 herr_t
-H5D__chunk_direct_write(const H5D_t *dset, hid_t dxpl_id, uint32_t filters, hsize_t *offset, 
-     uint32_t data_size, const void *buf)
+H5D__chunk_direct_write(const H5D_t *dset, hid_t dxpl_id, uint32_t filters, 
+	hsize_t *offset, uint32_t data_size, const void *buf)
+
 {
     const H5O_layout_t *layout = &(dset->shared->layout);       /* Dataset layout */
     H5D_chunk_ud_t udata;   /* User data for querying chunk info */
@@ -356,7 +357,7 @@ H5D__chunk_direct_write(const H5D_t *dset, hid_t dxpl_id, uint32_t filters, hsiz
 	idx_info.storage = &(dset->shared->layout.storage.u.chunk);
 
 	/* Set up the size of chunk for user data */
-	udata.nbytes = data_size;
+        H5_ASSIGN_OVERFLOW(udata.nbytes, data_size, size_t, uint32_t);
 
         /* Create the chunk it if it doesn't exist, or reallocate the chunk
          *  if its size changed.

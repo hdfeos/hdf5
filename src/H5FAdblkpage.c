@@ -167,7 +167,7 @@ HDfprintf(stderr, "%s: Called, addr = %a\n", FUNC, addr);
 
     /* Set info about data block page on disk */
     dblk_page->addr = addr;
-    dblk_page->size = H5FA_DBLK_PAGE_SIZE(dblk_page, nelmts);
+    dblk_page->size = H5FA_DBLK_PAGE_SIZE(hdr, nelmts);
 #ifdef H5FA_DEBUG
 HDfprintf(stderr, "%s: dblk_page->size = %Zu\n", FUNC, dblk_page->size);
 #endif /* H5FA_DEBUG */
@@ -223,6 +223,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     /* Set up user data */
     udata.hdr = hdr;
     udata.nelmts = dblk_page_nelmts;
+    udata.dblk_page_addr = dblk_page_addr;
 
     /* Protect the data block page */
     if(NULL == (ret_value = (H5FA_dblk_page_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_FARRAY_DBLK_PAGE, dblk_page_addr, &udata, rw)))

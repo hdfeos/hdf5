@@ -322,6 +322,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     udata.hdr = hdr;
     udata.parent = parent;
     udata.nelmts = dblk_nelmts;
+    udata.dblk_addr = dblk_addr;
 
     /* Protect the data block */
     if(NULL == (ret_value = (H5EA_dblock_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_EARRAY_DBLOCK, dblk_addr, &udata, rw)))

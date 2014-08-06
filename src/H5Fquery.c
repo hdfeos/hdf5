@@ -1073,3 +1073,34 @@ H5F_use_tmp_space(const H5F_t *f)
     FUNC_LEAVE_NOAPI(f->shared->use_tmp_space)
 } /* end H5F_use_tmp_space() */
 
+
+/*-------------------------------------------------------------------------
+ * Function:	H5F__get_eof
+ *
+ * Purpose:	Quick and dirty routine to retrieve the file's 'eof' value
+ *
+ * Return:	Non-negative on success/Negative on failure
+ *
+ * Programmer:	Quincey Koziol <koziol@hdfgroup.org>
+ *		July 19, 2013
+ *
+ *-------------------------------------------------------------------------
+ */
+haddr_t
+H5F__get_eof(const H5F_t *f)
+{
+    haddr_t	ret_value;
+
+    FUNC_ENTER_PACKAGE
+
+    HDassert(f);
+    HDassert(f->shared);
+
+    /* Dispatch to driver */
+    if(HADDR_UNDEF == (ret_value = H5FD_get_eof(f->shared->lf)))
+	HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, HADDR_UNDEF, "driver get_eof request failed")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
+} /* end H5F__get_eof() */
+
