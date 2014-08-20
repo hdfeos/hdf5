@@ -517,8 +517,10 @@ struct expected_entry_status
     hbool_t		deserialized;
     hbool_t		serialized;
     hbool_t		destroyed;
-    int                 flush_dep_par_type; /* Entry type of flush dependency parent */
-    int                 flush_dep_par_idx; /* Index of flush dependency parent */
+    int                 flush_dep_par_type; /* Entry type of flush */
+                                            /* dependency parent */
+    int                 flush_dep_par_idx;  /* Index of flush dependency */
+                                            /* parent */
     uint64_t            child_flush_dep_height_rc[H5C__NUM_FLUSH_DEP_HEIGHTS];
                                         /* flush dependency heights of flush
                                          * dependency children

@@ -1142,6 +1142,7 @@ if ( ( (head_ptr) == NULL ) ||                                               \
        )                                                                     \
      )                                                                       \
    ) {                                                                       \
+    HDassert(0 && "DLL pre remove SC failed");                               \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "DLL pre remove SC failed")     \
 }
 
@@ -1162,6 +1163,7 @@ if ( ( ( ( (head_ptr) == NULL ) || ( (tail_ptr) == NULL ) ) &&           \
        )                                                                 \
      )                                                                   \
    ) {                                                                   \
+    HDassert(0 && "DLL sanity check failed");                            \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "DLL sanity check failed")  \
 }
 
@@ -1184,6 +1186,7 @@ if ( ( (entry_ptr) == NULL ) ||                                              \
        )                                                                     \
      )                                                                       \
    ) {                                                                       \
+    HDassert(0 && "DLL pre insert SC failed");                               \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "DLL pre insert SC failed")     \
 }
 
@@ -1194,12 +1197,14 @@ if ( ( (dll_len) <= 0 ) ||                                                    \
      ( (old_size) > (dll_size) ) ||                                           \
      ( (new_size) <= 0 ) ||                                                   \
      ( ( (dll_len) == 1 ) && ( (old_size) != (dll_size) ) ) ) {               \
+    HDassert(0 && "DLL pre size update SC failed");                           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "DLL pre size update SC failed") \
 }
 
 #define H5C__DLL_POST_SIZE_UPDATE_SC(dll_len, dll_size, old_size, new_size)    \
 if ( ( (new_size) > (dll_size) ) ||                                            \
      ( ( (dll_len) == 1 ) && ( (new_size) != (dll_size) ) ) ) {                \
+    HDassert(0 && "DLL post size update SC failed");                           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "DLL post size update SC failed") \
 }
 
@@ -1308,6 +1313,7 @@ if ( ( (hd_ptr) == NULL ) ||                                                   \
        )                                                                       \
      )                                                                         \
    ) {                                                                         \
+    HDassert(0 && "aux DLL pre remove SC failed");                             \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "aux DLL pre remove SC failed")   \
 }
 
@@ -1328,6 +1334,7 @@ if ( ( ( ( (head_ptr) == NULL ) || ( (tail_ptr) == NULL ) ) &&              \
        )                                                                    \
      )                                                                      \
    ) {                                                                      \
+    HDassert(0 && "AUX DLL sanity check failed");                           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "AUX DLL sanity check failed") \
 }
 
@@ -1350,6 +1357,7 @@ if ( ( (entry_ptr) == NULL ) ||                                                \
        )                                                                       \
      )                                                                         \
    ) {                                                                         \
+    HDassert(0 && "AUX DLL pre insert SC failed");                             \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "AUX DLL pre insert SC failed")   \
 }
 
@@ -1786,6 +1794,7 @@ if ( ( (cache_ptr) == NULL ) ||                               \
      ( (cache_ptr)->index_size !=                             \
        ((cache_ptr)->clean_index_size +                       \
 	(cache_ptr)->dirty_index_size) ) ) {                  \
+    HDassert(0 && "Pre HT insert SC failed");                 \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val,              \
                "Pre HT insert SC failed")                     \
 }
@@ -1811,6 +1820,7 @@ if ( ( (cache_ptr) == NULL ) ||                                         \
      ( (cache_ptr)->index_size !=                                       \
        ((cache_ptr)->clean_index_size +                                 \
 	(cache_ptr)->dirty_index_size) ) ) {                            \
+    HDassert(0 && "Pre HT remove SC failed");                           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Pre HT remove SC failed") \
 }
 
@@ -1823,6 +1833,7 @@ if ( ( (cache_ptr) == NULL ) ||                                             \
      ( ! H5F_addr_defined(Addr) ) ||                                        \
      ( H5C__HASH_FCN(Addr) < 0 ) ||                                         \
      ( H5C__HASH_FCN(Addr) >= H5C__HASH_TABLE_LEN ) ) {                     \
+    HDassert(0 && "Pre HT search SC failed");                               \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val, "Pre HT search SC failed") \
 }
 
@@ -1846,6 +1857,7 @@ if ( ( (cache_ptr) == NULL ) ||                                             \
        ( (entry_ptr)->ht_prev->ht_next != (entry_ptr) ) ) ||                \
      ( ( (entry_ptr)->ht_next != NULL ) &&                                  \
        ( (entry_ptr)->ht_next->ht_prev != (entry_ptr) ) ) ) {               \
+    HDassert(0 && "Post successful HT search SC failed");                   \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val,                            \
                 "Post successful HT search SC failed")                      \
 }
@@ -1855,6 +1867,7 @@ if ( ( (cache_ptr) == NULL ) ||                                             \
 if ( ( (cache_ptr) == NULL ) ||                                        \
      ( ((cache_ptr)->index)[k] != (entry_ptr) ) ||                     \
      ( (entry_ptr)->ht_prev != NULL ) ) {                              \
+    HDassert(0 && "Post HT shift to front SC failed");                 \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val,                       \
                 "Post HT shift to front SC failed")                    \
 }
@@ -1878,6 +1891,7 @@ if ( ( (cache_ptr) == NULL ) ||                                         \
 	  ( ( (was_clean) ) ||                                          \
 	    ( (cache_ptr)->dirty_index_size < (old_size) ) ) ) ||       \
      ( (entry_ptr) == NULL ) ) {                                        \
+    HDassert(0 && "Pre HT entry size change SC failed");                \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                            \
                 "Pre HT entry size change SC failed")                   \
 }
@@ -1897,6 +1911,7 @@ if ( ( (cache_ptr) == NULL ) ||                                           \
 	    ( (cache_ptr)->clean_index_size < (new_size) ) ) ) ||         \
      ( ( (cache_ptr)->index_len == 1 ) &&                                 \
        ( (cache_ptr)->index_size != (new_size) ) ) ) {                    \
+    HDassert(0 && "Post HT entry size change SC failed");                 \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                              \
                 "Post HT entry size change SC failed")                    \
 }
@@ -1912,6 +1927,7 @@ if (                                                                          \
     ( (cache_ptr)->dirty_index_size < (entry_ptr)->size ) ||                  \
     ( (cache_ptr)->index_size !=                                              \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) ) {  \
+    HDassert(0 && "Pre HT update for entry clean SC failed");                 \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                  \
                 "Pre HT update for entry clean SC failed")                    \
 }
@@ -1927,6 +1943,7 @@ if (                                                                          \
     ( (cache_ptr)->clean_index_size < (entry_ptr)->size ) ||                  \
     ( (cache_ptr)->index_size !=                                              \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) ) {  \
+    HDassert(0 && "Pre HT update for entry dirty SC failed");                 \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                  \
                 "Pre HT update for entry dirty SC failed")                    \
 }
@@ -1934,6 +1951,7 @@ if (                                                                          \
 #define H5C__POST_HT_UPDATE_FOR_ENTRY_CLEAN_SC(cache_ptr, entry_ptr)        \
 if ( (cache_ptr)->index_size !=                                             \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) {  \
+    HDassert(0 && "Post HT update for entry clean SC failed");              \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                \
                 "Post HT update for entry clean SC failed")                 \
 }
@@ -1941,6 +1959,7 @@ if ( (cache_ptr)->index_size !=                                             \
 #define H5C__POST_HT_UPDATE_FOR_ENTRY_DIRTY_SC(cache_ptr, entry_ptr)        \
 if ( (cache_ptr)->index_size !=                                             \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) {  \
+    HDassert(0 && "Post HT update for entry dirty SC failed");              \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                \
                 "Post HT update for entry dirty SC failed")                 \
 }

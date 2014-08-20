@@ -37,7 +37,7 @@
 #include "H5Fprivate.h"		/* File access				*/
 
 
-#define H5C_DO_SANITY_CHECKS		0
+#define H5C_DO_SANITY_CHECKS		1
 #define H5C_DO_TAGGING_SANITY_CHECKS	1
 #define H5C_DO_EXTREME_SANITY_CHECKS	0
 /* Note: The memory sanity checks aren't going to work until I/O filters are

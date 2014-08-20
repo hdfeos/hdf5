@@ -142,7 +142,6 @@ static herr_t H5C__flash_increase_cache_size(H5C_t * cache_ptr,
 
 static herr_t H5C_flush_single_entry(const H5F_t *	 f,
                                      hid_t 		 dxpl_id,
-                                     const H5C_class_t * type_ptr,
                                      haddr_t		 addr,
                                      unsigned	         flags,
                                      hbool_t del_entry_from_slist_on_destroy);
@@ -651,7 +650,6 @@ H5C_apply_candidate_list(H5F_t * f,
 
             if(H5C_flush_single_entry(f,
                                       dxpl_id,
-                                      clear_ptr->type,
                                       clear_ptr->addr,
                                       H5C__FLUSH_CLEAR_ONLY_FLAG,
                                       TRUE) < 0)
@@ -673,7 +671,6 @@ H5C_apply_candidate_list(H5F_t * f,
 
             if(H5C_flush_single_entry(f,
                                       dxpl_id,
-                                      flush_ptr->type,
                                       flush_ptr->addr,
                                       H5C__NO_FLAGS_SET,
                                       TRUE) < 0)
@@ -764,7 +761,6 @@ H5C_apply_candidate_list(H5F_t * f,
 
                 if(H5C_flush_single_entry(f,
                                       dxpl_id,
-                                      clear_ptr->type,
                                       clear_ptr->addr,
                                       H5C__FLUSH_CLEAR_ONLY_FLAG,
                                       TRUE) < 0)
@@ -785,7 +781,6 @@ H5C_apply_candidate_list(H5F_t * f,
 
                 if(H5C_flush_single_entry(f,
                                       dxpl_id,
-                                      flush_ptr->type,
                                       flush_ptr->addr,
                                       H5C__NO_FLAGS_SET,
                                       TRUE) < 0)
@@ -831,8 +826,6 @@ H5C_apply_candidate_list(H5F_t * f,
 
         if(H5C_flush_single_entry(f,
                                   primary_dxpl_id,
-                                  secondary_dxpl_id,
-                                  delayed_ptr->type,
                                   delayed_ptr->addr,
                                   H5C__NO_FLAGS_SET,
                                   &first_flush,
@@ -1627,7 +1620,7 @@ H5C_expunge_entry(H5F_t *f, hid_t dxpl_id, const H5C_class_t *type,
     /* Pass along 'free file space' flag to cache client */
     flush_flags |= (flags & H5C__FREE_FILE_SPACE_FLAG);
 
-    if(H5C_flush_single_entry(f, dxpl_id, entry_ptr->type, entry_ptr->addr, flush_flags, TRUE) < 0)
+    if(H5C_flush_single_entry(f, dxpl_id, entry_ptr->addr, flush_flags, TRUE) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTEXPUNGE, FAIL, "H5C_flush_single_entry() failed.")
 
 done:
@@ -1912,7 +1905,6 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
 #endif /* H5C_DO_SANITY_CHECKS */
                                 status = H5C_flush_single_entry(f,
                                                                 dxpl_id,
-                                                                NULL,
                                                                 entry_ptr->addr,
                                                                 flags,
                                                                 FALSE);
@@ -1943,7 +1935,6 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
 #endif /* H5C_DO_SANITY_CHECKS */
                                 status = H5C_flush_single_entry(f,
                                                                 dxpl_id,
-                                                                NULL,
                                                                 entry_ptr->addr,
                                                                 flags,
                                                                 FALSE);
@@ -3030,7 +3021,6 @@ H5C_mark_entries_as_clean(H5F_t *  f,
 
             if ( H5C_flush_single_entry(f,
                                         dxpl_id,
-                                        entry_ptr->type,
                                         addr,
                                         H5C__FLUSH_CLEAR_ONLY_FLAG,
                                         TRUE) < 0 ) {
@@ -3087,7 +3077,6 @@ H5C_mark_entries_as_clean(H5F_t *  f,
 
             if ( H5C_flush_single_entry(f,
                                         dxpl_id,
-                                        clear_ptr->type,
                                         clear_ptr->addr,
                                         H5C__FLUSH_CLEAR_ONLY_FLAG,
                                         TRUE) < 0 ) {
@@ -3122,7 +3111,6 @@ H5C_mark_entries_as_clean(H5F_t *  f,
 
             if ( H5C_flush_single_entry(f,
                                         dxpl_id,
-                                        clear_ptr->type,
                                         clear_ptr->addr,
                                         H5C__FLUSH_CLEAR_ONLY_FLAG,
                                         TRUE) < 0 ) {
@@ -5576,7 +5564,18 @@ H5C_unprotect(H5F_t *		  f,
 
         /* Mark the entry as dirty if appropriate */
         entry_ptr->is_dirty = (entry_ptr->is_dirty || dirtied );
+        /* the image_up_to_date field was introduced to support 
+         * journaling.  Until we re-introduce journaling, this 
+         * field should be equal to !entry_ptr->is_dirty.  
+         *
+         * When journaling is re-enabled it should be set 
+         * to FALSE if dirtied is TRUE.
+         */
+#if 1 /* JRM */
 	entry_ptr->image_up_to_date = FALSE;
+#else /* JRM */
+	entry_ptr->image_up_to_date = !entry_ptr->is_dirty;
+#endif /* JRM */
 
         /* Update index for newly dirtied entry */
         if(was_clean && entry_ptr->is_dirty)
@@ -5659,7 +5658,6 @@ H5C_unprotect(H5F_t *		  f,
 
             if ( H5C_flush_single_entry(f,
                                         dxpl_id,
-                                        type,
                                         addr,
                                         flush_flags,
                                         TRUE) < 0 ) {
@@ -5687,7 +5685,6 @@ H5C_unprotect(H5F_t *		  f,
 
             if ( H5C_flush_single_entry(f,
                                         dxpl_id,
-                                        type,
                                         addr,
                                         H5C__FLUSH_CLEAR_ONLY_FLAG,
                                         TRUE) < 0 ) {
@@ -6997,7 +6994,6 @@ H5C__autoadjust__ageout__evict_aged_out_entries(H5F_t * f,
 
                 result = H5C_flush_single_entry(f,
                                                 dxpl_id,
-                                                entry_ptr->type,
                                                 entry_ptr->addr,
                                                 H5C__NO_FLAGS_SET,
                                                 FALSE);
@@ -7007,7 +7003,6 @@ H5C__autoadjust__ageout__evict_aged_out_entries(H5F_t * f,
 
                 result = H5C_flush_single_entry(f,
                                                 dxpl_id,
-                                                entry_ptr->type,
                                                 entry_ptr->addr,
                                                 H5C__FLUSH_INVALIDATE_FLAG,
                                                 TRUE);
@@ -7103,7 +7098,6 @@ H5C__autoadjust__ageout__evict_aged_out_entries(H5F_t * f,
 
                 result = H5C_flush_single_entry(f,
                                                 dxpl_id,
-                                                entry_ptr->type,
                                                 entry_ptr->addr,
                                                 H5C__FLUSH_INVALIDATE_FLAG,
                                                 TRUE);
@@ -7850,7 +7844,6 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                         if(entry_ptr->flush_dep_height == curr_flush_dep_height ) {
                             status = H5C_flush_single_entry(f,
                                                             dxpl_id,
-                                                            NULL,
                                                             entry_ptr->addr,
                                                             H5C__NO_FLAGS_SET,
                                                             FALSE);
@@ -7874,7 +7867,6 @@ H5C_flush_invalidate_cache(const H5F_t * f,
 
                             status = H5C_flush_single_entry(f,
                                                             dxpl_id,
-                                                            NULL,
                                                             entry_ptr->addr,
                                                             (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG),
                                                              TRUE);
@@ -7966,7 +7958,6 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                             if(entry_ptr->flush_dep_height == curr_flush_dep_height ){
                                 status = H5C_flush_single_entry(f,
                                                                 dxpl_id,
-                                                                NULL,
                                                                 entry_ptr->addr,
                                                                 (cooked_flags | H5C__FLUSH_INVALIDATE_FLAG),
                                                                 TRUE);
@@ -8130,12 +8121,15 @@ done:
  *
  * Programmer:  John Mainzer, 5/5/04
  *
+ * Changes:	Refactored function to remove the type_ptr parameter.
+ *
+ *						JRM -- 8/7/14
+ *
  *-------------------------------------------------------------------------
  */
 static herr_t
 H5C_flush_single_entry(const H5F_t *	   f,
                        hid_t 		   dxpl_id,
-                       const H5C_class_t * type_ptr,
                        haddr_t		   addr,
                        unsigned	     	   flags,
                        hbool_t		   del_entry_from_slist_on_destroy)
@@ -8159,7 +8153,6 @@ H5C_flush_single_entry(const H5F_t *	   f,
     HDassert( f );
     HDassert( cache_ptr );
     HDassert( cache_ptr->magic == H5C__H5C_T_MAGIC );
-    HDassert( type_ptr );
     HDassert( H5F_addr_defined(addr) );
 
     destroy = ( (flags & H5C__FLUSH_INVALIDATE_FLAG) != 0 );
@@ -8212,10 +8205,10 @@ H5C_flush_single_entry(const H5F_t *	   f,
                     "Attempt to flush a protected entry.")
     }
 
-    if ( ( entry_ptr != NULL ) &&
-         ( ( type_ptr == NULL ) || ( type_ptr->id == entry_ptr->type->id ) ) )
+    if ( entry_ptr != NULL )
     {
         /* we have work to do */
+	HDassert(entry_ptr->type);
 
 	/* We will set flush_in_progress back to FALSE at the end if the
 	 * entry still exists at that point.
@@ -8319,10 +8312,26 @@ H5C_flush_single_entry(const H5F_t *	   f,
                 H5C__REMOVE_ENTRY_FROM_SLIST(cache_ptr, entry_ptr)
         }
 
-        /* Clear the dirty flag only, if requested */
-        if(clear_only)
+        /* Clear the dirty flag only, if requested.  */
+        if(clear_only) {
+
+#if 0 /* JRM */
 	    entry_ptr->is_dirty = FALSE;
-	else if(entry_ptr->is_dirty) {
+
+            /* Quincey seems to have inserted this -- I have modified it
+             * to only update the index for clean if destroy is FALSE.
+             * If destroy is TRUE, the enty has already been removed 
+             * from the index.		JRM -- 8/12/14
+             */
+	    H5C__UPDATE_INDEX_FOR_ENTRY_CLEAN(cache_ptr, entry_ptr);
+#else /* JRM */
+            if ( ( was_dirty ) && ( ! destroy ) ) {
+
+	        entry_ptr->is_dirty = FALSE;
+	        H5C__UPDATE_INDEX_FOR_ENTRY_CLEAN(cache_ptr, entry_ptr);
+            }
+#endif /* JRM */
+	} else if(entry_ptr->is_dirty) {
             unsigned serialize_flags = H5C__SERIALIZE_NO_FLAGS_SET;
 
 	    /* The entry is dirty, and we are doing either a flush,
@@ -8413,20 +8422,20 @@ H5C_flush_single_entry(const H5F_t *	   f,
 		         * to do is update the cache entry so we will have
 		         * the correct values when we actually write the
 		         * image of the entry to disk.
-		         *
-		         * Note that if the serialize function changes the
-		         * size of the disk image of the entry, it must
-		         * deallocate the old image, and allocate a new.
 		         */
                         if(serialize_flags & H5C__SERIALIZE_RESIZED_FLAG) {
+
                             H5C__UPDATE_STATS_FOR_ENTRY_SIZE_CHANGE(cache_ptr, entry_ptr, new_len)
                             entry_ptr->size = new_len;
+
                         } /* end if */
 
                         /* Check for move */
                         if(serialize_flags & H5C__SERIALIZE_MOVED_FLAG) {
+
                             H5C__UPDATE_STATS_FOR_MOVE(cache_ptr, entry_ptr)
                             entry_ptr->addr = new_addr;
+
                         } /* end if */
 		    } /* end if */
 		    else {
@@ -8438,6 +8447,7 @@ H5C_flush_single_entry(const H5F_t *	   f,
 		         * cache data structures.
 		         */
                         if(serialize_flags & H5C__SERIALIZE_RESIZED_FLAG) {
+
                             H5C__UPDATE_STATS_FOR_ENTRY_SIZE_CHANGE(cache_ptr, entry_ptr, new_len)
 
                             /* The replacement policy code thinks the
@@ -8470,6 +8480,7 @@ H5C_flush_single_entry(const H5F_t *	   f,
 
                         /* Check for move */
                         if(serialize_flags & H5C__SERIALIZE_MOVED_FLAG) {
+
                             /* The replacement policy code thinks the
                              * entry is already clean, so modify is_dirty
                              * to meet this expectation.
@@ -8501,12 +8512,15 @@ H5C_flush_single_entry(const H5F_t *	   f,
             } /* end if */
 
 	    /* Finally, write the image to disk */
-	    if(H5F_block_write(f, type_ptr->mem_type, entry_ptr->addr,
+	    if(H5F_block_write(f, entry_ptr->type->mem_type, entry_ptr->addr,
                     entry_ptr->size, dxpl_id, entry_ptr->image_ptr) < 0)
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't write image to file.")
 
             /* Mark the entry as clean */
             entry_ptr->is_dirty = FALSE;
+
+	    /* Update the index to reflect the fact that the entry is now clean */
+	    H5C__UPDATE_INDEX_FOR_ENTRY_CLEAN(cache_ptr, entry_ptr);
         } /* end if */
 
 
@@ -8531,7 +8545,7 @@ H5C_flush_single_entry(const H5F_t *	   f,
 #endif /* NDEBUG */
 
                 /* Release the space on disk */
-                if(H5MF_xfree(f, type_ptr->mem_type, dxpl_id, entry_ptr->addr, (hsize_t)entry_ptr->size) < 0)
+                if(H5MF_xfree(f, entry_ptr->type->mem_type, dxpl_id, entry_ptr->addr, (hsize_t)entry_ptr->size) < 0)
                     HGOTO_ERROR(H5E_CACHE, H5E_CANTFREE, FAIL, "unable to free file space for cache entry")
             } /* end if */
 
@@ -8549,7 +8563,7 @@ H5C_flush_single_entry(const H5F_t *	   f,
             /* Check for actually destroying the entry in memory */
             /* (As opposed to taking ownership of it) */
             if(destroy_entry)
-                if(type_ptr->free_icr((void *)entry_ptr) < 0)
+                if(entry_ptr->type->free_icr((void *)entry_ptr) < 0)
                     HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "free_icr callback failed.")
         }
 	else /* just flushing or clearing */
@@ -8924,7 +8938,6 @@ H5C_make_space_in_cache(H5F_t *	f,
 #endif /* H5C_COLLECT_CACHE_STATS */
                     result = H5C_flush_single_entry(f,
                                                     dxpl_id,
-                                                    entry_ptr->type,
                                                     entry_ptr->addr,
                                                     H5C__NO_FLAGS_SET,
                                                     FALSE);
@@ -8937,7 +8950,6 @@ H5C_make_space_in_cache(H5F_t *	f,
 
                     result = H5C_flush_single_entry(f,
                                                     dxpl_id,
-                                                    entry_ptr->type,
                                                     entry_ptr->addr,
                                                     H5C__FLUSH_INVALIDATE_FLAG,
                                                     TRUE);
@@ -9095,7 +9107,6 @@ H5C_make_space_in_cache(H5F_t *	f,
 
             result = H5C_flush_single_entry(f,
                                             dxpl_id,
-                                            entry_ptr->type,
                                             entry_ptr->addr,
                                             H5C__FLUSH_INVALIDATE_FLAG,
                                             TRUE);
