@@ -8178,6 +8178,10 @@ H5C_flush_single_entry(const H5F_t *	   f,
 
         if ( entry_ptr->in_slist ) {
 
+#if 1 /* JRM */
+	    HDassert(entry_ptr->is_dirty);
+#endif /* JRM */
+
             if ( ( ( entry_ptr->flush_marker ) && ( ! entry_ptr->is_dirty ) ) ||
                  ( entry_ptr->addr != addr ) ) {
 
@@ -8185,6 +8189,12 @@ H5C_flush_single_entry(const H5F_t *	   f,
                             "entry in slist failed sanity checks.")
             }
         } else {
+
+#if 1 /* JRM */
+	    HDassert(!entry_ptr->is_dirty);
+	    HDassert(!entry_ptr->flush_marker);
+	    HDassert(entry_ptr->addr == addr);
+#endif /* JRM */
 
             if ( ( entry_ptr->is_dirty ) ||
                  ( entry_ptr->flush_marker ) ||
@@ -8199,6 +8209,9 @@ H5C_flush_single_entry(const H5F_t *	   f,
 
     if ( ( entry_ptr != NULL ) && ( entry_ptr->is_protected ) )
     {
+#if 1 /* JRM */
+	HDassert(!entry_ptr->is_protected);
+#endif /* JRM */
 
         /* Attempt to flush a protected entry -- scream and die. */
         HGOTO_ERROR(H5E_CACHE, H5E_PROTECT, FAIL, \
@@ -8416,6 +8429,7 @@ H5C_flush_single_entry(const H5F_t *	   f,
                     } /* end if */
 
                     if(destroy) {
+
                         /* We have already removed the entry from the
 		         * cache's data structures, so no need to update
 		         * them for the re-size and/or move.  All we need
@@ -8450,14 +8464,21 @@ H5C_flush_single_entry(const H5F_t *	   f,
 
                             H5C__UPDATE_STATS_FOR_ENTRY_SIZE_CHANGE(cache_ptr, entry_ptr, new_len)
 
+#if 0 /* JRM */
                             /* The replacement policy code thinks the
                              * entry is already clean, so modify is_dirty
                              * to meet this expectation.
                              */
                             entry_ptr->is_dirty = FALSE;
+#else /* JRM */
+			    HDassert(entry_ptr->is_dirty);
+#endif /* JRM */
 
                             /* update the hash table for the size change*/
-                            H5C__UPDATE_INDEX_FOR_SIZE_CHANGE(cache_ptr, entry_ptr->size, new_len, entry_ptr, TRUE);
+                            H5C__UPDATE_INDEX_FOR_SIZE_CHANGE(cache_ptr, \
+                                                        entry_ptr->size, \
+                                                        new_len, entry_ptr, \
+                                                        !(entry_ptr->is_dirty));
 
                             /* The entry can't be protected since we are
                              * in the process of flushing it.  Thus we must
@@ -8474,18 +8495,23 @@ H5C_flush_single_entry(const H5F_t *	   f,
                             /* finally, set is_dirty to TRUE again, and
                              * update the size and image_ptr.
                              */
+#if 0 /* JRM */
                             entry_ptr->is_dirty = TRUE;
+#endif /* JRM */
                             entry_ptr->size = new_len;
                         } /* end if */
 
                         /* Check for move */
                         if(serialize_flags & H5C__SERIALIZE_MOVED_FLAG) {
-
+#if 0 /* JRM */
                             /* The replacement policy code thinks the
                              * entry is already clean, so modify is_dirty
                              * to meet this expectation.
                              */
                             entry_ptr->is_dirty = FALSE;
+#else /* JRM */
+			    HDassert(entry_ptr->is_dirty);
+#endif /* JRM */
 
                             H5C__UPDATE_STATS_FOR_MOVE(cache_ptr, entry_ptr)
 
@@ -8493,9 +8519,10 @@ H5C_flush_single_entry(const H5F_t *	   f,
                             H5C__DELETE_FROM_INDEX(cache_ptr, entry_ptr)
                             entry_ptr->addr = new_addr;
                             H5C__INSERT_IN_INDEX(cache_ptr, entry_ptr, FAIL)
-
+#if 0 /* JRM */
                             /* finally, set is_dirty to TRUE again */
                             entry_ptr->is_dirty = TRUE;
+#endif /* JRM */
                         } /* end if */
 		    } /* end else */
                 } /* end if */
@@ -8519,8 +8546,17 @@ H5C_flush_single_entry(const H5F_t *	   f,
             /* Mark the entry as clean */
             entry_ptr->is_dirty = FALSE;
 
-	    /* Update the index to reflect the fact that the entry is now clean */
-	    H5C__UPDATE_INDEX_FOR_ENTRY_CLEAN(cache_ptr, entry_ptr);
+	    if ( ! destroy ) { /* JRM */
+
+	        /* Update the index to reflect the fact that the 
+                 * entry is now clean 
+                 */
+	        H5C__UPDATE_INDEX_FOR_ENTRY_CLEAN(cache_ptr, entry_ptr);
+
+            }
+	    /* else if destroy, we have already removed the entry 
+             * from the index 
+             */
         } /* end if */
 
 
@@ -8680,16 +8716,41 @@ H5C_load_entry(H5F_t *             f,
     if(type->image_len) {
         size_t	new_len;        /* New size of on-disk image */
 
+	/* set magic and type field in *entry_ptr.  While the image_len 
+         * callback shouldn't touch the cache specific fields, it may check 
+         * these fields to ensure that it it has received the expected 
+         * value.
+         *
+         * Note that this initialization is repeated below on the off 
+         * chance that we had to re-try the deserialization.
+         */
+        entry = (H5C_cache_entry_t *)thing;
+        entry->magic = H5C__H5C_CACHE_ENTRY_T_MAGIC;
+        entry->type  = type;
+
         /* Get the actual image size for the thing */
         if(type->image_len(thing, &new_len) < 0)
-	    HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, NULL, "can't retrieve image length")
+
+	    HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, NULL, \
+                        "can't retrieve image length")
+
 	else if(new_len == 0)
+
 	    HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, NULL, "image length is 0")
+
 	else if(new_len != len) {
-            /* Check for size changing on non-speculatively loaded, non-compressed thing */
-            if(type->flags & ~(H5C__CLASS_SPECULATIVE_LOAD_FLAG | H5C__CLASS_COMPRESSED_FLAG))
-                HGOTO_ERROR(H5E_CACHE, H5E_UNSUPPORTED, NULL, "size of non-speculative, non-compressed object changed")
+
+            /* Check for size changing on non-speculatively loaded, 
+             * non-compressed thing 
+             */
+            if(type->flags & ~(H5C__CLASS_SPECULATIVE_LOAD_FLAG | 
+                               H5C__CLASS_COMPRESSED_FLAG))
+
+                HGOTO_ERROR(H5E_CACHE, H5E_UNSUPPORTED, NULL, \
+                     "size of non-speculative, non-compressed object changed")
+
             else {
+
                 void *new_image;       /* Buffer for disk image */
 
                 /* Allocate differently sized buffer */

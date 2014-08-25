@@ -123,7 +123,37 @@ static herr_t monster_image_len(void *thing, size_t *image_len_ptr);
 static herr_t variable_image_len(void *thing, size_t *image_len_ptr);
 static herr_t notify_image_len(void *thing, size_t *image_len_ptr);
 
+static herr_t pico_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t nano_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t micro_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t tiny_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t small_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t medium_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t large_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t huge_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t monster_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
 static herr_t variable_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+    haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
+    unsigned *flags_ptr);
+static herr_t notify_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
     haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr,
     unsigned *flags_ptr);
 
@@ -303,7 +333,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)pico_get_load_size,
     (H5C_deserialize_func_t)pico_deserialize,
     (H5C_image_len_func_t)pico_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)pico_pre_serialize,
     (H5C_serialize_func_t)pico_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)pico_free_icr,
@@ -316,7 +346,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)nano_get_load_size,
     (H5C_deserialize_func_t)nano_deserialize,
     (H5C_image_len_func_t)nano_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)nano_pre_serialize,
     (H5C_serialize_func_t)nano_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)nano_free_icr,
@@ -329,7 +359,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)micro_get_load_size,
     (H5C_deserialize_func_t)micro_deserialize,
     (H5C_image_len_func_t)micro_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)micro_pre_serialize,
     (H5C_serialize_func_t)micro_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)micro_free_icr,
@@ -342,7 +372,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)tiny_get_load_size,
     (H5C_deserialize_func_t)tiny_deserialize,
     (H5C_image_len_func_t)tiny_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)tiny_pre_serialize,
     (H5C_serialize_func_t)tiny_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)tiny_free_icr,
@@ -355,7 +385,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)small_get_load_size,
     (H5C_deserialize_func_t)small_deserialize,
     (H5C_image_len_func_t)small_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)small_pre_serialize,
     (H5C_serialize_func_t)small_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)small_free_icr,
@@ -368,7 +398,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)medium_get_load_size,
     (H5C_deserialize_func_t)medium_deserialize,
     (H5C_image_len_func_t)medium_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)medium_pre_serialize,
     (H5C_serialize_func_t)medium_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)medium_free_icr,
@@ -381,7 +411,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)large_get_load_size,
     (H5C_deserialize_func_t)large_deserialize,
     (H5C_image_len_func_t)large_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)large_pre_serialize,
     (H5C_serialize_func_t)large_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)large_free_icr,
@@ -394,7 +424,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)huge_get_load_size,
     (H5C_deserialize_func_t)huge_deserialize,
     (H5C_image_len_func_t)huge_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)huge_pre_serialize,
     (H5C_serialize_func_t)huge_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)huge_free_icr,
@@ -407,7 +437,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)monster_get_load_size,
     (H5C_deserialize_func_t)monster_deserialize,
     (H5C_image_len_func_t)monster_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)monster_pre_serialize,
     (H5C_serialize_func_t)monster_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)monster_free_icr,
@@ -433,7 +463,7 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_get_load_size_func_t)notify_get_load_size,
     (H5C_deserialize_func_t)notify_deserialize,
     (H5C_image_len_func_t)notify_image_len,
-    (H5AC_pre_serialize_func_t)NULL,
+    (H5AC_pre_serialize_func_t)notify_pre_serialize,
     (H5C_serialize_func_t)notify_serialize,
     (H5C_notify_func_t)notify_notify,
     (H5C_free_icr_func_t)notify_free_icr,
@@ -1044,6 +1074,132 @@ pre_serialize(const H5F_t *f,
 } /* pre_serialize() */
 
 herr_t
+pico_pre_serialize(const H5F_t *f,
+                   hid_t dxpl_id,
+                   void *thing,
+                   haddr_t addr,
+                   size_t len,
+                   haddr_t *new_addr_ptr,
+                   size_t *new_len_ptr,
+                   unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+nano_pre_serialize(const H5F_t *f,
+                   hid_t dxpl_id,
+                   void *thing,
+                   haddr_t addr,
+                   size_t len,
+                   haddr_t *new_addr_ptr,
+                   size_t *new_len_ptr,
+                   unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+micro_pre_serialize(const H5F_t *f,
+                    hid_t dxpl_id,
+                    void *thing,
+                    haddr_t addr,
+                    size_t len,
+                    haddr_t *new_addr_ptr,
+                    size_t *new_len_ptr,
+                    unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+tiny_pre_serialize(const H5F_t *f,
+                   hid_t dxpl_id,
+                   void *thing,
+                   haddr_t addr,
+                   size_t len,
+                   haddr_t *new_addr_ptr,
+                   size_t *new_len_ptr,
+                   unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+small_pre_serialize(const H5F_t *f,
+                    hid_t dxpl_id,
+                    void *thing,
+                    haddr_t addr,
+                    size_t len,
+                    haddr_t *new_addr_ptr,
+                    size_t *new_len_ptr,
+                    unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+medium_pre_serialize(const H5F_t *f,
+                     hid_t dxpl_id,
+                     void *thing,
+                     haddr_t addr,
+                     size_t len,
+                     haddr_t *new_addr_ptr,
+                     size_t *new_len_ptr,
+                     unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+large_pre_serialize(const H5F_t *f,
+                    hid_t dxpl_id,
+                    void *thing,
+                    haddr_t addr,
+                    size_t len,
+                    haddr_t *new_addr_ptr,
+                    size_t *new_len_ptr,
+                    unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+huge_pre_serialize(const H5F_t *f,
+                   hid_t dxpl_id,
+                   void *thing,
+                   haddr_t addr,
+                   size_t len,
+                   haddr_t *new_addr_ptr,
+                   size_t *new_len_ptr,
+                   unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
+monster_pre_serialize(const H5F_t *f,
+                      hid_t dxpl_id,
+                      void *thing,
+                      haddr_t addr,
+                      size_t len,
+                      haddr_t *new_addr_ptr,
+                      size_t *new_len_ptr,
+                      unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
+herr_t
 variable_pre_serialize(const H5F_t *f,
                        hid_t dxpl_id,
                        void *thing,
@@ -1056,6 +1212,21 @@ variable_pre_serialize(const H5F_t *f,
     return pre_serialize(f, dxpl_id, thing, addr, len, 
                          new_addr_ptr, new_len_ptr, flags_ptr);
 }
+
+herr_t
+notify_pre_serialize(const H5F_t *f,
+                     hid_t dxpl_id,
+                     void *thing,
+                     haddr_t addr,
+                     size_t len,
+                     haddr_t *new_addr_ptr,
+                     size_t *new_len_ptr,
+                     unsigned *flags_ptr)
+{
+    return pre_serialize(f, dxpl_id, thing, addr, len, 
+                         new_addr_ptr, new_len_ptr, flags_ptr);
+}
+
 
 
 /*-------------------------------------------------------------------------
@@ -1937,6 +2108,7 @@ reset_entries(void)
                 base_addr[j].deserialized = FALSE;
                 base_addr[j].serialized = FALSE;
                 base_addr[j].destroyed = FALSE;
+                base_addr[j].expunged = FALSE;
 
                 base_addr[j].flush_dep_par_type = -1;
                 base_addr[j].flush_dep_par_idx = -1;
@@ -2163,7 +2335,7 @@ verify_entry_status(H5C_t * cache_ptr,
         test_entry_t  * entry_ptr = &(base_addr[expected[i].entry_index]);
         hbool_t         in_cache = FALSE; /* will set to TRUE if necessary */
         unsigned        u;              /* Local index variable */
-
+#if 0 /* original code */ /* JRM */
 	if ( ( ! expected[i].in_cache ) &&
 	     ( ( expected[i].is_dirty ) ||
 	       ( expected[i].is_protected ) ||
@@ -2173,6 +2345,26 @@ verify_entry_status(H5C_t * cache_ptr,
 	    sprintf(msg, "%d: Contradictory data in expected[%d].\n", tag, i);
 	    failure_mssg = msg;
 	}
+#else /* revised code */ /* JRM */
+	if ( ( ! expected[i].in_cache ) &&
+             ( ( expected[i].is_protected ) || ( expected[i].is_pinned ) ) ) {
+
+	    pass = FALSE;
+	    sprintf(msg, "%d: Contradictory data in expected[%d].\n", tag, i);
+	    failure_mssg = msg;
+	}
+
+        if ( ( ! expected[i].in_cache ) &&
+             ( expected[i].is_dirty ) &&
+             ( ! entry_ptr->expunged ) ) {
+
+	    pass = FALSE;
+	    sprintf(msg, 
+                  "%d: expected[%d] specs non-expunged, dirty, non-resident.\n",
+                   tag, i);
+	    failure_mssg = msg;
+        }
+#endif /* revised code */ /* JRM */
 
         if ( pass ) {
 
@@ -2949,6 +3141,11 @@ takedown_cache(H5F_t * file_ptr,
  * Programmer:	John Mainzer
  *              7/6/06
  *
+ * Changes:	Added code to set entry_ptr->expunged to TRUE if 
+ *		H5C_expunge_entry() returns without error.
+ *
+ *					JRM -- 8/21/14
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -2992,6 +3189,9 @@ expunge_entry(H5F_t * file_ptr,
             pass = FALSE;
             failure_mssg = "error in H5C_expunge_entry().";
 
+        } else {
+
+	    entry_ptr->expunged = TRUE;
         }
     }
 

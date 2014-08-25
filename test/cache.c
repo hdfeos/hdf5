@@ -32792,8 +32792,8 @@ check_notify_cb(void)
     unsigned u;                         /* Local index variable */
     struct expected_entry_status expected[5] =
     {
-      /* entry			entry		in	at main                                                        flush dep flush dep child flush   flush       flush */
-      /* type:		index:	size:		cache:	addr:	dirty:	prot:	pinned:	dsrlzd:	srlzd:	dest:  par type: par idx: dep ref.count: dep height: order: */
+      /* entry			entry		   in	 at main                                               flush dep flush dep child flush   flush       flush  */
+      /* type:		index:	size:		   cache: addr:	dirty:	prot:	pinned:	dsrlzd:	srlzd:	dest:  par type: par idx: dep ref.count: dep height: order: */
       { NOTIFY_ENTRY_TYPE, 0,	NOTIFY_ENTRY_SIZE, FALSE, TRUE,	FALSE,	FALSE,	FALSE,	FALSE,	FALSE,	FALSE, -1,       -1,      {0,0,0,0,0,0}, 0,          -1 },
       { NOTIFY_ENTRY_TYPE, 1,	NOTIFY_ENTRY_SIZE, FALSE, TRUE,	FALSE,	FALSE,	FALSE,	FALSE,	FALSE,	FALSE, -1,       -1,      {0,0,0,0,0,0}, 0,          -1 },
       { NOTIFY_ENTRY_TYPE, 2,	NOTIFY_ENTRY_SIZE, FALSE, TRUE,	FALSE,	FALSE,	FALSE,	FALSE,	FALSE,	FALSE, -1,       -1,      {0,0,0,0,0,0}, 0,          -1 },
@@ -32847,7 +32847,7 @@ check_notify_cb(void)
     for(u = 0; u < 5; u++) {
         expunge_entry(file_ptr, entry_type, (int32_t)u);
         if ( !pass ) CACHE_ERROR("expunge_entry failed")
-
+#if 0 /* original code */ /* JRM */
         /* Change expected values, and verify the status of the entries
          * after each insertion
          */
@@ -32855,6 +32855,15 @@ check_notify_cb(void)
         expected[u].is_dirty = FALSE;
         expected[u].serialized = TRUE;
         expected[u].destroyed = TRUE;
+#else /* modified code */ /* JRM */
+        /* Change expected values, and verify the status of the entries
+         * after each expunge
+         */
+        expected[u].in_cache = FALSE;
+        expected[u].is_dirty = TRUE;
+        expected[u].serialized = FALSE;
+        expected[u].destroyed = TRUE;
+#endif /* modified code */ /* JRM */
 
         /* Verify the status */
         verify_entry_status(cache_ptr,  /* H5C_t * cache_ptr */
@@ -32931,6 +32940,7 @@ check_notify_cb(void)
         expunge_entry(file_ptr, entry_type, (int32_t)u);
         if ( !pass ) CACHE_ERROR("expunge_entry failed")
 
+#if 0 /* original code */ /* JRM */
         /* Change expected values, and verify the status of the entries
          * after each insertion
          */
@@ -32938,6 +32948,15 @@ check_notify_cb(void)
         expected[u].is_dirty = FALSE;
         expected[u].serialized = TRUE;
         expected[u].destroyed = TRUE;
+#else /* modified code */ /* JRM */
+        /* Change expected values, and verify the status of the entries
+         * after each expunge
+         */
+        expected[u].in_cache = FALSE;
+        expected[u].is_dirty = TRUE;
+        expected[u].serialized = FALSE;
+        expected[u].destroyed = TRUE;
+#endif /* modified code */ /* JRM */
 
         /* Verify the status */
         verify_entry_status(cache_ptr,  /* H5C_t * cache_ptr */

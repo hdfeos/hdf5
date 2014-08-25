@@ -333,19 +333,36 @@ typedef struct test_entry_t
     hbool_t               destroyed;    /* entry has been destroyed since the
                                          * last time it was reset.
                                          */
-    int                 flush_dep_par_type; /* Entry type of flush dependency parent */
-    int                 flush_dep_par_idx; /* Index of flush dependency parent */
-    uint64_t            child_flush_dep_height_rc[H5C__NUM_FLUSH_DEP_HEIGHTS];
+    hbool_t 		  expunged;     /* entry has been expunged since the 
+                                         * last time it was reset.
+                                         */
+    int                   flush_dep_par_type; /* Entry type of flush 
+					       * dependency parent 
+					       */
+    int                   flush_dep_par_idx; /* Index of flush dependency 
+                                              * parent 
+                                              */
+    uint64_t              child_flush_dep_height_rc[H5C__NUM_FLUSH_DEP_HEIGHTS];
                                         /* flush dependency heights of flush
                                          * dependency children
                                          */
-    unsigned            flush_dep_height; /* flush dependency height of entry */
-    hbool_t		pinned_from_client;	/* entry was pinned by client call */
-    hbool_t		pinned_from_cache;	/* entry was pinned by cache internally */
-    unsigned            flush_order;    /* Order that entry was flushed in */
+    unsigned              flush_dep_height; /* flush dependency height of entry */
+    hbool_t		  pinned_from_client;	/* entry was pinned by 
+                                                 * client call 
+                                                 */
+    hbool_t		  pinned_from_cache;	/* entry was pinned by 
+                                                 * cache internally 
+                                                 */
+    unsigned              flush_order;    /* Order that entry was flushed in */
 
-    unsigned            notify_after_insert_count;    /* Count of times that entry was inserted in cache */
-    unsigned            notify_before_evict_count;    /* Count of times that entry was removed in cache */
+    unsigned              notify_after_insert_count;  /* Count of times that 
+                                                       * entry was inserted in 
+                                                       * cache 
+                                                       */
+    unsigned              notify_before_evict_count;  /* Count of times that 
+                                                       * entry was removed in 
+                                                       * cache 
+                                                       */
 } test_entry_t;
 
 /* The following are cut down test versions of the hash table manipulation
