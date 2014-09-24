@@ -267,9 +267,7 @@ H5_term_library(void)
 	pending += DOWN(A);
 	pending += DOWN(S);
 	pending += DOWN(T);
-#ifdef H5_HAVE_INDEXING
 	pending += DOWN(X);
-#endif
 	pending += DOWN(Q);
 
         /* Don't shut down the file code until objects in files are shut down */
