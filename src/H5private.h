@@ -2380,6 +2380,7 @@ H5_DLL int H5Q_term_interface(void);
 H5_DLL int H5R_term_interface(void);
 H5_DLL int H5S_term_interface(void);
 H5_DLL int H5T_term_interface(void);
+H5_DLL int H5X_term_interface(void);
 H5_DLL int H5Z_term_interface(void);
 
 /* Checksum functions */
