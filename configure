@@ -28323,7 +28323,7 @@ fi
 
 case $withval in
   yes)
-    HAVE_ALACRITY="yes"
+    HAVE_FASTBIT="yes"
     for ac_header in iapi.h
 do :
   ac_fn_c_check_header_mongrel "$LINENO" "iapi.h" "ac_cv_header_iapi_h" "$ac_includes_default"
