@@ -195,7 +195,7 @@ am__EXEEXT_1 = testhdf5$(EXEEXT) lheap$(EXEEXT) ohdr$(EXEEXT) \
 	dtransform$(EXEEXT) reserved$(EXEEXT) cross_read$(EXEEXT) \
 	freespace$(EXEEXT) mf$(EXEEXT) farray$(EXEEXT) earray$(EXEEXT) \
 	btree2$(EXEEXT) fheap$(EXEEXT) file_image$(EXEEXT) \
-	unregister$(EXEEXT) query$(EXEEXT)
+	unregister$(EXEEXT) query$(EXEEXT) index$(EXEEXT)
 @HAVE_SHARED_CONDITIONAL_TRUE@am__EXEEXT_2 = plugin$(EXEEXT)
 am__EXEEXT_3 = gen_bad_ohdr$(EXEEXT) gen_bogus$(EXEEXT) \
 	gen_cross$(EXEEXT) gen_deflate$(EXEEXT) gen_filters$(EXEEXT) \
@@ -420,6 +420,10 @@ hyperslab_SOURCES = hyperslab.c
 hyperslab_OBJECTS = hyperslab.$(OBJEXT)
 hyperslab_LDADD = $(LDADD)
 hyperslab_DEPENDENCIES = libh5test.la $(LIBHDF5)
+index_SOURCES = index.c
+index_OBJECTS = index.$(OBJEXT)
+index_LDADD = $(LDADD)
+index_DEPENDENCIES = libh5test.la $(LIBHDF5)
 istore_SOURCES = istore.c
 istore_OBJECTS = istore.$(OBJEXT)
 istore_LDADD = $(LDADD)
@@ -573,11 +577,11 @@ SOURCES = $(libdynlib1_la_SOURCES) $(libdynlib2_la_SOURCES) \
 	gen_new_array.c gen_new_fill.c gen_new_group.c gen_new_mtime.c \
 	gen_new_super.c gen_noencoder.c gen_nullspace.c gen_plist.c \
 	gen_sizes_lheap.c gen_specmetaread.c gen_udlinks.c getname.c \
-	gheap.c hyperslab.c istore.c lheap.c links.c links_env.c mf.c \
-	mount.c mtime.c ntypes.c objcopy.c ohdr.c plugin.c pool.c \
-	query.c reserved.c set_extent.c space_overflow.c stab.c \
-	tcheck_version.c $(testhdf5_SOURCES) testmeta.c \
-	$(ttsafe_SOURCES) unlink.c unregister.c vfd.c
+	gheap.c hyperslab.c index.c istore.c lheap.c links.c \
+	links_env.c mf.c mount.c mtime.c ntypes.c objcopy.c ohdr.c \
+	plugin.c pool.c query.c reserved.c set_extent.c \
+	space_overflow.c stab.c tcheck_version.c $(testhdf5_SOURCES) \
+	testmeta.c $(ttsafe_SOURCES) unlink.c unregister.c vfd.c
 DIST_SOURCES = $(am__libdynlib1_la_SOURCES_DIST) \
 	$(am__libdynlib2_la_SOURCES_DIST) \
 	$(am__libdynlib3_la_SOURCES_DIST) $(libh5test_la_SOURCES) \
@@ -592,11 +596,11 @@ DIST_SOURCES = $(am__libdynlib1_la_SOURCES_DIST) \
 	gen_new_array.c gen_new_fill.c gen_new_group.c gen_new_mtime.c \
 	gen_new_super.c gen_noencoder.c gen_nullspace.c gen_plist.c \
 	gen_sizes_lheap.c gen_specmetaread.c gen_udlinks.c getname.c \
-	gheap.c hyperslab.c istore.c lheap.c links.c links_env.c mf.c \
-	mount.c mtime.c ntypes.c objcopy.c ohdr.c plugin.c pool.c \
-	query.c reserved.c set_extent.c space_overflow.c stab.c \
-	tcheck_version.c $(testhdf5_SOURCES) testmeta.c \
-	$(ttsafe_SOURCES) unlink.c unregister.c vfd.c
+	gheap.c hyperslab.c index.c istore.c lheap.c links.c \
+	links_env.c mf.c mount.c mtime.c ntypes.c objcopy.c ohdr.c \
+	plugin.c pool.c query.c reserved.c set_extent.c \
+	space_overflow.c stab.c tcheck_version.c $(testhdf5_SOURCES) \
+	testmeta.c $(ttsafe_SOURCES) unlink.c unregister.c vfd.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1130,7 +1134,7 @@ TEST_PROG = testhdf5 lheap ohdr stab gheap cache cache_api cache_tagging \
            set_extent ttsafe enc_dec_plist enc_dec_plist_with_endianess\
            getname vfd ntypes dangle dtransform reserved cross_read \
            freespace mf farray earray btree2 fheap file_image unregister \
-           query
+           query index
 
 
 # These programs generate test files for the tests.  They don't need to be
@@ -1528,6 +1532,10 @@ hyperslab$(EXEEXT): $(hyperslab_OBJECTS) $(hyperslab_DEPENDENCIES) $(EXTRA_hyper
 	@rm -f hyperslab$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(hyperslab_OBJECTS) $(hyperslab_LDADD) $(LIBS)
 
+index$(EXEEXT): $(index_OBJECTS) $(index_DEPENDENCIES) $(EXTRA_index_DEPENDENCIES) 
+	@rm -f index$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(index_OBJECTS) $(index_LDADD) $(LIBS)
+
 istore$(EXEEXT): $(istore_OBJECTS) $(istore_DEPENDENCIES) $(EXTRA_istore_DEPENDENCIES) 
 	@rm -f istore$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(istore_OBJECTS) $(istore_LDADD) $(LIBS)
@@ -1688,6 +1696,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gheap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/h5test.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hyperslab.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/index.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/istore.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lheap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/links.Po@am__quote@
@@ -2311,6 +2320,13 @@ unregister.log: unregister$(EXEEXT)
 query.log: query$(EXEEXT)
 	@p='query$(EXEEXT)'; \
 	b='query'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+index.log: index$(EXEEXT)
+	@p='index$(EXEEXT)'; \
+	b='index'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
