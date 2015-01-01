@@ -336,7 +336,7 @@ H5B_find(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t addr, void *u
     cache_udata.f = f;
     cache_udata.type = type;
     cache_udata.rc_shared = rc_shared;
-    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_READ)))
+    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__READ_ONLY_FLAG)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to load B-tree node")
 
     rt = bt->nchildren;
@@ -485,7 +485,7 @@ H5B__split(H5F_t *f, hid_t dxpl_id, H5B_ins_ud_t *bt_ud, unsigned idx,
     cache_udata.f = f;
     cache_udata.type = shared->type;
     cache_udata.rc_shared = bt_ud->bt->rc_shared;
-    if(NULL == (split_bt_ud->bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, split_bt_ud->addr, &cache_udata, H5AC_WRITE)))
+    if(NULL == (split_bt_ud->bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, split_bt_ud->addr, &cache_udata, H5AC__NO_FLAGS_SET)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to protect B-tree")
     split_bt_ud->bt->level = bt_ud->bt->level;
 
@@ -522,7 +522,7 @@ H5B__split(H5F_t *f, hid_t dxpl_id, H5B_ins_ud_t *bt_ud, unsigned idx,
         cache_udata2.f = f;
         cache_udata2.type = shared->type;
         cache_udata2.rc_shared = bt_ud->bt->rc_shared;
-	if(NULL == (tmp_bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt_ud->bt->right, &cache_udata2, H5AC_WRITE)))
+	if(NULL == (tmp_bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt_ud->bt->right, &cache_udata2, H5AC__NO_FLAGS_SET)))
 	    HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to load right sibling")
 
 	tmp_bt->left = split_bt_ud->addr;
@@ -601,7 +601,7 @@ H5B_insert(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t addr,
     cache_udata.type = type;
     cache_udata.rc_shared = rc_shared;
     bt_ud.addr = addr;
-    if(NULL == (bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_WRITE)))
+    if(NULL == (bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__NO_FLAGS_SET)))
         HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to locate root of B-tree")
 
     /* Insert the object */
@@ -903,7 +903,7 @@ H5B__insert_helper(H5F_t *f, hid_t dxpl_id, H5B_ins_ud_t *bt_ud,
              * Follow the minimum branch out of this node to a subtree.
              */
             child_bt_ud.addr = bt->child[idx];
-            if(NULL == (child_bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, child_bt_ud.addr, &cache_udata, H5AC_WRITE)))
+            if(NULL == (child_bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, child_bt_ud.addr, &cache_udata, H5AC__NO_FLAGS_SET)))
                 HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to load node")
 
             if((int)(my_ins = H5B__insert_helper(f, dxpl_id, &child_bt_ud, type,
@@ -949,7 +949,7 @@ H5B__insert_helper(H5F_t *f, hid_t dxpl_id, H5B_ins_ud_t *bt_ud,
             */
             idx = bt->nchildren - 1;
             child_bt_ud.addr = bt->child[idx];
-            if(NULL == (child_bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, child_bt_ud.addr, &cache_udata, H5AC_WRITE)))
+            if(NULL == (child_bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, child_bt_ud.addr, &cache_udata, H5AC__NO_FLAGS_SET)))
                 HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to load node")
 
             if((int)(my_ins = H5B__insert_helper(f, dxpl_id, &child_bt_ud, type,
@@ -1004,7 +1004,7 @@ H5B__insert_helper(H5F_t *f, hid_t dxpl_id, H5B_ins_ud_t *bt_ud,
 	 */
 	HDassert(idx < bt->nchildren);
 	child_bt_ud.addr = bt->child[idx];
-        if(NULL == (child_bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, child_bt_ud.addr, &cache_udata, H5AC_WRITE)))
+        if(NULL == (child_bt_ud.bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, child_bt_ud.addr, &cache_udata, H5AC__NO_FLAGS_SET)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to load node")
 
 	if((int)(my_ins = H5B__insert_helper(f, dxpl_id, &child_bt_ud, type,
@@ -1163,7 +1163,7 @@ H5B__iterate_helper(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t ad
     cache_udata.f = f;
     cache_udata.type = type;
     cache_udata.rc_shared = rc_shared;
-    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_READ)))
+    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__READ_ONLY_FLAG)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5_ITER_ERROR, "unable to load B-tree node")
 
     if(bt->level > 0) {
@@ -1227,7 +1227,7 @@ H5B__iterate_helper(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t ad
                 if(H5F_addr_defined(next_addr)) {
                     /* Protect the next node to the right */
                     addr = next_addr;
-                    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_READ)))
+                    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__READ_ONLY_FLAG)))
                         HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5_ITER_ERROR, "B-tree node")
 
                     /* Cache information from this node */
@@ -1364,7 +1364,7 @@ H5B__remove_helper(H5F_t *f, hid_t dxpl_id, haddr_t addr, const H5B_class_t *typ
     cache_udata.f = f;
     cache_udata.type = type;
     cache_udata.rc_shared = rc_shared;
-    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_WRITE)))
+    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__NO_FLAGS_SET)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to load B-tree node")
 
     rt = bt->nchildren;
@@ -1464,7 +1464,7 @@ H5B__remove_helper(H5F_t *f, hid_t dxpl_id, haddr_t addr, const H5B_class_t *typ
                  * "critical" for any child in its node to maintain this
                  * consistency (and avoid breaking key/child consistency) */
                 if(H5F_addr_defined(bt->left)) {
-                    if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->left, &cache_udata, H5AC_WRITE)))
+                    if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->left, &cache_udata, H5AC__NO_FLAGS_SET)))
                         HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to load node from tree")
 
                     /* Copy right-most key from deleted node to right-most key
@@ -1481,7 +1481,7 @@ H5B__remove_helper(H5F_t *f, hid_t dxpl_id, haddr_t addr, const H5B_class_t *typ
                     sibling = NULL;   /* Make certain future references will be caught */
                 } /* end if */
                 if(H5F_addr_defined(bt->right)) {
-                    if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->right, &cache_udata, H5AC_WRITE)))
+                    if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->right, &cache_udata, H5AC__NO_FLAGS_SET)))
                         HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to unlink node from tree")
 
                     /* Copy left-most key from deleted node to left-most key in
@@ -1601,7 +1601,7 @@ H5B__remove_helper(H5F_t *f, hid_t dxpl_id, haddr_t addr, const H5B_class_t *typ
         HDassert(level > 0);
 
         /* Update the rightmost key in the left sibling */
-        if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->left, &cache_udata, H5AC_WRITE)))
+        if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->left, &cache_udata, H5AC__NO_FLAGS_SET)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to protect node")
 
         HDmemcpy(H5B_NKEY(sibling, shared, sibling->nchildren),
@@ -1616,7 +1616,7 @@ H5B__remove_helper(H5F_t *f, hid_t dxpl_id, haddr_t addr, const H5B_class_t *typ
         HDassert(level > 0);
 
         /* Update the lefttmost key in the right sibling */
-        if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->right, &cache_udata, H5AC_WRITE)))
+        if(NULL == (sibling = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, bt->right, &cache_udata, H5AC__NO_FLAGS_SET)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, H5B_INS_ERROR, "unable to protect node")
 
         HDmemcpy(H5B_NKEY(sibling, shared, 0),
@@ -1723,7 +1723,7 @@ H5B_delete(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t addr, void 
     cache_udata.f = f;
     cache_udata.type = type;
     cache_udata.rc_shared = rc_shared;
-    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_WRITE)))
+    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__NO_FLAGS_SET)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to load B-tree node")
 
     /* Iterate over all children in tree, deleting them */
@@ -1985,7 +1985,7 @@ H5B__get_info_helper(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t a
     cache_udata.f = f;
     cache_udata.type = type;
     cache_udata.rc_shared = rc_shared;
-    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_READ)))
+    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__READ_ONLY_FLAG)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to load B-tree node")
 
     /* Cache information from this node */
@@ -2009,7 +2009,7 @@ H5B__get_info_helper(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t a
     while(H5F_addr_defined(next_addr)) {
         /* Protect the next node to the right */
         addr = next_addr;
-        if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_READ)))
+        if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__READ_ONLY_FLAG)))
             HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "B-tree node")
 
         /* Cache information from this node */
@@ -2136,7 +2136,7 @@ H5B_valid(H5F_t *f, hid_t dxpl_id, const H5B_class_t *type, haddr_t addr)
     cache_udata.f = f;
     cache_udata.type = type;
     cache_udata.rc_shared = rc_shared;
-    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC_READ)))
+    if(NULL == (bt = (H5B_t *)H5AC_protect(f, dxpl_id, H5AC_BT, addr, &cache_udata, H5AC__READ_ONLY_FLAG)))
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTPROTECT, FAIL, "unable to protect B-tree node")
 
 done:

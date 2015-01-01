@@ -81,7 +81,8 @@ static herr_t H5HG_cache_heap_serialize(const H5F_t *f,
                                         size_t len,
                                         void *thing);
 
-static herr_t H5HG_cache_heap_free_icr(void *thing);
+static herr_t H5HG_cache_heap_free_icr(void *thing, const H5F_t *f,
+                                       hid_t dxpl_id);
 
 
 #else /* V2 metadata cache */
@@ -116,6 +117,8 @@ const H5AC_class_t H5AC_GHEAP[1] = {{
   /* serialize     */ (H5AC_serialize_func_t)H5HG_cache_heap_serialize,
   /* notify        */ (H5AC_notify_func_t)NULL,
   /* free_icr      */ (H5AC_free_icr_func_t)H5HG_cache_heap_free_icr,
+  /* clear         */ (H5AC_clear_func_t)NULL,
+  /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 
@@ -546,7 +549,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5HG_cache_heap_free_icr(void *thing)
+H5HG_cache_heap_free_icr(void *thing, const H5F_t UNUSED *f, hid_t UNUSED dxpl_id)
 {
     H5HG_heap_t *heap = NULL;
     herr_t      ret_value = SUCCEED;    /* Return value */

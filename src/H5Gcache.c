@@ -126,6 +126,8 @@ const H5AC_class_t H5AC_SNODE[1] = {{
     /* serialize     */ (H5AC_serialize_func_t)H5G_cache_node_serialize,
     /* notify        */ (H5AC_notify_func_t)NULL,
     /* free_icr      */ (H5AC_free_icr_func_t)H5G_cache_node_free_icr,
+    /* clear         */ (H5AC_clear_func_t)NULL,
+    /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 #else /* V2 cache version of H5AC_SNODE */
@@ -190,15 +192,13 @@ H5G_cache_node_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
     /* we pass the file pointer as the user data -- no way to 
      * verify that we do in fact have a file pointer.
      */
-    f = (H5F_t *)udata_ptr;
+    f = (const H5F_t *)udata_ptr;
 
     /* compute image len */
-    image_len = H5G_NODE_SIZE(f);
+    image_len = (size_t)(H5G_NODE_SIZE(f));
 
     /* report image length */
-    *image_len_ptr - image_len;
-
-done:
+    *image_len_ptr = image_len;
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -261,7 +261,7 @@ H5G_cache_node_deserialize(const void *image_ptr,
 
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
 
-    sym->node_size = H5G_NODE_SIZE(f);
+    sym->node_size = (size_t)(H5G_NODE_SIZE(f));
 
     if(NULL == (sym->entry = H5FL_SEQ_CALLOC(H5G_entry_t, 
                                              (size_t)(2 * H5F_SYM_LEAF_K(f)))))
@@ -337,20 +337,18 @@ H5G_cache_node_image_len(const void *thing, size_t *image_len_ptr)
     H5G_node_t *sym;
     herr_t      ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDassert(thing);
     HDassert(image_len_ptr);
 
-    sym = (H5G_node_t *)thing;
+    sym = (const H5G_node_t *)thing;
 
     HDassert(sym);
     HDassert(sym->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert((const H5AC_class_t *)(sym->cache_info.type) == &(H5AC_SNODE[0]));
 
     *image_len_ptr = sym->node_size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -404,6 +402,7 @@ H5G_cache_node_serialize(const H5F_t *f,
     HDassert(sym);
     HDassert(sym->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert((const H5AC_class_t *)(sym->cache_info.type) == &(H5AC_SNODE[0]));
+    HDassert(len == sym->node_size);
 
 
     /* Get temporary pointer to serialized symbol table node */

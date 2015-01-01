@@ -127,6 +127,8 @@ const H5AC_class_t H5AC_SOHM_TABLE[1] = {{
    /* serialize     */ (H5AC_serialize_func_t)H5SM_cache_table_serialize,
    /* notify        */ (H5AC_notify_func_t)NULL,
    /* free_icr      */ (H5AC_free_icr_func_t)H5SM_cache_table_free_icr,
+   /* clear         */ (H5AC_clear_func_t)NULL,
+   /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 const H5AC_class_t H5AC_SOHM_LIST[1] = {{
@@ -141,6 +143,8 @@ const H5AC_class_t H5AC_SOHM_LIST[1] = {{
    /* serialize     */ (H5AC_serialize_func_t)H5SM_cache_list_serialize,
    /* notify        */ (H5AC_notify_func_t)NULL,
    /* free_icr      */ (H5AC_free_icr_func_t)H5SM_cache_list_free_icr,
+   /* clear         */ (H5AC_clear_func_t)NULL,
+   /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 

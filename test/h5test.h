@@ -114,7 +114,11 @@ H5TEST_DLLVAR MPI_Info h5_io_info_g;         /* MPI INFO object for IO */
 /*
  * Alarm definitions to wait up (terminate) a test that runs too long.
  */
+#if 0 /* original code */ /* JRM */
 #define H5_ALARM_SEC  1200  /* default is 20 minutes */
+#else /* modified code */ /* JRM */
+#define H5_ALARM_SEC  120000  /* default is 2000 minutes */
+#endif /* modified code */ /* JRM */
 #define ALARM_ON  TestAlarmOn()
 #define ALARM_OFF  HDalarm(0)
 

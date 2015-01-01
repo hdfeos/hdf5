@@ -341,7 +341,9 @@ typedef struct H5HF_hdr_t {
     size_t      rc;             /* Reference count of heap's components using heap header */
     haddr_t     heap_addr;      /* Address of heap header in the file */
     size_t      heap_size;      /* Size of heap header in the file */
-    H5AC_protect_t mode;        /* Access mode for heap */
+#if 0 /* this field doesn't appear to be used */ /* JRM */
+    unsigned    mode;           /* Access mode for heap */
+#endif /* his field doesn't appear to be used */ /* JRM */
     H5F_t      *f;              /* Pointer to file for heap */
     size_t      file_rc;        /* Reference count of files using heap header */
     hbool_t     pending_delete; /* Heap is pending deletion */
@@ -622,7 +624,7 @@ H5_DLL hsize_t H5HF_dtable_span_size(const H5HF_dtable_t *dtable, unsigned start
 H5_DLL H5HF_hdr_t * H5HF_hdr_alloc(H5F_t *f);
 H5_DLL haddr_t H5HF_hdr_create(H5F_t *f, hid_t dxpl_id, const H5HF_create_t *cparam);
 H5_DLL H5HF_hdr_t *H5HF_hdr_protect(H5F_t *f, hid_t dxpl_id, haddr_t addr,
-    H5AC_protect_t rw);
+    unsigned flags);
 H5_DLL herr_t H5HF_hdr_finish_init_phase1(H5HF_hdr_t *hdr);
 H5_DLL herr_t H5HF_hdr_finish_init_phase2(H5HF_hdr_t *hdr);
 H5_DLL herr_t H5HF_hdr_finish_init(H5HF_hdr_t *hdr);
@@ -663,7 +665,7 @@ H5_DLL herr_t H5HF_man_iblock_create(H5HF_hdr_t *hdr, hid_t dxpl_id,
 H5_DLL H5HF_indirect_t *H5HF_man_iblock_protect(H5HF_hdr_t *hdr, hid_t dxpl_id,
     haddr_t iblock_addr, unsigned iblock_nrows,
     H5HF_indirect_t *par_iblock, unsigned par_entry, hbool_t must_protect,
-    H5AC_protect_t rw, hbool_t *did_protect);
+    unsigned flags, hbool_t *did_protect);
 H5_DLL herr_t H5HF_man_iblock_unprotect(H5HF_indirect_t *iblock, hid_t dxpl_id,
     unsigned cache_flags, hbool_t did_protect);
 H5_DLL herr_t H5HF_man_iblock_attach(H5HF_indirect_t *iblock, unsigned entry,
@@ -689,10 +691,10 @@ H5_DLL herr_t H5HF_man_dblock_destroy(H5HF_hdr_t *hdr, hid_t dxpl_id,
 H5_DLL H5HF_direct_t *H5HF_man_dblock_protect(H5HF_hdr_t *hdr, hid_t dxpl_id,
     haddr_t dblock_addr, size_t dblock_size,
     H5HF_indirect_t *par_iblock, unsigned par_entry,
-    H5AC_protect_t rw);
+    unsigned flags);
 H5_DLL herr_t H5HF_man_dblock_locate(H5HF_hdr_t *hdr, hid_t dxpl_id,
     hsize_t obj_off, H5HF_indirect_t **par_iblock,
-    unsigned *par_entry, hbool_t *par_did_protect, H5AC_protect_t rw);
+    unsigned *par_entry, hbool_t *par_did_protect, unsigned flags);
 H5_DLL herr_t H5HF_man_dblock_delete(H5F_t *f, hid_t dxpl_id, haddr_t dblock_addr,
     hsize_t dblock_size);
 H5_DLL herr_t H5HF_man_dblock_dest(H5HF_direct_t *dblock);

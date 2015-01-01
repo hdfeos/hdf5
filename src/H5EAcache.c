@@ -107,6 +107,7 @@ static herr_t H5EA__cache_dblock_serialize(const H5F_t *f, void *image, size_t l
     void *thing);
 static herr_t H5EA__cache_dblock_notify(H5AC_notify_action_t action, void *thing);
 static herr_t H5EA__cache_dblock_free_icr(void *thing);
+static herr_t H5EA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr);
 
 static herr_t H5EA__cache_dblk_page_get_load_size(const void *udata, size_t *image_len);
 static void *H5EA__cache_dblk_page_deserialize(const void *image, size_t len,
@@ -135,6 +136,8 @@ const H5AC_class_t H5AC_EARRAY_HDR[1] = {{
     H5EA__cache_hdr_serialize,          /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5EA__cache_hdr_free_icr,           /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 /* H5EA index block inherits cache-like properties from H5AC */
@@ -150,6 +153,8 @@ const H5AC_class_t H5AC_EARRAY_IBLOCK[1] = {{
     H5EA__cache_iblock_serialize,       /* 'serialize' callback */
     H5EA__cache_iblock_notify,          /* 'notify' callback */
     H5EA__cache_iblock_free_icr,        /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 /* H5EA super block inherits cache-like properties from H5AC */
@@ -165,6 +170,8 @@ const H5AC_class_t H5AC_EARRAY_SBLOCK[1] = {{
     H5EA__cache_sblock_serialize,       /* 'serialize' callback */
     H5EA__cache_sblock_notify,          /* 'notify' callback */
     H5EA__cache_sblock_free_icr,        /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 /* H5EA data block inherits cache-like properties from H5AC */
@@ -180,6 +187,8 @@ const H5AC_class_t H5AC_EARRAY_DBLOCK[1] = {{
     H5EA__cache_dblock_serialize,       /* 'serialize' callback */
     H5EA__cache_dblock_notify,          /* 'notify' callback */
     H5EA__cache_dblock_free_icr,        /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    H5EA__cache_dblock_fsf_size,        /* 'fsf_size' callback */
 }};
 
 /* H5EA data block page inherits cache-like properties from H5AC */
@@ -195,6 +204,8 @@ const H5AC_class_t H5AC_EARRAY_DBLK_PAGE[1] = {{
     H5EA__cache_dblk_page_serialize,    /* 'serialize' callback */
     H5EA__cache_dblk_page_notify,       /* 'notify' callback */
     H5EA__cache_dblk_page_free_icr,     /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 
@@ -1248,14 +1259,42 @@ H5EA__cache_dblock_get_load_size(const void *_udata, size_t *image_len))
     /* Set up fake data block for computing size on disk */
     /* (Note: extracted from H5EA__dblock_alloc) */
     HDmemset(&dblock, 0, sizeof(dblock));
+
+#if 1 /* new code */ /* JRM */
+    /* need to set:
+     * 
+     *    dblock.hdr
+     *    dblock.npages
+     *    dblock.nelmts
+     *
+     * before we invoke either H5EA_DBLOCK_PREFIX_SIZE() or 
+     * H5EA_DBLOCK_SIZE().
+     */
+#endif /* new code */ /* JRM */
     dblock.hdr = udata->hdr;
     dblock.nelmts = udata->nelmts;
 
+#if 1 /* new code */ /* JRM */
+    if(udata->nelmts > udata->hdr->dblk_page_nelmts) {
+        /* Set the # of pages in the direct block */
+        dblock.npages = udata->nelmts / udata->hdr->dblk_page_nelmts;
+        HDassert(udata->nelmts==(dblock.npages * udata->hdr->dblk_page_nelmts));
+    } /* end if */
+#endif /* new code */ /* JRM */
+
     /* Set the image length size */
+#if 0 /* old code */ /* JRM */
     if(udata->nelmts > udata->hdr->dblk_page_nelmts)
         *image_len = (size_t)H5EA_DBLOCK_PREFIX_SIZE(&dblock);
     else
         *image_len = (size_t)H5EA_DBLOCK_SIZE(&dblock);
+#else /* new code */ /* JRM */
+    if(!dblock.npages)
+        *image_len = H5EA_DBLOCK_SIZE(&dblock);
+    else
+        *image_len = H5EA_DBLOCK_PREFIX_SIZE(&dblock);
+
+#endif /* new_code */ /* JRM */
 
 END_FUNC(STATIC)   /* end H5EA__cache_dblock_get_load_size() */
 
@@ -1297,6 +1336,9 @@ H5EA__cache_dblock_deserialize(const void *image, size_t len,
     /* Allocate the extensible array data block */
     if(NULL == (dblock = H5EA__dblock_alloc(udata->hdr, udata->parent, udata->nelmts)))
 	H5E_THROW(H5E_CANTALLOC, "memory allocation failed for extensible array data block")
+
+    HDassert(((!dblock->npages) && (len == H5EA_DBLOCK_SIZE(dblock))) || \
+             (len == H5EA_DBLOCK_PREFIX_SIZE(dblock)));
 
     /* Set the extensible array data block's information */
     dblock->addr = udata->dblk_addr;
@@ -1555,6 +1597,57 @@ H5EA__cache_dblock_free_icr(void *thing))
 CATCH
 
 END_FUNC(STATIC)   /* end H5EA__cache_dblock_free_icr() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:    H5EA__cache_dblock_fsf_size
+ *
+ * Purpose:     Tell the metadata cache the actual amount of file space
+ *              to free when a dblock entry is destroyed with the free
+ *              file space block set.
+ *
+ *              This function is needed when the data block is paged, as
+ *              the datablock header and all its pages are allocted as a
+ *              single contiguous chunk of file space, and must be
+ *              deallocated the same way.
+ *
+ *              The size of the chunk of memory in which the dblock
+ *              header and all its pages is stored in the size field,
+ *              so we simply pass that value back to the cache.
+ *
+ *              If the datablock is not paged, then the size field of
+ *              the cache_info contains the correct size.  However this
+ *              value will be the same as the size field, so we return
+ *              the contents of the size field to the cache in this case
+ *              as well.
+ *
+ * Return:      Non-negative on success/Negative on failure
+ *
+ * Programmer:  John Mainzer
+ *              12/5/14
+ *
+ *-------------------------------------------------------------------------
+ */
+BEGIN_FUNC(STATIC, NOERR,
+herr_t, SUCCEED, FAIL,
+H5EA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr))
+
+    H5EA_dblock_t *dblock = NULL;
+
+    /* Check arguments */
+    HDassert(thing);
+    HDassert(fsf_size_ptr);
+
+    dblock = (H5EA_dblock_t *)thing;
+
+    HDassert(dblock);
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_EARRAY_DBLOCK[0]));
+
+    *fsf_size_ptr = dblock->size;
+
+END_FUNC(STATIC)   /* end H5EA__cache_dblock_fsf_size() */
 
 
 /*-------------------------------------------------------------------------

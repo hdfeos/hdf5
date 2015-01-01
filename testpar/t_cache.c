@@ -373,7 +373,7 @@ static hbool_t serve_rw_count_reset_request(struct mssg_t * mssg_ptr);
 /* call back functions & related data structures */
 
 static herr_t datum_get_load_size(const void * udata_ptr,
-                                size_t *image_len_ptr);
+                                  size_t *image_len_ptr);
 
 static void * datum_deserialize(const void * image_ptr,
                                 size_t len,
@@ -384,15 +384,9 @@ static herr_t datum_image_len(void *thing,
                               size_t *image_len_ptr);
 
 static herr_t datum_serialize(const H5F_t *f,
-                              hid_t dxpl_id,
-                              haddr_t addr,
+                              void *image_ptr,
                               size_t len,
-                              void * image_ptr,
-                              void * thing,
-                              unsigned * flags_ptr,
-                              haddr_t * new_addr_ptr,
-                              size_t * new_len_ptr,
-                              void ** new_image_ptr_ptr);
+                              void *thing_ptr);
 
 static herr_t datum_free_icr(void * thing);
 
@@ -403,16 +397,19 @@ static herr_t datum_free_icr(void * thing);
 const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
 {
   {
-    DATUM_ENTRY_TYPE,
-    "datum",
-    H5FD_MEM_DEFAULT,
-    H5AC__CLASS_NO_FLAGS_SET,
-    (H5C_get_load_size_func_t)datum_get_load_size,
-    (H5C_deserialize_func_t)datum_deserialize,
-    (H5C_image_len_func_t)datum_image_len,
-    (H5C_serialize_func_t)datum_serialize,
-    (H5C_notify_func_t)NULL,
-    (H5C_free_icr_func_t)datum_free_icr,
+    /* id            */ DATUM_ENTRY_TYPE,
+    /* name          */ "datum",
+    /* mem_type      */ H5FD_MEM_DEFAULT,
+    /* flags         */ H5AC__CLASS_NO_FLAGS_SET,
+    /* get_load_size */ (H5AC_get_load_size_func_t)datum_get_load_size,
+    /* deserialize   */ (H5AC_deserialize_func_t)datum_deserialize,
+    /* image_len     */ (H5AC_image_len_func_t)datum_image_len,
+    /* pre_serialize */ (H5AC_pre_serialize_func_t)NULL,
+    /* serialize     */ (H5AC_serialize_func_t)datum_serialize,
+    /* notify        */ (H5AC_notify_func_t)NULL,
+    /* free_icr      */ (H5AC_free_icr_func_t)datum_free_icr,
+    /* clear         */ (H5AC_clear_func_t)NULL,
+    /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
   }
 };
 
@@ -2552,15 +2549,9 @@ datum_image_len(void *thing, size_t *image_len)
  */
 static herr_t
 datum_serialize(const H5F_t *f,
-                hid_t UNUSED dxpl_id,
-                haddr_t UNUSED addr,
-                size_t UNUSED len,
-                void * image_ptr,
-                void * thing,
-                unsigned * flags_ptr,
-                haddr_t * new_addr_ptr,
-                size_t * new_len_ptr,
-                void ** new_image_ptr_ptr)
+                void *image_ptr,
+                size_t len,
+                void *thing_ptr)
 {
     const char * fcn_name = "datum_serialize()";
     hbool_t was_dirty = FALSE;
@@ -2571,17 +2562,14 @@ datum_serialize(const H5F_t *f,
     H5C_t * cache_ptr;
     struct H5AC_aux_t * aux_ptr;
 
-    HDassert( thing );
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:entering\n", "0", fcn_name);
+#endif /* JRM */
+
+    HDassert( thing_ptr );
     HDassert( image_ptr );
-    HDassert( flags_ptr );
 
-    *flags_ptr = 0;
-
-    HDassert( new_addr_ptr );
-    HDassert( new_len_ptr );
-    HDassert( new_image_ptr_ptr );
-
-    entry_ptr = (struct datum *)thing;
+    entry_ptr = (struct datum *)thing_ptr;
 
     HDassert( f );
     HDassert( f->shared );
@@ -2592,9 +2580,17 @@ datum_serialize(const H5F_t *f,
     HDassert( cache_ptr->magic == H5C__H5C_T_MAGIC );
     HDassert( cache_ptr->aux_ptr ); 
 
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:have cache ptr\n", cache_ptr->prefix, fcn_name);
+#endif /* JRM */
+
     aux_ptr = (H5AC_aux_t *)(f->shared->cache->aux_ptr);
 
     HDassert( aux_ptr->magic == H5AC__H5AC_AUX_T_MAGIC );
+
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:have aux ptr\n", cache_ptr->prefix, fcn_name);
+#endif /* JRM */
 
     idx = addr_to_datum_index(entry_ptr->base_addr);
 
@@ -2603,11 +2599,15 @@ datum_serialize(const H5F_t *f,
     HDassert( idx < virt_num_data_entries );
     HDassert( &(data[idx]) == entry_ptr );
 
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:have idx = %d\n", cache_ptr->prefix, fcn_name, idx);
+#endif /* JRM */
+
     if ( callbacks_verbose ) {
 
         HDfprintf(stdout,
 		  "%d: serialize() idx = %d, addr = %ld, len = %d.\n",
-		  world_mpi_rank, idx, (long)addr, (int)len);
+		  world_mpi_rank, idx, (long)entry_ptr->header.addr, (int)len);
 	fflush(stdout);
     }
 
@@ -2627,6 +2627,10 @@ datum_serialize(const H5F_t *f,
                   "%d:%s: Flushed dirty entry from non-zero file process.",
                   world_mpi_rank, fcn_name);
     }
+
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:about to send mssg\n", cache_ptr->prefix, fcn_name);
+#endif /* JRM */
 
     if ( ret_value == SUCCEED ) {
 
@@ -2662,6 +2666,10 @@ datum_serialize(const H5F_t *f,
         }
     }
 
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:after send mssg\n", cache_ptr->prefix, fcn_name);
+#endif /* JRM */
+
 #if DO_WRITE_REQ_ACK
 
     if ( ( ret_value == SUCCEED ) && ( was_dirty ) ) {
@@ -2693,6 +2701,10 @@ datum_serialize(const H5F_t *f,
 
 #endif /* DO_WRITE_REQ_ACK */
 
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:after write req ack\n", cache_ptr->prefix, fcn_name);
+#endif /* JRM */
+
     datum_flushes++;
 
     if ( entry_ptr->header.is_pinned ) {
@@ -2700,6 +2712,10 @@ datum_serialize(const H5F_t *f,
         datum_pinned_flushes++;
         HDassert( entry_ptr->global_pinned || entry_ptr->local_pinned );
     }
+
+#if 0 /* JRM */
+    HDfprintf(stdout, "%s:%s:exiting\n", cache_ptr->prefix, fcn_name);
+#endif /* JRM */
 
     return(ret_value);
 
@@ -3297,9 +3313,11 @@ lock_entry(H5F_t * file_ptr,
 
 	HDassert( ! (entry_ptr->locked) );
 
-        cache_entry_ptr = (H5C_cache_entry_t *)H5AC_protect(file_ptr, H5P_DATASET_XFER_DEFAULT,
+        cache_entry_ptr = (H5C_cache_entry_t *)H5AC_protect(file_ptr, 
+                                        H5P_DATASET_XFER_DEFAULT,
                                         &(types[0]), entry_ptr->base_addr,
-                                        &entry_ptr->base_addr, H5AC_WRITE);
+                                        &entry_ptr->base_addr, 
+                                        H5AC__NO_FLAGS_SET);
 
         if ( ( cache_entry_ptr != (void *)(&(entry_ptr->header)) ) ||
              ( entry_ptr->header.type != &(types[0]) ) ||
@@ -5271,12 +5289,17 @@ smoke_check_1(int metadata_write_strategy)
 {
     const char * fcn_name = "smoke_check_1()";
     hbool_t success = TRUE;
+    hbool_t report_progress = FALSE;
+    int chk_pnt = 0;
     int i;
     int max_nerrors;
     hid_t fid = -1;
     H5F_t * file_ptr = NULL;
     H5C_t * cache_ptr = NULL;
     struct mssg_t mssg;
+
+    if ( report_progress ) /* 0 */
+        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
     switch ( metadata_write_strategy ) {
 
@@ -5299,11 +5322,20 @@ smoke_check_1(int metadata_write_strategy)
 	    break;
     }
 
+    if ( report_progress ) /* 1 */
+        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
+
     nerrors = 0;
     init_data();
     reset_stats();
 
+    if ( report_progress ) /* 2 */
+        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
+
     if ( world_mpi_rank == world_server_mpi_rank ) {
+
+        if ( report_progress ) /* 3 */
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
 	if ( ! server_main() ) {
 
@@ -5314,9 +5346,16 @@ smoke_check_1(int metadata_write_strategy)
                           world_mpi_rank, fcn_name);
             }
         }
+
+        if ( report_progress ) /* 4 */
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
+
     }
     else /* run the clients */
     {
+        if ( report_progress ) /* 3 */
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
+
         if ( ! setup_cache_for_test(&fid, &file_ptr, &cache_ptr,
                                     metadata_write_strategy) ) {
 
@@ -5329,16 +5368,25 @@ smoke_check_1(int metadata_write_strategy)
             }
         }
 
+        if ( report_progress ) /* 4 */
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
+
         for ( i = 0; i < (virt_num_data_entries / 2); i++ )
         {
             insert_entry(cache_ptr, file_ptr, i, H5AC__NO_FLAGS_SET);
         }
+
+        if ( report_progress ) 
+            HDfprintf(stdout, "%d:sc1:cp=%d+++\n", world_mpi_rank, chk_pnt++);
 
         for ( i = (virt_num_data_entries / 2) - 1; i >= 0; i-- )
         {
 	    lock_entry(file_ptr, i);
 	    unlock_entry(file_ptr, i, H5AC__NO_FLAGS_SET);
         }
+
+        if ( report_progress ) 
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
         /* Move the first half of the entries... */
         for ( i = 0; i < (virt_num_data_entries / 2); i++ )
@@ -5348,6 +5396,9 @@ smoke_check_1(int metadata_write_strategy)
 	    move_entry(file_ptr, i, (i + (virt_num_data_entries / 2)));
         }
 
+        if ( report_progress ) 
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
+
         /* ...and then move them back. */
         for ( i = (virt_num_data_entries / 2) - 1; i >= 0; i-- )
         {
@@ -5355,6 +5406,9 @@ smoke_check_1(int metadata_write_strategy)
 	    unlock_entry(file_ptr, i, H5AC__NO_FLAGS_SET);
 	    move_entry(file_ptr, i, (i + (virt_num_data_entries / 2)));
         }
+
+        if ( report_progress ) 
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
         if ( fid >= 0 ) {
 
@@ -5368,6 +5422,9 @@ smoke_check_1(int metadata_write_strategy)
             }
         }
 
+        if ( report_progress ) 
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
+
         /* verify that all instance of datum are back where the started
          * and are clean.
          */
@@ -5377,6 +5434,9 @@ smoke_check_1(int metadata_write_strategy)
             HDassert( data_index[i] == i );
             HDassert( ! (data[i].dirty) );
         }
+
+        if ( report_progress ) 
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
         /* compose the done message */
         mssg.req       = DONE_REQ_CODE;
@@ -5402,7 +5462,13 @@ smoke_check_1(int metadata_write_strategy)
                 }
             }
         }
+
+        if ( report_progress ) 
+            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
     }
+
+    if ( report_progress ) 
+        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
     max_nerrors = get_max_nerrors();
 
@@ -5418,6 +5484,9 @@ smoke_check_1(int metadata_write_strategy)
             H5_FAILED();
         }
     }
+
+    if ( report_progress ) 
+        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
     success = ( ( success ) && ( max_nerrors == 0 ) );
 
@@ -6600,15 +6669,15 @@ trace_file_check(int metadata_write_strategy)
       "H5AC_insert_entry 0x202 25 0x0 2 0\n",
       "H5AC_insert_entry 0x204 25 0x0 4 0\n",
       "H5AC_insert_entry 0x208 25 0x0 6 0\n",
-      "H5AC_protect 0x200 25 H5AC_WRITE 2 1\n",
+      "H5AC_protect 0x200 25 H5AC__NO_FLAGS_SET 2 1\n",
       "H5AC_mark_entry_dirty 0x200 0\n",
       "H5AC_unprotect 0x200 25 0 0 0\n",
-      "H5AC_protect 0x202 25 H5AC_WRITE 2 1\n",
+      "H5AC_protect 0x202 25 H5AC__NO_FLAGS_SET 2 1\n",
       "H5AC_pin_protected_entry 0x202 0\n",
       "H5AC_unprotect 0x202 25 0 0 0\n",
       "H5AC_unpin_entry 0x202 0\n",
       "H5AC_expunge_entry 0x202 25 0\n",
-      "H5AC_protect 0x204 25 H5AC_WRITE 4 1\n",
+      "H5AC_protect 0x204 25 H5AC__NO_FLAGS_SET 4 1\n",
       "H5AC_pin_protected_entry 0x204 0\n",
       "H5AC_unprotect 0x204 25 0 0 0\n",
       "H5AC_mark_entry_dirty 0x204 0 0 0\n",
@@ -6628,15 +6697,15 @@ trace_file_check(int metadata_write_strategy)
       "H5AC_insert_entry 0x202 25 0x0 2 0\n",
       "H5AC_insert_entry 0x204 25 0x0 4 0\n",
       "H5AC_insert_entry 0x208 25 0x0 6 0\n",
-      "H5AC_protect 0x200 25 H5AC_WRITE 2 1\n",
+      "H5AC_protect 0x200 25 H5AC__NO_FLAGS_SET 2 1\n",
       "H5AC_mark_entry_dirty 0x200 0\n",
       "H5AC_unprotect 0x200 25 0 0 0\n",
-      "H5AC_protect 0x202 25 H5AC_WRITE 2 1\n",
+      "H5AC_protect 0x202 25 H5AC__NO_FLAGS_SET 2 1\n",
       "H5AC_pin_protected_entry 0x202 0\n",
       "H5AC_unprotect 0x202 25 0 0 0\n",
       "H5AC_unpin_entry 0x202 0\n",
       "H5AC_expunge_entry 0x202 25 0\n",
-      "H5AC_protect 0x204 25 H5AC_WRITE 4 1\n",
+      "H5AC_protect 0x204 25 H5AC__NO_FLAGS_SET 4 1\n",
       "H5AC_pin_protected_entry 0x204 0\n",
       "H5AC_unprotect 0x204 25 0 0 0\n",
       "H5AC_mark_entry_dirty 0x204 0 0 0\n",
@@ -7012,7 +7081,8 @@ main(int argc, char **argv)
      * calls.  By then, MPI calls may not work.
      */
     if (H5dont_atexit() < 0){
-	printf("Failed to turn off atexit processing. Continue.\n", mpi_rank);
+	printf("%d:Failed to turn off atexit processing. Continue.\n", 
+               mpi_rank);
     };
     H5open();
 

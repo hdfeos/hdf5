@@ -88,6 +88,10 @@ static herr_t H5O_cache_serialize(const H5F_t *f,
 
 static herr_t H5O_cache_free_icr(void *thing);
 
+static herr_t H5O_cache_clear(const H5F_t *f,
+                              void *thing, 
+                              hbool_t about_to_destroy);
+
 
 static herr_t H5O_cache_chk_get_load_size(const void *udata_ptr,
                                           size_t *image_len_ptr);
@@ -106,6 +110,10 @@ static herr_t H5O_cache_chk_serialize(const H5F_t *f,
                                       void *thing);
 
 static herr_t H5O_cache_chk_free_icr(void *thing);
+
+static herr_t H5O_cache_chk_clear(const H5F_t *f,
+                                  void *thing, 
+                                  hbool_t about_to_destroy);
 
 #else /* V2 cache callbacks */
 
@@ -156,10 +164,12 @@ const H5AC_class_t H5AC_OHDR[1] = {{
     /* serialize     */ (H5AC_serialize_func_t)H5O_cache_serialize,
     /* notify        */ (H5AC_notify_func_t)NULL,
     /* free_icr      */ (H5AC_free_icr_func_t)H5O_cache_free_icr,
+    /* clear         */ (H5AC_clear_func_t)H5O_cache_clear,
+    /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 const H5AC_class_t H5AC_OHDR_CHK[1] = {{
-    /* id            */ H5AC_OHDR_ID,
+    /* id            */ H5AC_OHDR_CHK_ID,
     /* name          */ "object header continuation chunk",
     /* mem_type      */ H5FD_MEM_OHDR,
     /* flags         */ H5AC__CLASS_NO_FLAGS_SET,
@@ -170,6 +180,8 @@ const H5AC_class_t H5AC_OHDR_CHK[1] = {{
     /* serialize     */ (H5AC_serialize_func_t)H5O_cache_chk_serialize,
     /* notify        */ (H5AC_notify_func_t)NULL,
     /* free_icr      */ (H5AC_free_icr_func_t)H5O_cache_chk_free_icr,
+    /* clear         */ (H5AC_clear_func_t)H5O_cache_chk_clear,
+    /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 #else /* V2 cache H5AC_class_t instance definitions */
@@ -242,7 +254,7 @@ H5FL_SEQ_DEFINE(H5O_cont_t);
  */
 
 static herr_t
-H5O_cache_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
+H5O_cache_get_load_size(const void UNUSED *udata_ptr, size_t *image_len_ptr)
 {
     herr_t              ret_value = SUCCEED;    /* Return value */
 
@@ -251,8 +263,6 @@ H5O_cache_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
     HDassert(image_len_ptr);
 
     *image_len_ptr = H5O_SPEC_READ_SIZE;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -299,7 +309,7 @@ H5O_cache_deserialize(const void *image_ptr,
     FUNC_ENTER_NOAPI(NULL)
 
     HDassert(image_ptr);
-    HDassert(len >= H5O_SPEC_READ_SIZE );
+    HDassert(len > 0); 
     HDassert(udata_ptr);
     HDassert(dirty_ptr);
 
@@ -535,7 +545,7 @@ H5O_cache_image_len(const void *thing, size_t *image_len_ptr)
     const H5O_t *oh = NULL;
     herr_t       ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDassert(thing);
     HDassert(image_len_ptr);
@@ -554,8 +564,6 @@ H5O_cache_image_len(const void *thing, size_t *image_len_ptr)
     else
 
        *image_len_ptr = oh->chunk[0].size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -797,6 +805,91 @@ done:
 
 
 /*-------------------------------------------------------------------------
+ * Function:    H5O_cache_clear
+ *
+ * Purpose: 	Clear all dirty bits associated with this cache entry.
+ *
+ *		This is ncessary as the object header cache client maintains 
+ *		its own dirty bits on individual messages.  These dirty bits 
+ *		used to be cleared by the old V2 metadata cache flush callback,
+ *		but now the metadata cache must clear them explicitly, as 
+ *		the serialize callback does not imply that the data has been
+ *		written to disk.
+ *
+ *		This callback is also necessary for the parallel case.
+ *
+ *      	A generic discussion of metadata cache callbacks of this type
+ *      	may be found in H5Cprivate.h:
+ *
+ *
+ * Return:      Success:        SUCCEED
+ *              Failure:        FAIL
+ *
+ * Programmer:  John Mainzer
+ *              9/22/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5O_cache_clear(const H5F_t *f, void *thing, hbool_t about_to_destroy)
+{ 
+    unsigned    u;
+    H5O_t      *oh = NULL;
+    herr_t      ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+
+    oh = (H5O_t *)thing;
+
+    HDassert(oh);
+    HDassert(oh->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(oh->cache_info.type) == &(H5AC_OHDR[0]));
+
+#ifdef H5_HAVE_PARALLEL
+    if ( ( oh->nchunks > 0 ) && ( ! about_to_destroy ) ){
+
+        /* Scan through chunk 0 (the chunk stored contiguously with this 
+         * object header) and cause it to update its image of all entries 
+         * currently marked dirty.  Must do this in the parallel case, as 
+         * it is possible that this processor may clear this object header 
+         * several times before flushing it -- thus causing undefined 
+         * sections of the image to be written to disk overwriting valid data.
+         */
+
+        if ( H5O_chunk_serialize(f, oh, 0) < 0 ) {
+
+            HGOTO_ERROR(H5E_OHDR, H5E_CANTSERIALIZE, FAIL,
+                        "unable to serialize object header chunk")
+        }
+    }
+#endif /* H5_HAVE_PARALLEL */
+
+    /* Mark messages stored with the object header (i.e. messages in 
+     * chunk 0)  as clean 
+     */
+    for(u = 0; u < oh->nmesgs; u++) {
+    
+        if ( oh->mesg[u].chunkno == 0 ) {
+
+            oh->mesg[u].dirty = FALSE;
+        }
+    }
+
+#ifndef NDEBUG
+    /* Reset the number of messages dirtied by decoding */
+    oh->ndecode_dirtied = 0;
+#endif /* NDEBUG */
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5O_cache_clear() */
+
+
+/*-------------------------------------------------------------------------
  * Function:    H5O_cache_chk_get_load_size()
  *
  * Purpose: Tell the metadata cache how large the on disk image of the 
@@ -834,8 +927,6 @@ H5O_cache_chk_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
     HDassert(udata->oh);
 
     *image_len_ptr = udata->size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -966,7 +1057,7 @@ H5O_cache_chk_image_len(const void *thing, size_t *image_len_ptr)
     const H5O_chunk_proxy_t * chk_proxy = NULL;
     herr_t                    ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDassert(thing);
     HDassert(image_len_ptr);
@@ -980,8 +1071,6 @@ H5O_cache_chk_image_len(const void *thing, size_t *image_len_ptr)
     HDassert(chk_proxy->oh);
 
     *image_len_ptr = chk_proxy->oh->chunk[chk_proxy->chunkno].size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -1111,6 +1200,81 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 
 } /* end H5O_cache_chk_free_icr() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:    H5O_cache_chk_clear
+ *
+ * Purpose: 	Clear all dirty bits associated with this cache entry.
+ *
+ *		This is ncessary as the object header cache client maintains 
+ *		its own dirty bits on individual messages.  These dirty bits 
+ *		used to be cleared by the old V2 metadata cache flush callback,
+ *		but now the metadata cache must clear them explicitly, as 
+ *		the serialize callback does not imply that the data has been
+ *		written to disk.
+ *
+ *		This callback is also necessary for the parallel case.
+ *
+ *      	A generic discussion of metadata cache callbacks of this type
+ *      	may be found in H5Cprivate.h:
+ *
+ *
+ * Return:      Success:        SUCCEED
+ *              Failure:        FAIL
+ *
+ * Programmer:  John Mainzer
+ *              9/22/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5O_cache_chk_clear(const H5F_t *f, void *thing, hbool_t UNUSED about_to_destroy)
+{ 
+    unsigned            u;
+    H5O_chunk_proxy_t * chk_proxy = NULL;
+    H5O_t             * oh = NULL;
+    herr_t              ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(thing);
+
+    chk_proxy = (H5O_chunk_proxy_t *)thing;
+
+    HDassert(chk_proxy);
+    HDassert(chk_proxy->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(chk_proxy->cache_info.type) == \
+             &(H5AC_OHDR_CHK[0]));
+    HDassert(chk_proxy->oh);
+
+    oh = chk_proxy->oh;
+
+    HDassert(oh);
+    HDassert(oh->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(oh->cache_info.type) == &(H5AC_OHDR[0]));
+
+#ifdef H5_HAVE_PARALLEL
+    if ( ( chk_proxy->oh->cache_info.is_dirty ) && ( ! about_to_destroy ) ) {
+
+        if ( H5O_chunk_serialize(f, chk_proxy->oh, chk_proxy->chunkno) < 0 ) {
+
+            HGOTO_ERROR(H5E_OHDR, H5E_CANTSERIALIZE, FAIL,
+                       "unable to serialize object header chunk")
+        }
+    }
+#endif /* H5_HAVE_PARALLEL */
+
+    /* Mark messages in chunk as clean */
+    for(u = 0; u < chk_proxy->oh->nmesgs; u++)
+        if(chk_proxy->oh->mesg[u].chunkno == chk_proxy->chunkno)
+            chk_proxy->oh->mesg[u].dirty = FALSE;
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5O_cache_chk_clear() */
 
 #else /* V2 cache callback definitions */
 

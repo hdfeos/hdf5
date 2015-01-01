@@ -337,6 +337,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)pico_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)pico_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     NANO_ENTRY_TYPE,
@@ -350,6 +352,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)nano_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)nano_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     MICRO_ENTRY_TYPE,
@@ -363,6 +367,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)micro_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)micro_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     TINY_ENTRY_TYPE,
@@ -376,6 +382,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)tiny_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)tiny_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     SMALL_ENTRY_TYPE,
@@ -389,6 +397,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)small_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)small_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     MEDIUM_ENTRY_TYPE,
@@ -402,6 +412,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)medium_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)medium_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     LARGE_ENTRY_TYPE,
@@ -415,6 +427,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)large_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)large_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     HUGE_ENTRY_TYPE,
@@ -428,6 +442,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)huge_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)huge_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     MONSTER_ENTRY_TYPE,
@@ -441,6 +457,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)monster_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)monster_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     VARIABLE_ENTRY_TYPE,
@@ -454,6 +472,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)variable_serialize,
     (H5C_notify_func_t)NULL,
     (H5C_free_icr_func_t)variable_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   },
   {
     NOTIFY_ENTRY_TYPE,
@@ -467,6 +487,8 @@ const H5C_class_t types[NUMBER_OF_ENTRY_TYPES] =
     (H5C_serialize_func_t)notify_serialize,
     (H5C_notify_func_t)notify_notify,
     (H5C_free_icr_func_t)notify_free_icr,
+    (H5C_clear_func_t)NULL,
+    (H5C_get_fsf_size_t)NULL,
   }
 };
 

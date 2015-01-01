@@ -262,6 +262,21 @@
  * are flushed. (this has been changed -- dirty entries are now removed from
  * the skip list as they are flushed.  JRM - 10/25/05)
  *
+ * slist_changed: Boolean flag used to indicate whether the contents of 
+ *		the slist has changed since the last time this flag was
+ *		reset.  This is used in the cache flush code to detect 
+ *		conditions in which pre-serialize or serialize callbacks
+ *		have modified the slist -- which obliges us to restart 
+ *		the scan of the slist from the beginning.
+ *
+ * slist_change_in_pre_serialize: Boolean flag used to indicate that 
+ *		a pre_serialize call has modified the slist since the 
+ *		last time this flag was reset.
+ *
+ * slist_change_in_serialize: Boolean flag used to indicate that 
+ *		a serialize call has modified the slist since the 
+ *		last time this flag was reset.
+ *
  * slist_len:   Number of entries currently in the skip list
  *              used to maintain a sorted list of dirty entries in the
  *              cache.
@@ -291,6 +306,11 @@
  *                   multiple entries being flushed last arises, though
  *                   explicit tests for that case should be added when said
  *                   HDasserts are removed.
+ *
+ *		     Update: There are now two possible last entries
+ *		     (superblock and file driver info message).  This
+ *		     number will probably increase as we add superblock
+ *		     messages.   JRM -- 11/18/14
  *
  * With the addition of the fractal heap, the cache must now deal with
  * the case in which entries may be dirtied, moved, or have their sizes
@@ -890,6 +910,9 @@ struct H5C_t
 
     hbool_t                     ignore_tags;
 
+    hbool_t			slist_changed;
+    hbool_t			slist_change_in_pre_serialize;
+    hbool_t			slist_change_in_serialize;
     int32_t                     slist_len;
     size_t                      slist_size;
     H5SL_t *                    slist_ptr;
@@ -2054,7 +2077,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
     }                                                        \
     if ((entry_ptr)->flush_me_last) {                        \
         (cache_ptr)->num_last_entries++;                     \
-        HDassert((cache_ptr)->num_last_entries == 1);        \
+        HDassert((cache_ptr)->num_last_entries <= 2);        \
     }                                                        \
     H5C__UPDATE_STATS_FOR_HT_INSERTION(cache_ptr)            \
     H5C__POST_HT_INSERT_SC(cache_ptr, fail_val)              \
@@ -2088,7 +2111,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
     }                                                         \
     if ((entry_ptr)->flush_me_last) {                         \
         (cache_ptr)->num_last_entries--;                      \
-        HDassert((cache_ptr)->num_last_entries == 0);         \
+        HDassert((cache_ptr)->num_last_entries <= 1);         \
     }                                                         \
     H5C__UPDATE_STATS_FOR_HT_DELETION(cache_ptr)              \
     H5C__POST_HT_REMOVE_SC(cache_ptr, entry_ptr)              \
@@ -2254,8 +2277,23 @@ if ( ( (cache_ptr)->index_size !=                                           \
  *		able to dirty, resize and/or move entries during the
  *		flush.
  *
+ *		JRM -- 12/13/14
+ *		Added code to set cache_ptr->slist_changed to TRUE 
+ *		when an entry is inserted in the slist.
+ *
  *-------------------------------------------------------------------------
  */
+
+#if H5C_DO_SLIST_SANITY_CHECKS
+
+#define ENTRY_IN_SLIST(cache_ptr, entry_ptr) \
+    H5C_entry_in_skip_list((cache_ptr), (entry_ptr))
+
+#else /* H5C_DO_SLIST_SANITY_CHECKS */
+
+#define ENTRY_IN_SLIST(cache_ptr, entry_ptr) FALSE
+
+#endif /* H5C_DO_SLIST_SANITY_CHECKS */
 
 #if H5C_DO_SANITY_CHECKS
 
@@ -2267,6 +2305,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
     HDassert( (entry_ptr)->size > 0 );                                         \
     HDassert( H5F_addr_defined((entry_ptr)->addr) );                           \
     HDassert( !((entry_ptr)->in_slist) );                                      \
+    HDassert( !ENTRY_IN_SLIST((cache_ptr), (entry_ptr)) );                     \
                                                                                \
     if ( H5SL_insert((cache_ptr)->slist_ptr, entry_ptr, &(entry_ptr)->addr)    \
                                                                          < 0 ) \
@@ -2274,6 +2313,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
                     "Can't insert entry in skip list")                         \
                                                                                \
     (entry_ptr)->in_slist = TRUE;                                              \
+    (cache_ptr)->slist_changed = TRUE;                                         \
     (cache_ptr)->slist_len++;                                                  \
     (cache_ptr)->slist_size += (entry_ptr)->size;                              \
     (cache_ptr)->slist_len_increase++;                                         \
@@ -2294,6 +2334,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
     HDassert( (entry_ptr)->size > 0 );                                         \
     HDassert( H5F_addr_defined((entry_ptr)->addr) );                           \
     HDassert( !((entry_ptr)->in_slist) );                                      \
+    HDassert( !ENTRY_IN_SLIST((cache_ptr), (entry_ptr)) );                     \
                                                                                \
     if ( H5SL_insert((cache_ptr)->slist_ptr, entry_ptr, &(entry_ptr)->addr)    \
                                                                          < 0 ) \
@@ -2301,6 +2342,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
                     "Can't insert entry in skip list")                         \
                                                                                \
     (entry_ptr)->in_slist = TRUE;                                              \
+    (cache_ptr)->slist_changed = TRUE;                                         \
     (cache_ptr)->slist_len++;                                                  \
     (cache_ptr)->slist_size += (entry_ptr)->size;                              \
                                                                                \
@@ -2341,6 +2383,10 @@ if ( ( (cache_ptr)->index_size !=                                           \
  *		Updated sanity checks for the new is_read_only and
  *		ro_ref_count fields in H5C_cache_entry_t.
  *
+ *		JRM -- 12/13/14
+ *		Added code to set cache_ptr->slist_changed to TRUE 
+ *		when an entry is removed from the slist.
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -2363,6 +2409,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
                     "Can't delete entry from skip list.")           \
                                                                     \
     HDassert( (cache_ptr)->slist_len > 0 );                         \
+    (cache_ptr)->slist_changed = TRUE;                              \
     (cache_ptr)->slist_len--;                                       \
     HDassert( (cache_ptr)->slist_size >= (entry_ptr)->size );       \
     (cache_ptr)->slist_size -= (entry_ptr)->size;                   \
@@ -2393,6 +2440,11 @@ if ( ( (cache_ptr)->index_size !=                                           \
  *		able to dirty, resize and/or move entries during the
  *		flush.
  *
+ *		JRM -- 12/13/14
+ *		Note that we do not set cache_ptr->slist_changed to TRUE 
+ *		in this case, as the structure of the slist is not
+ *		modified.
+ *
  *-------------------------------------------------------------------------
  */
 
@@ -2418,7 +2470,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
     HDassert( (new_size) <= (cache_ptr)->slist_size );                   \
     HDassert( ( (cache_ptr)->slist_len > 1 ) ||                          \
               ( (cache_ptr)->slist_size == (new_size) ) );               \
-} /* H5C__REMOVE_ENTRY_FROM_SLIST */
+} /* H5C__UPDATE_SLIST_FOR_SIZE_CHANGE */
 
 #else /* H5C_DO_SANITY_CHECKS */
 
@@ -2439,7 +2491,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
     HDassert( (new_size) <= (cache_ptr)->slist_size );                   \
     HDassert( ( (cache_ptr)->slist_len > 1 ) ||                          \
               ( (cache_ptr)->slist_size == (new_size) ) );               \
-} /* H5C__REMOVE_ENTRY_FROM_SLIST */
+} /* H5C__UPDATE_SLIST_FOR_SIZE_CHANGE */
 
 #endif /* H5C_DO_SANITY_CHECKS */
 

@@ -98,6 +98,14 @@ H5F_init_super_interface(void)
     FUNC_LEAVE_NOAPI(H5F_init())
 } /* H5F_init_super_interface() */
 
+#if 0 /* JRM */
+/* the following function probably shouldn't be here -- believe the name
+ * of the function has been changed to H5FD_locate_signature(), and the 
+ * function moved to H5FDint.c.  
+ *
+ * Delete this function if all goes well.
+ */
+
 
 /*-------------------------------------------------------------------------
  * Function:    H5F_locate_signature
@@ -117,12 +125,17 @@ H5F_init_super_interface(void)
 herr_t
 H5F_locate_signature(H5FD_t *file, hid_t dxpl_id, haddr_t *sig_addr)
 {
+    H5P_genplist_t  *dxpl;               /* DXPL object */
     haddr_t         addr, eoa;
     uint8_t         buf[H5F_SIGNATURE_LEN];
     unsigned        n, maxpow;
     herr_t          ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT
+
+    /* Get the DXPL plist object for DXPL ID */
+    if(NULL == (dxpl = (H5P_genplist_t *)H5I_object(dxpl_id)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "can't get property list")
 
     /* Find the least N such that 2^N is larger than the file size */
     if(HADDR_UNDEF == (addr = H5FD_get_eof(file)) || HADDR_UNDEF == (eoa = H5FD_get_eoa(file, H5FD_MEM_SUPER)))
@@ -139,7 +152,7 @@ H5F_locate_signature(H5FD_t *file, hid_t dxpl_id, haddr_t *sig_addr)
         addr = (8 == n) ? 0 : (haddr_t)1 << n;
         if(H5FD_set_eoa(file, H5FD_MEM_SUPER, addr + H5F_SIGNATURE_LEN) < 0)
             HGOTO_ERROR(H5E_IO, H5E_CANTINIT, FAIL, "unable to set EOA value for file signature")
-        if(H5FD_read(file, dxpl_id, H5FD_MEM_SUPER, addr, (size_t)H5F_SIGNATURE_LEN, buf) < 0)
+        if(H5FD_read(file, dxpl, H5FD_MEM_SUPER, addr, (size_t)H5F_SIGNATURE_LEN, buf) < 0)
             HGOTO_ERROR(H5E_IO, H5E_CANTINIT, FAIL, "unable to read file signature")
         if(!HDmemcmp(buf, H5F_SIGNATURE, (size_t)H5F_SIGNATURE_LEN))
             break;
@@ -161,6 +174,8 @@ H5F_locate_signature(H5FD_t *file, hid_t dxpl_id, haddr_t *sig_addr)
 done:
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5F_locate_signature() */
+
+#endif /* JRM */
 
 
 /*-------------------------------------------------------------------------
@@ -320,19 +335,29 @@ done:
 herr_t
 H5F__super_read(H5F_t *f, hid_t dxpl_id)
 {
+    H5P_genplist_t     *dxpl;               /* DXPL object */
     H5F_super_t *       sblock = NULL;      /* Superblock structure */
     H5F_superblock_cache_ud_t udata;        /* User data for cache callbacks */
     H5P_genplist_t     *c_plist;            /* File creation property list  */
     unsigned            sblock_flags = H5AC__NO_FLAGS_SET;       /* flags used in superblock unprotect call      */
     haddr_t             super_addr;         /* Absolute address of superblock */
     haddr_t             eof;                /* End of file address */
-    H5AC_protect_t      rw;                 /* Read/write permissions for file */
+    unsigned      	rw_flags;           /* Read/write permissions for file */
     herr_t              ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_PACKAGE_TAG(dxpl_id, H5AC__SUPERBLOCK_TAG, FAIL)
 
     /* Find the superblock */
+#if 0 /* original code */ /* JRM */
     if(H5F_locate_signature(f->shared->lf, dxpl_id, &super_addr) < 0)
+#else /* modified code */ /* JRM */
+
+    /* Get the DXPL plist object for DXPL ID */
+    if(NULL == (dxpl = (H5P_genplist_t *)H5I_object(dxpl_id)))
+        HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "can't get property list")
+
+    if(H5FD_locate_signature(f->shared->lf, dxpl, &super_addr) < 0)
+#endif /* JRM */
         HGOTO_ERROR(H5E_FILE, H5E_NOTHDF5, FAIL, "unable to locate file signature")
     if(HADDR_UNDEF == super_addr)
         HGOTO_ERROR(H5E_FILE, H5E_NOTHDF5, FAIL, "file signature not found")
@@ -345,17 +370,36 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
     } /* end if */
 
     /* Determine file intent for superblock protect */
+
+    /* Must tell cache at protect time that the super block is to be
+     * flushed last (and collectively in the parallel case).
+     */
+
+#ifdef H5_HAVE_PARALLEL
+
     if(H5F_INTENT(f) & H5F_ACC_RDWR)
-        rw = H5AC_WRITE;
+        rw_flags = H5AC__FLUSH_LAST_FLAG | H5C__FLUSH_COLLECTIVELY_FLAG;
     else
-        rw = H5AC_READ;
+        rw_flags = H5AC__FLUSH_LAST_FLAG | 
+                   H5C__FLUSH_COLLECTIVELY_FLAG | 
+                   H5AC__READ_ONLY_FLAG;
+
+#else /* H5_HAVE_PARALLEL */
+
+    if(H5F_INTENT(f) & H5F_ACC_RDWR)
+        rw_flags = H5AC__FLUSH_LAST_FLAG;  /* i.e. r/w access */
+    else
+        rw_flags = H5AC__READ_ONLY_FLAG | H5AC__FLUSH_LAST_FLAG;
+
+#endif /* H5_HAVE_PARALLEL */
 
     /* Get the shared file creation property list */
     if(NULL == (c_plist = (H5P_genplist_t *)H5I_object(f->shared->fcpl_id)))
         HGOTO_ERROR(H5E_FILE, H5E_BADTYPE, FAIL, "can't get property list")
 
     /* Make certain we can read the fixed-size portion of the superblock */
-    if(H5F__set_eoa(f, H5FD_MEM_SUPER, H5F_SUPERBLOCK_FIXED_SIZE) < 0)
+    if(H5F__set_eoa(f, H5FD_MEM_SUPER, 
+              H5F_SUPERBLOCK_FIXED_SIZE + H5F_SUPERBLOCK_MINIMAL_VARLEN_SIZE) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "set end of space allocation request failed")
 
     /* Set up the user data for cache callbacks */
@@ -368,7 +412,7 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
     udata.drvrinfo_removed = FALSE;
 
     /* Look up the superblock */
-    if(NULL == (sblock = (H5F_super_t *)H5AC_protect(f, dxpl_id, H5AC_SUPERBLOCK, (haddr_t)0, &udata, rw)))
+    if(NULL == (sblock = (H5F_super_t *)H5AC_protect(f, dxpl_id, H5AC_SUPERBLOCK, (haddr_t)0, &udata, rw_flags)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTPROTECT, FAIL, "unable to load superblock")
 
     /* Pin the superblock in the cache */
@@ -376,7 +420,7 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
         HGOTO_ERROR(H5E_FILE, H5E_CANTPIN, FAIL, "unable to pin superblock")
 
     /* Mark the superblock dirty if it was modified during loading */
-    if(H5AC_WRITE == rw && udata.ignore_drvrinfo && udata.drvrinfo_removed) {
+    if(((rw_flags & H5AC__READ_ONLY_FLAG) == 0) && udata.ignore_drvrinfo && udata.drvrinfo_removed) {
         HDassert(sblock->super_vers < HDF5_SUPERBLOCK_VERSION_2);
         sblock_flags |= H5AC__DIRTIED_FLAG;
     } /* end if */
@@ -406,7 +450,7 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
             HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "failed to set base address for file driver")
 
         /* Indicate that the superblock should be marked dirty */
-        if(H5AC_WRITE == rw)
+        if((rw_flags & H5AC__READ_ONLY_FLAG) == 0)
             sblock_flags |= H5AC__DIRTIED_FLAG;
     } /* end if */
 
@@ -484,14 +528,16 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
         drvrinfo_udata.f = f;
 
         /* Look up the driver info block */
-        if(NULL == (drvinfo = (H5O_drvinfo_t *)H5AC_protect(f, dxpl_id, H5AC_DRVRINFO, sblock->driver_addr, &drvrinfo_udata, rw)))
+        if(NULL == (drvinfo = (H5O_drvinfo_t *)H5AC_protect(f, dxpl_id, H5AC_DRVRINFO, sblock->driver_addr, &drvrinfo_udata, rw_flags)))
             HGOTO_ERROR(H5E_FILE, H5E_CANTPROTECT, FAIL, "unable to load driver info block")
 
         /* Loading the driver info block is enough to set up the right info */
 
         /* Check if we need to rewrite the driver info block info */
         if(H5F_HAS_FEATURE(f, H5FD_FEAT_DIRTY_DRVRINFO_LOAD)) {
-            HDassert(H5AC_WRITE == rw);
+
+            HDassert((rw_flags & H5AC__READ_ONLY_FLAG) == 0);
+
             drvinfo_flags |= H5AC__DIRTIED_FLAG;
         } /* end if */
 
@@ -535,8 +581,6 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
         if(status) {
             /* Check for ignoring the driver info for this file */
             if(!udata.ignore_drvrinfo) {
-                /* Sanity check - the superblock should be marked dirty */
-                HDassert(sblock_flags & H5AC__DIRTIED_FLAG);
 
                 /* Retrieve the 'driver info' structure */
                 if(NULL == H5O_msg_read(&ext_loc, H5O_DRVINFO_ID, &drvinfo, dxpl_id))
@@ -616,7 +660,7 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
     /* (NOTE: only for later versions of superblock, earlier versions are handled
      *          earlier in this routine.
      */
-    if(H5AC_WRITE == rw &&
+    if(((rw_flags & H5AC__READ_ONLY_FLAG) == 0) &&
             sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2 &&
             H5F_addr_defined(sblock->ext_addr)) {
         /* Check for modifying the driver info when opening the file */
@@ -641,8 +685,25 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
                 drvinfo.buf = dbuf;
 
                 /* Write driver info information to the superblock extension */
+
+#if 1 /* bug fix test code -- tidy this up if all goes well */ /* JRM */
+		/* KLUGE ALERT!!
+		 *
+		 * H5F_super_ext_write_msg() expects f->shared->sblock to 
+		 * be set -- verify that it is NULL, and then set it.
+		 * Set it back to NULL when we are done.
+		 */
+		HDassert(f->shared->sblock == NULL);
+		f->shared->sblock = sblock;
+#endif /* JRM */
+
                 if(H5F_super_ext_write_msg(f, dxpl_id, &drvinfo, H5O_DRVINFO_ID, FALSE) < 0)
                     HGOTO_ERROR(H5E_FILE, H5E_WRITEERROR, FAIL, "error in writing message to superblock extension")
+
+#if 1 /* bug fix test code -- tidy this up if all goes well */ /* JRM */
+		f->shared->sblock = NULL;
+#endif /* JRM */
+
             } /* end if */
         } /* end if */
         /* Check for eliminating the driver info block */

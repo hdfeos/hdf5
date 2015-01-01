@@ -1012,7 +1012,14 @@ H5FD_open(const char *name, unsigned flags, hid_t fapl_id, haddr_t maxaddr)
     if(HADDR_UNDEF == maxaddr)
         maxaddr = driver->maxaddr;
     if(NULL == (file = (driver->open)(name, flags, fapl_id, maxaddr)))
+#if 1 /* debugging code */ /* JRM */
+    {
+       /* assert(0); */
+#endif /* debugging code */ /* JRM */
 	HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, NULL, "open failed")
+#if 1 /* debugging code */ /* JRM */
+    }
+#endif /* debugging code */ /* JRM */
 
     /*
      * Fill in public fields. We must increment the reference count on the

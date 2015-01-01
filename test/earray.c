@@ -208,7 +208,7 @@ const H5AC_class_t H5AC_EARRAY_TEST[1] = {{
     /* id            */ H5AC_TEST_ID,
     /* name          */ "earray test",
     /* mem_type      */ H5FD_MEM_DEFAULT,
-    /* flags         */ H5AC__CLASS_NO_FLAGS_SET,
+    /* flags         */ H5AC__CLASS_NO_IO_FLAG,
     /* get_load_size */ (H5AC_get_load_size_func_t)earray_cache_test_get_load_size,
     /* deserialize   */ (H5AC_deserialize_func_t)earray_cache_test_deserialize,
     /* image_len     */ (H5AC_image_len_func_t)earray_cache_test_image_len,
@@ -216,6 +216,8 @@ const H5AC_class_t H5AC_EARRAY_TEST[1] = {{
     /* serialize     */ (H5AC_serialize_func_t)earray_cache_test_serialize,
     /* notify        */ (H5AC_notify_func_t)NULL,
     /* free_icr      */ (H5AC_free_icr_func_t)earray_cache_test_free_icr,
+    /* clear         */ NULL,
+    /* fsf_size      */ NULL,
 }};
 
 #else /* V2 cache H5AC_EARRAY_TEST definition */
@@ -798,15 +800,6 @@ earray_cache_test_serialize(const H5F_t *f,
     HDassert(test->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert((const H5AC_class_t *)(test->cache_info.type) == 
              &(H5AC_EARRAY_TEST[0]));
-
-    /* in the V2 cache case, the remainder of the function up to the 
-     * return statement used to be executed only if the entry was marked 
-     * as dirty in the cache.  I've made this code unconditional instead,
-     * which may cause problems.  If we run into odd errors in this test 
-     * code, this change is an abvious candidate for the reason.
-     *
-     *                                             JRM -- 8/3/14
-     */
 
     /* Check for out of order flush */
     if(test->fd_info->base_obj)
@@ -1839,7 +1832,7 @@ test_flush_depend(hid_t fapl, H5EA_create_t *cparam, earray_test_param_t UNUSED 
         TEST_ERROR
 
     /* Protect the base entry */
-    if(NULL == (base_entry = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, base_addr, NULL, H5AC_WRITE)))
+    if(NULL == (base_entry = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, base_addr, NULL, H5AC__NO_FLAGS_SET)))
         TEST_ERROR
 
     /* Unprotect & unpin the base entry */
@@ -1851,7 +1844,7 @@ test_flush_depend(hid_t fapl, H5EA_create_t *cparam, earray_test_param_t UNUSED 
         TEST_ERROR
 
     /* Protect the test entry */
-    if(NULL == (entry1 = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, addr1, NULL, H5AC_WRITE)))
+    if(NULL == (entry1 = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, addr1, NULL, H5AC__NO_FLAGS_SET)))
         TEST_ERROR
 
     /* Unprotect & unpin the test entry */
@@ -1863,7 +1856,7 @@ test_flush_depend(hid_t fapl, H5EA_create_t *cparam, earray_test_param_t UNUSED 
         TEST_ERROR
 
     /* Protect the test entry */
-    if(NULL == (entry2 = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, addr2, NULL, H5AC_WRITE)))
+    if(NULL == (entry2 = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, addr2, NULL, H5AC__NO_FLAGS_SET)))
         TEST_ERROR
 
     /* Unprotect & unpin the test entry */
@@ -1875,7 +1868,7 @@ test_flush_depend(hid_t fapl, H5EA_create_t *cparam, earray_test_param_t UNUSED 
         TEST_ERROR
 
     /* Protect the test entry */
-    if(NULL == (entry3 = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, addr3, NULL, H5AC_WRITE)))
+    if(NULL == (entry3 = (earray_test_t *)H5AC_protect(f, H5P_DATASET_XFER_DEFAULT, H5AC_EARRAY_TEST, addr3, NULL, H5AC__NO_FLAGS_SET)))
         TEST_ERROR
 
     /* Unprotect & unpin the test entry */

@@ -32,6 +32,30 @@
 
 
 /*-------------------------------------------------------------------------
+ * Function:	H5F_shared_is_defined
+ *
+ * Purpose:	Return TRUE if f and f->shared are both not NULL, and 
+ *              FALSE otherwise.
+ *
+ * Return:	TRUE if f != NULL and f->shared != NULL.
+ *              FALSE otherwise.
+ *
+ * Programmer:	John Mainzer 10/30/14
+ *
+ *-------------------------------------------------------------------------
+ */
+hbool_t
+H5F_shared_is_defined(H5F_t *f)
+{
+    if ( ( NULL != f ) && ( NULL != f->shared ) )
+        return(TRUE);
+    else
+        return(FALSE);
+
+} /* H5F_shared_is_defined() */
+
+
+/*-------------------------------------------------------------------------
  * Function:	H5F_debug
  *
  * Purpose:	Prints a file header to the specified stream.  Each line

@@ -147,6 +147,8 @@ const H5AC_class_t H5AC_LHEAP_PRFX[1] = {{
   /* serialize     */ (H5AC_serialize_func_t)H5HL_cache_prefix_serialize,
   /* notify        */ (H5AC_notify_func_t)NULL,
   /* free_icr      */ (H5AC_free_icr_func_t)H5HL_cache_prefix_free_icr,
+  /* clear         */ (H5AC_clear_func_t)NULL,
+  /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 const H5AC_class_t H5AC_LHEAP_DBLK[1] = {{
@@ -161,6 +163,8 @@ const H5AC_class_t H5AC_LHEAP_DBLK[1] = {{
   /* serialize     */ (H5AC_serialize_func_t)H5HL_cache_datablock_serialize,
   /* notify        */ (H5AC_notify_func_t)NULL,
   /* free_icr      */ (H5AC_free_icr_func_t)H5HL_cache_datablock_free_icr,
+  /* clear         */ (H5AC_clear_func_t)NULL,
+  /* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 #else /* V2 cache instances of H5AC_class_t */
@@ -434,7 +438,9 @@ H5HL_cache_prefix_deserialize(const void *image_ptr,
         HGOTO_ERROR(H5E_HEAP, H5E_CANTALLOC, NULL, \
                     "can't allocate local heap prefix")
 
+#if 0 /* doesn't look like we need this -- JRM */
     HDassert(!prfx->spec_load_failed);
+#endif /* JRM */
 
     /* Store the prefix's address & length */
     heap->prfx_addr = udata->prfx_addr;
@@ -490,31 +496,37 @@ H5HL_cache_prefix_deserialize(const void *image_ptr,
                                 "can't initialize free list")
 
             } /* end if */
-            else 
+            else {
 
-                /* Make certain the length was OK on the retry */
+		/* the supplied buffer is too small -- We have already made note
+                 * of the correct size, so simply return success.  H5C_load_entry()
+                 * will notice the size discrepency, and re-try the load.
+                 */
+
+                /* Make certain that this is the first try ... */
                 HDassert(!udata->made_attempt);
 
-            /* Note that we've made one attempt at decoding the local heap 
-             * already (useful when the length is incorrect and the cache 
-             * will retry with a larger one) 
-             */
-            udata->made_attempt = TRUE;
-
-            /* Note that H5HL_cache_prefix_free_icr() must also free the
-             * the heap when it frees the prefix.  Do this by setting 
-             * prefix->spec_load_failed to TRUE.
-             */
-	    prfx->spec_load_failed = TRUE;
-
+                /* ... and mark the udata so that we know that we have used up
+                 * our first try.
+                 */
+                udata->made_attempt = TRUE;
+#if 0 /* doesn't look like we need this -- JRM */
+                /* Note that H5HL_cache_prefix_free_icr() must also free the
+                 * the heap when it frees the prefix.  Do this by setting 
+                 * prefix->spec_load_failed to TRUE.
+                 */
+	        prfx->spec_load_failed = TRUE;
+#endif /* JRM */
+	    } /* end else */
         } /* end if */
-        else
+        else {
 
             /* Note that the heap should _NOT_ be a single 
              * object in the cache 
              */
             heap->single_cache_obj = FALSE;
 
+	} /* end else */
     } /* end if */
 
     /* Set flag to indicate prefix from loaded from file */
@@ -751,7 +763,9 @@ done:
 static herr_t
 H5HL_cache_prefix_free_icr(void *thing)
 {
+#if 0 /* doesn't look like we need this -- JRM */
     hbool_t      spec_load_failed;
+#endif /* JRM */
     H5HL_t      *heap = NULL; 
     H5HL_prfx_t *prfx = NULL; /* Pointer to local heap prefix to query */
     herr_t       ret_value = SUCCEED;    /* Return value */
@@ -775,9 +789,12 @@ H5HL_cache_prefix_free_icr(void *thing)
     HDassert(H5F_addr_eq(prfx->cache_info.addr, prfx->heap->prfx_addr));
     HDassert(prfx->heap);
 
+#if 0 /* doesn't look like we need this -- JRM */
     /* make note of the spec_load_failed and heap fields of the prefix */
     spec_load_failed = prfx->spec_load_failed;
+    prfx->spec_load_failed = FALSE;
     heap = prfx->heap;
+#endif /* JRM */
 
     /* Destroy local heap prefix */
     if(H5HL_prfx_dest(prfx) < 0)
@@ -785,6 +802,7 @@ H5HL_cache_prefix_free_icr(void *thing)
         HGOTO_ERROR(H5E_HEAP, H5E_CANTRELEASE, FAIL, \
                     "can't destroy local heap prefix")
 
+#if 0 /* doesn't look like we need this -- JRM */
     /* if spec_load_failed is TRUE, the instance of H5HL_prfx_t we were 
      * passed is a partially allocated instance that was allocated as 
      * part of a failed attempt to deserialize a buffer that was too small.
@@ -798,6 +816,7 @@ H5HL_cache_prefix_free_icr(void *thing)
 
 	    HGOTO_ERROR(H5E_HEAP, H5E_CANTRELEASE, FAIL, \
                         "unable to destroy local heap")
+#endif /* JRM */
 
 done:
 

@@ -38,6 +38,7 @@
 
 
 #define H5C_DO_SANITY_CHECKS		1
+#define H5C_DO_SLIST_SANITY_CHECKS	0
 #define H5C_DO_TAGGING_SANITY_CHECKS	1
 #define H5C_DO_EXTREME_SANITY_CHECKS	0
 /* Note: The memory sanity checks aren't going to work until I/O filters are
@@ -121,6 +122,60 @@ typedef struct H5C_t H5C_t;
  * 	mem type passed into H5F_block_read().
  *
  * flags:  Flags indicating class-specific behavior.
+ *
+ *	Whoever created the flags field couldn't be bothered to 
+ *	document the meanings of the flags he created.  Hence the 
+ *	following discussions of the H5C__CLASS_SPECULATIVE_LOAD_FLAG
+ *	and the H5C__CLASS_COMPRESSED_FLAG should be viewed with 
+ *	suspicion, as the meanings are divined from the source 
+ *	code, and thus may be inaccurate.  Please correct any 
+ *	errors you find.
+ *
+ *	Possible flags are:
+ *
+ *	H5C__CLASS_NO_FLAGS_SET: No special processing.
+ *
+ *	H5C__CLASS_SPECULATIVE_LOAD_FLAG: This flag appears to be used
+ *		only in H5C_load_entry().  When it is set, entries are 
+ *		permitted to change their sizes on the first attempt 
+ *		to load.  
+ *
+ *		If the new size is larger than the old, the read buffer
+ *		is reallocated to the new size, loaded from file, and the 
+ *		deserialize routine is called a second time on the 
+ *		new buffer.  The entry returned by the first call to 
+ *		the deserialize routine is discarded (via the free_icr
+ *		call) after the new size is retrieved (via the image_len
+ *		call).  Note that the new size is used as the size of the 
+ *		entry in the cache.
+ *
+ *		If the new size is smaller than the old, no new loads 
+ *		or desearializes are performed, but the new size becomes
+ *		the size of the entry in the cache.
+ *
+ *		When this flag is set, an attempt to read past the 
+ *		end of file is pemitted.  In this case, if the size 
+ *		returned get_load_size callback would result in a 
+ *		read past the end of file, the size is trunkated to 
+ *		avoid this, and processing proceeds as normal.
+ *
+ *	H5C__CLASS_COMPRESSED_FLAG: This flags appears to be used 
+ *		only in H5C_load_entry().  It seems to mean that 
+ *		an entry can change its size on load, but that no 
+ *		retry of the load from file or deserialize call is 
+ *		needed.  This only makes sense if the new size is 
+ *		less than the old -- but there is no requirement for 
+ *		this in the code.  I have inserted an assert to test 
+ *		this.  So far it hasn't been triggered.
+ *		
+ *		As with the H5C__CLASS_SPECULATIVE_LOAD_FLAG, the new
+ *		size is used as the size of the entry in the cache.
+ *
+ *	H5C__CLASS_NO_IO_FLAG:  This flag is intended only for use in test 
+ *		code.  When it is set, any attempt to load an entry of 
+ *		the type with this flag set will trigger an assertion 
+ *		failure, and any flush of an entry with this flag set 
+ *		will not result in any write to file.
  *
  * GET_LOAD_SIZE: Pointer to the 'get load size' function.
  *
@@ -466,7 +521,7 @@ typedef struct H5C_t H5C_t;
  *
  *	The typedef for the free ICR callback is as follows:
  *
- *	typedef herr_t (*H5C_free_icr_func_t)(void * thing);
+ *	typedef herr_t (*H5C_free_icr_func_t)(void * thing));
  *
  * 	The parameters of the free ICR callback are as follows:
  *
@@ -490,6 +545,124 @@ typedef struct H5C_t H5C_t;
  *	free ICR call would fail if the in core representation has been
  *	modified since the last serialize of clear callback.
  *
+ * CLEAR: Pointer to the clear callback.
+ *
+ *	In principle, there should be no need for the clear callback,
+ *	as the dirty flag should be maintained by the metadata cache.
+ *.  
+ *	However, some clients maintain dirty bits on internal data, 
+ *	and we need some way of keeping these dirty bits in sync with 
+ *	those maintained by the metadata cache.  This callback exists
+ *	to serve this purpose.  If defined, it is called whenever the 
+ *	cache marks dirty entry clean, or when the cache is about to 
+ *	discard a dirty entry without writing it to disk (This 
+ *	happens as the result of an unprotect call with the 
+ *	H5AC__DELETED_FLAG set, and the H5C__TAKE_OWNERSHIP_FLAG not
+ *	set.)
+ *
+ *	Arguably, this functionality should be in the NOTIFY callback.
+ *	However, this callback is specific to only a few clients, and 
+ *	it will be called relatively frequently.  Hence it is made its
+ *	own callback to minimize overhead.
+ *
+ *	The typedef for the clear callback is as follows:
+ *
+ *	typedef herr_t (*H5C_clear_func_t)(const H5F_t *f,
+ *                                         void * thing, 
+ *                                         hbool_t about_to_destroy);
+ *
+ *	The parameters of the clear callback are as follows:
+ *
+ *	f:	File pointer.
+ *
+ *	thing:  Pointer to void containing the address of the in core
+ *		representation of the target metadata cache entry.  This
+ *		is the same pointer that would be returned by a protect()
+ *		call of the associated addr and len.
+ *
+ *	about_to_destroy: Boolean flag used to indicate whether the 
+ *		metadata cache is about to destroy the target metadata
+ *		cache entry.  The callback can use this flag to omit
+ *		operations that are irrelevant it the entry is about 
+ *		to be destroyed.
+ *
+ *	Processing in the clear function should proceed as follows:
+ *
+ *	Reset all internal dirty bits in the target metadata cache entry.
+ *
+ *	If the about_to_destroy flag is TRUE, the clear function may 
+ *	ommit any dirty bit that will not trigger a sanity check failure 
+ *	or otherwise cause problems in the subsequent free icr call.
+ *	In particular, the call must ensure that the free icr call will
+ *	not fail to to changes since prior to this call, and after the 
+ *	last serialize or clear call.
+ *
+ *	If the function is successful, it must return SUCCEED. 
+ *
+ *	If it fails for any reason, the function must return FAIL and
+ *	push error information on the error stack with the error API
+ *	routines. 
+ *
+ * GET_FSF_SIZE: Pointer to the get file space free size callback.
+ *
+ *	In principle, there is no need for the get file space free size
+ *	callback.  However, as an optimization, it is sometimes convenient
+ *	to allocate and free file space for a number of cache entries 
+ *	simultaneously in a single contiguous block of file space.
+ *
+ *	File space allocation is done by the client, so the metadata cache
+ *	need not be involved.  However, since the metadata cache typically
+ *      handles file space release when an entry is destroyed, some 
+ *	adjustment on the part of the metadata cache is required for this
+ *	operation.
+ *
+ *      The get file space free size callback exists to support this 
+ *	operation.
+ *
+ *	If a group of cache entries that were allocated as a group are to 
+ *	be discarded and their file space released, the type of the first
+ *	(i.e. lowest address) entry in the group must implement the 
+ *	get free file space size callback.  
+ *
+ *	To free the file space of all entries in the group in a single 
+ *	operation, first expunge all entries other than the first without 
+ *	the free file space flag.  
+ *
+ *	Then, to complete the operation, unprotect or expunge the first
+ *	entry in the block with the free file space flag set.  Since 
+ *	the get free file space callback is implemented, the metadata 
+ *	cache will use this callback to get the size of the block to be
+ *	freed, instead of using the size of the entry as is done otherwise.
+ *
+ *	At present this callback is used only by the H5FA and H5EA dblock
+ *	and dblock page client classes.
+ *
+ *      The typedef for the clear callback is as follows:
+ *
+ *      typedef herr_t (*H5C_get_fsf_size_func_t)(void * thing,
+ *                                                size_t *fsf_size_ptr);
+ *
+ *      The parameters of the clear callback are as follows:
+ *
+ *      thing:  Pointer to void containing the address of the in core
+ *              representation of the target metadata cache entry.  This
+ *              is the same pointer that would be returned by a protect()
+ *              call of the associated addr and len.
+ *
+ *	fs_size_ptr: Pointer to size_t in which the callback will return
+ *              the size of the piece of file space to be freed.  Note 
+ *		that the space to be freed is presumed to have the same 
+ *		base address as the cache entry.
+ *
+ *      The function simply returns the size of the block of file space
+ *	to be freed in *fsf_size_ptr.  
+ *
+ *	If the function is successful, it must return SUCCEED.
+ *
+ *      If it fails for any reason, the function must return FAIL and
+ *      push error information on the error stack with the error API
+ *      routines.
+ *
  ***************************************************************************/
 
 /* Actions that can be reported to 'notify' client callback */
@@ -499,7 +672,9 @@ typedef enum H5C_notify_action_t {
                                          *      'protect' call, or inserted
                                          *      with 'set' call)
                                          */
-    H5C_NOTIFY_ACTION_BEFORE_EVICT      /* Entry is about to be evicted from cache */
+    H5C_NOTIFY_ACTION_BEFORE_EVICT      /* Entry is about to be evicted 
+                                         * from cache .
+                                         */
 } H5C_notify_action_t;
 
 typedef herr_t (*H5C_get_load_size_func_t)(const void *udata_ptr,
@@ -536,9 +711,17 @@ typedef herr_t (*H5C_notify_func_t)(H5C_notify_action_t action,
 
 typedef herr_t (*H5C_free_icr_func_t)(void *thing);
 
+typedef herr_t (*H5C_clear_func_t)(const H5F_t *f,
+                                   void * thing, 
+                                   hbool_t about_to_destroy);
+
+typedef herr_t (*H5C_get_fsf_size_t)(void * thing,
+                                     size_t *fsf_size_ptr);
+
 #define H5C__CLASS_NO_FLAGS_SET			((unsigned)0x0)
 #define H5C__CLASS_SPECULATIVE_LOAD_FLAG	((unsigned)0x1)
 #define H5C__CLASS_COMPRESSED_FLAG		((unsigned)0x2)
+#define H5C__CLASS_NO_IO_FLAG			((unsigned)0x4)
 
 typedef struct H5C_class_t {
     int					id;
@@ -552,6 +735,8 @@ typedef struct H5C_class_t {
     H5C_serialize_func_t		serialize;
     H5C_notify_func_t			notify;
     H5C_free_icr_func_t		        free_icr;
+    H5C_clear_func_t                    clear;
+    H5C_get_fsf_size_t			fsf_size;
 } H5C_class_t;
 
 
@@ -1015,7 +1200,6 @@ typedef struct H5C_cache_entry_t
 #endif /* H5_HAVE_PARALLEL */
     hbool_t			flush_in_progress;
     hbool_t			destroy_in_progress;
-    hbool_t		        free_file_space_on_destroy;
 
     /* fields supporting the 'flush dependency' feature: */
 
@@ -1416,10 +1600,14 @@ typedef struct H5C_auto_size_ctl_t
  *
  * 	H5C__SET_FLUSH_MARKER_FLAG
  * 	H5C__PIN_ENTRY_FLAG
+ *	H5C__FLUSH_LAST_FLAG		; super block only
+ *	H5C__FLUSH_COLLECTIVELY_FLAG	; super block only
  *
  * These flags apply to H5C_protect()
  *
  * 	H5C__READ_ONLY_FLAG
+ *	H5C__FLUSH_LAST_FLAG		; super block only 
+ *	H5C__FLUSH_COLLECTIVELY_FLAG	; super block only
  *
  * These flags apply to H5C_unprotect():
  *
@@ -1469,8 +1657,7 @@ typedef struct H5C_auto_size_ctl_t
 
 #ifdef H5_HAVE_PARALLEL
 H5_DLL herr_t H5C_apply_candidate_list(H5F_t * f,
-                                       hid_t primary_dxpl_id,
-                                       hid_t secondary_dxpl_id,
+                                       hid_t dxpl_id,
                                        H5C_t * cache_ptr,
                                        int num_candidates,
                                        haddr_t * candidates_list_ptr,

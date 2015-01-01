@@ -276,7 +276,7 @@ END_FUNC(PKG)   /* end H5EA__sblock_create() */
 BEGIN_FUNC(PKG, ERR,
 H5EA_sblock_t *, NULL, NULL,
 H5EA__sblock_protect(H5EA_hdr_t *hdr, hid_t dxpl_id, H5EA_iblock_t *parent,
-    haddr_t sblk_addr, unsigned sblk_idx, H5AC_protect_t rw))
+    haddr_t sblk_addr, unsigned sblk_idx, unsigned flags))
 
     /* Local variables */
     H5EA_sblock_cache_ud_t udata;      /* Information needed for loading super block */
@@ -290,6 +290,9 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     HDassert(hdr);
     HDassert(H5F_addr_defined(sblk_addr));
 
+    /* only the H5AC__READ_ONLY_FLAG may be set */
+    HDassert((flags & (unsigned)(~H5AC__READ_ONLY_FLAG)) == 0);
+
     /* Set up user data */
     udata.hdr = hdr;
     udata.parent = parent;
@@ -297,7 +300,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     udata.sblk_addr = sblk_addr;
 
     /* Protect the super block */
-    if(NULL == (ret_value = (H5EA_sblock_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_EARRAY_SBLOCK, sblk_addr, &udata, rw)))
+    if(NULL == (ret_value = (H5EA_sblock_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_EARRAY_SBLOCK, sblk_addr, &udata, flags)))
         H5E_THROW(H5E_CANTPROTECT, "unable to protect extensible array super block, address = %llu", (unsigned long long)sblk_addr)
 
 CATCH
@@ -371,7 +374,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     HDassert(H5F_addr_defined(sblk_addr));
 
     /* Protect super block */
-    if(NULL == (sblock = H5EA__sblock_protect(hdr, dxpl_id, parent, sblk_addr, sblk_idx, H5AC_WRITE)))
+    if(NULL == (sblock = H5EA__sblock_protect(hdr, dxpl_id, parent, sblk_addr, sblk_idx, H5AC__NO_FLAGS_SET)))
         H5E_THROW(H5E_CANTPROTECT, "unable to protect extensible array super block, address = %llu", (unsigned long long)sblk_addr)
 
     /* Iterate over data blocks */

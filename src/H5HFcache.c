@@ -243,6 +243,8 @@ const H5AC_class_t H5AC_FHEAP_HDR[1] = {{
 /* serialize     */ (H5AC_serialize_func_t)H5HF_cache_hdr_serialize,
 /* notify        */ (H5AC_notify_func_t)NULL,
 /* free_icr      */ (H5AC_free_icr_func_t)H5HF_cache_hdr_free_icr,
+/* clear         */ (H5AC_clear_func_t)NULL,
+/* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 const H5AC_class_t H5AC_FHEAP_IBLOCK[1] = {{
@@ -257,10 +259,12 @@ const H5AC_class_t H5AC_FHEAP_IBLOCK[1] = {{
 /* serialize     */ (H5AC_serialize_func_t)H5HF_cache_iblock_serialize,
 /* notify        */ (H5AC_notify_func_t)H5HF_cache_iblock_notify,
 /* free_icr      */ (H5AC_free_icr_func_t)H5HF_cache_iblock_free_icr,
+/* clear         */ (H5AC_clear_func_t)NULL,
+/* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 const H5AC_class_t H5AC_FHEAP_DBLOCK[1] = {{
-/* id            */ H5AC_FHEAP_IBLOCK_ID,
+/* id            */ H5AC_FHEAP_DBLOCK_ID,
 /* name          */ "fractal heap direct block",
 /* mem_type      */ H5FD_MEM_FHEAP_DBLOCK,
 /* flags         */ H5AC__CLASS_NO_FLAGS_SET,
@@ -271,6 +275,8 @@ const H5AC_class_t H5AC_FHEAP_DBLOCK[1] = {{
 /* serialize     */ (H5AC_serialize_func_t)H5HF_cache_dblock_serialize,
 /* notify        */ (H5AC_notify_func_t)H5HF_cache_dblock_notify,
 /* free_icr      */ (H5AC_free_icr_func_t)H5HF_cache_dblock_free_icr,
+/* clear         */ (H5AC_clear_func_t)NULL,
+/* fsf_size      */ (H5AC_get_fsf_size_t)NULL,
 }};
 
 #else /* V2 cache H6AC_class_t definitions */
@@ -517,8 +523,6 @@ H5HF_cache_hdr_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
 
     /* report header disk load image size */
     *image_len_ptr = size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -890,7 +894,7 @@ H5HF_cache_hdr_image_len(const void *thing, size_t *image_len_ptr)
     H5HF_hdr_t  *hdr = NULL;     	/* Fractal heap info */
     herr_t      ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDassert(thing);
     HDassert(image_len_ptr);
@@ -903,8 +907,6 @@ H5HF_cache_hdr_image_len(const void *thing, size_t *image_len_ptr)
               &(H5AC_FHEAP_HDR[0]));
 
     *image_len_ptr = hdr->heap_size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -1102,8 +1104,6 @@ H5HF_cache_hdr_pre_serialize(const H5F_t *f,
      *
      * Do this with a call to H5HF_cache_verify_hdr_descendants_clean().
      */
-    hbool_t descendants_clean = TRUE;
-
     if ( H5HF_cache_verify_hdr_descendants_clean((H5F_t *)f, dxpl_id, hdr,
                                                  &descendants_clean) < 0 )
 
@@ -1215,7 +1215,6 @@ H5HF_cache_hdr_serialize(const H5F_t *f,
 {
     H5HF_hdr_t *hdr;
     uint8_t    *p;             /* Pointer into raw data buffer */
-    size_t  	size;           /* Header size on disk */
     uint8_t 	heap_flags;     /* Status flags for heap */
     uint32_t 	metadata_chksum; /* Computed metadata checksum value */
     herr_t      ret_value = SUCCEED;    /* Return value */
@@ -1233,6 +1232,9 @@ H5HF_cache_hdr_serialize(const H5F_t *f,
     HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
               &(H5AC_FHEAP_HDR[0]));
     HDassert(len == hdr->heap_size);
+
+    /* Set the shared heap header's file context for this operation */
+    hdr->f = f;
 
     /* Get temporary pointer to serialized header */
     p = (uint8_t *)image_ptr;
@@ -1496,11 +1498,9 @@ H5HF_cache_iblock_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
      *						JRM -- 6/29/14
      */
 
-    size = H5HF_MAN_INDIRECT_SIZE(hdr, *udata->nrows);
+    size = (size_t)H5HF_MAN_INDIRECT_SIZE(hdr, *udata->nrows);
 
     *image_len_ptr = size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -1858,7 +1858,7 @@ H5HF_cache_iblock_image_len(const void *thing, size_t *image_len_ptr)
     H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
     herr_t      	 ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDassert(thing);
     HDassert(image_len_ptr);
@@ -1871,8 +1871,6 @@ H5HF_cache_iblock_image_len(const void *thing, size_t *image_len_ptr)
               &(H5AC_FHEAP_IBLOCK[0]));
 
     *image_len_ptr = iblock->size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -2061,7 +2059,7 @@ H5HF_cache_iblock_pre_serialize(const H5F_t *f,
 
     HDassert(hdr);
     HDassert(hdr->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
-    HDassert((const H5AC_class_t *)(iblock->cache_info.type) == \
+    HDassert((const H5AC_class_t *)(hdr->cache_info.type) == \
               &(H5AC_FHEAP_HDR[0]));
 
 #ifndef NDEBUG
@@ -2122,7 +2120,7 @@ H5HF_cache_iblock_pre_serialize(const H5F_t *f,
         if(NULL == iblock->parent) {
 
             /* Update information about indirect block's location */
-            hdr->man_dtable.table_addr = addr;
+            hdr->man_dtable.table_addr = new_addr;
 
             /* Mark that heap header was modified */
             if(H5HF_hdr_dirty(hdr) < 0)
@@ -2141,7 +2139,7 @@ H5HF_cache_iblock_pre_serialize(const H5F_t *f,
             par_entry = iblock->par_entry;
 
             /* Update information about indirect block's location */
-            par_iblock->ents[par_entry].addr = addr;
+            par_iblock->ents[par_entry].addr = new_addr;
 
             /* Mark that parent was modified */
             if(H5HF_iblock_dirty(par_iblock) < 0)
@@ -2262,7 +2260,7 @@ H5HF_cache_iblock_serialize(const H5F_t *f,
     size_t 		 u;             /* Local index variable */
     herr_t               ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDassert(f);
     HDassert(image_ptr);
@@ -2284,10 +2282,8 @@ H5HF_cache_iblock_serialize(const H5F_t *f,
     /* Get the pointer to the shared heap header */
     hdr = iblock->hdr;
 
-    /* The version 2 cache H5HF_cache_iblock_flush() call used to set 
-     * hdr->f = f at this point.  However, it doesn't seem to be needed
-     * in this function, so I have omitted the assignment.
-     */
+    /* Set the shared heap header's file context for this operation */
+    hdr->f = f;
 
     /* Get temporary pointer to buffer for serialized indirect block */
     p = (uint8_t *)image_ptr;
@@ -2363,8 +2359,6 @@ H5HF_cache_iblock_serialize(const H5F_t *f,
     HDassert(nchildren == iblock->nchildren);
     HDassert(max_child == iblock->max_child);
 #endif /* NDEBUG */
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -2744,8 +2738,6 @@ H5HF_cache_dblock_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
 
     *image_len_ptr = size;
 
-done:
-
     FUNC_LEAVE_NOAPI(ret_value)
 
 } /* end H5HF_cache_dblock_get_load_size() */
@@ -2850,13 +2842,9 @@ H5HF_cache_dblock_deserialize(const void *image_ptr,
     H5HF_hdr_t          *hdr;           /* Shared fractal heap information */
     H5HF_dblock_cache_ud_t *udata;      /* user data for callback */
     H5HF_parent_t       *par_info;      /* Pointer to parent information */
-    H5HF_indirect_t     *iblock = NULL; /* Indirect block info */
     H5HF_direct_t       *dblock = NULL; /* Direct block info */
     const uint8_t       *p;             /* Pointer into raw data buffer */
     haddr_t             heap_addr;      /* Address of heap header in the file */
-    uint32_t            stored_chksum;  /* Stored metadata checksum value */
-    uint32_t            computed_chksum; /* Computed metadata checksum value */
-    unsigned            u;              /* Local index variable */
     void *              ret_value;      /* Return value */
 
     FUNC_ENTER_NOAPI(NULL)
@@ -2888,7 +2876,6 @@ H5HF_cache_dblock_deserialize(const void *image_ptr,
 
     HDmemset(&dblock->cache_info, 0, sizeof(H5AC_info_t));
 
-    /**** do we need this? ****/
     /* Set the shared heap header's file context for this operation */
     hdr->f = udata->f;
 
@@ -3127,7 +3114,7 @@ H5HF_cache_dblock_image_len(const void *thing, size_t *image_len_ptr)
     H5HF_direct_t       *dblock = NULL; /* Direct block info */
     herr_t               ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_NOAPI_NOINIT_NOERR
 
     HDassert(thing);
     HDassert(image_len_ptr);
@@ -3140,8 +3127,6 @@ H5HF_cache_dblock_image_len(const void *thing, size_t *image_len_ptr)
               &(H5AC_FHEAP_DBLOCK[0]));
 
     *image_len_ptr = dblock->size;
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -3372,7 +3357,6 @@ H5HF_cache_dblock_pre_serialize(const H5F_t *f,
 
     hdr = dblock->hdr;
 
-    /* Do we need this? */
     /* Set the shared heap header's file context for this operation */
     hdr->f = (H5F_t *)f;
 
@@ -3446,6 +3430,7 @@ H5HF_cache_dblock_pre_serialize(const H5F_t *f,
     /* at this point, dblock->blk should point to an uncompressed image of 
      * the direct block.  If I/O filters are not enabled, this image should
      * be ready to hand off to the metadata cache.
+     */
 
     /* Sanity check */
     HDassert((size_t)(p - dblock->blk) == \
@@ -3743,20 +3728,20 @@ H5HF_cache_dblock_pre_serialize(const H5F_t *f,
      * use by the serialize function.
      */
 
-    dblock->write_buf = write_buf;
+    dblock->write_buf = (uint8_t *)write_buf;
     dblock->write_size = write_size;
 
     /* finally, pass data back to the metadata cache as appropriate */
 
     if ( ! H5F_addr_eq(addr, new_addr) ) {
 
-        flags != H5C__SERIALIZE_MOVED_FLAG;
+        flags |= H5C__SERIALIZE_MOVED_FLAG;
         *new_addr_ptr = new_addr;
     }
 
     if ( len != write_size ) {
  
-        flags != H5C__SERIALIZE_RESIZED_FLAG;
+        flags |= H5C__SERIALIZE_RESIZED_FLAG;
         *new_len_ptr = write_size;
     }
 
@@ -3884,7 +3869,8 @@ H5HF_cache_dblock_serialize(const H5F_t *f,
     HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
               &(H5AC_FHEAP_DBLOCK[0]));
-    HDassert(dblock->cache_info.size == dblock->size);
+    HDassert((dblock->blk != dblock->write_buf) || \
+             (dblock->cache_info.size == dblock->size));
     HDassert(dblock->write_buf);
     HDassert(dblock->write_size > 0);
     HDassert((dblock->blk != dblock->write_buf) || \
@@ -3908,8 +3894,6 @@ H5HF_cache_dblock_serialize(const H5F_t *f,
 
     HDassert(dblock->write_buf == NULL);
     HDassert(dblock->write_size == 0);
-
-done:
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -6082,7 +6066,8 @@ H5HF_cache_verify_hdr_descendants_clean(H5F_t *f,
 		    root_iblock = (H5HF_indirect_t *)H5AC_protect(f, dxpl_id,
                                                          H5AC_FHEAP_IBLOCK,
                                                          root_iblock_addr,
-                                                         NULL, H5AC_READ);
+                                                         NULL, 
+                                                         H5C__READ_ONLY_FLAG);
 
                     if ( NULL == root_iblock )
 
@@ -6156,9 +6141,10 @@ H5HF_cache_verify_hdr_descendants_clean(H5F_t *f,
                      */
 
                     iblock = (H5HF_indirect_t *)H5AC_protect(f, dxpl_id,
-                                                             H5AC_FHEAP_IBLOCK,
-                                                             root_iblock_addr,
-                                                             NULL, H5AC_READ);
+                                                          H5AC_FHEAP_IBLOCK,
+                                                          root_iblock_addr,
+                                                          NULL, 
+                                                          H5C__READ_ONLY_FLAG);
 
                     if ( NULL == iblock )
 
@@ -6660,7 +6646,7 @@ H5HF_cache_verify_descendant_iblocks_clean(H5F_t *f,
 			    child_iblock_ptr = (H5HF_indirect_t *)
 				H5AC_protect(f, dxpl_id, H5AC_FHEAP_IBLOCK, 
 					     child_iblock_addr, 
-					     NULL, H5AC_READ);
+					     NULL, H5C__READ_ONLY_FLAG);
 
 			    if ( NULL == child_iblock_ptr )
 

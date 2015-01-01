@@ -263,7 +263,7 @@ END_FUNC(PKG)   /* end H5FA__dblock_create() */
 BEGIN_FUNC(PKG, ERR,
 H5FA_dblock_t *, NULL, NULL,
 H5FA__dblock_protect(H5FA_hdr_t *hdr, hid_t dxpl_id, haddr_t dblk_addr,
-    hsize_t dblk_nelmts, H5AC_protect_t rw))
+    hsize_t dblk_nelmts, unsigned flags))
 
     /* Local variables */
     H5FA_dblock_cache_ud_t udata;      /* Information needed for loading data block */
@@ -277,12 +277,18 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     HDassert(H5F_addr_defined(dblk_addr));
     HDassert(dblk_nelmts);
 
+    /* only the H5AC__READ_ONLY_FLAG flag is permitted */
+    HDassert((flags & (unsigned)(~H5AC__READ_ONLY_FLAG)) == 0);
+
     /* Set up user data */
     udata.hdr = hdr;
     udata.dblk_addr = dblk_addr;
+#if 1 /* new code */ /* JRM */
+    udata.nelmts = dblk_nelmts;
+#endif /* new code */ /* JRM */
 
     /* Protect the data block */
-    if(NULL == (ret_value = (H5FA_dblock_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_FARRAY_DBLOCK, dblk_addr, &udata, rw)))
+    if(NULL == (ret_value = (H5FA_dblock_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_FARRAY_DBLOCK, dblk_addr, &udata, flags)))
         H5E_THROW(H5E_CANTPROTECT, "unable to protect fixed array data block, address = %llu", (unsigned long long)dblk_addr)
 
 CATCH
@@ -354,7 +360,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     HDassert(dblk_nelmts > 0);
 
     /* Protect data block */
-    if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, dblk_addr, dblk_nelmts, H5AC_WRITE)))
+    if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, dblk_addr, dblk_nelmts, H5AC__NO_FLAGS_SET)))
         H5E_THROW(H5E_CANTPROTECT, "unable to protect fixed array data block, address = %llu", (unsigned long long)dblk_addr)
 
     /* Check if data block is paged */
@@ -372,6 +378,7 @@ HDfprintf(stderr, "%s: Expunging data block page from cache\n", FUNC);
 #endif /* H5FA_DEBUG */
             /* Evict the data block page from the metadata cache */
             /* (OK to call if it doesn't exist in the cache) */
+
             if(H5AC_expunge_entry(hdr->f, dxpl_id, H5AC_FARRAY_DBLK_PAGE, dblk_page_addr, H5AC__NO_FLAGS_SET) < 0)
                 H5E_THROW(H5E_CANTEXPUNGE, "unable to remove array data block page from metadata cache")
 #ifdef H5FA_DEBUG

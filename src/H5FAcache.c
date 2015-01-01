@@ -85,6 +85,8 @@ static herr_t H5FA__cache_dblock_serialize(const H5F_t *f, void *image, size_t l
     void *thing);
 static herr_t H5FA__cache_dblock_free_icr(void *thing);
 
+static herr_t H5FA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr);
+
 static herr_t H5FA__cache_dblk_page_get_load_size(const void *udata, size_t *image_len);
 static void *H5FA__cache_dblk_page_deserialize(const void *image, size_t len,
     void *udata, hbool_t *dirty);
@@ -111,6 +113,8 @@ const H5AC_class_t H5AC_FARRAY_HDR[1] = {{
     H5FA__cache_hdr_serialize,          /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5FA__cache_hdr_free_icr,           /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 /* H5FA data block inherits cache-like properties from H5AC */
@@ -126,6 +130,8 @@ const H5AC_class_t H5AC_FARRAY_DBLOCK[1] = {{
     H5FA__cache_dblock_serialize,       /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5FA__cache_dblock_free_icr,        /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    H5FA__cache_dblock_fsf_size,        /* 'fsf_size' callback */
 }};
 
 /* H5FA data block page inherits cache-like properties from H5AC */
@@ -141,6 +147,8 @@ const H5AC_class_t H5AC_FARRAY_DBLK_PAGE[1] = {{
     H5FA__cache_dblk_page_serialize,    /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5FA__cache_dblk_page_free_icr,     /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 
@@ -465,15 +473,72 @@ H5FA__cache_dblock_get_load_size(const void *_udata, size_t *image_len))
     HDmemset(&dblock, 0, sizeof(dblock));
 
     /* Set up fake data block for computing size on disk */
+#if 1 /* original code */ /* JRM */
+    /* need: dblock->hdr
+     *       dblock->npages
+     *       dblock->dblk_page_init_size
+     *
+     * On careful examination, it looks like the original code 
+     * does what is needed.
+     */
+
     dblock.hdr = udata->hdr;
     dblk_page_nelmts = (size_t)1 << udata->hdr->cparam.max_dblk_page_nelmts_bits;
     if(udata->hdr->cparam.nelmts > dblk_page_nelmts) {
         dblock.npages = (size_t)(((udata->hdr->cparam.nelmts + dblk_page_nelmts) - 1) / dblk_page_nelmts);
         dblock.dblk_page_init_size = (dblock.npages + 7) / 8;
     } /* end if */
+#else /* modified code */ /* JRM */
+    /* need: dblock->hdr
+     *       dblock->npages
+     *       dblock->dblk_page_init_size
+     */
+    dblock->hdr = udata->hdr;
+
+    /* Set non-zero internal fields */
+    dblock->dblk_page_nelmts = 
+	(size_t)1 << hdr->cparam.max_dblk_page_nelmts_bits;
+
+    /* Check if this data block should be paged */
+    if(udata->nelmts > dblock->dblk_page_nelmts) {
+
+        /* Compute number of pages */
+        hsize_t npages = ((udata->nelmts + dblock->dblk_page_nelmts) - 1) / 
+                          dblock->dblk_page_nelmts;
+
+        /* Safely assign the number of pages */
+        H5_ASSIGN_OVERFLOW(/* To: */ dblock->npages, /* From: */ npages, /* From: */ hsize_t, /* To: */ size_t);
+
+        /* Sanity check that we have at least 1 page */
+        HDassert(dblock->npages > 0);
+
+        /* Compute size of 'page init' flag array, in bytes */
+        dblock->dblk_page_init_size = (dblock->npages + 7) / 8;
+        HDassert(dblock->dblk_page_init_size > 0);
+
+        /* don't need to allocate space for 'page init' flags */
+
+        /* don't need to compute data block page size */
+
+        /* don't need to compute the # of elements on last page */
+
+    } /* end if */
+    else {
+        hsize_t dblk_size = hdr->cparam.nelmts * hdr->cparam.cls->nat_elmt_size;
+
+        /* don't need to allocate buffer for elements in data block */
+    } /* end else */
+#endif /* modified code */ /* JRM */
 
     /* Set the image length size */
+#if 0 /* original code */ /* JRM */
     *image_len = (size_t)H5FA_DBLOCK_SIZE(&dblock);
+#else /* modified code */ /* JRM */
+    if(!dblock.npages)
+        *image_len = (size_t)H5FA_DBLOCK_SIZE(&dblock);
+    else
+        *image_len = (size_t)H5FA_DBLOCK_PREFIX_SIZE(&dblock);
+#endif /* modified code */ /* JRM */
 
 END_FUNC(STATIC)   /* end H5FA__cache_dblock_get_load_size() */
 
@@ -511,7 +576,11 @@ H5FA__cache_dblock_deserialize(const void *image, size_t len,
 
     /* Allocate the fixed array data block */
     if(NULL == (dblock = H5FA__dblock_alloc(udata->hdr)))
-	H5E_THROW(H5E_CANTALLOC, "memory allocation failed for fixed array data block")
+	H5E_THROW(H5E_CANTALLOC, \
+                  "memory allocation failed for fixed array data block")
+
+    HDassert(((!dblock->npages) && (len == (size_t)H5FA_DBLOCK_SIZE(dblock))) \
+             || (len == (size_t)H5FA_DBLOCK_PREFIX_SIZE(dblock)));
 
     /* Set the fixed array data block's information */
     dblock->addr = udata->dblk_addr;
@@ -610,7 +679,14 @@ H5FA__cache_dblock_image_len(const void *_thing, size_t *image_len))
     HDassert(image_len);
 
     /* Set the image length size */
+#if 0 /* original code */ /* JRM */
     *image_len = dblock->size;
+#else /* modified code -- adapted from current trunk */ /* JRM */
+    if(!dblock->npages)
+        *image_len = (size_t)dblock->size;
+    else
+        *image_len = H5FA_DBLOCK_PREFIX_SIZE(dblock);
+#endif /* modified code -- adapted from current trunk */ /* JRM */
 
 END_FUNC(STATIC)   /* end H5FA__cache_dblock_image_len() */
 
@@ -710,16 +786,76 @@ BEGIN_FUNC(STATIC, ERR,
 herr_t, SUCCEED, FAIL,
 H5FA__cache_dblock_free_icr(void *thing))
 
+    H5FA_dblock_t *dblock = NULL;
+
     /* Check arguments */
     HDassert(thing);
 
+    dblock = (H5FA_dblock_t *)thing;
+
+    HDassert(dblock);
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_FARRAY_DBLOCK[0]));
+
     /* Release the fixed array data block */
-    if(H5FA__dblock_dest((H5FA_dblock_t *)thing) < 0)
+    if(H5FA__dblock_dest(dblock) < 0)
         H5E_THROW(H5E_CANTFREE, "can't free fixed array data block")
 
 CATCH
 
 END_FUNC(STATIC)   /* end H5FA__cache_dblock_free_icr() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:	H5FA__cache_dblock_fsf_size
+ *
+ * Purpose:	Tell the metadata cache the actual amount of file space
+ *		to free when a dblock entry is destroyed with the free
+ *		file space block set.
+ *
+ *		This function is needed when the data block is paged, as 
+ *		the datablock header and all its pages are allocted as a
+ *		single contiguous chunk of file space, and must be 
+ *		deallocated the same way.
+ *
+ *		The size of the chunk of memory in which the dblock
+ *		header and all its pages is stored in the size field,
+ *		so we simply pass that value back to the cache.
+ *
+ *		If the datablock is not paged, then the size field of 
+ *		the cache_info contains the correct size.  However this
+ *		value will be the same as the size field, so we return
+ *		the contents of the size field to the cache in this case
+ *		as well.
+ *		
+ * Return:	Non-negative on success/Negative on failure
+ *
+ * Programmer:	John Mainzer
+ *              12/5/14
+ *
+ *-------------------------------------------------------------------------
+ */
+BEGIN_FUNC(STATIC, NOERR,
+herr_t, SUCCEED, FAIL,
+H5FA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr))
+
+    H5FA_dblock_t *dblock = NULL;
+
+    /* Check arguments */
+    HDassert(thing);
+    HDassert(fsf_size_ptr);
+
+    dblock = (H5FA_dblock_t *)thing;
+
+    HDassert(dblock);
+    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
+              &(H5AC_FARRAY_DBLOCK[0]));
+
+    *fsf_size_ptr = dblock->size;
+
+END_FUNC(STATIC)   /* end H5FA__cache_dblock_fsf_size() */
 
 
 /*-------------------------------------------------------------------------

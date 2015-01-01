@@ -693,6 +693,7 @@ H5_DLL herr_t H5F_cwfs_advance_heap(H5F_t *f, struct H5HG_heap_t *heap,
 H5_DLL herr_t H5F_cwfs_remove_heap(H5F_file_t *shared, struct H5HG_heap_t *heap);
 
 /* Debugging functions */
+H5_DLL hbool_t H5F_shared_is_defined(H5F_t *f);
 H5_DLL herr_t H5F_debug(H5F_t *f, FILE * stream, int indent, int fwidth);
 
 #endif /* _H5Fprivate_H */

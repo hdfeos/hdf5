@@ -60,6 +60,9 @@ static herr_t H5F__cache_superblock_get_load_size(const void *udata, size_t *ima
 static void *H5F__cache_superblock_deserialize(const void *image, size_t len,
     void *udata, hbool_t *dirty);
 static herr_t H5F__cache_superblock_image_len(const void *thing, size_t *image_len);
+static herr_t H5F__cache_superblock_pre_serialize(const H5F_t *f, hid_t dxpl_id, void *thing,
+     haddr_t addr, size_t len, haddr_t *new_addr_ptr, size_t *new_len_ptr, 
+     unsigned *flags_ptr);
 static herr_t H5F__cache_superblock_serialize(const H5F_t *f, void *image, size_t len,
     void *thing);
 static herr_t H5F__cache_superblock_free_icr(void *thing);
@@ -83,13 +86,15 @@ const H5AC_class_t H5AC_SUPERBLOCK[1] = {{
     "Superblock",                       /* Metadata client name (for debugging) */
     H5FD_MEM_SUPER,                     /* File space memory type for client */
     H5AC__CLASS_SPECULATIVE_LOAD_FLAG,  /* Client class behavior flags */
-    H5F__cache_superblock_get_load_size, /* 'get_load_size' callback */
+    H5F__cache_superblock_get_load_size,/* 'get_load_size' callback */
     H5F__cache_superblock_deserialize,  /* 'deserialize' callback */
     H5F__cache_superblock_image_len,    /* 'image_len' callback */
-    NULL,                               /* 'pre_serialize' callback */
+    H5F__cache_superblock_pre_serialize,/* 'pre_serialize' callback */
     H5F__cache_superblock_serialize,    /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5F__cache_superblock_free_icr,     /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 /* H5F driver info block inherits cache-like properties from H5AC */
@@ -105,6 +110,8 @@ const H5AC_class_t H5AC_DRVRINFO[1] = {{
     H5F__cache_drvrinfo_serialize,      /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5F__cache_drvrinfo_free_icr,       /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,                               /* 'fsf_size' callback */
 }};
 
 
@@ -144,8 +151,12 @@ H5F__cache_superblock_get_load_size(const void UNUSED *udata, size_t *image_len)
     HDassert(image_len);
 
     /* Set the initial image length size */
+#if 1 /* original code */ /* JRM */
     *image_len = H5F_SUPERBLOCK_FIXED_SIZE +    /* Fixed size of superblock */
-        H5F_SUPERBLOCK_VARLEN_SIZE_COMMON;
+        H5F_SUPERBLOCK_MINIMAL_VARLEN_SIZE;
+#else /* JRM */
+    *image_len = H5F_SUPERBLOCK_FIXED_SIZE;     /* Fixed size of superblock */
+#endif /* JRM */
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5F__cache_superblock_get_load_size() */
@@ -170,7 +181,7 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
     void *_udata, hbool_t UNUSED *dirty)
 {
     H5F_super_t         *sblock = NULL; /* File's superblock */
-    H5F_superblock_cache_ud_t *udata = (H5F_superblock_cache_ud_t *)_udata;     /* User data */
+    H5F_superblock_cache_ud_t *udata = NULL;     /* User data */
     const uint8_t	*p;             /* Pointer into raw data buffer */
     size_t              variable_size;  /* Sariable size of superblock */
     unsigned            super_vers;     /* Superblock version */
@@ -182,6 +193,10 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
 
     /* Check arguments */
     HDassert(image);
+    HDassert(_udata);
+
+    udata = (H5F_superblock_cache_ud_t *)_udata;
+
     HDassert(udata);
     HDassert(udata->f);
 
@@ -205,6 +220,7 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
 
     /* Sanity check */
     HDassert(((size_t)(p - (const uint8_t *)image)) == H5F_SUPERBLOCK_FIXED_SIZE);
+    HDassert(len >= H5F_SUPERBLOCK_FIXED_SIZE + 6);
 
     /* Determine the size of addresses & size of offsets, for computing the
      * variable-sized portion of the superblock.
@@ -227,21 +243,30 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
     sblock->sizeof_size = sizeof_size;
 
     /* Determine the size of the variable-length part of the superblock */
-    variable_size = (size_t)H5F_SUPERBLOCK_VARLEN_SIZE(super_vers, sizeof_addr, sizeof_size);
+    variable_size = (size_t)H5F_SUPERBLOCK_VARLEN_SIZE(super_vers, sizeof_addr, \
+                                                       sizeof_size);
     HDassert(variable_size > 0);
 
     /* Handle metadata cache retry for variable-sized portion of the superblock */
     if(len != (H5F_SUPERBLOCK_FIXED_SIZE + variable_size)) {
+
         /* Sanity check */
-        HDassert(len == (H5F_SUPERBLOCK_FIXED_SIZE + H5F_SUPERBLOCK_VARLEN_SIZE_COMMON));
+        HDassert(len == (H5F_SUPERBLOCK_FIXED_SIZE + 
+                         H5F_SUPERBLOCK_MINIMAL_VARLEN_SIZE));
 
         /* Make certain we can read the variabled-sized portion of the superblock */
-        if(H5F__set_eoa(udata->f, H5FD_MEM_SUPER, (haddr_t)(H5F_SUPERBLOCK_FIXED_SIZE + variable_size)) < 0)
-            HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, NULL, "set end of space allocation request failed")
+        if(H5F__set_eoa(udata->f, H5FD_MEM_SUPER, 
+                        (haddr_t)(H5F_SUPERBLOCK_FIXED_SIZE + variable_size)) < 0)
+
+            HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, NULL, \
+                        "set end of space allocation request failed")
+
     } /* end if */
     else {
+
         /* Check for older version of superblock format */
         if(super_vers < HDF5_SUPERBLOCK_VERSION_2) {
+
             uint32_t    status_flags;	    /* File status flags	   */
             unsigned    sym_leaf_k;         /* Symbol table leaf node's 'K' value */
             unsigned    snode_btree_k;      /* B-tree symbol table internal node 'K' value */
@@ -260,21 +285,29 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
 
             /* Shared header version number (hard-wired) */
             if(HDF5_SHAREDHEADER_VERSION != *p++)
-                HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "bad shared-header format version number")
+
+                HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, \
+                            "bad shared-header format version number")
 
             /* Size of file addresses */
             sizeof_addr = *p++;
+
             if(sizeof_addr != 2 && sizeof_addr != 4 &&
                     sizeof_addr != 8 && sizeof_addr != 16 && sizeof_addr != 32)
+
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "bad byte number in an address")
+
             sblock->sizeof_addr = sizeof_addr;
             udata->f->shared->sizeof_addr = sizeof_addr;  /* Keep a local copy also */
 
             /* Size of file sizes */
             sizeof_size = *p++;
+
             if(sizeof_size != 2 && sizeof_size != 4 &&
                     sizeof_size != 8 && sizeof_size != 16 && sizeof_size != 32)
+
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "bad byte number for object size")
+
             sblock->sizeof_size = sizeof_size;
             udata->f->shared->sizeof_size = sizeof_size;  /* Keep a local copy also */
 
@@ -283,14 +316,22 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
 
             /* Various B-tree sizes */
             UINT16DECODE(p, sym_leaf_k);
+
             if(sym_leaf_k == 0)
-                HGOTO_ERROR(H5E_FILE, H5E_BADRANGE, NULL, "bad symbol table leaf node 1/2 rank")
+
+                HGOTO_ERROR(H5E_FILE, H5E_BADRANGE, NULL, \
+                            "bad symbol table leaf node 1/2 rank")
+
             udata->sym_leaf_k = sym_leaf_k;    /* Keep a local copy also */
 
             /* Need 'get' call to set other array values */
             UINT16DECODE(p, snode_btree_k);
+
             if(snode_btree_k == 0)
-                HGOTO_ERROR(H5E_FILE, H5E_BADRANGE, NULL, "bad 1/2 rank for btree internal nodes")
+
+                HGOTO_ERROR(H5E_FILE, H5E_BADRANGE, NULL, \
+                            "bad 1/2 rank for btree internal nodes")
+
             udata->btree_k[H5B_SNODE_ID] = snode_btree_k;
             /*
              * Delay setting the value in the property list until we've checked
@@ -301,7 +342,9 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
             UINT32DECODE(p, status_flags);
             HDassert(status_flags <= 255);
             sblock->status_flags = (uint8_t)status_flags;
+
             if(sblock->status_flags & ~H5F_SUPER_ALL_FLAGS)
+
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "bad flag value for superblock")
 
             /*
@@ -309,13 +352,19 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
              * storage B-tree internal 'K' value
              */
             if(super_vers > HDF5_SUPERBLOCK_VERSION_DEF) {
+
                 UINT16DECODE(p, chunk_btree_k);
+
                 /* Reserved bytes are present only in version 1 */
                 if(super_vers == HDF5_SUPERBLOCK_VERSION_1)
+
                     p += 2;   /* reserved */
+
             } /* end if */
             else
+
                 chunk_btree_k = HDF5_BTREE_CHUNK_IK_DEF;
+
             udata->btree_k[H5B_CHUNK_ID] = chunk_btree_k;
 
             /* Remainder of "variable-sized" portion of superblock */
@@ -326,12 +375,17 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
 
             /* Allocate space for the root group symbol table entry */
             HDassert(!sblock->root_ent);
+
             if(NULL == (sblock->root_ent = (H5G_entry_t *)H5MM_calloc(sizeof(H5G_entry_t))))
-                HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, NULL, "can't allocate space for root group symbol table entry")
+
+                HGOTO_ERROR(H5E_FILE, H5E_CANTALLOC, NULL, \
+                            "can't allocate space for root group symbol table entry")
 
             /* decode the root group symbol table entry */
             if(H5G_ent_decode(udata->f, (const uint8_t **)&p, sblock->root_ent) < 0)
-                HGOTO_ERROR(H5E_FILE, H5E_CANTDECODE, NULL, "can't decode root group symbol table entry")
+
+                HGOTO_ERROR(H5E_FILE, H5E_CANTDECODE, NULL, \
+                            "can't decode root group symbol table entry")
 
             /* Set the root group address to the correct value */
             sblock->root_addr = sblock->root_ent->header;
@@ -342,37 +396,48 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
              *  in the superblock.
              */
             if(udata->ignore_drvrinfo && H5F_addr_defined(sblock->driver_addr)) {
+
                 /* Eliminate the driver info */
                 sblock->driver_addr = HADDR_UNDEF;
                 udata->drvrinfo_removed = TRUE;
+
             } /* end if */
 
             /* NOTE: Driver info block is decoded separately, later */
 
         } /* end if */
         else {
+
             uint32_t computed_chksum;       /* Computed checksum  */
             uint32_t read_chksum;           /* Checksum read from file  */
 
             /* Size of file addresses */
             sizeof_addr = *p++;
+
             if(sizeof_addr != 2 && sizeof_addr != 4 &&
                     sizeof_addr != 8 && sizeof_addr != 16 && sizeof_addr != 32)
+
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "bad byte number in an address")
+
             sblock->sizeof_addr = sizeof_addr;
             udata->f->shared->sizeof_addr = sizeof_addr;  /* Keep a local copy also */
 
             /* Size of file sizes */
             sizeof_size = *p++;
+
             if(sizeof_size != 2 && sizeof_size != 4 &&
                     sizeof_size != 8 && sizeof_size != 16 && sizeof_size != 32)
+
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "bad byte number for object size")
+
             sblock->sizeof_size = sizeof_size;
             udata->f->shared->sizeof_size = sizeof_size;  /* Keep a local copy also */
 
             /* File status flags (not really used yet) */
             sblock->status_flags = *p++;
+
             if(sblock->status_flags & ~H5F_SUPER_ALL_FLAGS)
+
                 HGOTO_ERROR(H5E_FILE, H5E_BADVALUE, NULL, "bad flag value for superblock")
 
             /* Base, superblock extension, end of file & root group object header addresses */
@@ -382,14 +447,24 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
             H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->root_addr/*out*/);
 
             /* Compute checksum for superblock */
-            computed_chksum = H5_checksum_metadata(image, (size_t)(p - (const uint8_t *)image), 0);
+            computed_chksum = H5_checksum_metadata(image, 
+                                                  (size_t)(p - (const uint8_t *)image), 0);
 
             /* Decode checksum */
             UINT32DECODE(p, read_chksum);
 
             /* Verify correct checksum */
             if(read_chksum != computed_chksum)
-                HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, "bad checksum on driver information block")
+
+                HGOTO_ERROR(H5E_FILE, H5E_CANTOPENFILE, NULL, \
+                            "bad checksum on driver information block")
+
+            /* The Driver Information Block may not appear with the version
+             * 2 super block.  Thus we set the driver_addr field of the in 
+             * core representation of the super block HADDR_UNDEF to prevent 
+             * any attempt to load the Driver Information Block.
+             */
+            sblock->driver_addr = HADDR_UNDEF;
         } /* end else */
     } /* end else */
 
@@ -402,10 +477,13 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
 done:
     /* Release the [possibly partially initialized] superblock on error */
     if(!ret_value && sblock)
+
         if(H5F__super_free(sblock) < 0)
+
             HDONE_ERROR(H5E_FILE, H5E_CANTFREE, NULL, "unable to destroy superblock data")
 
     FUNC_LEAVE_NOAPI(ret_value)
+
 } /* end H5F__cache_superblock_deserialize() */
 
 
@@ -425,19 +503,156 @@ done:
 static herr_t
 H5F__cache_superblock_image_len(const void *_thing, size_t *image_len)
 {
-    const H5F_super_t *sblock = (const H5F_super_t *)_thing;      /* Pointer to the object */
+    const H5F_super_t *sblock = NULL;      /* Pointer to the object */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Check arguments */
-    HDassert(sblock);
+    HDassert(_thing);
     HDassert(image_len);
+
+    sblock = (const H5F_super_t *)_thing;
+
+    HDassert(sblock);
+    HDassert(sblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(sblock->cache_info.type) == &(H5AC_SUPERBLOCK[0]));
+
 
     /* Set the image length size */
     *image_len = (size_t)H5F_SUPERBLOCK_SIZE(sblock);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
+
 } /* end H5F__cache_superblock_image_len() */
+
+
+/*-------------------------------------------------------------------------
+ * Function:    H5FS__cache_hdf_pre_serialize
+ *
+ * Purpose: The current use of this function is a cludge to repair an 
+ *	oversight in the conversion of the superblock code to use the 
+ *	version 3 cache.  
+ *
+ *	In the V2 metadata cache callbacks, the superblock dirver info 
+ *      message was updated in the flush routine.  Note that this operation
+ *      only applies to version 2 or later superblocks.
+ *
+ *      Somehow, this functionality was lost in the conversion to use 
+ *      the V3 cache, causing failures with the multi file driver 
+ *      (and possibly the family file driver as well).
+ *
+ *      Performing this operation is impossible in the current serialize
+ *      routine, as the dxpl_id is not available.  While I am pretty sure
+ *      that this is not the correct place for this functionality, as I 
+ *      can see it causing problems with both journaling and possibly 
+ *      parallel HDF5 as well, I am placing code for the necessary update
+ *      in the pre_serialize call for now for testing purposes.  We will
+ *	almost certainly want to change this.
+ *
+ *      A discussion of generic metadata cache callbacks of this type
+ *      may be found in H5Cprivate.h.
+ *
+ * Return:      Success:        SUCCEED
+ *              Failure:        FAIL
+ *
+ * Programmer:  John Mainzer
+ *              10/82/14
+ *
+ *-------------------------------------------------------------------------
+ */
+static herr_t
+H5F__cache_superblock_pre_serialize(const H5F_t *f,
+                                    hid_t dxpl_id,
+                                    void *thing,
+                                    haddr_t UNUSED addr,
+                                    size_t UNUSED len,
+                                    haddr_t UNUSED *new_addr_ptr,
+                                    size_t UNUSED *new_len_ptr,
+                                    unsigned *flags_ptr)
+{
+    H5F_super_t *sblock = NULL;      /* Pointer to the super block */
+    herr_t               ret_value = SUCCEED;    /* Return value */
+
+    FUNC_ENTER_NOAPI_NOINIT
+
+    HDassert(f);
+    HDassert(thing);
+    HDassert(flags_ptr);
+
+    sblock = (H5F_super_t *)thing;
+
+    HDassert(sblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(sblock->cache_info.type) == &(H5AC_SUPERBLOCK[0]));
+
+    if (sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2) {
+
+        /* WARNING: This code almost certainly doesn't belong here.  Must
+         *          discuss with Quincey where to put it.  Note issues
+         *          for journaling and possibly parallel.
+         *
+         *                                            -- JRM
+         */
+        /* Update the driver information message in the superblock extension
+         * if appropriate.
+         */
+        if(H5F_addr_defined(sblock->ext_addr)) {
+
+            size_t     driver_size;    /* Size of driver info block (bytes)*/
+            H5O_loc_t  ext_loc;        /* "Object location" for superblock extension */
+
+            HDassert(sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2);
+
+            /* Open the superblock extension's object header */
+            if(H5F_super_ext_open((H5F_t *)f, sblock->ext_addr, &ext_loc) < 0)
+
+                HGOTO_ERROR(H5E_FILE, H5E_CANTOPENOBJ, FAIL, \
+                            "unable to open file's superblock extension")
+
+            /* Check for ignoring the driver info for this file */
+            if(!H5F_HAS_FEATURE(f, H5FD_FEAT_IGNORE_DRVRINFO)) {
+
+                /* Check for driver info message */
+                H5_ASSIGN_OVERFLOW(driver_size, H5FD_sb_size(f->shared->lf), hsize_t, size_t);
+                if(driver_size > 0) {
+
+                    H5O_drvinfo_t drvinfo;      /* Driver info */
+                    uint8_t dbuf[H5F_MAX_DRVINFOBLOCK_SIZE];  /* Driver info block encoding buffer */
+
+                    /* Sanity check */
+                    HDassert(driver_size <= H5F_MAX_DRVINFOBLOCK_SIZE);
+
+                    /* Encode driver-specific data */
+                    if(H5FD_sb_encode(f->shared->lf, drvinfo.name, dbuf) < 0)
+
+                        HGOTO_ERROR(H5E_FILE, H5E_CANTINIT, FAIL, \
+                                    "unable to encode driver information")
+
+                    /* Write driver info information to the superblock extension */
+                    drvinfo.len = driver_size;
+                    drvinfo.buf = dbuf;
+                    if(H5O_msg_write(&ext_loc, H5O_DRVINFO_ID, H5O_MSG_FLAG_DONTSHARE,
+                                     H5O_UPDATE_TIME, &drvinfo, dxpl_id) < 0)
+
+                        HGOTO_ERROR(H5E_FILE, H5E_WRITEERROR, FAIL, \
+                                    "unable to update driver info header message")
+
+                } /* end if */
+            } /* end if */
+
+            /* Close the superblock extension object header */
+            if(H5F_super_ext_close((H5F_t *)f, &ext_loc, dxpl_id, FALSE) < 0)
+
+                HGOTO_ERROR(H5E_FILE, H5E_CANTCLOSEOBJ, FAIL, \
+                            "unable to close file's superblock extension")
+        } /* end if */
+    } /* end if */
+
+done:
+
+    FUNC_LEAVE_NOAPI(ret_value)
+
+} /* end H5FS_cache_superblock_pre_serialize() */
+
 
 
 /*-------------------------------------------------------------------------
@@ -529,7 +744,7 @@ H5F__cache_superblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
         /* NOTE: Driver info block is handled separately */
 
     } /* end if */
-    else {
+    else { /* sblock->super_vers >= HDF5_SUPERBLOCK_VERSION_2 */
         uint32_t        chksum;                 /* Checksum temporary variable      */
         H5O_loc_t       *root_oloc;             /* Pointer to root group's object location */
 
@@ -562,6 +777,7 @@ H5F__cache_superblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
 
         /* Sanity check */
         HDassert((size_t)(p - (uint8_t *)image) == (size_t)H5F_SUPERBLOCK_SIZE(sblock));
+
     } /* end else */
 
     /* Sanity check */
@@ -587,21 +803,37 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__cache_superblock_free_icr(void *thing)
+H5F__cache_superblock_free_icr(void * thing)
 {
-    herr_t ret_value = SUCCEED;     /* Return value */
+    H5F_super_t *sblock = NULL;  /* Pointer to the object */
+    herr_t ret_value = SUCCEED;        /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Check arguments */
     HDassert(thing);
 
+    sblock = (const H5F_super_t *)thing;
+
+    HDassert(sblock);
+
+    /* the metadata cache sets cache_info.magic to
+     * H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling the
+     * free_icr routine.  Hence the following assert:
+     */
+
+    HDassert(sblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
+    HDassert((const H5AC_class_t *)(sblock->cache_info.type) == &(H5AC_SUPERBLOCK[0]));
+
     /* Destroy superblock */
-    if(H5F__super_free((H5F_super_t *)thing) < 0)
+    if(H5F__super_free(sblock) < 0)
+
         HGOTO_ERROR(H5E_BTREE, H5E_CANTFREE, FAIL, "unable to free superblock")
 
 done:
+
     FUNC_LEAVE_NOAPI(ret_value)
+
 } /* H5F__cache_superblock_free_icr() */
 
 
@@ -662,6 +894,7 @@ H5F__cache_drvrinfo_deserialize(const void *image, size_t len,
 
     /* Check arguments */
     HDassert(image);
+    HDassert(image >= H5F_DRVINFOBLOCK_HDR_SIZE);
     HDassert(udata);
     HDassert(udata->f);
 
@@ -729,13 +962,20 @@ done:
 static herr_t
 H5F__cache_drvrinfo_image_len(const void *_thing, size_t *image_len)
 {
-    const H5O_drvinfo_t *drvinfo = (const H5O_drvinfo_t *)_thing;      /* Pointer to the object */
+    const H5O_drvinfo_t *drvinfo = NULL;      /* Pointer to the object */
 
     FUNC_ENTER_STATIC_NOERR
 
     /* Check arguments */
-    HDassert(drvinfo);
+    HDassert(_thing);
     HDassert(image_len);
+
+    drvinfo = (const H5O_drvinfo_t *)_thing;
+    
+    HDassert(drvinfo);
+    HDassert(drvinfo->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(drvinfo->cache_info.type) == \
+              &(H5AC_DRVRINFO[0]));
 
     /* Set the image length size */
     *image_len = (size_t)(H5F_DRVINFOBLOCK_HDR_SIZE +   /* Fixed-size portion of driver info block */
@@ -759,10 +999,10 @@ H5F__cache_drvrinfo_image_len(const void *_thing, size_t *image_len)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5F__cache_drvrinfo_serialize(const H5F_t *f, void *image, size_t UNUSED len,
+H5F__cache_drvrinfo_serialize(const H5F_t *f, void *image, size_t len,
     void *_thing)
 {
-    H5O_drvinfo_t *drvinfo = (H5O_drvinfo_t *)_thing;      /* Pointer to the object */
+    H5O_drvinfo_t *drvinfo = NULL;      /* Pointer to the object */
     uint8_t *p;                 /* Pointer into raw data buffer */
     uint8_t *dbuf;              /* Pointer to beginning of driver info */
     herr_t ret_value = SUCCEED; /* Return value */
@@ -772,7 +1012,15 @@ H5F__cache_drvrinfo_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     /* check arguments */
     HDassert(f);
     HDassert(image);
+    HDassert(_thing);
+
+    drvinfo = (H5O_drvinfo_t *)_thing;
+
     HDassert(drvinfo);
+    HDassert(drvinfo->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
+    HDassert((const H5AC_class_t *)(drvinfo->cache_info.type) == \
+              &(H5AC_DRVRINFO[0]));
+    HDassert(len == (size_t)(H5F_DRVINFOBLOCK_HDR_SIZE + drvinfo->len));
 
     /* Get temporary pointer to serialized header */
     p = (uint8_t *)image;
@@ -821,10 +1069,24 @@ done:
 static herr_t
 H5F__cache_drvrinfo_free_icr(void *thing)
 {
+    H5O_drvinfo_t *drvinfo = NULL;      /* Pointer to the object */
+
     FUNC_ENTER_STATIC_NOERR
 
     /* Check arguments */
     HDassert(thing);
+
+    drvinfo = (H5O_drvinfo_t *)thing;
+
+    HDassert(drvinfo);
+
+    /* the metadata cache sets cache_info.magic to
+     * H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling the
+     * free_icr routine.  Hence the following assert:
+     */
+    HDassert(drvinfo->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
+    HDassert((const H5AC_class_t *)(drvinfo->cache_info.type) == \
+              &(H5AC_DRVRINFO[0]));
 
     /* Destroy driver info message */
     H5MM_xfree(thing);

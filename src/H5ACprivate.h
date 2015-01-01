@@ -126,7 +126,8 @@ typedef H5C_notify_action_t     H5AC_notify_action_t;
 
 #define H5AC__CLASS_NO_FLAGS_SET 	H5C__CLASS_NO_FLAGS_SET
 #define H5AC__CLASS_SPECULATIVE_LOAD_FLAG H5C__CLASS_SPECULATIVE_LOAD_FLAG
-#define H5AC__CLASS_COMPRESSED_FLAG	 H5C__CLASS_COMPRESSED_FLAG
+#define H5AC__CLASS_COMPRESSED_FLAG	H5C__CLASS_COMPRESSED_FLAG
+#define H5AC__CLASS_NO_IO_FLAG		H5C__CLASS_NO_IO_FLAG
 
 typedef H5C_get_load_size_func_t	H5AC_get_load_size_func_t;
 typedef H5C_deserialize_func_t		H5AC_deserialize_func_t;
@@ -140,6 +141,8 @@ typedef H5C_pre_serialize_func_t	H5AC_pre_serialize_func_t;
 typedef H5C_serialize_func_t		H5AC_serialize_func_t;
 typedef H5C_notify_func_t		H5AC_notify_func_t;
 typedef H5C_free_icr_func_t		H5AC_free_icr_func_t;
+typedef H5C_clear_func_t		H5AC_clear_func_t;
+typedef H5C_get_fsf_size_t		H5AC_get_fsf_size_t;
 
 typedef H5C_class_t			H5AC_class_t;
 
@@ -156,10 +159,21 @@ typedef H5C_cache_entry_t		H5AC_info_t;
  * Flexible Parallel HDF5 locking can then act accordingly.
  */
 
+#if 0 /* delete this if all goes well */ /* JRM */
 typedef enum H5AC_protect_t {
     H5AC_WRITE,                 /* Protect object for writing                */
-    H5AC_READ                   /* Protect object for reading                */
+    H5AC_READ,                  /* Protect object for reading                */
+    /* the following are needed for the super block.  Given the number of */
+    /* possibilities, we should probably get rid of this type, and modify */
+    /* H5AC_protect to take a set of flags.                               */
+#ifdef H5_HAVE_PARALLEL
+    H5AC_WRITE_FLUSH_LAST_AND_COLLECTIVELY,
+    H5AC_READ_FLUSH_LAST_AND_COLLECTIVELY,
+#endif /* H5_HAVE_PARALLEL */
+    H5AC_WRITE_FLUSH_LAST,
+    H5AC_READ_FLUSH_LAST
 } H5AC_protect_t;
+#endif /* delete this if all goes well */ /* JRM */
 
 
 /* Typedef for metadata cache (defined in H5Cpkg.h) */
@@ -299,6 +313,7 @@ H5_DLLVAR hid_t H5AC_ind_dxpl_id;
 #define H5AC__FLUSH_CLEAR_ONLY_FLAG	  H5C__FLUSH_CLEAR_ONLY_FLAG
 #define H5AC__FLUSH_MARKED_ENTRIES_FLAG   H5C__FLUSH_MARKED_ENTRIES_FLAG
 #define H5AC__FLUSH_IGNORE_PROTECTED_FLAG H5C__FLUSH_IGNORE_PROTECTED_FLAG
+#define H5AC__READ_ONLY_FLAG		  H5C__READ_ONLY_FLAG
 #define H5AC__FREE_FILE_SPACE_FLAG	  H5C__FREE_FILE_SPACE_FLAG
 #define H5AC__TAKE_OWNERSHIP_FLAG         H5C__TAKE_OWNERSHIP_FLAG
 #define H5AC__FLUSH_LAST_FLAG		  H5C__FLUSH_LAST_FLAG
@@ -327,8 +342,13 @@ H5_DLL herr_t H5AC_insert_entry(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *typ
     haddr_t addr, void *thing, unsigned int flags);
 H5_DLL herr_t H5AC_pin_protected_entry(void *thing);
 H5_DLL herr_t H5AC_create_flush_dependency(void *parent_thing, void *child_thing);
+#if 0 /* original version */ /* JRM */
 H5_DLL void * H5AC_protect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type,
     haddr_t addr, void *udata, H5AC_protect_t rw);
+#else /* modified version */ /* JRM */
+H5_DLL void * H5AC_protect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type,
+    haddr_t addr, void *udata, unsigned flags);
+#endif /* modified version */ /* JRM */
 H5_DLL herr_t H5AC_resize_entry(void *thing, size_t new_size);
 H5_DLL herr_t H5AC_unpin_entry(void *thing);
 H5_DLL herr_t H5AC_destroy_flush_dependency(void *parent_thing, void *child_thing);

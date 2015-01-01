@@ -106,6 +106,8 @@ const H5AC_class_t H5AC_BT2_HDR[1] = {{
     H5B2__cache_hdr_serialize,          /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5B2__cache_hdr_free_icr,           /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,				/* 'fsf_size' callback */
 }};
 
 /* H5B2 inherits cache-like properties from H5AC */
@@ -121,6 +123,8 @@ const H5AC_class_t H5AC_BT2_INT[1] = {{
     H5B2__cache_int_serialize,          /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5B2__cache_int_free_icr,           /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,				/* 'fsf_size' callback */
 }};
 
 /* H5B2 inherits cache-like properties from H5AC */
@@ -136,6 +140,8 @@ const H5AC_class_t H5AC_BT2_LEAF[1] = {{
     H5B2__cache_leaf_serialize,         /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
     H5B2__cache_leaf_free_icr,          /* 'free_icr' callback */
+    NULL,				/* 'clear' callback */
+    NULL,				/* 'fsf_size' callback */
 }};
 
 
@@ -950,7 +956,11 @@ H5B2__cache_leaf_serialize(const H5F_t *f, void *image, size_t UNUSED len,
 
     /* b-tree type */
     *p++ = leaf->hdr->cls->id;
+#if 0 /* original code */ /* JRM */
     HDassert((size_t)(p - leaf->hdr->page) == (H5B2_LEAF_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
+#else /* modified code */ /* JRM */
+    HDassert((size_t)(p - (uint8_t *)image) == (H5B2_LEAF_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
+#endif /* modified code */ /* JRM */
 
     /* Serialize records for leaf node */
     native = leaf->leaf_native;

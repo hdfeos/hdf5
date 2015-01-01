@@ -117,10 +117,12 @@ struct H5HL_prfx_t {
     H5AC_info_t cache_info;       /* Information for H5AC cache functions, */
                                   /* _must_ be first field in structure    */
     H5HL_t                 *heap; /* Pointer to heap for prefix */
+#if 0 /* doesn't look like we need this afterall -- JRM */
     hbool_t	spec_load_failed; /* flag used to indicate that a speculative */
                                   /* load has failed, and that the free icr   */
                                   /* routine has extra work to do.  In all    */
                                   /* cases, this flag must be false.          */
+#endif /* JRM */
 };
 
 /* Callback information for loading local heap prefix from disk */
