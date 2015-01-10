@@ -41,6 +41,7 @@
 #define H5C_DO_SLIST_SANITY_CHECKS	0
 #define H5C_DO_TAGGING_SANITY_CHECKS	1
 #define H5C_DO_EXTREME_SANITY_CHECKS	0
+
 /* Note: The memory sanity checks aren't going to work until I/O filters are
  *      changed to call a particular alloc/free routine for their buffers,
  *      because the H5AC__SERIALIZE_RESIZED_FLAG set by the fractal heap
@@ -123,12 +124,11 @@ typedef struct H5C_t H5C_t;
  *
  * flags:  Flags indicating class-specific behavior.
  *
- *	Whoever created the flags field couldn't be bothered to 
- *	document the meanings of the flags he created.  Hence the 
- *	following discussions of the H5C__CLASS_SPECULATIVE_LOAD_FLAG
- *	and the H5C__CLASS_COMPRESSED_FLAG should be viewed with 
- *	suspicion, as the meanings are divined from the source 
- *	code, and thus may be inaccurate.  Please correct any 
+ *	Whoever created the flags field neglected to document the meanings 
+ *      of the flags he created.  Hence the following discussions of the 
+ *	H5C__CLASS_SPECULATIVE_LOAD_FLAG and the H5C__CLASS_COMPRESSED_FLAG 
+ *	should be viewed with suspicion, as the meanings are divined from 
+ *	the source code, and thus may be inaccurate.  Please correct any 
  *	errors you find.
  *
  *	Possible flags are:
@@ -179,9 +179,16 @@ typedef struct H5C_t H5C_t;
  *
  * GET_LOAD_SIZE: Pointer to the 'get load size' function.
  *
- * 	This function must be able to determing the size of a disk image for
+ * 	This function must be able to determine the size of the disk image of
  *      a metadata cache entry, given the 'udata' that will be passed to the
  *      'deserialize' callback.
+ *
+ *	Note that if either the H5C__CLASS_SPECULATIVE_LOAD_FLAG or
+ *	the H5C__CLASS_COMPRESSED_FLAG is set, the disk image size 
+ *	returned by this callback is either a first guess (if the 
+ *	H5C__CLASS_SPECULATIVE_LOAD_FLAG is set) or an upper bound
+ *	(if the H5C__CLASS_COMPRESSED_FLAG is set).  In all other cases,
+ *	the value returned should be correct.
  *
  *	The typedef for the deserialize callback is as follows:
  *
@@ -193,9 +200,10 @@ typedef struct H5C_t H5C_t;
  *	udata_ptr: Pointer to user data provided in the protect call, which
  *         	will also be passed through to the deserialize callback.
  *
- *	image_len_ptr: Length in bytes of the in file image to be deserialized.
+ *	image_len_ptr: Pointer to the location in which the length in bytes 
+ *		of the in file image to be deserialized is to be returned.
  *
- *              This parameter is used by the cache to determine the size of
+ *              This value is used by the cache to determine the size of
  *              the disk image for the metadata, in order to read the disk
  *              image from the file.
  *
@@ -252,8 +260,8 @@ typedef struct H5C_t H5C_t;
  *      the space allocated for the in core representation, and return
  *      a pointer to the in core representation.  Observe that an
  *      instance of H5C_cache_entry_t must be the first item in this
- *      representation.  It will have to be initialized appropriately
- *      after the callback returns.
+ *      representation.  The cache will initialize it after the callback
+ *      returns.
  *
  *      Note that the structure of the in core representation is otherwise
  *      up to the cache client.  All that is required is that the pointer
@@ -269,17 +277,40 @@ typedef struct H5C_t H5C_t;
  *      buffer length, malloc failure, etc.) the function must return NULL and
  *      push error information on the error stack with the error API routines.
  *
- *      If the protect call which occasioned the call to the deserialize
- *      callback had the check length flag set, after the deserialize call
- *      returns, the cache must call the image_len callback (see below) and
- *      update its on disk image length accordingly.
+ *	Exceptions to the above:
+ *
+ *	If the H5C__CLASS_SPECULATIVE_LOAD_FLAG is set, the buffer supplied
+ *	to the function need not be currect on the first invocation of the 
+ *	callback in any single attempt to load the entry.
+ *
+ *	In this case, if the buffer is larger than necessary, the function
+ *	should load the entry as described above and not flag an error due
+ *	to the oversized buffer.  The cache will correct its mis-apprehension
+ *	of the entry size with a subsequent call to the image_len callback.
+ *
+ *	If the buffer is too small, and this is the first desrialize call
+ *	in the entry load operation, the function should not flag an error.
+ *	Instead, it must compute the correct size of the entry, allocate an
+ *	in core representation and initialize it to the extent that an 
+ *	immediate call to the image len callback will return the correct 
+ *	image size.
+ *
+ *	In this case, when the deserialize callback returns, the cache will
+ *	call the image length callback, realize that the supplied buffer was
+ *	too small, discard the returned in core representation, allocate
+ *	and load a new buffer of the correct size from file, and then call
+ *	the deserialize callback again.
+ *
+ *	If the H5C__CLASS_COMPRESSED_FLAG is set, exceptions are as per the
+ *	H5C__CLASS_SPECULATIVE_LOAD_FLAG, save that only oversized buffers
+ *	are permitted.
  *
  *
  * IMAGE_LEN: Pointer to the image length callback.
  *
  *	In the best of all possible worlds, we would not have this callback.
- *	It exists to allow clients to reduce the size of the on disk image of
- *	an entry in the deserialize callback.
+ *	It exists to allow clients to change the size of the on disk image 
+ *	of an entry in the deserialize callback (see discussion above).
  *
  *      The typedef for the image_len callback is as follows:
  *
@@ -311,21 +342,27 @@ typedef struct H5C_t H5C_t;
  *	either constructing a journal or flushing the entry to disk.
  *
  *      If the client needs to change the address or length of the entry on
- *      disk, or re-allocate the image pointer, the pre-serialize callback
- *      is responsible for those actions, so that the actual serialize
- *      callback (described below) is only responsible for serializing the
- *      data structure, not moving it on disk or resizing it.
+ *      disk prior to flush, the pre-serialize callback is responsible for 
+ *	these actions, so that the actual serialize callback (described 
+ *	below) is only responsible for serializing the data structure, not 
+ *	moving it on disk or resizing it.
+ *
+ *	In addition, the client may use the pre-serialize callback to 
+ *	ensure that the entry is ready to be flushed -- in particular, 
+ *	if the entry contains references to other entries that are in 
+ *	temporary file space, the pre-serialize callback must move those
+ *	entries into real file space so that the serialzed entry will 
+ *	contain no invalid data.
  *
  *	One would think that the base address and length of
  *	the length of the entry's image on disk would be well known. 
  *	However, that need not be the case as fractal heap blocks can
  *	change size (and therefor possible location as well) on
- *	serialization if compression is enabled.  In the old H5C code,
- *	this happened on a flush, and occasioned a move in the midst
- *	of the flush.  To avoid this in H5C, the pre-serialize callback
- *	will return the new base address, length, and image pointer to
- *	the caller when necessary.  The caller must then update the
- *	metadata cache's internal structures accordingly.
+ *	serialization if compression is enabled.  Similarly, it may
+ *	be necessary to move entries from temporary to real file space.
+ *
+ *	The pre-serialize callback must report any such changes to the 
+ *	cache, which must then update its internal structures as needed.
  *
  *	The typedef for the pre-serialize callback is as follows:
  *
@@ -334,9 +371,9 @@ typedef struct H5C_t H5C_t;
  *                                             void * thing,
  *                                             haddr_t addr,
  *                                             size_t len,
- *                                             unsigned * flags_ptr,
  *                                             haddr_t * new_addr_ptr,
- *                                             size_t * new_len_ptr);
+ *                                             size_t * new_len_ptr,
+ *                                             unsigned * flags_ptr);
  *
  *	The parameters of the pre-serialize callback are as follows:
  *
@@ -347,7 +384,7 @@ typedef struct H5C_t H5C_t;
  *	dxpl_id: dxpl_id passed with the file pointer to the cache, and
  *	        passed on to the callback.  Necessary as some callbacks
  *	        revise the size and location of the target entry, or
- *	        possibly other entries on serialize.
+ *	        possibly other entries on pre-serialize.
  *
  *	thing:  Pointer to void containing the address of the in core
  *		representation of the target metadata cache entry. 
@@ -362,12 +399,32 @@ typedef struct H5C_t H5C_t;
  *		production mode.
  *
  *	len:    Length in bytes of the in file image of the entry to be
- *		serialized.  Also the size of *image_ptr (below).
+ *		serialized.  Also the size the image passed to the 
+ *		serialize callback (discussed below) unless that value 
+ *		is altered by this function
  *
  *		This parameter is supplied mainly for sanity checking.
  *		Sanity checks should be performed when compiled in debug
  *		mode, but the parameter may be unused when compiled in
  *		production mode.
+ *
+ *	new_addr_ptr:  Pointer to haddr_t.  If the entry is moved by
+ *		the serialize function, the new on disk base address must
+ *		be stored in *new_addr_ptr, and the appropriate flag set
+ *		in *flags_ptr.  
+ *
+ *		If the entry is not moved by the serialize function, 
+ *		*new_addr_ptr is undefined on pre-serialize callback 
+ *		return.
+ *
+ *	new_len_ptr:  Pointer to size_t.  If the entry is resized by the
+ *		serialize function, the new length of the on disk image
+ *		must be stored in *new_len_ptr, and the appropriate flag set
+ *              in *flags_ptr.
+ *
+ *		If the entry is not resized by the pre-serialize function, 
+ *		*new_len_ptr is undefined on pre-serialize callback 
+ *		return.
  *
  *	flags_ptr:  Pointer to an unsigned integer used to return flags
  *		indicating whether the resize function resized or moved
@@ -377,28 +434,10 @@ typedef struct H5C_t H5C_t;
  *		must be set to indicate a resize and a move respectively.
  *
  *	        If the H5C__SERIALIZE_RESIZED_FLAG is set, the new length
- *	        and image pointer must be stored in *new_len_ptr and
- *	        *new_image_ptr_ptr respectively. 
+ *	        must be stored in *new_len_ptr.
  *
- *	        If the H5C__SERIALIZE_MOVED_FLAG flag is also set, the
+ *	        If the H5C__SERIALIZE_MOVED_FLAG flag is set, the
  *	        new image base address must be stored in *new_addr_ptr. 
- *	        Observe that the H5C__SERIALIZE_MOVED_FLAG must not
- *	        appear without the H5C__SERIALIZE_RESIZED_FLAG. 
- *
- *	        Except as noted above, the locations pointed to by the
- *	        remaining parameters are undefined, and should be ignored
- *	        by the caller. 
- *
- *	new_addr_ptr:  Pointer to haddr_t.  If the entry is moved by
- *		the serialize function, the new on disk base address must
- *		be stored in *new_addr_ptr.  If the entry is not moved
- *		by the serialize function, *new_addr_ptr is undefined. 
- *
- *	new_len_ptr:  Pointer to size_t.  If the entry is resized by the
- *		serialize function, the new length of the on disk image
- *		must be stored in *new_len_ptr.  If the entry is not
- *		resized by the serialize function, *new_len_ptr is
- *		undefined. 
  *
  *	Processing in the pre-serialize function should proceed as follows:
  *
@@ -414,6 +453,9 @@ typedef struct H5C_t H5C_t;
  *	If the base address of the on disk image must be changed, the
  *      pre-serialize function must set *new_addr_ptr to the new base address,
  *      and set the H5C__SERIALIZE_MOVED_FLAG in *flags_ptr.
+ *
+ *	In addition, the pre-serialize callback may perform any other 
+ *	processing required before the entry is written to disk
  *
  *	If it is successful, the function must return SUCCEED. 
  *
@@ -431,6 +473,11 @@ typedef struct H5C_t H5C_t;
  *	At this point, the base address and length of the entry's image on
  *      disk must be well known and not change during the serialization
  *      process. 
+ *
+ *	While any size and/or location changes must have been handled 
+ *	by a pre-serialize call, the client may elect to handle any other 
+ *	changes to the entry required to place it in correct form for 
+ *	writing to disk in this call.
  *
  *	The typedef for the serialize callback is as follows:
  *
@@ -469,9 +516,12 @@ typedef struct H5C_t H5C_t;
  *
  *	Processing in the serialize function should proceed as follows:
  *
- *	The serialize function must examine the in core representation
- *	indicated by the thing parameter, and write a serialized image
- *	of its contents into the provided buffer. 
+ *	If there are any remaining changes to the entry required before 
+ *	write to disk, they must be dealt with first.
+ *
+ *	The serialize function must then examine the in core 
+ *	representation indicated by the thing parameter, and write a 
+ *	serialized image of its contents into the provided buffer. 
  *
  *	If it is successful, the function must return SUCCEED. 
  *
@@ -499,7 +549,7 @@ typedef struct H5C_t H5C_t;
  *	thing:  Pointer to void containing the address of the in core
  *		representation of the target metadata cache entry.  This
  *		is the same pointer that would be returned by a protect
- *		of the addr and len above. 
+ *		of the addr and len of the entry. 
  *
  *	Processing in the notify function should proceed as follows:
  *
@@ -528,7 +578,7 @@ typedef struct H5C_t H5C_t;
  *	thing:  Pointer to void containing the address of the in core
  *		representation of the target metadata cache entry.  This
  *		is the same pointer that would be returned by a protect
- *		of the addr and len above. 
+ *		of the addr and len of the entry. 
  *
  *	Processing in the free ICR function should proceed as follows:
  *
@@ -582,7 +632,7 @@ typedef struct H5C_t H5C_t;
  *
  *	about_to_destroy: Boolean flag used to indicate whether the 
  *		metadata cache is about to destroy the target metadata
- *		cache entry.  The callback can use this flag to omit
+ *		cache entry.  The callback may use this flag to omit
  *		operations that are irrelevant it the entry is about 
  *		to be destroyed.
  *
@@ -594,7 +644,7 @@ typedef struct H5C_t H5C_t;
  *	ommit any dirty bit that will not trigger a sanity check failure 
  *	or otherwise cause problems in the subsequent free icr call.
  *	In particular, the call must ensure that the free icr call will
- *	not fail to to changes since prior to this call, and after the 
+ *	not fail due to changes prior to this call, and after the 
  *	last serialize or clear call.
  *
  *	If the function is successful, it must return SUCCEED. 
@@ -707,16 +757,16 @@ typedef herr_t (*H5C_serialize_func_t)(const H5F_t *f,
                                         void *thing);
 
 typedef herr_t (*H5C_notify_func_t)(H5C_notify_action_t action,
-                                 void *thing);
+                                 	void *thing);
 
 typedef herr_t (*H5C_free_icr_func_t)(void *thing);
 
 typedef herr_t (*H5C_clear_func_t)(const H5F_t *f,
-                                   void * thing, 
-                                   hbool_t about_to_destroy);
+                                   	void * thing, 
+                                   	hbool_t about_to_destroy);
 
 typedef herr_t (*H5C_get_fsf_size_t)(void * thing,
-                                     size_t *fsf_size_ptr);
+                                     	size_t *fsf_size_ptr);
 
 #define H5C__CLASS_NO_FLAGS_SET			((unsigned)0x0)
 #define H5C__CLASS_SPECULATIVE_LOAD_FLAG	((unsigned)0x1)
@@ -842,8 +892,9 @@ typedef herr_t (*H5C_log_flush_func_t)(H5C_t * cache_ptr,
  * 		dynamically allocated block of size bytes in which the
  * 		on disk image of the metadata cache entry is stored.
  *
- * 		If the entry is dirty, the serialize callback must be used
- * 		to update this image before it is written to disk
+ * 		If the entry is dirty, the pre-serialize and serialize 
+ *		callbacks must be used to update this image before it is 
+ *		written to disk
  *
  * image_up_to_date:  Boolean flag that is set to TRUE when *image_ptr
  * 		is up to date, and set to false when the entry is dirtied.
@@ -883,16 +934,15 @@ typedef herr_t (*H5C_log_flush_func_t)(H5C_t * cache_ptr,
  * 		dirtied while protected.
  *
  * 		This field is set to FALSE in the protect call, and may
- * 		be set to TRUE by the
- * 		H5C_mark_entry_dirty()
- * 		call at an time prior to the unprotect call.
+ * 		be set to TRUE by the H5C_mark_entry_dirty() call at any 
+ *		time prior to the unprotect call.
  *
- * 		The H5C_mark_entry_dirty() call exists
- * 		as a convenience function for the fractal heap code which
- * 		may not know if an entry is protected or pinned, but knows
- * 		that is either protected or pinned.  The dirtied field was
- * 		added as in the parallel case, it is necessary to know
- * 		whether a protected entry was dirty prior to the protect call.
+ * 		The H5C_mark_entry_dirty() call exists as a convenience 
+ *		function for the fractal heap code which may not know if 
+ *		an entry is protected or pinned, but knows that is either 
+ *		protected or pinned.  The dirtied field was added as in 
+ *		the parallel case, it is necessary to know whether a 
+ *		protected entry is dirty prior to the protect call.
  *
  * is_protected: Boolean flag indicating whether this entry is protected
  *		(or locked, to use more conventional terms).  When it is
@@ -936,9 +986,10 @@ typedef herr_t (*H5C_log_flush_func_t)(H5C_t * cache_ptr,
  * 		   policy code (LRU at present).
  *
  * 		2) A pinned entry can be accessed or modified at any time.
- * 		   Therefore, the cache must check with the entry owner
- * 		   before flushing it.  If permission is denied, the
- * 		   cache does not flush the entry.
+ * 		   This places an extra burden on the pre-serialize and 
+ *		   serialize callbacks, which must ensure that a pinned 
+ *		   entry is consistant and ready to write to disk before 
+ *		   generating an image.
  *
  * 		3) A pinned entry can be marked as dirty (and possibly
  *		   change size) while it is unprotected.
@@ -963,21 +1014,27 @@ typedef herr_t (*H5C_log_flush_func_t)(H5C_t * cache_ptr,
  *		the entry is flushed for whatever reason.
  *
  * flush_me_last:  Boolean flag indicating that this entry should not be
- *                 flushed from the cache until all other entries without
- *                 the flush_me_last flag set have been flushed.
+ *		flushed from the cache until all other entries without
+ *              the flush_me_last flag set have been flushed.
  *
  * flush_me_collectively:  Boolean flag indicating that this entry needs
- *                         to be flushed collectively when in a parallel
- *                         situation.
+ *              to be flushed collectively when in a parallel situation.
  * 
- *      Note: At this time, the flush_me_last and flush_me_collectively
- *            flags will only be applied to one entry, the superblock,
- *            and the code utilizing these flags is protected with HDasserts
- *            to enforce this. This restraint can certainly be relaxed in
- *            the future if the the need for multiple entries getting flushed
- *            last or collectively arises, though the code allowing for that
- *            will need to be expanded and tested appropriately if that
- *            functionality is desired.
+ *		Note: 
+ *		
+ *		At this time, the flush_me_last and flush_me_collectively
+ *              flags will only be applied to one entry, the superblock,
+ *              and the code utilizing these flags is protected with HDasserts
+ *              to enforce this. This restraint can certainly be relaxed in
+ *              the future if the the need for multiple entries getting flushed
+ *              last or collectively arises, though the code allowing for that
+ *              will need to be expanded and tested appropriately if that
+ *              functionality is desired.
+ *
+ *		Update: There are now two possible last entries
+ *                   	(superblock and file driver info message).  This
+ *                   	number will probably increase as we add superblock
+ *                   	messages.   JRM -- 11/18/14
  *
  * clear_on_unprotect:  Boolean flag used only in PHDF5.  When H5C is used
  *		to implement the metadata cache In the parallel case, only
@@ -1089,63 +1146,43 @@ typedef herr_t (*H5C_log_flush_func_t)(H5C_t * cache_ptr,
  * The use of the replacement policy fields under the Modified LRU policy
  * is discussed below:
  *
- * next:	Next pointer in either the LRU or the protected list,
- *		depending on the current value of protected.  If there
- *		is no next entry on the list, this field should be set
- *		to NULL.
+ * next:	Next pointer in either the LRU, the protected list, or 
+ *		the pinned list depending on the current values of 
+ *		is_protected and is_pinned.  If there is no next entry 
+ *		on the list, this field should be set to NULL.
  *
- * prev:	Prev pointer in either the LRU or the protected list,
- *		depending on the current value of protected.  If there
- *		is no previous entry on the list, this field should be
- *		set to NULL.
+ * prev:	Prev pointer in either the LRU, the protected list,
+ *		or the pinned list depending on the current values of 
+ *		is_protected and is_pinned.  If there is no previous 
+ *		entry on the list, this field should be set to NULL.
  *
  * aux_next:	Next pointer on either the clean or dirty LRU lists.
- *		This entry should be NULL when protected is true.  When
- *		protected is false, and dirty is true, it should point
- *		to the next item on the dirty LRU list.  When protected
- *		is false, and dirty is false, it should point to the
- *		next item on the clean LRU list.  In either case, when
- *		there is no next item, it should be NULL.
+ *		This entry should be NULL when either is_protected or 
+ *		is_pinned is true.  
+ *
+ *		When is_protected and is_pinned are false, and is_dirty is 
+ *		true, it should point to the next item on the dirty LRU 
+ *		list.  
+ *
+ *		When is_protected and is_pinned are false, and is_dirty is 
+ *		false, it should point to the next item on the clean LRU 
+ *		list.  In either case, when there is no next item, it 
+ *		should be NULL.
  *
  * aux_prev:	Previous pointer on either the clean or dirty LRU lists.
- *		This entry should be NULL when protected is true.  When
- *		protected is false, and dirty is true, it should point
- *		to the previous item on the dirty LRU list.  When protected
- *		is false, and dirty is false, it should point to the
- *		previous item on the clean LRU list.  In either case, when
- *		there is no previous item, it should be NULL.
+ *		This entry should be NULL when either is_protected or 
+ *		is_pinned is true.  
  *
+ *		When is_protected and is_pinned are false, and is_dirty is 
+ *		true, it should point to the previous item on the dirty 
+ *		LRU list.  
+ *	
+ *		When is_protected and is_pinned are false, and is_dirty 
+ *		is false, it should point to the previous item on the 
+ *		clean LRU list.  
  *
- * Fields supporting metadata journaling:
- *
- * last_trans:	unit64_t containing the ID of the last transaction in
- * 		which this entry was dirtied.  If journaling is disabled,
- * 		or if the entry has never been dirtied in a transaction,
- * 		this field should be set to zero.  Once we notice that
- * 		the specified transaction has made it to disk, we will
- * 		reset this field to zero as well.
- *
- * 		We must maintain this field, as to avoid messages from
- * 		the future, we must not flush a dirty entry to disk
- * 		until the last transaction in which it was dirtied
- * 		has made it to disk in the journal file.
- *
- * trans_next:  Next pointer in the entries modified in the current
- * 		transaction list.  This field should always be null
- * 		unless journaling is enabled, the entry is dirty,
- * 		and last_trans field contains the current transaction
- * 		number.  Even if all these conditions are fulfilled,
- * 		the field will still be NULL if this is the last
- * 		entry on the list.
- *
- * trans_prev:  Previous pointer in the entries modified in the current
- * 		transaction list.  This field should always be null
- * 		unless journaling is enabled, the entry is dirty,
- * 		and last_trans field contains the current transaction
- * 		number.  Even if all these conditions are fulfilled,
- * 		the field will still be NULL if this is the first
- * 		entry on the list.
- *
+ *		In either case, when there is no previous item, it should 
+ *		be NULL.
  *
  * Cache entry stats collection fields:
  *

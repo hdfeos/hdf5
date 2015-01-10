@@ -366,17 +366,7 @@ herr_t
 H5B2_get_root_addr_test(H5B2_t *bt2, haddr_t *root_addr)
 {
 
-#if 0 /* original code */ /* JRM */
-    /* this macro causes an assert failure -- looking at the 
-     * same function in the trunk, it seems we have a merge bug.
-     * Trying to fix it by using code from trunk.
-     *
-     * If all goes well, delete this branch of the #if 
-     */
-    FUNC_ENTER_PACKAGE_NOERR
-#else /* modified code */ /* JRM */
     FUNC_ENTER_NOAPI_NOINIT_NOERR
-#endif /* modified code */ /* JRM */
 
     /* Check arguments. */
     HDassert(bt2);
@@ -413,17 +403,7 @@ H5B2_get_node_info_test(H5B2_t *bt2, hid_t dxpl_id, void *udata,
     unsigned    idx;                    /* Location of record which matches key */
     herr_t	ret_value = SUCCEED;    /* Return value */
 
-#if 0 /* original code */ /* JRM */
-    /* this macro causes an assert failure -- looking at the 
-     * same function in the trunk, it seems we have a merge bug.
-     * Trying to fix it by using code from trunk.
-     *
-     * If all goes well, delete this branch of the #if 
-     */
-    FUNC_ENTER_PACKAGE
-#else /* modified code */ /* JRM */
     FUNC_ENTER_NOAPI(FAIL)
-#endif /* modified code */ /* JRM */
 
     /* Check arguments. */
     HDassert(bt2);
@@ -537,17 +517,7 @@ H5B2_get_node_depth_test(H5B2_t *bt2, hid_t dxpl_id, void *udata)
     H5B2_node_info_test_t ninfo;        /* Node information */
     int		ret_value;              /* Return information */
 
-#if 0 /* original code */ /* JRM */
-    /* this macro causes an assert failure -- looking at the 
-     * same function in the trunk, it seems we have a merge bug.
-     * Trying to fix it by using code from trunk.
-     *
-     * If all goes well, delete this branch of the #if 
-     */
-    FUNC_ENTER_PACKAGE
-#else /* modified code */ /* JRM */
     FUNC_ENTER_NOAPI(FAIL)
-#endif /* modified code */ /* JRM */
 
     /* Check arguments. */
     HDassert(bt2);

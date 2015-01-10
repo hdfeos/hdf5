@@ -283,9 +283,7 @@ HDfprintf(stderr, "%s: Called\n", FUNC);
     /* Set up user data */
     udata.hdr = hdr;
     udata.dblk_addr = dblk_addr;
-#if 1 /* new code */ /* JRM */
     udata.nelmts = dblk_nelmts;
-#endif /* new code */ /* JRM */
 
     /* Protect the data block */
     if(NULL == (ret_value = (H5FA_dblock_t *)H5AC_protect(hdr->f, dxpl_id, H5AC_FARRAY_DBLOCK, dblk_addr, &udata, flags)))

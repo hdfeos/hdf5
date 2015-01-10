@@ -2357,17 +2357,7 @@ verify_entry_status(H5C_t * cache_ptr,
         test_entry_t  * entry_ptr = &(base_addr[expected[i].entry_index]);
         hbool_t         in_cache = FALSE; /* will set to TRUE if necessary */
         unsigned        u;              /* Local index variable */
-#if 0 /* original code */ /* JRM */
-	if ( ( ! expected[i].in_cache ) &&
-	     ( ( expected[i].is_dirty ) ||
-	       ( expected[i].is_protected ) ||
-	       ( expected[i].is_pinned ) ) ) {
 
-	    pass = FALSE;
-	    sprintf(msg, "%d: Contradictory data in expected[%d].\n", tag, i);
-	    failure_mssg = msg;
-	}
-#else /* revised code */ /* JRM */
 	if ( ( ! expected[i].in_cache ) &&
              ( ( expected[i].is_protected ) || ( expected[i].is_pinned ) ) ) {
 
@@ -2386,7 +2376,6 @@ verify_entry_status(H5C_t * cache_ptr,
                    tag, i);
 	    failure_mssg = msg;
         }
-#endif /* revised code */ /* JRM */
 
         if ( pass ) {
 

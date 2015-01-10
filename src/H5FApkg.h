@@ -214,18 +214,11 @@ typedef struct H5FA_hdr_cache_ud_t {
 } H5FA_hdr_cache_ud_t;
 
 /* Info needed for loading data block */
-#if 0 /* original code */ /* JRM */
-typedef struct H5FA_dblock_cache_ud_t {
-    H5FA_hdr_t *hdr;            /* Shared fixed array information */
-    haddr_t    dblk_addr;       /* Address of data block on disk */
-} H5FA_dblock_cache_ud_t;
-#else /* modified code */ /* JRM */
 typedef struct H5FA_dblock_cache_ud_t {
     H5FA_hdr_t *hdr;            /* Shared fixed array information */
     hsize_t     nelmts;         /* Number of elements in data block */
     haddr_t     dblk_addr;      /* Address of data block on disk */
 } H5FA_dblock_cache_ud_t;
-#endif /* modified code */ /* JRM */
 
 /* Info needed for loading data block page */
 typedef struct H5FA_dblk_page_cache_ud_t {

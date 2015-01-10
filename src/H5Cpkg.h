@@ -151,6 +151,10 @@
  *		   the max_cache_size limit until the next time the cache
  *		   attempts to load or insert an entry.
  *
+ *		d) When the evictions_enabled field is false (see below),
+ *		   the cache size will increase without limit until the
+ *		   field is set to true.
+ *
  * min_clean_size: Nominal minimum number of clean bytes in the cache.
  *              The cache attempts to maintain this number of bytes of
  *              clean data so as to avoid case b) above.  Again, this is
@@ -177,8 +181,8 @@
  *		entry is flushed to disk.
  *
  *
- * In cases where memory is plentiful, and performance is an issue, it
- * is useful to disable all cache evictions, and thereby postpone metadata
+ * In cases where memory is plentiful, and performance is an issue, it may
+ * be useful to disable all cache evictions, and thereby postpone metadata
  * writes.  The following field is used to implement this.
  *
  * evictions_enabled:  Boolean flag that is initialized to TRUE.  When
@@ -201,7 +205,7 @@
  *              This value should not be mistaken for footprint of the
  *              cache in memory.  The average cache entry is small, and
  *              the cache has a considerable overhead.  Multiplying the
- *              index_size by two should yield a conservative estimate
+ *              index_size by three should yield a conservative estimate
  *              of the cache's memory footprint.
  *
  * clean_index_size: Number of bytes of clean entries currently stored in
@@ -212,12 +216,7 @@
  *
  *		WARNING:
  *
- *		1) The clean_index_size field is not maintained by the
- *		   index macros, as the hash table doesn't care whether
- *		   the entry is clean or dirty.  Instead the field is
- *		   maintained in the H5C__UPDATE_RP macros.
- *
- *		2) The value of the clean_index_size must not be mistaken
+ *		   The value of the clean_index_size must not be mistaken
  *		   for the current clean size of the cache.  Rather, the
  *		   clean size of the cache is the current value of
  *		   clean_index_size plus the amount of empty space (if any)
@@ -228,13 +227,6 @@
  *		is also the sum of the sizes of all entries in the cache.
  *		Thus we should have the invarient that clean_index_size +
  *		dirty_index_size == index_size.
- *
- *		WARNING:
- *
- *		1) The dirty_index_size field is not maintained by the
- *		   index macros, as the hash table doesn't care whether
- *		   the entry is clean or dirty.  Instead the field is
- *		   maintained in the H5C__UPDATE_RP macros.
  *
  * index:	Array of pointer to H5C_cache_entry_t of size
  *		H5C__HASH_TABLE_LEN.  At present, this value is a power
@@ -298,19 +290,19 @@
  *                 some optimizations when I get to it.
  *
  * num_last_entries: The number of entries in the cache that can only be
- *                   flushed after all other entries in the cache have
- *                   been flushed. At this time, this will only ever be
- *                   one entry (the superblock), and the code has been
- *                   protected with HDasserts to enforce this. This restraint
- *                   can certainly be relaxed in the future if the need for
- *                   multiple entries being flushed last arises, though
- *                   explicit tests for that case should be added when said
- *                   HDasserts are removed.
+ *		flushed after all other entries in the cache have
+ *              been flushed. At this time, this will only ever be
+ *              one entry (the superblock), and the code has been
+ *              protected with HDasserts to enforce this. This restraint
+ *              can certainly be relaxed in the future if the need for
+ *              multiple entries being flushed last arises, though
+ *              explicit tests for that case should be added when said
+ *              HDasserts are removed.
  *
- *		     Update: There are now two possible last entries
- *		     (superblock and file driver info message).  This
- *		     number will probably increase as we add superblock
- *		     messages.   JRM -- 11/18/14
+ *		Update: There are now two possible last entries
+ *		(superblock and file driver info message).  This
+ *		number will probably increase as we add superblock
+ *		messages.   JRM -- 11/18/14
  *
  * With the addition of the fractal heap, the cache must now deal with
  * the case in which entries may be dirtied, moved, or have their sizes
@@ -320,10 +312,11 @@
  *
  * slist_len_increase: Number of entries that have been added to the
  * 		slist since the last time this field was set to zero.
+ *		Note that this value can be negative.
  *
  * slist_size_increase: Total size of all entries that have been added
  * 		to the slist since the last time this field was set to
- * 		zero.
+ * 		zero.  Note that this value can be negative.
  *
  *
  * When a cache entry is protected, it must be removed from the LRU
@@ -362,9 +355,9 @@
  *         replacement policy code).
  *
  *      2) A pinned entry can be accessed or modified at any time.
- *         Therefore, the cache must check with the entry owner
- *         before flushing it.  If permission is denied, the
- *         cache just skips the entry in the flush.
+ *         This places an additional burden on the associated pre-serialize
+ *	   and serialize callbacks, which must ensure the the entry is in 
+ *	   a consistant state before creating an image of it.
  *
  *      3) A pinned entry can be marked as dirty (and possibly
  *         change size) while it is unprotected.
@@ -374,7 +367,8 @@
  *         flush.
  *
  * Since pinned entries cannot be evicted, they must be kept on a pinned
- * entry list, instead of being entrusted to the replacement policy code.
+ * entry list (pel), instead of being entrusted to the replacement policy 
+ * code.
  *
  * Maintaining the pinned entry list requires the following fields:
  *
@@ -402,7 +396,8 @@
  *
  * While there has been interest in several replacement policies for
  * this cache, the initial development schedule is tight.  Thus I have
- * elected to support only a modified LRU policy for the first cut.
+ * elected to support only a modified LRU (least recently used) policy 
+ * for the first cut.
  *
  * To further simplify matters, I have simply included the fields needed
  * by the modified LRU in this structure.  When and if we add support for
@@ -420,7 +415,8 @@
  * be collective and the other processes will not know to participate.
  *
  * To deal with this issue, I have modified the usual LRU policy by adding
- * clean and dirty LRU lists to the usual LRU list.
+ * clean and dirty LRU lists to the usual LRU list.  In general, these 
+ * lists are only exist in parallel builds.
  *
  * The clean LRU list is simply the regular LRU list with all dirty cache
  * entries removed.
@@ -437,7 +433,7 @@
  *
  * Even if we start with a completely clean cache, a sequence of protects
  * without unprotects can empty the clean LRU list.  In this case, the
- * cache must grow temporarily.  At the next write, we will attempt to
+ * cache must grow temporarily.  At the next sync point, we will attempt to
  * evict enough entries to reduce index_size to less than max_cache_size.
  * While this will usually be possible, all bets are off if enough entries
  * are protected.
@@ -447,14 +443,14 @@
  *
  * LRU_list_len:  Number of cache entries currently on the LRU list.
  *
- *              Observe that LRU_list_len + pl_len must always equal
- *              index_len.
+ *              Observe that LRU_list_len + pl_len + pel_len must always 
+ *		equal index_len.
  *
  * LRU_list_size:  Number of bytes of cache entries currently residing on the
  *              LRU list.
  *
- *              Observe that LRU_list_size + pl_size must always equal
- *              index_size.
+ *              Observe that LRU_list_size + pl_size + pel_size must always 
+ *		equal index_size.
  *
  * LRU_head_ptr:  Pointer to the head of the doubly linked LRU list.  Cache
  *              entries on this list are linked by their next and prev fields.
@@ -699,7 +695,7 @@
  *		equal to the array index has been evicted from the cache in
  *		the current epoch.
  *
- * moves:     Array of int64 of length H5C__MAX_NUM_TYPE_IDS + 1.  The cells
+ * moves:       Array of int64 of length H5C__MAX_NUM_TYPE_IDS + 1.  The cells
  *		are used to record the number of times an entry with type
  *		id equal to the array index has been moved in the current
  *		epoch.
@@ -707,7 +703,7 @@
  * entry_flush_moves: Array of int64 of length H5C__MAX_NUM_TYPE_IDS + 1. 
  * 		The cells are used to record the number of times an entry
  * 		with type id equal to the array index has been moved
- * 		during its flush callback in the current epoch.
+ * 		during its pre-serialize callback in the current epoch.
  *
  * cache_flush_moves: Array of int64 of length H5C__MAX_NUM_TYPE_IDS + 1. 
  * 		The cells are used to record the number of times an entry
@@ -734,7 +730,7 @@
  * 		with type id equal to the array index has been flushed while
  * 		pinned in the current epoch.
  *
- * pinned_cleared:  Array of int64 of length H5C__MAX_NUM_TYPE_IDS + 1.  The
+ * pinned_clears:  Array of int64 of length H5C__MAX_NUM_TYPE_IDS + 1.  The
  * 		cells are used to record the number of times an  entry
  * 		with type id equal to the array index has been cleared while
  * 		pinned in the current epoch.
@@ -752,7 +748,8 @@
  * entry_flush_size_changes:  Array of int64 of length
  * 		H5C__MAX_NUM_TYPE_IDS + 1.  The cells are used to record
  * 		the number of times an entry with type id equal to the
- * 		array index has changed size while in its flush callback.
+ * 		array index has changed size while in its pre-serialize 
+ *		callback.
  *
  * cache_flush_size_changes:  Array of int64 of length
  * 		H5C__MAX_NUM_TYPE_IDS + 1.  The cells are used to record
@@ -1165,7 +1162,7 @@ if ( ( (head_ptr) == NULL ) ||                                               \
        )                                                                     \
      )                                                                       \
    ) {                                                                       \
-    HDassert(0 && "DLL pre remove SC failed");                               \
+    /* HDassert(0 && "DLL pre remove SC failed"); */                         \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "DLL pre remove SC failed")     \
 }
 
@@ -1186,7 +1183,7 @@ if ( ( ( ( (head_ptr) == NULL ) || ( (tail_ptr) == NULL ) ) &&           \
        )                                                                 \
      )                                                                   \
    ) {                                                                   \
-    HDassert(0 && "DLL sanity check failed");                            \
+    /* HDassert(0 && "DLL sanity check failed"); */                      \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "DLL sanity check failed")  \
 }
 
@@ -1209,7 +1206,7 @@ if ( ( (entry_ptr) == NULL ) ||                                              \
        )                                                                     \
      )                                                                       \
    ) {                                                                       \
-    HDassert(0 && "DLL pre insert SC failed");                               \
+    /* HDassert(0 && "DLL pre insert SC failed"); */                         \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "DLL pre insert SC failed")     \
 }
 
@@ -1220,14 +1217,14 @@ if ( ( (dll_len) <= 0 ) ||                                                    \
      ( (old_size) > (dll_size) ) ||                                           \
      ( (new_size) <= 0 ) ||                                                   \
      ( ( (dll_len) == 1 ) && ( (old_size) != (dll_size) ) ) ) {               \
-    HDassert(0 && "DLL pre size update SC failed");                           \
+    /* HDassert(0 && "DLL pre size update SC failed"); */                     \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "DLL pre size update SC failed") \
 }
 
 #define H5C__DLL_POST_SIZE_UPDATE_SC(dll_len, dll_size, old_size, new_size)    \
 if ( ( (new_size) > (dll_size) ) ||                                            \
      ( ( (dll_len) == 1 ) && ( (new_size) != (dll_size) ) ) ) {                \
-    HDassert(0 && "DLL post size update SC failed");                           \
+    /* HDassert(0 && "DLL post size update SC failed"); */                     \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "DLL post size update SC failed") \
 }
 
@@ -1336,7 +1333,7 @@ if ( ( (hd_ptr) == NULL ) ||                                                   \
        )                                                                       \
      )                                                                         \
    ) {                                                                         \
-    HDassert(0 && "aux DLL pre remove SC failed");                             \
+    /* HDassert(0 && "aux DLL pre remove SC failed"); */                       \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "aux DLL pre remove SC failed")   \
 }
 
@@ -1357,7 +1354,7 @@ if ( ( ( ( (head_ptr) == NULL ) || ( (tail_ptr) == NULL ) ) &&              \
        )                                                                    \
      )                                                                      \
    ) {                                                                      \
-    HDassert(0 && "AUX DLL sanity check failed");                           \
+    /* HDassert(0 && "AUX DLL sanity check failed"); */                     \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "AUX DLL sanity check failed") \
 }
 
@@ -1380,7 +1377,7 @@ if ( ( (entry_ptr) == NULL ) ||                                                \
        )                                                                       \
      )                                                                         \
    ) {                                                                         \
-    HDassert(0 && "AUX DLL pre insert SC failed");                             \
+    /* HDassert(0 && "AUX DLL pre insert SC failed"); */                       \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, (fv), "AUX DLL pre insert SC failed")   \
 }
 
@@ -1819,7 +1816,7 @@ if ( ( (cache_ptr) == NULL ) ||                                         \
 	(cache_ptr)->dirty_index_size) ) ||                             \
      ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||   \
      ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {  \
-    HDassert(0 && "Pre HT insert SC failed");                           \
+    /* HDassert(0 && "Pre HT insert SC failed"); */                     \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val,                        \
                "Pre HT insert SC failed")                               \
 }
@@ -1832,7 +1829,7 @@ if ( ( (cache_ptr) == NULL ) ||                                         \
 	(cache_ptr)->dirty_index_size) ) ||                             \
      ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||   \
      ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {  \
-    HDassert(0 && "Post HT insert SC failed");                          \
+    /* HDassert(0 && "Post HT insert SC failed"); */                    \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val,                        \
                "Pre HT insert SC failed")                               \
 }
@@ -1860,7 +1857,7 @@ if ( ( (cache_ptr) == NULL ) ||                                         \
 	(cache_ptr)->dirty_index_size) ) ||                             \
      ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||   \
      ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {  \
-    HDassert(0 && "Pre HT remove SC failed");                           \
+    /* HDassert(0 && "Pre HT remove SC failed"); */                     \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Pre HT remove SC failed") \
 }
 
@@ -1877,7 +1874,7 @@ if ( ( (cache_ptr) == NULL ) ||                                          \
 	(cache_ptr)->dirty_index_size) ) ||                              \
      ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||    \
      ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {   \
-    HDassert(0 && "Post HT remove SC failed");                           \
+    /* HDassert(0 && "Post HT remove SC failed"); */                     \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Post HT remove SC failed") \
 }
 
@@ -1890,7 +1887,7 @@ if ( ( (cache_ptr) == NULL ) ||                                             \
      ( ! H5F_addr_defined(Addr) ) ||                                        \
      ( H5C__HASH_FCN(Addr) < 0 ) ||                                         \
      ( H5C__HASH_FCN(Addr) >= H5C__HASH_TABLE_LEN ) ) {                     \
-    HDassert(0 && "Pre HT search SC failed");                               \
+    /* HDassert(0 && "Pre HT search SC failed"); */                         \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val, "Pre HT search SC failed") \
 }
 
@@ -1914,7 +1911,7 @@ if ( ( (cache_ptr) == NULL ) ||                                             \
        ( (entry_ptr)->ht_prev->ht_next != (entry_ptr) ) ) ||                \
      ( ( (entry_ptr)->ht_next != NULL ) &&                                  \
        ( (entry_ptr)->ht_next->ht_prev != (entry_ptr) ) ) ) {               \
-    HDassert(0 && "Post successful HT search SC failed");                   \
+    /* HDassert(0 && "Post successful HT search SC failed"); */             \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val,                            \
                 "Post successful HT search SC failed")                      \
 }
@@ -1924,7 +1921,7 @@ if ( ( (cache_ptr) == NULL ) ||                                             \
 if ( ( (cache_ptr) == NULL ) ||                                        \
      ( ((cache_ptr)->index)[k] != (entry_ptr) ) ||                     \
      ( (entry_ptr)->ht_prev != NULL ) ) {                              \
-    HDassert(0 && "Post HT shift to front SC failed");                 \
+    /* HDassert(0 && "Post HT shift to front SC failed"); */           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, fail_val,                       \
                 "Post HT shift to front SC failed")                    \
 }
@@ -1949,7 +1946,7 @@ if ( ( (cache_ptr) == NULL ) ||                                         \
 	  ( ( (was_clean) ) ||                                          \
 	    ( (cache_ptr)->dirty_index_size < (old_size) ) ) ) ||       \
      ( (entry_ptr) == NULL ) ) {                                        \
-    HDassert(0 && "Pre HT entry size change SC failed");                \
+    /* HDassert(0 && "Pre HT entry size change SC failed"); */          \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                            \
                 "Pre HT entry size change SC failed")                   \
 }
@@ -1971,7 +1968,7 @@ if ( ( (cache_ptr) == NULL ) ||                                           \
 	    ( (cache_ptr)->clean_index_size < (new_size) ) ) ) ||         \
      ( ( (cache_ptr)->index_len == 1 ) &&                                 \
        ( (cache_ptr)->index_size != (new_size) ) ) ) {                    \
-    HDassert(0 && "Post HT entry size change SC failed");                 \
+    /* HDassert(0 && "Post HT entry size change SC failed"); */           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                              \
                 "Post HT entry size change SC failed")                    \
 }
@@ -1989,7 +1986,7 @@ if (                                                                          \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) ||   \
     ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||          \
     ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {         \
-    HDassert(0 && "Pre HT update for entry clean SC failed");                 \
+    /* HDassert(0 && "Pre HT update for entry clean SC failed"); */           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                  \
                 "Pre HT update for entry clean SC failed")                    \
 }
@@ -2007,7 +2004,7 @@ if (                                                                          \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) ||   \
     ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||          \
     ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {         \
-    HDassert(0 && "Pre HT update for entry dirty SC failed");                 \
+    /* HDassert(0 && "Pre HT update for entry dirty SC failed"); */           \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                  \
                 "Pre HT update for entry dirty SC failed")                    \
 }
@@ -2017,7 +2014,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) || \
      ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||       \
      ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {      \
-    HDassert(0 && "Post HT update for entry clean SC failed");              \
+    /* HDassert(0 && "Post HT update for entry clean SC failed"); */        \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                \
                 "Post HT update for entry clean SC failed")                 \
 }
@@ -2027,7 +2024,7 @@ if ( ( (cache_ptr)->index_size !=                                           \
        ((cache_ptr)->clean_index_size + (cache_ptr)->dirty_index_size) ) || \
      ( (cache_ptr)->index_size < ((cache_ptr)->clean_index_size) ) ||       \
      ( (cache_ptr)->index_size < ((cache_ptr)->dirty_index_size) ) ) {      \
-    HDassert(0 && "Post HT update for entry dirty SC failed");              \
+    /* HDassert(0 && "Post HT update for entry dirty SC failed"); */        \
     HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL,                                \
                 "Post HT update for entry dirty SC failed")                 \
 }

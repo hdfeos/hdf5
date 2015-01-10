@@ -330,11 +330,6 @@ H5HF_iblock_decr(H5HF_indirect_t *iblock)
 
 	/* Check for expunging the indirect block from the metadata cache */
 	if(expunge_iblock) {
-#if 0 /* original code */ /* JRM */
-            /* Evict the indirect block from the metadata cache */
-            if(H5AC_expunge_entry(hdr->f, H5AC_dxpl_id, H5AC_FHEAP_IBLOCK, iblock_addr, H5AC__FREE_FILE_SPACE_FLAG) < 0)
-                HGOTO_ERROR(H5E_HEAP, H5E_CANTREMOVE, FAIL, "unable to remove indirect block from cache")
-#else /* modified code */ /* JRM */
             unsigned cache_flags = H5AC__NO_FLAGS_SET;
 
             /* if the indirect block is in real file space, tell 
@@ -345,7 +340,6 @@ H5HF_iblock_decr(H5HF_indirect_t *iblock)
 
             if(H5AC_expunge_entry(hdr->f, H5AC_dxpl_id, H5AC_FHEAP_IBLOCK, iblock_addr, cache_flags) < 0)
                 HGOTO_ERROR(H5E_HEAP, H5E_CANTREMOVE, FAIL, "unable to remove indirect block from cache")
-#endif /* modified code */ /* JRM */
         } /* end if */
     } /* end if */
 
@@ -1654,9 +1648,6 @@ H5HF_man_iblock_delete(H5HF_hdr_t *hdr, hid_t dxpl_id, haddr_t iblock_addr,
 #endif /* NDEBUG */
 
     /* Indicate that the indirect block should be deleted & file space freed */
-#if 0 /* JRM */ /* original code */
-    cache_flags |= H5AC__DIRTIED_FLAG | H5AC__DELETED_FLAG | H5AC__FREE_FILE_SPACE_FLAG;
-#else /* JRM */ /* modified code */
     cache_flags |= H5AC__DIRTIED_FLAG | H5AC__DELETED_FLAG;
 
     /* if the indirect block is in real file space, tell
@@ -1664,7 +1655,6 @@ H5HF_man_iblock_delete(H5HF_hdr_t *hdr, hid_t dxpl_id, haddr_t iblock_addr,
      */
     if (!H5F_IS_TMP_ADDR(hdr->f, iblock_addr))
         cache_flags |= H5AC__FREE_FILE_SPACE_FLAG;
-#endif /* JRM */ /* modified code */
 
 done:
     /* Unprotect the indirect block, with appropriate flags */

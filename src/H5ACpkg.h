@@ -142,6 +142,29 @@
  *
  *                                              JRM - 6/27/05
  *
+ * Update: When the above was written, I planned to allow the process
+ *	0 metadata cache to write dirty metadata between sync points.
+ *	However, testing indicated that this allowed occasional 
+ *	messages from the future to reach the caches on other processes.
+ *
+ *	To resolve this, the code was altered to require that all metadata
+ *	writes take place during sync points -- which solved the problem.
+ *	Initially all writes were performed by the process 0 cache.  This 
+ *	approach was later replaced with a distributed write approach
+ *	in which each process writes a subset of the metadata to be 
+ *	written.  
+ *
+ *	After thinking on the matter for a while, I arrived at the 
+ *	conclusion that the process 0 cache could be allowed to write 
+ *	dirty metadata between sync points if it restricted itself to 
+ *	entries that had been dirty at the time of the previous sync point.  
+ *	
+ *	To date, there has been no attempt to implement this optimization.
+ *	However, should it be attempted, much of the supporting code 
+ *	should still be around.
+ *
+ *						JRM -- 1/6/15
+ *
  * magic:       Unsigned 32 bit integer always set to
  *		H5AC__H5AC_AUX_T_MAGIC.  This field is used to validate
  *		pointers to instances of H5AC_aux_t.
@@ -179,6 +202,10 @@
  *		this code, all writes were done from process 0.  This
  *		field exists to facilitate experiments with other 
  *		strategies.
+ *
+ *		At present, this field must be set to either
+ *		H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY or 
+ *		H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED.
  *
  * dirty_bytes_propagations: This field only exists when the
  *		H5AC_DEBUG_DIRTY_BYTES_CREATION #define is TRUE.

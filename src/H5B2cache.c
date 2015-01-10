@@ -956,11 +956,7 @@ H5B2__cache_leaf_serialize(const H5F_t *f, void *image, size_t UNUSED len,
 
     /* b-tree type */
     *p++ = leaf->hdr->cls->id;
-#if 0 /* original code */ /* JRM */
-    HDassert((size_t)(p - leaf->hdr->page) == (H5B2_LEAF_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
-#else /* modified code */ /* JRM */
     HDassert((size_t)(p - (uint8_t *)image) == (H5B2_LEAF_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
-#endif /* modified code */ /* JRM */
 
     /* Serialize records for leaf node */
     native = leaf->leaf_native;

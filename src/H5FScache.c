@@ -49,10 +49,8 @@
 #define H5FS_HDR_VERSION        0               /* Header */
 #define H5FS_SINFO_VERSION      0               /* Serialized sections */
 
-#if 0 /* delete this ? */ /* JRM */
 /* Size of stack buffer for serialized headers */
 #define H5FS_HDR_BUF_SIZE               256
-#endif /* JRM */
 
 
 /******************/
@@ -94,7 +92,7 @@ static herr_t H5FS_cache_hdr_pre_serialize(const H5F_t *f,
                                            hid_t dxpl_id,
                                            void *thing,
                                            haddr_t addr,
-                                           size_t UNUSED len,
+                                           size_t len,
                                            haddr_t *new_addr_ptr,
                                            size_t *new_len_ptr,
                                            unsigned *flags_ptr);
@@ -104,7 +102,6 @@ static herr_t H5FS_cache_hdr_serialize(const H5F_t *f,
                                        void *thing);
 static herr_t H5FS_cache_hdr_free_icr(void *thing);
 
-#if 1 /* V3 MDC cache callback declarations */
 
 /* sinfo callbacks */
 
@@ -136,14 +133,6 @@ static herr_t H5FS_cache_sinfo_serialize(const H5F_t *f,
 static herr_t H5FS_cache_sinfo_free_icr(void *thing);
 
 
-#else /* V2 MDC cache callback declaration */
-static H5FS_sinfo_t *H5FS_cache_sinfo_load(H5F_t *f, hid_t dxpl_id, haddr_t addr, void *udata);
-static herr_t H5FS_cache_sinfo_flush(H5F_t *f, hid_t dxpl_id, hbool_t destroy, haddr_t addr, H5FS_sinfo_t *sinfo, unsigned UNUSED * flags_ptr);
-static herr_t H5FS_cache_sinfo_dest(H5F_t *f, H5FS_sinfo_t *sinfo);
-static herr_t H5FS_cache_sinfo_clear(H5F_t *f, H5FS_sinfo_t *sinfo, hbool_t destroy);
-static herr_t H5FS_cache_sinfo_size(const H5F_t *f, const H5FS_sinfo_t *sinfo, size_t *size_ptr);
-#endif /* V2 MDC cache callback declaration */
-
 /*********************/
 /* Package Variables */
 /*********************/
@@ -165,8 +154,6 @@ const H5AC_class_t H5AC_FSPACE_HDR[1] = {{
     NULL,                             /* 'fsf_size' callback */
 }};
 
-#if 1 /* V3 MDC cache H6AC_class_t definition */
-
 const H5AC_class_t H5AC_FSPACE_SINFO[1] = {{
     H5AC_FSPACE_SINFO_ID,             /* Metadata client ID */
     "Free Space Section Info",        /* Metadata client name (for debugging) */
@@ -182,20 +169,6 @@ const H5AC_class_t H5AC_FSPACE_SINFO[1] = {{
     NULL,			      /* 'clear' callback */
     NULL,                             /* 'fsf_size' callback */
 }};
-
-
-#else /* V2 MDC cache H6AC_class_t definition */
-/* H5FS serialized sections inherit cache-like properties from H5AC */
-const H5AC_class_t H5AC_FSPACE_SINFO[1] = {{
-    H5AC_FSPACE_SINFO_ID,
-    (H5AC_load_func_t)H5FS_cache_sinfo_load,
-    (H5AC_flush_func_t)H5FS_cache_sinfo_flush,
-    (H5AC_dest_func_t)H5FS_cache_sinfo_dest,
-    (H5AC_clear_func_t)H5FS_cache_sinfo_clear,
-    (H5AC_notify_func_t)NULL,
-    (H5AC_size_func_t)H5FS_cache_sinfo_size,
-}};
-#endif /* V2 MDC cache H6AC_class_t definition */
 
 
 /*****************************/
@@ -479,11 +452,7 @@ H5FS_cache_hdr_pre_serialize(const H5F_t *f,
     H5FS_t 		*fspace = NULL;
     herr_t      	 ret_value = SUCCEED;    /* Return value */
 
-#if 0 /* old code */ /* JRM */
-    FUNC_ENTER_NOAPI_NOINIT
-#else /* modified code */ /* JRM */
     FUNC_ENTER_NOAPI_NOINIT_TAG(dxpl_id, H5AC__FREESPACE_TAG, FAIL)
-#endif /* modified code */ /* JRM */
 
     HDassert(f);
     HDassert(thing);
@@ -612,12 +581,10 @@ H5FS_cache_hdr_pre_serialize(const H5F_t *f,
                 HDassert(fspace->sinfo->cache_info.size == \
                          fspace->alloc_sect_size);
 
-#if 1 /* not sure this is correct */ /* JRM */
                 /* the metadata cache is now managing the section info, 
                  * so set fspace->sinfo to NULL.
                  */
                 fspace->sinfo = NULL;
-#endif /* not sure this is correct */ /* JRM */
   
             } else if ( H5F_IS_TMP_ADDR(f, fspace->sect_addr) ) { /* case 2 */
 
@@ -752,11 +719,7 @@ H5FS_cache_hdr_pre_serialize(const H5F_t *f,
 
 done:
 
-#if 0 /* old code */ /* JRM */
-    FUNC_LEAVE_NOAPI(ret_value)
-#else /* modified code */ /* JRM */
     FUNC_LEAVE_NOAPI_TAG(ret_value, FAIL)
-#endif /* modified code */ /* JRM */
 
 } /* end H5FS_cache_hdr_pre_serialize() */
 
@@ -942,8 +905,6 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 
 } /* end H5FS_cache_hdr_free_icr() */
-
-#if 1 /* Version 3 MDC callback definitions */
 
 
 /********************************************************/
@@ -1537,412 +1498,6 @@ done:
     FUNC_LEAVE_NOAPI(ret_value)
 
 } /* end H5FS_cache_sinfo_free_icr() */
-
-
-#else /* Version 2 MDC callback definitions */
-
-/*-------------------------------------------------------------------------
- * Function:	H5FS_cache_sinfo_load
- *
- * Purpose:	Loads free space sections from the disk.
- *
- * Return:      Success:        Pointer to a new free space section info
- *              Failure:        NULL
- *
- * Programmer:  Quincey Koziol
- *              koziol@ncsa.uiuc.edu
- *              July 31 2006
- *
- *-------------------------------------------------------------------------
- */
-static H5FS_sinfo_t *
-H5FS_cache_sinfo_load(H5F_t *f, hid_t dxpl_id, haddr_t UNUSED addr, void *_udata)
-{
-    H5FS_sinfo_t	*sinfo = NULL;  /* Free space section info */
-    H5FS_sinfo_cache_ud_t *udata = (H5FS_sinfo_cache_ud_t *)_udata; /* user data for callback */
-    haddr_t             fs_addr;        /* Free space header address */
-    size_t              old_sect_size;  /* Old section size */
-    uint8_t		*buf = NULL;    /* Temporary buffer */
-    const uint8_t	*p;             /* Pointer into raw data buffer */
-    uint32_t            stored_chksum;  /* Stored metadata checksum value */
-    uint32_t            computed_chksum; /* Computed metadata checksum value */
-    H5FS_sinfo_t	*ret_value;     /* Return value */
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    /* Check arguments */
-    HDassert(f);
-    HDassert(udata);
-
-    /* Allocate a new free space section info */
-    if(NULL == (sinfo = H5FS_sinfo_new(udata->f, udata->fspace)))
-	HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
-
-    /* Allocate space for the buffer to serialize the sections into */
-    H5_ASSIGN_OVERFLOW(/* To: */ old_sect_size, /* From: */ udata->fspace->sect_size, /* From: */ hsize_t, /* To: */ size_t);
-    if(NULL == (buf = H5FL_BLK_MALLOC(sect_block, (size_t)udata->fspace->sect_size)))
-        HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
-
-    /* Read buffer from disk */
-    if(H5F_block_read(f, H5FD_MEM_FSPACE_SINFO, udata->fspace->sect_addr, (size_t)udata->fspace->sect_size, dxpl_id, buf) < 0)
-	HGOTO_ERROR(H5E_FSPACE, H5E_READERROR, NULL, "can't read free space sections")
-
-    /* Deserialize free sections from buffer available */
-    p = buf;
-
-    /* Magic number */
-    if(HDmemcmp(p, H5FS_SINFO_MAGIC, (size_t)H5_SIZEOF_MAGIC))
-	HGOTO_ERROR(H5E_FSPACE, H5E_CANTLOAD, NULL, "wrong free space sections signature")
-    p += H5_SIZEOF_MAGIC;
-
-    /* Version */
-    if(*p++ != H5FS_SINFO_VERSION)
-	HGOTO_ERROR(H5E_FSPACE, H5E_CANTLOAD, NULL, "wrong free space sections version")
-
-    /* Address of free space header for these sections */
-    H5F_addr_decode(udata->f, &p, &fs_addr);
-    if(H5F_addr_ne(fs_addr, udata->fspace->addr))
-	HGOTO_ERROR(H5E_FSPACE, H5E_CANTLOAD, NULL, "incorrect header address for free space sections")
-
-    /* Check for any serialized sections */
-    if(udata->fspace->serial_sect_count > 0) {
-        hsize_t old_tot_sect_count;     /* Total section count from header */
-        hsize_t old_serial_sect_count;  /* Total serializable section count from header */
-        hsize_t old_ghost_sect_count;   /* Total ghost section count from header */
-        hsize_t old_tot_space;          /* Total space managed from header */
-        unsigned sect_cnt_size;         /* The size of the section size counts */
-
-        /* Compute the size of the section counts */
-        sect_cnt_size = H5VM_limit_enc_size((uint64_t)udata->fspace->serial_sect_count);
-
-        /* Reset the section count, the "add" routine will update it */
-        old_tot_sect_count = udata->fspace->tot_sect_count;
-        old_serial_sect_count = udata->fspace->serial_sect_count;
-        old_ghost_sect_count = udata->fspace->ghost_sect_count;
-        old_tot_space = udata->fspace->tot_space;
-        udata->fspace->tot_sect_count = 0;
-        udata->fspace->serial_sect_count = 0;
-        udata->fspace->ghost_sect_count = 0;
-        udata->fspace->tot_space = 0;
-
-        /* Walk through the buffer, deserializing sections */
-        do {
-            hsize_t sect_size;      /* Current section size */
-            size_t node_count;      /* # of sections of this size */
-            size_t u;               /* Local index variable */
-
-            /* The number of sections of this node's size */
-            UINT64DECODE_VAR(p, node_count, sect_cnt_size);
-            HDassert(node_count);
-
-            /* The size of the sections for this node */
-            UINT64DECODE_VAR(p, sect_size, sinfo->sect_len_size);
-            HDassert(sect_size);
-
-            /* Loop over nodes of this size */
-            for(u = 0; u < node_count; u++) {
-                H5FS_section_info_t *new_sect;  /* Section that was deserialized */
-                haddr_t sect_addr;      /* Address of free space section in the address space */
-                unsigned sect_type;     /* Type of free space section */
-                unsigned des_flags;     /* Flags from deserialize callback */
-
-                /* The address of the section */
-                UINT64DECODE_VAR(p, sect_addr, sinfo->sect_off_size);
-
-                /* The type of this section */
-                sect_type = *p++;
-
-                /* Call 'deserialize' callback for this section */
-                des_flags = 0;
-                HDassert(udata->fspace->sect_cls[sect_type].deserialize);
-                if(NULL == (new_sect = (*udata->fspace->sect_cls[sect_type].deserialize)(&udata->fspace->sect_cls[sect_type], udata->dxpl_id, p, sect_addr, sect_size, &des_flags)))
-                    HGOTO_ERROR(H5E_FSPACE, H5E_CANTDECODE, NULL, "can't deserialize section")
-
-                /* Update offset in serialization buffer */
-                p += udata->fspace->sect_cls[sect_type].serial_size;
-
-                /* Insert section in free space manager, unless requested not to */
-                if(!(des_flags & H5FS_DESERIALIZE_NO_ADD))
-                    if(H5FS_sect_add(udata->f, udata->dxpl_id, udata->fspace, new_sect, H5FS_ADD_DESERIALIZING, NULL) < 0)
-                        HGOTO_ERROR(H5E_FSPACE, H5E_CANTINSERT, NULL, "can't add section to free space manager")
-            } /* end for */
-        } while(p < ((buf + old_sect_size) - H5FS_SIZEOF_CHKSUM));
-
-        /* Sanity check */
-        HDassert((size_t)(p - buf) == (old_sect_size - H5FS_SIZEOF_CHKSUM));
-        HDassert(old_sect_size == udata->fspace->sect_size);
-        HDassert(old_tot_sect_count == udata->fspace->tot_sect_count);
-        HDassert(old_serial_sect_count == udata->fspace->serial_sect_count);
-        HDassert(old_ghost_sect_count == udata->fspace->ghost_sect_count);
-        HDassert(old_tot_space == udata->fspace->tot_space);
-    } /* end if */
-
-    /* Compute checksum on indirect block */
-    computed_chksum = H5_checksum_metadata(buf, (size_t)(p - (const uint8_t *)buf), 0);
-
-    /* Metadata checksum */
-    UINT32DECODE(p, stored_chksum);
-
-    /* Verify checksum */
-    if(stored_chksum != computed_chksum)
-	HGOTO_ERROR(H5E_FSPACE, H5E_BADVALUE, NULL, "incorrect metadata checksum for fractal heap indirect block")
-
-    /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)buf) == old_sect_size);
-
-    /* Set return value */
-    ret_value = sinfo;
-
-done:
-    if(buf)
-        buf = H5FL_BLK_FREE(sect_block, buf);
-    if(!ret_value && sinfo)
-        if(H5FS_sinfo_dest(sinfo) < 0)
-            HDONE_ERROR(H5E_FSPACE, H5E_CANTFREE, NULL, "unable to destroy free space info")
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FS_cache_sinfo_load() */ /*lint !e818 Can't make udata a pointer to const */
-
-
-/*-------------------------------------------------------------------------
- * Function:	H5FS_cache_sinfo_flush
- *
- * Purpose:	Flushes a dirty free space section info to disk.
- *
- * Return:	Non-negative on success/Negative on failure
- *
- * Programmer:  Quincey Koziol
- *              koziol@ncsa.uiuc.edu
- *              July 31 2006
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FS_cache_sinfo_flush(H5F_t *f, hid_t dxpl_id, hbool_t destroy, haddr_t addr, H5FS_sinfo_t *sinfo, unsigned UNUSED * flags_ptr)
-{
-    herr_t ret_value = SUCCEED;         /* Return value */
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    /* check arguments */
-    HDassert(f);
-    HDassert(H5F_addr_defined(addr));
-    HDassert(sinfo);
-    HDassert(sinfo->fspace);
-    HDassert(sinfo->fspace->sect_cls);
-
-    if(sinfo->cache_info.is_dirty || sinfo->dirty) {
-        H5FS_iter_ud_t udata;       /* User data for callbacks */
-        uint8_t	*buf = NULL;        /* Temporary raw data buffer */
-        uint8_t *p;                 /* Pointer into raw data buffer */
-        uint32_t metadata_chksum;   /* Computed metadata checksum value */
-        unsigned bin;               /* Current bin we are on */
-
-        /* Sanity check address */
-        if(H5F_addr_ne(addr, sinfo->fspace->sect_addr))
-            HGOTO_ERROR(H5E_FSPACE, H5E_CANTLOAD, FAIL, "incorrect address for free space sections")
-
-        /* Allocate temporary buffer */
-        if((buf = H5FL_BLK_MALLOC(sect_block, (size_t)sinfo->fspace->sect_size)) == NULL)
-            HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, FAIL, "memory allocation failed")
-
-        p = buf;
-
-        /* Magic number */
-        HDmemcpy(p, H5FS_SINFO_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-        p += H5_SIZEOF_MAGIC;
-
-        /* Version # */
-        *p++ = H5FS_SINFO_VERSION;
-
-        /* Address of free space header for these sections */
-        H5F_addr_encode(f, &p, sinfo->fspace->addr);
-
-        /* Set up user data for iterator */
-        udata.sinfo = sinfo;
-        udata.p = &p;
-        udata.sect_cnt_size = H5VM_limit_enc_size((uint64_t)sinfo->fspace->serial_sect_count);
-
-        /* Iterate over all the bins */
-        for(bin = 0; bin < sinfo->nbins; bin++) {
-            /* Check if there are any sections in this bin */
-            if(sinfo->bins[bin].bin_list) {
-                /* Iterate over list of section size nodes for bin */
-                if(H5SL_iterate(sinfo->bins[bin].bin_list, H5FS_sinfo_serialize_node_cb, &udata) < 0)
-                    HGOTO_ERROR(H5E_FSPACE, H5E_BADITER, FAIL, "can't iterate over section size nodes")
-            } /* end if */
-        } /* end for */
-
-        /* Compute checksum */
-        metadata_chksum = H5_checksum_metadata(buf, (size_t)(p - buf), 0);
-
-        /* Metadata checksum */
-        UINT32ENCODE(p, metadata_chksum);
-
-        /* Sanity check */
-        HDassert((size_t)(p - buf) == sinfo->fspace->sect_size);
-        HDassert(sinfo->fspace->sect_size <= sinfo->fspace->alloc_sect_size);
-
-        /* Check for section info at temporary address */
-        if(H5F_IS_TMP_ADDR(f, sinfo->fspace->sect_addr)) {
-            /* Sanity check */
-            HDassert(sinfo->fspace->sect_size > 0);
-            HDassert(H5F_addr_eq(sinfo->fspace->sect_addr, addr));
-
-            /* Allocate space for the section info in file */
-            if(HADDR_UNDEF == (addr = H5MF_alloc(f, H5FD_MEM_FSPACE_SINFO, dxpl_id, sinfo->fspace->sect_size)))
-                HGOTO_ERROR(H5E_FSPACE, H5E_NOSPACE, FAIL, "file allocation failed for free space sections")
-            sinfo->fspace->alloc_sect_size = (size_t)sinfo->fspace->sect_size;
-
-            /* Sanity check */
-            HDassert(!H5F_addr_eq(sinfo->fspace->sect_addr, addr));
-
-            /* Let the metadata cache know the section info moved */
-            if(H5AC_move_entry(f, H5AC_FSPACE_SINFO, sinfo->fspace->sect_addr, addr) < 0)
-                HGOTO_ERROR(H5E_HEAP, H5E_CANTMOVE, FAIL, "unable to move indirect block")
-
-            /* Update the internal address for the section info */
-            sinfo->fspace->sect_addr = addr;
-
-            /* Mark free space header as dirty */
-            if(H5AC_mark_entry_dirty(sinfo->fspace) < 0)
-                HGOTO_ERROR(H5E_FSPACE, H5E_CANTMARKDIRTY, FAIL, "unable to mark free space header as dirty")
-        } /* end if */
-
-        /* Write buffer to disk */
-        if(H5F_block_write(f, H5FD_MEM_FSPACE_SINFO, sinfo->fspace->sect_addr, (size_t)sinfo->fspace->sect_size, dxpl_id, buf) < 0)
-            HGOTO_ERROR(H5E_FSPACE, H5E_CANTFLUSH, FAIL, "unable to save free space sections to disk")
-
-        buf = H5FL_BLK_FREE(sect_block, buf);
-
-	sinfo->cache_info.is_dirty = FALSE;
-        sinfo->dirty = FALSE;
-    } /* end if */
-
-    if(destroy)
-        if(H5FS_cache_sinfo_dest(f, sinfo) < 0)
-	    HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL, "unable to destroy free space section info")
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5FS_cache_sinfo_flush() */
-
-
-/*-------------------------------------------------------------------------
- * Function:	H5FS_cache_sinfo_dest
- *
- * Purpose:	Destroys a free space section info in memory.
- *
- * Return:	Non-negative on success/Negative on failure
- *
- * Programmer:	Quincey Koziol
- *		koziol@ncsa.uiuc.edu
- *		July 31 2006
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FS_cache_sinfo_dest(H5F_t *f, H5FS_sinfo_t *sinfo)
-{
-    herr_t ret_value = SUCCEED; /* Return value */
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    /* Check arguments */
-    HDassert(sinfo);
-
-    /* If we're going to free the space on disk, the address must be valid */
-    HDassert(!sinfo->cache_info.free_file_space_on_destroy || H5F_addr_defined(sinfo->cache_info.addr));
-
-    /* Check for freeing file space for free space section info */
-    if(sinfo->cache_info.free_file_space_on_destroy) {
-        /* Sanity check */
-        HDassert(sinfo->fspace->alloc_sect_size > 0);
-
-        /* Release the space on disk */
-        /* (XXX: Nasty usage of internal DXPL value! -QAK) */
-        if(!H5F_IS_TMP_ADDR(f, sinfo->cache_info.addr))
-            if(H5MF_xfree(f, H5FD_MEM_FSPACE_SINFO, H5AC_dxpl_id, sinfo->cache_info.addr, (hsize_t)sinfo->fspace->alloc_sect_size) < 0)
-                HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL, "unable to free free space section info")
-    } /* end if */
-
-    /* Destroy free space info */
-    if(H5FS_sinfo_dest(sinfo) < 0)
-        HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL, "unable to destroy free space info")
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FS_cache_sinfo_dest() */
-
-
-/*-------------------------------------------------------------------------
- * Function:	H5FS_cache_sinfo_clear
- *
- * Purpose:	Mark a free space section info in memory as non-dirty.
- *
- * Return:	Non-negative on success/Negative on failure
- *
- * Programmer:	Quincey Koziol
- *		koziol@ncsa.uiuc.edu
- *		July 31 2006
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FS_cache_sinfo_clear(H5F_t *f, H5FS_sinfo_t *sinfo, hbool_t destroy)
-{
-    herr_t ret_value = SUCCEED;         /* Return value */
-
-    FUNC_ENTER_NOAPI_NOINIT
-
-    /*
-     * Check arguments.
-     */
-    HDassert(sinfo);
-
-    /* Reset the dirty flag.  */
-    sinfo->cache_info.is_dirty = FALSE;
-
-    if(destroy)
-        if(H5FS_cache_sinfo_dest(f, sinfo) < 0)
-	    HGOTO_ERROR(H5E_FSPACE, H5E_CANTFREE, FAIL, "unable to destroy free space section info")
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5FS_cache_sinfo_clear() */
-
-
-/*-------------------------------------------------------------------------
- * Function:	H5FS_cache_sinfo_size
- *
- * Purpose:	Compute the size in bytes of a free space section info
- *		on disk, and return it in *size_ptr.  On failure,
- *		the value of *size_ptr is undefined.
- *
- * Return:	Non-negative on success/Negative on failure
- *
- * Programmer:	Quincey Koziol
- *		koziol@ncsa.uiuc.edu
- *		July 31 2006
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5FS_cache_sinfo_size(const H5F_t UNUSED *f, const H5FS_sinfo_t *sinfo, size_t *size_ptr)
-{
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
-
-    /* check arguments */
-    HDassert(sinfo);
-    HDassert(size_ptr);
-
-    /* Set size value */
-    H5_ASSIGN_OVERFLOW(/* To: */ *size_ptr, /* From: */ sinfo->fspace->alloc_sect_size, /* From: */ hsize_t, /* To: */ size_t);
-
-    FUNC_LEAVE_NOAPI(SUCCEED)
-} /* H5FS_cache_sinfo_size() */
-
-#endif /* V2 MDC callback definitions */
 
 
 /*-------------------------------------------------------------------------

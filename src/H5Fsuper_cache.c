@@ -151,12 +151,8 @@ H5F__cache_superblock_get_load_size(const void UNUSED *udata, size_t *image_len)
     HDassert(image_len);
 
     /* Set the initial image length size */
-#if 1 /* original code */ /* JRM */
     *image_len = H5F_SUPERBLOCK_FIXED_SIZE +    /* Fixed size of superblock */
         H5F_SUPERBLOCK_MINIMAL_VARLEN_SIZE;
-#else /* JRM */
-    *image_len = H5F_SUPERBLOCK_FIXED_SIZE;     /* Fixed size of superblock */
-#endif /* JRM */
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5F__cache_superblock_get_load_size() */

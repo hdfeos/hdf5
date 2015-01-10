@@ -82,11 +82,10 @@
         + 1) /* superblock version */
 
 /* Macros for computing variable-size superblock size */
-#if 1 /*************** original version ***********************/ /* JRM */
 
 /* In the trunk versions of the superblock size macros, the parameters
  * are the file and the H5F_SUPERBLOCK_VARLEN_SIZE macro are the
- * superblock version and the file pointer.  Unfortunately, we can
+ * superblock version and the file pointer.  Unfortunately, we can't
  * do this with the V3 cache, as the image_len callback does not have
  * access to the file pointer -- only the superblock.
  *
@@ -150,76 +149,6 @@
 #define H5F_SUPERBLOCK_SIZE(s) ( H5F_SUPERBLOCK_FIXED_SIZE              \
         + H5F_SUPERBLOCK_VARLEN_SIZE((s)->super_vers, (s)->sizeof_addr, (s)->sizeof_size))
 
-#else /*************************** modified version *****************/ /* JRM */
-
-/* the following version of the super block size macros is taken directly 
- * from the trunk.  The big difference is the value of the old sizeof_addr 
- * paramter is calculated directly from the file ptr (H5F_SIZEOF_ADDR(f)
- * replaces sizeof_addr.  The sizeof_size parameter does not appear to be
- * used.  
- *
- * The H5F_SIZEOF_ADDR(f) resolves to ((F)->shared->sizeof_addr -- this
- * field is initialized in H5F_new() from values in the file creation 
- * (or file access?) property list.  It seems that these are default values
- * that should be OK -- f->shared->sizeof_addr will be overwritten from the 
- * supper block when it is read in.
- *
- * From running through with the debugger, it seems that f->shared->sizeof_addr
- * is initialized to 8 -- which with todays file systems should cause us to 
- * read enough data for the super block, and possibly then some.  As long 
- * as H5C_load_entry() can handle a reduction in the size of the super block
- * image, this should be OK.  Obviously, we will have a problem when 128 
- * bit file addresses show up, but that should be a while.
- *
- * Also, we could probably get HDF5 to crash on file load if we set up the 
- * file creation / file access property list with a small value for 
- * sizeof addr.  We have to decide if this is a problem.  For now I will
- * bypass the issue.
- *
- *						JRM -- 8/31/14
- */
-
-#define H5F_SUPERBLOCK_VARLEN_SIZE_COMMON                               \
-        (2  /* freespace, and root group versions */                    \
-        + 1 /* reserved */                                              \
-        + 3 /* shared header vers, size of address, size of lengths */  \
-        + 1 /* reserved */                                              \
-        + 4 /* group leaf k, group internal k */                        \
-        + 4) /* consistency flags */
-#define H5F_SUPERBLOCK_VARLEN_SIZE_V0(f)                                \
-        ( H5F_SUPERBLOCK_VARLEN_SIZE_COMMON /* Common variable-length info */ \
-        + H5F_SIZEOF_ADDR(f) /* base address */                         \
-        + H5F_SIZEOF_ADDR(f) /* <unused> */                             \
-        + H5F_SIZEOF_ADDR(f) /* EOF address */                          \
-        + H5F_SIZEOF_ADDR(f) /* driver block address */                 \
-        + H5G_SIZEOF_ENTRY(f)) /* root group ptr */
-#define H5F_SUPERBLOCK_VARLEN_SIZE_V1(f)                                \
-        ( H5F_SUPERBLOCK_VARLEN_SIZE_COMMON /* Common variable-length info */ \
-        + 2 /* indexed B-tree internal k */                             \
-        + 2 /* reserved */                                              \
-        + H5F_SIZEOF_ADDR(f) /* base address */                         \
-        + H5F_SIZEOF_ADDR(f) /* <unused> */                             \
-        + H5F_SIZEOF_ADDR(f) /* EOF address */                          \
-        + H5F_SIZEOF_ADDR(f) /* driver block address */                 \
-        + H5G_SIZEOF_ENTRY(f)) /* root group ptr */
-#define H5F_SUPERBLOCK_VARLEN_SIZE_V2(f)                                \
-        ( 2 /* size of address, size of lengths */                      \
-        + 1 /* consistency flags */                                     \
-        + H5F_SIZEOF_ADDR(f) /* base address */                         \
-        + H5F_SIZEOF_ADDR(f) /* superblock extension address */         \
-        + H5F_SIZEOF_ADDR(f) /* EOF address */                          \
-        + H5F_SIZEOF_ADDR(f) /* root group object header address */     \
-        + H5F_SIZEOF_CHKSUM) /* superblock checksum (keep this last) */
-#define H5F_SUPERBLOCK_VARLEN_SIZE(v, f) (                              \
-        (v == 0 ? H5F_SUPERBLOCK_VARLEN_SIZE_V0(f) : 0)                 \
-        + (v == 1 ? H5F_SUPERBLOCK_VARLEN_SIZE_V1(f) : 0)               \
-        + (v == 2 ? H5F_SUPERBLOCK_VARLEN_SIZE_V2(f) : 0))
-
-/* Total size of superblock, depends on superblock version */
-#define H5F_SUPERBLOCK_SIZE(v, f) ( H5F_SUPERBLOCK_FIXED_SIZE           \
-        + H5F_SUPERBLOCK_VARLEN_SIZE(v, f))
-
-#endif /********************* modified version **********************/ /* JRM */
 
 /* Forward declaration external file cache struct used below (defined in
  * H5Fefc.c) */

@@ -338,11 +338,7 @@ typedef struct H5O_link_t {
 typedef struct H5O_efl_entry_t {
     size_t	name_offset;		/*offset of name within heap	     */
     char	*name;			/*malloc'd name			     */
-#if 0 /* original code */ /* JRM */
-    HDoff_t	offset;			/*offset of data within file	     */
-#else /* modified to bypass a possible configure issue */ /* JRM */
     off_t	offset;			/*offset of data within file	     */
-#endif /* JRM */
     hsize_t	size;			/*size allocated within file	     */
 } H5O_efl_entry_t;
 
@@ -567,13 +563,6 @@ typedef struct H5O_btreek_t {
  * Information about driver info, stored in superblock extension
  * (Data structure in memory)
  */
-#if 0 /* original code */ /* JRM */
-typedef struct H5O_drvinfo_t {
-    char                name[9];                /* Driver name */
-    size_t		len;                    /* Length of encoded buffer */
-    uint8_t            *buf;                    /* Buffer for encoded info */
-} H5O_drvinfo_t;
-#else /* modified code */ /* JRM */
 typedef struct H5O_drvinfo_t {
 /* Information for H5AC cache functions, _must_ be first field in structure */
     H5AC_info_t         cache_info;
@@ -581,7 +570,6 @@ typedef struct H5O_drvinfo_t {
     size_t		len;                    /* Length of encoded buffer */
     uint8_t            *buf;                    /* Buffer for encoded info */
 } H5O_drvinfo_t;
-#endif /* modified code */ /* JRM */
 
 /*
  * Attribute Info Message.

@@ -311,11 +311,6 @@ H5HF_man_dblock_destroy(H5HF_hdr_t *hdr, hid_t dxpl_id, H5HF_direct_t *dblock,
         } /* end if */
     } /* end else */
 
-#if 0 /* original code */ /* JRM */
-    /* Indicate that the indirect block should be deleted & file space freed */
-    dblock->file_size = dblock_size;
-    cache_flags |= H5AC__DIRTIED_FLAG | H5AC__DELETED_FLAG | H5AC__FREE_FILE_SPACE_FLAG;
-#else /* modified code */ /* JRM */
     /* indicate that the indirect block should be deleted. */
     dblock->file_size = dblock_size;
     cache_flags |= H5AC__DIRTIED_FLAG | H5AC__DELETED_FLAG;
@@ -323,7 +318,6 @@ H5HF_man_dblock_destroy(H5HF_hdr_t *hdr, hid_t dxpl_id, H5HF_direct_t *dblock,
     /* if the dblock is in real file space, also tell the cache to free its file space */
     if (!H5F_IS_TMP_ADDR(hdr->f, dblock_addr))
         cache_flags |= H5AC__FREE_FILE_SPACE_FLAG;
-#endif /* modified code */ /* JRM */
 
 done:
     /* Unprotect the indirect block, with appropriate flags */

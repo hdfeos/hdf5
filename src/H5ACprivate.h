@@ -150,32 +150,6 @@ typedef H5C_class_t			H5AC_class_t;
 typedef H5C_cache_entry_t		H5AC_info_t;
 
 
-/*===----------------------------------------------------------------------===
- *                             Protect Types
- *===----------------------------------------------------------------------===
- *
- * These are for the wrapper functions to H5AC_protect. They specify what
- * type of operation you're planning on doing to the metadata. The
- * Flexible Parallel HDF5 locking can then act accordingly.
- */
-
-#if 0 /* delete this if all goes well */ /* JRM */
-typedef enum H5AC_protect_t {
-    H5AC_WRITE,                 /* Protect object for writing                */
-    H5AC_READ,                  /* Protect object for reading                */
-    /* the following are needed for the super block.  Given the number of */
-    /* possibilities, we should probably get rid of this type, and modify */
-    /* H5AC_protect to take a set of flags.                               */
-#ifdef H5_HAVE_PARALLEL
-    H5AC_WRITE_FLUSH_LAST_AND_COLLECTIVELY,
-    H5AC_READ_FLUSH_LAST_AND_COLLECTIVELY,
-#endif /* H5_HAVE_PARALLEL */
-    H5AC_WRITE_FLUSH_LAST,
-    H5AC_READ_FLUSH_LAST
-} H5AC_protect_t;
-#endif /* delete this if all goes well */ /* JRM */
-
-
 /* Typedef for metadata cache (defined in H5Cpkg.h) */
 typedef H5C_t	H5AC_t;
 
@@ -342,13 +316,8 @@ H5_DLL herr_t H5AC_insert_entry(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *typ
     haddr_t addr, void *thing, unsigned int flags);
 H5_DLL herr_t H5AC_pin_protected_entry(void *thing);
 H5_DLL herr_t H5AC_create_flush_dependency(void *parent_thing, void *child_thing);
-#if 0 /* original version */ /* JRM */
-H5_DLL void * H5AC_protect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type,
-    haddr_t addr, void *udata, H5AC_protect_t rw);
-#else /* modified version */ /* JRM */
 H5_DLL void * H5AC_protect(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type,
     haddr_t addr, void *udata, unsigned flags);
-#endif /* modified version */ /* JRM */
 H5_DLL herr_t H5AC_resize_entry(void *thing, size_t new_size);
 H5_DLL herr_t H5AC_unpin_entry(void *thing);
 H5_DLL herr_t H5AC_destroy_flush_dependency(void *parent_thing, void *child_thing);

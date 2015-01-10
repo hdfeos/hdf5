@@ -1013,27 +1013,12 @@ H5AC_insert_entry(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type, haddr_t add
         /* Check if we should try to flush */
         if ( aux_ptr->dirty_bytes >= aux_ptr->dirty_bytes_threshold )
         {
-#if 0 /* JRM */
-            HDfprintf(stdout, 
-                      "%d:H5AC_insert_entry: about to run sync point.\n",
-                       aux_ptr->mpi_rank);
-#endif /* JRM */
             if ( H5AC_run_sync_point(f, H5AC_noblock_dxpl_id, 
                                  H5AC_SYNC_POINT_OP__FLUSH_TO_MIN_CLEAN) < 0 )
             {
-#if 0 /* JRM */
-                HDfprintf(stdout, 
-                          "%d:H5AC_insert_entry: sync point failed.\n",
-                           aux_ptr->mpi_rank);
-#endif /* JRM */
                 HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
                             "Can't run sync point.")
             }
-#if 0 /* JRM */
-            HDfprintf(stdout, 
-                      "%d:H5AC_insert_entry: sync point succeeded.\n",
-                       aux_ptr->mpi_rank);
-#endif /* JRM */
         }
     } /* end if */
 }
@@ -1331,11 +1316,7 @@ H5AC_protect(H5F_t *f,
              const H5AC_class_t *type,
              haddr_t addr,
 	     void *udata,
-#if 0 /* original code -- delete if all goes well */ /* JRM */
-             H5AC_protect_t rw)
-#else /* modified code */ /* JRM */
              unsigned flags)
-#endif /* modified code */ /* JRM */
 {
     unsigned		protect_flags = H5C__NO_FLAGS_SET;
     void *		thing = (void *)NULL;
@@ -1372,24 +1353,11 @@ H5AC_protect(H5F_t *f,
 
 #endif /* H5_HAVE_PARALLEL */
 
-#if 0 /* obsolete code -- delete if all goes well */ /* JRM */
 
     /* Check for invalid access request */
-#if 0 /* original code */ /* JRM */
-    if(0 == (H5F_INTENT(f) & H5F_ACC_RDWR) && rw == H5AC_WRITE)
-#else /* modified code */ /* JRM */
-#ifdef H5_HAVE_PARALLEL
-    if(0 == (H5F_INTENT(f) & H5F_ACC_RDWR) && 
-       ((rw == H5AC_WRITE) || (rw == H5AC_WRITE_FLUSH_LAST) || 
-        (rw == H5AC_WRITE_FLUSH_LAST_AND_COLLECTIVELY)))
-#else /* H5_HAVE_PARALLEL */
-    if(0 == (H5F_INTENT(f) & H5F_ACC_RDWR) && 
-       ((rw == H5AC_WRITE) || (rw == H5AC_WRITE_FLUSH_LAST)))
-#endif /* H5_HAVE_PARALLEL */
-#endif /* modified code */ /* JRM */
+    if((0 == (H5F_INTENT(f) & H5F_ACC_RDWR)) && 
+       (0 == (flags & H5C__READ_ONLY_FLAG)))
 	HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, NULL, "no write intent on file")
-
-#endif /* obsolete code -- delete if all goes well */ /* JRM */
 
 
 #if H5AC__TRACE_FILE_ENABLED
@@ -1426,56 +1394,6 @@ H5AC_protect(H5F_t *f,
     }
 #endif /* H5AC__TRACE_FILE_ENABLED */
 
-#if 0 /* delete this if all goes well */ /* JRM */
-#if 0 /* original code */ /* JRM */
-    if ( rw == H5AC_READ ) {
-
-	protect_flags |= H5C__READ_ONLY_FLAG;
-    }
-#else /* modified code */ /* JRM */
-    switch ( rw )
-    {
-	case H5AC_WRITE:
-	    /* do nothing */
-	    break;
-
- 	case H5AC_READ:
-	    protect_flags |= H5C__READ_ONLY_FLAG;
-	    break;
-
-	case H5AC_WRITE_FLUSH_LAST:
-	    protect_flags |= H5C__FLUSH_LAST_FLAG;
-	    break;
-
-	case H5AC_READ_FLUSH_LAST:
-	    protect_flags |= H5C__READ_ONLY_FLAG;
-	    protect_flags |= H5C__FLUSH_LAST_FLAG;
-	    break;
-
-#ifdef H5_HAVE_PARALLEL
-
-	case H5AC_WRITE_FLUSH_LAST_AND_COLLECTIVELY:
-	    protect_flags |= H5C__FLUSH_LAST_FLAG;
-	    protect_flags |= H5C__FLUSH_COLLECTIVELY_FLAG;
-	    break;
-
-	case H5AC_READ_FLUSH_LAST_AND_COLLECTIVELY;
-	    protect_flags |= H5C__READ_ONLY_FLAG;
-	    protect_flags |= H5C__FLUSH_LAST_FLAG;
-	    protect_flags |= H5C__FLUSH_COLLECTIVELY_FLAG;
-	    break;
-
-#endif /* H5_HAVE_PARALLEL */
-
-	default:
-            HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, NULL, \
-                        "unknown H5AC_protect_t enum value.")
-
-	    break;
-
-    } /* end switch */
-#endif /* modified code */ /* JRM */
-#else /* and replace it with this */ /* JRM */
 
     if ( flags & H5C__READ_ONLY_FLAG ) 
 	protect_flags |= H5C__READ_ONLY_FLAG;
@@ -1490,7 +1408,6 @@ H5AC_protect(H5F_t *f,
 
 #endif /* H5_HAVE_PARALLEL */
 
-#endif /* and replace it with this */ /* JRM */
 
     thing = H5C_protect(f,
 		        dxpl_id,
@@ -4416,12 +4333,6 @@ H5AC_propagate_flushed_and_still_clean_entries_list(H5F_t  * f,
     HDassert(aux_ptr->metadata_write_strategy == 
               H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY);
 
-#if 0 /* JRM */
-    HDfprintf(stdout, 
-          "%d:H5AC_propagate_flushed_and_still_clean_entries_list:entering.\n",
-          aux_ptr->mpi_rank);
-#endif /* JRM */
-
     if(aux_ptr->mpi_rank == 0) {
         if(H5AC_broadcast_clean_list(cache_ptr) < 0)
             HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Can't broadcast clean slist.")
@@ -4433,11 +4344,6 @@ H5AC_propagate_flushed_and_still_clean_entries_list(H5F_t  * f,
     } /* end else */
 
 done:
-#if 0 /* JRM */
-    HDfprintf(stdout, 
-          "%d:H5AC_propagate_flushed_and_still_clean_entries_list:exiting.\n",
-          aux_ptr->mpi_rank);
-#endif /* JRM */
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5AC_propagate_flushed_and_still_clean_entries_list() */
 #endif /* H5_HAVE_PARALLEL */
@@ -4529,13 +4435,8 @@ H5AC_receive_and_apply_clean_list(H5F_t  * f,
         } /* end while */
 
         /* mark the indicated entries as clean */
-#if 0 /* original code */ /* JRM */
-        if(H5C_mark_entries_as_clean(f, primary_dxpl_id, secondary_dxpl_id,
-                (int32_t)num_entries, &(haddr_buf_ptr[0])) < 0)
-#else /* modified code */ /* JRM */
         if(H5C_mark_entries_as_clean(f, primary_dxpl_id, 
                 (int32_t)num_entries, &(haddr_buf_ptr[0])) < 0)
-#endif /* modified code */ /* JRM */
             HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Can't mark entries clean.")
     } /* end if */
 
@@ -4999,11 +4900,7 @@ H5AC_rsp__p0_only__flush(H5F_t *f,
 
         aux_ptr->write_permitted = TRUE;
 
-#if 0 /* original code */ /* JRM */
-        result = H5C_flush_cache(f, dxpl_id, dxpl_id, H5AC__NO_FLAGS_SET);
-#else /* modified code */ /* JRM */
         result = H5C_flush_cache(f, dxpl_id, H5AC__NO_FLAGS_SET);
-#endif /* modified code */ /* JRM */
 
         aux_ptr->write_permitted = FALSE;
 
@@ -5091,19 +4988,11 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
     HDassert( aux_ptr->metadata_write_strategy == 
               H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY );
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%d:H5AC_rsp__p0_only__flush_to_min_clean:entering\n",
-             aux_ptr->mpi_rank);
-#endif /* JRM */
 
     /* Query if evictions are allowed */
     if(H5C_get_evictions_enabled((const H5C_t *)cache_ptr, &evictions_enabled) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "H5C_get_evictions_enabled() failed.")
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%d:H5AC_rsp__p0_only__flush_to_min_clean:evictions_enabled = %d\n",
-             aux_ptr->mpi_rank, evictions_enabled);
-#endif /* JRM */
 
     /* Flush if evictions are allowed -- following call
      * will cause process 0 to flush to min clean size,
@@ -5114,11 +5003,6 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
      */
     if(evictions_enabled) {
         int          mpi_code;
-#if 0 /* JRM */
-        HDfprintf(stdout, 
-                  "%d:H5AC_rsp__p0_only__flush_to_min_clean:entering barier\n",
-                   aux_ptr->mpi_rank);
-#endif /* JRM */
 
         /* to prevent "messages from the future" we must synchronize all
          * processes before we start the flush.  This synchronization may
@@ -5126,12 +5010,6 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
          */
         if(MPI_SUCCESS != (mpi_code = MPI_Barrier(aux_ptr->mpi_comm)))
             HMPI_GOTO_ERROR(FAIL, "MPI_Barrier failed", mpi_code)
-
-#if 0 /* JRM */
-        HDfprintf(stdout, 
-                  "%d:H5AC_rsp__p0_only__flush_to_min_clean:past_barier\n",
-                   aux_ptr->mpi_rank);
-#endif /* JRM */
 
 
         if(0 == aux_ptr->mpi_rank) {
@@ -5151,11 +5029,6 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
             if(result < 0)
                 HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "H5C_flush_to_min_clean() failed.")
 
-#if 0 /* JRM */
-        HDfprintf(stdout, 
-                  "%d:H5AC_rsp__p0_only__flush_to_min_clean:past flush\n",
-                   aux_ptr->mpi_rank);
-#endif /* JRM */
 
             /* this call exists primarily for the test code -- it is used
  	     * to enforce POSIX semantics on the process used to simulate
@@ -5165,22 +5038,12 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
                 (aux_ptr->write_done)();
         } /* end if */
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%d:H5AC_rsp__p0_only__flush_to_min_clean:calling H5AC_propagate_flushed_and_still_clean_entries_list\n",
-             aux_ptr->mpi_rank);
-#endif /* JRM */
 
         if(H5AC_propagate_flushed_and_still_clean_entries_list(f, dxpl_id, cache_ptr) < 0)
             HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't propagate clean entries list.")
     } /* end if */
 
 done:
-
-#if 0 /* JRM */
-    HDfprintf(stdout, "%d:H5AC_rsp__p0_only__flush_to_min_clean:exiting\n",
-             aux_ptr->mpi_rank);
-#endif /* JRM */
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5AC_rsp__p0_only__flush_to_min_clean() */
 #endif /* H5_HAVE_PARALLEL */
@@ -5244,10 +5107,6 @@ H5AC_run_sync_point(H5F_t *f,
     HDassert( ( sync_point_op == H5AC_SYNC_POINT_OP__FLUSH_TO_MIN_CLEAN ) ||
               ( sync_point_op == H5AC_METADATA_WRITE_STRATEGY__DISTRIBUTED ) );
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%d:H5AC_run_sync_point:entering\n", aux_ptr->mpi_rank);
-#endif /* JRM */
-
 #if H5AC_DEBUG_DIRTY_BYTES_CREATION
     HDfprintf(stdout,
               "%d:H5AC_propagate...:%d: (u/uu/i/iu/r/ru) = %d/%d/%d/%d/%d/%d\n",
@@ -5265,23 +5124,10 @@ H5AC_run_sync_point(H5F_t *f,
         case H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY:
 	    switch(sync_point_op) {
                 case H5AC_SYNC_POINT_OP__FLUSH_TO_MIN_CLEAN:
-#if 0 /* JRM */
-                    HDfprintf(stdout, "%d:H5AC_run_sync_point:calling H5AC_rsp__p0_only__flush_to_min_clean\n", 
-                          aux_ptr->mpi_rank);
-#endif /* JRM */
 	            if(H5AC_rsp__p0_only__flush_to_min_clean(f, dxpl_id, cache_ptr) < 0)
                     {
-#if 0 /* JRM */
-                        HDfprintf(stdout, 
-                                  "%d:H5AC_run_sync_point:call failed\n", 
-                                  aux_ptr->mpi_rank);
-#endif /* JRM */
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "H5AC_rsp__p0_only__flush_to_min_clean() failed.")
                     }
-#if 0 /* JRM */
-                    HDfprintf(stdout,"%d:H5AC_run_sync_point:call succeeded\n", 
-                              aux_ptr->mpi_rank);
-#endif /* JRM */
 		    break;
 
 		case H5AC_SYNC_POINT_OP__FLUSH_CACHE:
@@ -5332,11 +5178,6 @@ H5AC_run_sync_point(H5F_t *f,
 #endif /* H5AC_DEBUG_DIRTY_BYTES_CREATION */
 
 done:
-
-#if 0 /* JRM */
-    HDfprintf(stdout, "%d:H5AC_run_sync_point:exiting\n", aux_ptr->mpi_rank);
-#endif /* JRM */
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5AC_run_sync_point() */
 #endif /* H5_HAVE_PARALLEL */

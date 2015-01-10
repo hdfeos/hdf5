@@ -2562,10 +2562,6 @@ datum_serialize(const H5F_t *f,
     H5C_t * cache_ptr;
     struct H5AC_aux_t * aux_ptr;
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:entering\n", "0", fcn_name);
-#endif /* JRM */
-
     HDassert( thing_ptr );
     HDassert( image_ptr );
 
@@ -2580,17 +2576,9 @@ datum_serialize(const H5F_t *f,
     HDassert( cache_ptr->magic == H5C__H5C_T_MAGIC );
     HDassert( cache_ptr->aux_ptr ); 
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:have cache ptr\n", cache_ptr->prefix, fcn_name);
-#endif /* JRM */
-
     aux_ptr = (H5AC_aux_t *)(f->shared->cache->aux_ptr);
 
     HDassert( aux_ptr->magic == H5AC__H5AC_AUX_T_MAGIC );
-
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:have aux ptr\n", cache_ptr->prefix, fcn_name);
-#endif /* JRM */
 
     idx = addr_to_datum_index(entry_ptr->base_addr);
 
@@ -2598,10 +2586,6 @@ datum_serialize(const H5F_t *f,
     HDassert( idx < NUM_DATA_ENTRIES );
     HDassert( idx < virt_num_data_entries );
     HDassert( &(data[idx]) == entry_ptr );
-
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:have idx = %d\n", cache_ptr->prefix, fcn_name, idx);
-#endif /* JRM */
 
     if ( callbacks_verbose ) {
 
@@ -2627,10 +2611,6 @@ datum_serialize(const H5F_t *f,
                   "%d:%s: Flushed dirty entry from non-zero file process.",
                   world_mpi_rank, fcn_name);
     }
-
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:about to send mssg\n", cache_ptr->prefix, fcn_name);
-#endif /* JRM */
 
     if ( ret_value == SUCCEED ) {
 
@@ -2666,10 +2646,6 @@ datum_serialize(const H5F_t *f,
         }
     }
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:after send mssg\n", cache_ptr->prefix, fcn_name);
-#endif /* JRM */
-
 #if DO_WRITE_REQ_ACK
 
     if ( ( ret_value == SUCCEED ) && ( was_dirty ) ) {
@@ -2701,10 +2677,6 @@ datum_serialize(const H5F_t *f,
 
 #endif /* DO_WRITE_REQ_ACK */
 
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:after write req ack\n", cache_ptr->prefix, fcn_name);
-#endif /* JRM */
-
     datum_flushes++;
 
     if ( entry_ptr->header.is_pinned ) {
@@ -2712,10 +2684,6 @@ datum_serialize(const H5F_t *f,
         datum_pinned_flushes++;
         HDassert( entry_ptr->global_pinned || entry_ptr->local_pinned );
     }
-
-#if 0 /* JRM */
-    HDfprintf(stdout, "%s:%s:exiting\n", cache_ptr->prefix, fcn_name);
-#endif /* JRM */
 
     return(ret_value);
 

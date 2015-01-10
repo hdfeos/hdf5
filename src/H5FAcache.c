@@ -472,14 +472,11 @@ H5FA__cache_dblock_get_load_size(const void *_udata, size_t *image_len))
     /* (Note: extracted from H5FA__dblock_alloc) */
     HDmemset(&dblock, 0, sizeof(dblock));
 
-    /* Set up fake data block for computing size on disk */
-#if 1 /* original code */ /* JRM */
-    /* need: dblock->hdr
+    /* Set up fake data block for computing size on disk
+     *
+     * need: dblock->hdr
      *       dblock->npages
      *       dblock->dblk_page_init_size
-     *
-     * On careful examination, it looks like the original code 
-     * does what is needed.
      */
 
     dblock.hdr = udata->hdr;
@@ -488,57 +485,12 @@ H5FA__cache_dblock_get_load_size(const void *_udata, size_t *image_len))
         dblock.npages = (size_t)(((udata->hdr->cparam.nelmts + dblk_page_nelmts) - 1) / dblk_page_nelmts);
         dblock.dblk_page_init_size = (dblock.npages + 7) / 8;
     } /* end if */
-#else /* modified code */ /* JRM */
-    /* need: dblock->hdr
-     *       dblock->npages
-     *       dblock->dblk_page_init_size
-     */
-    dblock->hdr = udata->hdr;
-
-    /* Set non-zero internal fields */
-    dblock->dblk_page_nelmts = 
-	(size_t)1 << hdr->cparam.max_dblk_page_nelmts_bits;
-
-    /* Check if this data block should be paged */
-    if(udata->nelmts > dblock->dblk_page_nelmts) {
-
-        /* Compute number of pages */
-        hsize_t npages = ((udata->nelmts + dblock->dblk_page_nelmts) - 1) / 
-                          dblock->dblk_page_nelmts;
-
-        /* Safely assign the number of pages */
-        H5_ASSIGN_OVERFLOW(/* To: */ dblock->npages, /* From: */ npages, /* From: */ hsize_t, /* To: */ size_t);
-
-        /* Sanity check that we have at least 1 page */
-        HDassert(dblock->npages > 0);
-
-        /* Compute size of 'page init' flag array, in bytes */
-        dblock->dblk_page_init_size = (dblock->npages + 7) / 8;
-        HDassert(dblock->dblk_page_init_size > 0);
-
-        /* don't need to allocate space for 'page init' flags */
-
-        /* don't need to compute data block page size */
-
-        /* don't need to compute the # of elements on last page */
-
-    } /* end if */
-    else {
-        hsize_t dblk_size = hdr->cparam.nelmts * hdr->cparam.cls->nat_elmt_size;
-
-        /* don't need to allocate buffer for elements in data block */
-    } /* end else */
-#endif /* modified code */ /* JRM */
 
     /* Set the image length size */
-#if 0 /* original code */ /* JRM */
-    *image_len = (size_t)H5FA_DBLOCK_SIZE(&dblock);
-#else /* modified code */ /* JRM */
     if(!dblock.npages)
         *image_len = (size_t)H5FA_DBLOCK_SIZE(&dblock);
     else
         *image_len = (size_t)H5FA_DBLOCK_PREFIX_SIZE(&dblock);
-#endif /* modified code */ /* JRM */
 
 END_FUNC(STATIC)   /* end H5FA__cache_dblock_get_load_size() */
 
@@ -679,14 +631,10 @@ H5FA__cache_dblock_image_len(const void *_thing, size_t *image_len))
     HDassert(image_len);
 
     /* Set the image length size */
-#if 0 /* original code */ /* JRM */
-    *image_len = dblock->size;
-#else /* modified code -- adapted from current trunk */ /* JRM */
     if(!dblock->npages)
         *image_len = (size_t)dblock->size;
     else
         *image_len = H5FA_DBLOCK_PREFIX_SIZE(dblock);
-#endif /* modified code -- adapted from current trunk */ /* JRM */
 
 END_FUNC(STATIC)   /* end H5FA__cache_dblock_image_len() */
 

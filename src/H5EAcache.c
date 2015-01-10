@@ -1260,7 +1260,6 @@ H5EA__cache_dblock_get_load_size(const void *_udata, size_t *image_len))
     /* (Note: extracted from H5EA__dblock_alloc) */
     HDmemset(&dblock, 0, sizeof(dblock));
 
-#if 1 /* new code */ /* JRM */
     /* need to set:
      * 
      *    dblock.hdr
@@ -1270,31 +1269,20 @@ H5EA__cache_dblock_get_load_size(const void *_udata, size_t *image_len))
      * before we invoke either H5EA_DBLOCK_PREFIX_SIZE() or 
      * H5EA_DBLOCK_SIZE().
      */
-#endif /* new code */ /* JRM */
     dblock.hdr = udata->hdr;
     dblock.nelmts = udata->nelmts;
 
-#if 1 /* new code */ /* JRM */
     if(udata->nelmts > udata->hdr->dblk_page_nelmts) {
         /* Set the # of pages in the direct block */
         dblock.npages = udata->nelmts / udata->hdr->dblk_page_nelmts;
         HDassert(udata->nelmts==(dblock.npages * udata->hdr->dblk_page_nelmts));
     } /* end if */
-#endif /* new code */ /* JRM */
 
     /* Set the image length size */
-#if 0 /* old code */ /* JRM */
-    if(udata->nelmts > udata->hdr->dblk_page_nelmts)
-        *image_len = (size_t)H5EA_DBLOCK_PREFIX_SIZE(&dblock);
-    else
-        *image_len = (size_t)H5EA_DBLOCK_SIZE(&dblock);
-#else /* new code */ /* JRM */
     if(!dblock.npages)
         *image_len = H5EA_DBLOCK_SIZE(&dblock);
     else
         *image_len = H5EA_DBLOCK_PREFIX_SIZE(&dblock);
-
-#endif /* new_code */ /* JRM */
 
 END_FUNC(STATIC)   /* end H5EA__cache_dblock_get_load_size() */
 

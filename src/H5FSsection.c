@@ -422,30 +422,7 @@ HDfprintf(stderr, "%s: Relinquishing section info ownership\n", FUNC);
             else {
                 /* Sanity checks... */
                 if(H5F_addr_defined(fspace->sect_addr))
-#if 0 /* debugging code */ /* JRM */
-                {
-                    HDfprintf(stdout, 
-                     "\n\nfspace->alloc_sect_size = %d, fspace->sect_size = %d\n",
-                     (int)(fspace->alloc_sect_size),
-                     (int)(fspace->sect_size));
-                    HDfprintf(stdout, 
-                 "fspace->cache_info->dirty/prot/pinned/tag = %d/%d/%d/%lld\n",
-                       fspace->cache_info.is_dirty,
-                       fspace->cache_info.is_protected,
-                       fspace->cache_info.is_pinned,
-                       (long long)(fspace->cache_info.tag));
-                    HDfprintf(stdout, 
-                 "sinfo->cache_info->dirty/prot/pinned = %d/%d/%d/%lld\n\n",
-                       fspace->sinfo->cache_info.is_dirty,
-                       fspace->sinfo->cache_info.is_protected,
-                       fspace->sinfo->cache_info.is_pinned,
-                       (long long)(fspace->sinfo->cache_info.tag));
-                      
-#endif /* debugging code */ /* JRM */
                     HDassert(fspace->alloc_sect_size == fspace->sect_size);
-#if 0 /* debugging code */ /* JRM */
-                }
-#endif /* debugging code */ /* JRM */
                 else
                     HDassert(fspace->alloc_sect_size == 0);
             } /* end else */

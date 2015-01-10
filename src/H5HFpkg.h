@@ -341,9 +341,7 @@ typedef struct H5HF_hdr_t {
     size_t      rc;             /* Reference count of heap's components using heap header */
     haddr_t     heap_addr;      /* Address of heap header in the file */
     size_t      heap_size;      /* Size of heap header in the file */
-#if 0 /* this field doesn't appear to be used */ /* JRM */
     unsigned    mode;           /* Access mode for heap */
-#endif /* his field doesn't appear to be used */ /* JRM */
     H5F_t      *f;              /* Pointer to file for heap */
     size_t      file_rc;        /* Reference count of files using heap header */
     hbool_t     pending_delete; /* Heap is pending deletion */

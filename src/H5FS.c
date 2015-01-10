@@ -361,10 +361,6 @@ HDfprintf(stderr, "%s: Expunging free space section info from cache\n", FUNC);
 #endif /* H5FS_DEBUG */
             /* Evict the free space section info from the metadata cache */
             /* (Free file space) */
-#if 0 /* original code */ /* JRM */
-            if(H5AC_expunge_entry(f, dxpl_id, H5AC_FSPACE_SINFO, fspace->sect_addr, H5AC__FREE_FILE_SPACE_FLAG) < 0)
-                HGOTO_ERROR(H5E_HEAP, H5E_CANTREMOVE, FAIL, "unable to remove free space section info from cache")
-#else /* modified code */ /* JRM */
             {
                 unsigned cache_flags = H5AC__NO_FLAGS_SET;
 
@@ -377,7 +373,6 @@ HDfprintf(stderr, "%s: Expunging free space section info from cache\n", FUNC);
                 if(H5AC_expunge_entry(f, dxpl_id, H5AC_FSPACE_SINFO, fspace->sect_addr, cache_flags) < 0)
                     HGOTO_ERROR(H5E_HEAP, H5E_CANTREMOVE, FAIL, "unable to remove free space section info from cache")
             }
-#endif /* modified code */ /* JRM */
 
 #ifdef H5FS_DEBUG
 HDfprintf(stderr, "%s: Done expunging free space section info from cache\n", FUNC);
