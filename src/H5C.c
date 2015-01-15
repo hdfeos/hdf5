@@ -4138,11 +4138,11 @@ H5C_protect(H5F_t *		f,
          */
         H5C__UPDATE_RP_FOR_INSERTION(cache_ptr, entry_ptr, NULL)
 
-        /* If the entry's type has a 'notify' callback send a 'after insertion'
+        /* If the entry's type has a 'notify' callback send a 'after load'
          * notice now that the entry is fully integrated into the cache.
          */
         if(entry_ptr->type->notify &&
-                (entry_ptr->type->notify)(H5C_NOTIFY_ACTION_AFTER_INSERT, entry_ptr) < 0)
+                (entry_ptr->type->notify)(H5C_NOTIFY_ACTION_AFTER_LOAD, entry_ptr) < 0)
             HGOTO_ERROR(H5E_CACHE, H5E_CANTNOTIFY, NULL, "can't notify client about entry inserted into cache")
     }
 
@@ -9008,11 +9008,13 @@ H5C_flush_single_entry(const H5F_t *	   f,
 
         /* Finally, write the image to disk.  
          * 
-         * Note that if the H5C__CLASS_NO_IO_FLAG is set in the 
+         * Note that if either the H5C__CLASS_NO_IO_FLAG or the 
+         * the H5AC__CLASS_SKIP_WRITES flag is set in the 
          * in the entry's type, we silently skip the write.  This
          * flag should only be used in test code. 
          */
-        if ( ((entry_ptr->type->flags) & H5C__CLASS_NO_IO_FLAG) == 0 )
+        if ( ( ((entry_ptr->type->flags) & H5C__CLASS_NO_IO_FLAG) == 0 ) &&
+             ( ((entry_ptr->type->flags) & H5C__CLASS_SKIP_WRITES) == 0 ) )
         {
             if ( ( H5F_block_write(f, entry_ptr->type->mem_type, 
                                    entry_ptr->addr,
@@ -9024,6 +9026,17 @@ H5C_flush_single_entry(const H5F_t *	   f,
             }
         }
 
+        /* if the entry has a notify callback, notify it that we have 
+         * just flushed the entry.
+         */
+
+        if ( ( entry_ptr->type->notify ) &&
+             ( (entry_ptr->type->notify)(H5C_NOTIFY_ACTION_AFTER_FLUSH, 
+                                         entry_ptr) < 0 ) )
+        {
+            HGOTO_ERROR(H5E_CACHE, H5E_CANTNOTIFY, FAIL, \
+                        "can't notify client of entry flush")
+        }
     } /* if ( ( entry_ptr != NULL ) && ( write_entry ) ) */
 
 
@@ -9445,8 +9458,9 @@ H5C_load_entry(H5F_t *             f,
 #endif /* H5C_DO_MEMORY_SANITY_CHECKS */
 
     /* Get the on-disk entry image */
-    if(H5F_block_read(f, type->mem_type, addr, len, dxpl_id, image) < 0)
-        HGOTO_ERROR(H5E_CACHE, H5E_READERROR, NULL, "Can't read image*")
+    if ( 0 == (type->flags & H5C__CLASS_SKIP_READS) )
+        if(H5F_block_read(f, type->mem_type, addr, len, dxpl_id, image) < 0)
+            HGOTO_ERROR(H5E_CACHE, H5E_READERROR, NULL, "Can't read image*")
 
     /* Deserialize the on-disk image into the native memory form */
     if(NULL == (thing = type->deserialize(image, len, udata, &dirty)))
@@ -9532,6 +9546,14 @@ H5C_load_entry(H5F_t *             f,
 
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, NULL, \
                                     "free_icr callback failed")
+
+		    /* H5AC__CLASS_SKIP_READS flag is used only in test 
+                     * code, and never if combination with either the 
+                     * H5C__CLASS_SPECULATIVE_LOAD_FLAG or the 
+                     * H5C__CLASS_COMPRESSED_FLAG.  If that changes,
+                     * the following assert will have to be re-visited.
+                     */
+		    HDassert( 0 == (type->flags & H5AC__CLASS_SKIP_READS) );
 
                     /* Go get the on-disk image again */
                     if(H5F_block_read(f, type->mem_type, addr, 

@@ -1446,9 +1446,14 @@ notify(H5C_notify_action_t action, void *thing, int32_t entry_type)
 
     /* Increment count for appropriate action */
     switch(action) {
-        case H5C_NOTIFY_ACTION_AFTER_INSERT:     /* Entry has been added to the cache */
+        case H5C_NOTIFY_ACTION_AFTER_INSERT:	/* Entry has been added */
+        case H5C_NOTIFY_ACTION_AFTER_LOAD:	/* to the cache.        */
             entry->notify_after_insert_count++;
             break;
+
+        case H5C_NOTIFY_ACTION_AFTER_FLUSH:
+	    /* do nothing */
+	    break;
 
         case H5C_NOTIFY_ACTION_BEFORE_EVICT:      /* Entry is about to be evicted from cache */
             entry->notify_before_evict_count++;

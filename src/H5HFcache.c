@@ -1694,7 +1694,7 @@ H5HF_cache_iblock_notify(H5C_notify_action_t action, void *thing)
               &(H5AC_FHEAP_IBLOCK[0]));
     HDassert(iblock->hdr);
 
-    if ( action == H5C_NOTIFY_ACTION_BEFORE_EVICT )
+    if ( action == H5AC_NOTIFY_ACTION_BEFORE_EVICT )
         HDassert((iblock->parent == iblock->fd_parent) ||
                  ((NULL == iblock->parent) && (iblock->fd_parent)));
     else
@@ -1747,7 +1747,8 @@ H5HF_cache_iblock_notify(H5C_notify_action_t action, void *thing)
 
     switch ( action )
     {
-        case H5C_NOTIFY_ACTION_AFTER_INSERT:
+        case H5AC_NOTIFY_ACTION_AFTER_INSERT:
+        case H5AC_NOTIFY_ACTION_AFTER_LOAD:
             if ( iblock->parent ) /* this is a child iblock */
             {
                 /* create flush dependency with parent iblock */
@@ -1764,7 +1765,11 @@ H5HF_cache_iblock_notify(H5C_notify_action_t action, void *thing)
             }
             break;
 
-        case H5C_NOTIFY_ACTION_BEFORE_EVICT:
+	case H5AC_NOTIFY_ACTION_AFTER_FLUSH:
+	    /* do nothing */
+	    break;
+
+        case H5AC_NOTIFY_ACTION_BEFORE_EVICT:
             if ( iblock->fd_parent ) /* this is a child iblock */
             {
                 /* destroy flush dependency with parent iblock */
@@ -2845,7 +2850,8 @@ H5HF_cache_dblock_notify(H5C_notify_action_t action, void *thing)
 
     switch ( action )
     {
-        case H5C_NOTIFY_ACTION_AFTER_INSERT:
+        case H5AC_NOTIFY_ACTION_AFTER_INSERT:
+        case H5AC_NOTIFY_ACTION_AFTER_LOAD:
             HDassert(dblock->parent == dblock->fd_parent);
 
             if ( dblock->parent ) /* this is a leaf dblock */
@@ -2864,7 +2870,11 @@ H5HF_cache_dblock_notify(H5C_notify_action_t action, void *thing)
             }
             break;
 
-        case H5C_NOTIFY_ACTION_BEFORE_EVICT:
+	case H5AC_NOTIFY_ACTION_AFTER_FLUSH:
+	    /* do nothing */
+	    break;
+
+        case H5AC_NOTIFY_ACTION_BEFORE_EVICT:
             HDassert((dblock->parent == dblock->fd_parent) ||
                      ((NULL == dblock->parent) && (dblock->fd_parent)));
             if ( dblock->fd_parent ) /* this is a leaf dblock */

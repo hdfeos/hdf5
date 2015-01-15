@@ -122,12 +122,18 @@ typedef enum {
 /* Aliases for 'notify action' type & values */
 typedef H5C_notify_action_t     H5AC_notify_action_t;
 #define H5AC_NOTIFY_ACTION_AFTER_INSERT H5C_NOTIFY_ACTION_AFTER_INSERT
+#define H5AC_NOTIFY_ACTION_AFTER_LOAD   H5C_NOTIFY_ACTION_AFTER_LOAD
+#define H5AC_NOTIFY_ACTION_AFTER_FLUSH	H5C_NOTIFY_ACTION_AFTER_FLUSH
 #define H5AC_NOTIFY_ACTION_BEFORE_EVICT H5C_NOTIFY_ACTION_BEFORE_EVICT
 
 #define H5AC__CLASS_NO_FLAGS_SET 	H5C__CLASS_NO_FLAGS_SET
 #define H5AC__CLASS_SPECULATIVE_LOAD_FLAG H5C__CLASS_SPECULATIVE_LOAD_FLAG
 #define H5AC__CLASS_COMPRESSED_FLAG	H5C__CLASS_COMPRESSED_FLAG
+
+/* The following flags should only appear in test code */
 #define H5AC__CLASS_NO_IO_FLAG		H5C__CLASS_NO_IO_FLAG
+#define H5AC__CLASS_SKIP_READS		H5C__CLASS_SKIP_READS
+#define H5AC__CLASS_SKIP_WRITES		H5C__CLASS_SKIP_WRITES
 
 typedef H5C_get_load_size_func_t	H5AC_get_load_size_func_t;
 typedef H5C_deserialize_func_t		H5AC_deserialize_func_t;

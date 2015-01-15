@@ -171,11 +171,22 @@ typedef struct H5C_t H5C_t;
  *		As with the H5C__CLASS_SPECULATIVE_LOAD_FLAG, the new
  *		size is used as the size of the entry in the cache.
  *
+ *      The following flags may only appear in test code.
+ *
  *	H5C__CLASS_NO_IO_FLAG:  This flag is intended only for use in test 
  *		code.  When it is set, any attempt to load an entry of 
  *		the type with this flag set will trigger an assertion 
  *		failure, and any flush of an entry with this flag set 
  *		will not result in any write to file.
+ *
+ *	H5C__CLASS_SKIP_READS: This flags is intended only for use in test
+ *		code.  When it is set, reads on load will be skipped,
+ *		and an uninitialize buffer will be passed to the 
+ *		deserialize function.
+ *
+ *	H5C__CLASS_SKIP_WRITES: This flags is intended only for use in test
+ *		code.  When it is set, writes of buffers prepared by the 
+ *		serialize callback will be skipped.
  *
  * GET_LOAD_SIZE: Pointer to the 'get load size' function.
  *
@@ -717,10 +728,14 @@ typedef struct H5C_t H5C_t;
 
 /* Actions that can be reported to 'notify' client callback */
 typedef enum H5C_notify_action_t {
-    H5C_NOTIFY_ACTION_AFTER_INSERT,     /* Entry has been added to the cache */
-                                        /* (could be loaded from file with
-                                         *      'protect' call, or inserted
-                                         *      with 'set' call)
+    H5C_NOTIFY_ACTION_AFTER_INSERT,     /* Entry has been added to the cache 
+                                         * the insert call
+                                         */
+    H5C_NOTIFY_ACTION_AFTER_LOAD,	/* Entry has been loaded into the 
+                                         * from file via the protect call
+                                         */
+    H5C_NOTIFY_ACTION_AFTER_FLUSH,	/* Entry has just been flushed to
+ 					 * file.
                                          */
     H5C_NOTIFY_ACTION_BEFORE_EVICT      /* Entry is about to be evicted 
                                          * from cache .
@@ -771,7 +786,11 @@ typedef herr_t (*H5C_get_fsf_size_t)(void * thing,
 #define H5C__CLASS_NO_FLAGS_SET			((unsigned)0x0)
 #define H5C__CLASS_SPECULATIVE_LOAD_FLAG	((unsigned)0x1)
 #define H5C__CLASS_COMPRESSED_FLAG		((unsigned)0x2)
+
+/* Following flags may only appear in test code */
 #define H5C__CLASS_NO_IO_FLAG			((unsigned)0x4)
+#define H5C__CLASS_SKIP_READS			((unsigned)0x8)
+#define H5C__CLASS_SKIP_WRITES			((unsigned)0x10)
 
 typedef struct H5C_class_t {
     int					id;
