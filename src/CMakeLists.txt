@@ -117,7 +117,6 @@ set (H5D_SRCS
     ${HDF5_SRC_DIR}/H5Dmpio.c
     ${HDF5_SRC_DIR}/H5Dnone.c
     ${HDF5_SRC_DIR}/H5Doh.c
-    ${HDF5_SRC_DIR}/H5Dproxy.c
     ${HDF5_SRC_DIR}/H5Dscatgath.c
     ${HDF5_SRC_DIR}/H5Dselect.c
     ${HDF5_SRC_DIR}/H5Dtest.c
