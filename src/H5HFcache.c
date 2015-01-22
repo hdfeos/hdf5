@@ -2176,9 +2176,9 @@ done:
 /*-------------------------------------------------------------------------
  * Function:	H5HF_cache_dblock_image_len
  *
- * Purpose:  Report the nominal size of the direct block image on disk.
+ * Purpose:  Report the actual size of the direct block image on disk.
  *	Note that this value will probably be incorrect if compression 
- *	is enabled.
+ *	is enabled and the entry is dirty.
  *
  *
  *      A generic discussion of metadata cache callbacks of this type
@@ -2195,8 +2195,12 @@ done:
 static herr_t 
 H5HF_cache_dblock_image_len(const void *thing, size_t *image_len_ptr)
 {
-    H5HF_direct_t       *dblock = NULL; /* Direct block info */
-    herr_t               ret_value = SUCCEED;    /* Return value */
+    H5HF_direct_t    *dblock = NULL;    /* Direct block info */
+    H5HF_indirect_t  *par_iblock= NULL; /* parent iblock */
+    H5HF_hdr_t       *hdr = NULL;       /* Shared fractal heap information */
+    unsigned          par_entry;        /* Entry in parent indirect block */
+    size_t            size;
+    herr_t            ret_value = SUCCEED;    /* Return value */
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
@@ -2210,7 +2214,60 @@ H5HF_cache_dblock_image_len(const void *thing, size_t *image_len_ptr)
     HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
               &(H5AC_FHEAP_DBLOCK[0]));
 
-    *image_len_ptr = dblock->size;
+    hdr = dblock->hdr;
+    par_iblock = dblock->parent;
+
+    /* Check for I/O filters on this heap */
+    if(hdr->filter_len > 0) {
+
+        /* We have three possible scenarios here.
+         *
+         * First, the block may never have been flushed.  In this
+         * case, both dblock->file_size and the size stored in the 
+         * parent (either the header or the parent iblock) will all 
+         * be zero.  In this case, return the uncompressed size 
+         * stored in dblock->size.
+         *
+         * Second, the block may have just been serialized, in which
+         * case, dblock->file_size should be zero, and the correct 
+         * on disk size should be stored in the parent (again, either
+         * the header or the parent iblock as case may be).
+         * 
+         * Third, we may be in the process of discarding this 
+         * dblock without writing it.  In this case, dblock->file_size
+         * should be non-zero and have the correct size.  Note that 
+         * in this case, the direct block will have been detached,
+         * and thus looking up the parent will likely return incorrect
+         * data.
+         */
+
+        if ( dblock->file_size != 0 ) {
+
+            size = dblock->file_size;
+
+        } else {
+
+            if ( par_iblock ) {
+            
+                par_entry = dblock->par_entry;
+                size = par_iblock->filt_ents[par_entry].size;
+        
+            } else {
+            
+                size = hdr->pline_root_direct_size;
+            }
+        }
+
+        if ( size == 0 )
+
+            size = dblock->size;
+
+    } else {
+
+        size = dblock->size;
+    }
+
+    *image_len_ptr = size;
 
     FUNC_LEAVE_NOAPI(ret_value)
 
@@ -2316,11 +2373,17 @@ H5HF_cache_dblock_pre_serialize(const H5F_t *f,
     HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
               &(H5AC_FHEAP_DBLOCK[0]));
-    HDassert(dblock->cache_info.size == dblock->size);
     HDassert(dblock->write_buf == NULL);
     HDassert(dblock->write_size == 0);
+    HDassert(dblock->cache_info.size == len);
 
     hdr = dblock->hdr;
+
+    /* dblock->size must match dblock->cache_info.size unless filters 
+     * are enabled.
+     */
+    HDassert((dblock->cache_info.size == dblock->size) || \
+             (hdr->filter_len > 0));
 
     /* Set the shared heap header's file context for this operation */
     hdr->f = (H5F_t *)f;
@@ -2499,6 +2562,8 @@ H5HF_cache_dblock_pre_serialize(const H5F_t *f,
                 /* Update information about compressed direct block's 
                  * location & size 
                  */
+                HDassert(hdr->man_dtable.table_addr == addr);
+                HDassert(hdr->pline_root_direct_size == len);
                 hdr->man_dtable.table_addr = new_addr;
                 hdr->pline_root_direct_size = write_size;
 
@@ -2573,6 +2638,8 @@ H5HF_cache_dblock_pre_serialize(const H5F_t *f,
                 /* Update information about compressed direct block's 
                  * location & size 
                  */
+                HDassert(par_iblock->ents[par_entry].addr == addr);
+                HDassert(par_iblock->filt_ents[par_entry].size == len);
                 par_iblock->ents[par_entry].addr = new_addr;
                 par_iblock->filt_ents[par_entry].size = write_size;
 

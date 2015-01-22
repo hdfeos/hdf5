@@ -3540,10 +3540,6 @@ H5C_move_entry(H5C_t *	     cache_ptr,
 	     * cache_ptr->slist_size_increase to keep from skewing
 	     * the sanity checks.
 	     */
-	    HDassert( cache_ptr->slist_len_increase >= 1 );
-	    HDassert( cache_ptr->slist_size_increase >=
-                      (int64_t)(entry_ptr->size) );
-
 	    cache_ptr->slist_len_increase -= 1;
 	    cache_ptr->slist_size_increase -= (int64_t)(entry_ptr->size);
         }
@@ -5942,10 +5938,6 @@ H5C_unprotect(H5F_t *		  f,
                  * cache_ptr->slist_size_increase to keep from skewing
                  * the sanity checks on flushes.
                  */
-                HDassert( cache_ptr->slist_len_increase >= 1 );
-                HDassert( cache_ptr->slist_size_increase >=
-                          (int64_t)(entry_ptr->size) );
-
                 cache_ptr->slist_len_increase -= 1;
                 cache_ptr->slist_size_increase -= (int64_t)(entry_ptr->size);
             }
@@ -9497,8 +9489,8 @@ H5C_load_entry(H5F_t *             f,
             /* Check for size changing on non-speculatively loaded, 
              * non-compressed thing 
              */
-            if(type->flags & ~(H5C__CLASS_SPECULATIVE_LOAD_FLAG | 
-                               H5C__CLASS_COMPRESSED_FLAG))
+            if( 0 == (type->flags & (H5C__CLASS_SPECULATIVE_LOAD_FLAG | 
+                                     H5C__CLASS_COMPRESSED_FLAG)) )
 
                 HGOTO_ERROR(H5E_CACHE, H5E_UNSUPPORTED, NULL, \
                      "size of non-speculative, non-compressed object changed")
