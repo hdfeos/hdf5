@@ -222,6 +222,7 @@ set (H5_TESTS
     enc_dec_plist
     enc_dec_plist_with_endianess
     unregister
+    test2d
 )
 
 foreach (test ${H5_TESTS})
