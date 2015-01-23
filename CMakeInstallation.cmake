@@ -1,4 +1,4 @@
-include (${HDF_RESOURCES_DIR}/CMakePackageConfigHelpers.cmake)
+include (CMakePackageConfigHelpers)
 
 #-----------------------------------------------------------------------------
 # Check for Installation Utilities
@@ -63,9 +63,9 @@ set (HDF5_VERSION_MINOR  ${HDF5_PACKAGE_VERSION_MINOR})
 #-----------------------------------------------------------------------------
 # Configure the hdf5-config.cmake file for the build directory
 #-----------------------------------------------------------------------------
-set(INCLUDE_INSTALL_DIR HDF5_INSTALL_INCLUDE_DIR )
-set(SHARE_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HDF5_INSTALL_CMAKE_DIR}" )
-set(CURRENT_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}" )
+set (INCLUDE_INSTALL_DIR ${HDF5_INSTALL_INCLUDE_DIR})
+set (SHARE_INSTALL_DIR "${CMAKE_CURRENT_BINARY_DIR}/${HDF5_INSTALL_CMAKE_DIR}" )
+set (CURRENT_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}" )
 configure_package_config_file (
     ${HDF_RESOURCES_DIR}/hdf5-config.cmake.in
     "${HDF5_BINARY_DIR}/${HDF5_PACKAGE}${HDF_PACKAGE_EXT}-config.cmake"
@@ -92,14 +92,14 @@ endif (NOT HDF5_EXTERNALLY_CONFIGURED)
 #-----------------------------------------------------------------------------
 # Configure the hdf5-config.cmake file for the install directory
 #-----------------------------------------------------------------------------
-set(INCLUDE_INSTALL_DIR HDF5_INSTALL_INCLUDE_DIR )
-set(SHARE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${HDF5_INSTALL_CMAKE_DIR}" )
-set(CURRENT_BUILD_DIR "${CMAKE_INSTALL_PREFIX}" )
+set (INCLUDE_INSTALL_DIR ${HDF5_INSTALL_INCLUDE_DIR})
+set (SHARE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/${HDF5_INSTALL_CMAKE_DIR}" )
+set (CURRENT_BUILD_DIR "${CMAKE_INSTALL_PREFIX}" )
 configure_package_config_file (
     ${HDF_RESOURCES_DIR}/hdf5-config.cmake.in
     "${HDF5_BINARY_DIR}/CMakeFiles/${HDF5_PACKAGE}${HDF_PACKAGE_EXT}-config.cmake"
     INSTALL_DESTINATION "${HDF5_INSTALL_CMAKE_DIR}"
-    PATH_VARS HDF5_INSTALL_INCLUDE_DIR SHARE_INSTALL_DIR CURRENT_BUILD_DIR
+    PATH_VARS INCLUDE_INSTALL_DIR SHARE_INSTALL_DIR CURRENT_BUILD_DIR
 )
 
 if (NOT HDF5_EXTERNALLY_CONFIGURED)
@@ -167,18 +167,26 @@ install (
 option (HDF5_PACK_EXAMPLES  "Package the HDF5 Library Examples Compressed File" OFF)
 if (HDF5_PACK_EXAMPLES)
   configure_file (
-      ${HDF_RESOURCES_DIR}/HDF518_Examples.cmake.in 
-      ${HDF5_BINARY_DIR}/HDF518_Examples.cmake @ONLY
+      ${HDF_RESOURCES_DIR}/HDF5_Examples.cmake.in 
+      ${HDF5_BINARY_DIR}/HDF5_Examples.cmake @ONLY
   )
   install (
-      FILES ${HDF5_BINARY_DIR}/HDF518_Examples.cmake
+      FILES ${HDF5_BINARY_DIR}/HDF5_Examples.cmake
       DESTINATION ${HDF5_INSTALL_DATA_DIR}
       COMPONENT hdfdocuments
   )
   if (EXISTS "${HDF5_EXAMPLES_COMPRESSED_DIR}/${HDF5_EXAMPLES_COMPRESSED}")
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E tar xzf ${HDF5_EXAMPLES_COMPRESSED_DIR}/${HDF5_EXAMPLES_COMPRESSED}
+    )
+    install (
+      DIRECTORY ${HDF5_BINARY_DIR}/HDF5Examples
+      DESTINATION ${HDF5_INSTALL_DATA_DIR}
+      USE_SOURCE_PERMISSIONS 
+      COMPONENT hdfdocuments
+    )
     install (
         FILES
-            ${HDF5_EXAMPLES_COMPRESSED_DIR}/${HDF5_EXAMPLES_COMPRESSED}
             ${HDF5_SOURCE_DIR}/release_docs/USING_CMake_Examples.txt
         DESTINATION ${HDF5_INSTALL_DATA_DIR}
         COMPONENT hdfdocuments

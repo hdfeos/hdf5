@@ -179,7 +179,7 @@ Create a CMakeLists.txt file at the source root. Include the
 following text in the file:
 
 ##########################################################
-cmake_minimum_required (VERSION 2.8.12)
+cmake_minimum_required (VERSION 3.1)
 PROJECT (HDF5MyApp C CXX)
 
 FIND_PACKAGE (HDF5 NAMES hdf5)
@@ -190,7 +190,7 @@ set (LINK_LIBS ${LINK_LIBS} ${HDF5_LIBRARIES})
 set (example hdf_example)
 
 add_executable (${example} ${PROJECT_SOURCE_DIR}/${example}.c)
-TARGET_C_PROPERTIES (${example} " " " ")
+TARGET_C_PROPERTIES (${example} STATIC " " " ")
 target_link_libraries (${example} ${LINK_LIBS})
 
 ENABLE_TESTING ()
@@ -232,7 +232,7 @@ ctest
 # where hdf518Examples is the source folder relative to the location of these scripts
 ############################################################################
 
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 set(CTEST_DASHBOARD_ROOT ${CTEST_SCRIPT_DIRECTORY})
 set(CTEST_SOURCE_NAME ${CTEST_SCRIPT_ARG})

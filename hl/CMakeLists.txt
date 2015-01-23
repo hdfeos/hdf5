@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.1)
 PROJECT (HDF5_HL C CXX)
 
 #-----------------------------------------------------------------------------
@@ -6,14 +6,6 @@ PROJECT (HDF5_HL C CXX)
 #-----------------------------------------------------------------------------
 add_definitions (${HDF_EXTRA_C_FLAGS})
 
-#-----------------------------------------------------------------------------
-# Shared Libs
-#-----------------------------------------------------------------------------
-if (BUILD_SHARED_LIBS)
-  set (HL_BUILT_AS_DYNAMIC_LIB 1)
-else (BUILD_SHARED_LIBS)
-  set (HL_BUILT_AS_STATIC_LIB 1)
-endif (BUILD_SHARED_LIBS)
 
 #-----------------------------------------------------------------------------
 # List Source files

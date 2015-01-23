@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.1)
 PROJECT (HDF5_F90_SRC C CXX Fortran)
 
 #-----------------------------------------------------------------------------
@@ -140,16 +140,31 @@ set (f90CStub_C_HDRS
     ${HDF5_F90_BINARY_DIR}/H5f90i_gen.h
 )
 
-add_library (${HDF5_F90_C_LIB_TARGET} ${LIB_TYPE} ${f90CStub_C_SRCS} ${f90CStub_C_HDRS})
-TARGET_C_PROPERTIES (${HDF5_F90_C_LIB_TARGET} " " " ")
+add_library (${HDF5_F90_C_LIB_TARGET} STATIC ${f90CStub_C_SRCS} ${f90CStub_C_HDRS})
+TARGET_C_PROPERTIES (${HDF5_F90_C_LIB_TARGET} STATIC " " " ")
 target_link_libraries (${HDF5_F90_C_LIB_TARGET} ${HDF5_LIB_TARGET} ${LINK_LIBS})
 set_global_variable (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_F90_C_LIB_TARGET}")
-H5_SET_LIB_OPTIONS (${HDF5_F90_C_LIB_TARGET} ${HDF5_F90_C_LIB_NAME} ${LIB_TYPE})
+H5_SET_LIB_OPTIONS (${HDF5_F90_C_LIB_TARGET} ${HDF5_F90_C_LIB_NAME} STATIC)
 set_target_properties (${HDF5_F90_C_LIB_TARGET} PROPERTIES
     FOLDER libraries/fortran
     LINKER_LANGUAGE C
     INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
+set (install_targets ${HDF5_F90_C_LIB_TARGET})
+
+if (BUILD_SHARED_LIBS)
+  add_library (${HDF5_F90_C_LIBSH_TARGET} SHARED ${f90CStub_C_SRCS} ${f90CStub_C_HDRS})
+  TARGET_C_PROPERTIES (${HDF5_F90_C_LIBSH_TARGET} SHARED " " " ")
+  target_link_libraries (${HDF5_F90_C_LIBSH_TARGET} ${HDF5_LIBSH_TARGET} ${LINK_SHARED_LIBS})
+  set_global_variable (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_F90_C_LIBSH_TARGET}")
+  H5_SET_LIB_OPTIONS (${HDF5_F90_C_LIBSH_TARGET} ${HDF5_F90_C_LIB_NAME} SHARED)
+  set_target_properties (${HDF5_F90_C_LIBSH_TARGET} PROPERTIES
+      FOLDER libraries/fortran
+      LINKER_LANGUAGE C
+      INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+  )
+  set (install_targets ${install_targets} ${HDF5_F90_C_LIBSH_TARGET})
+endif (BUILD_SHARED_LIBS)
 
 #-----------------------------------------------------------------------------
 # Fortran 2003 standard
@@ -228,35 +243,58 @@ endif (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
 #-----------------------------------------------------------------------------
 # Add Main fortran library
 #-----------------------------------------------------------------------------
-add_library (${HDF5_F90_LIB_TARGET} ${LIB_TYPE} ${f90_F_SRCS})
+add_library (${HDF5_F90_LIB_TARGET} STATIC ${f90_F_SRCS})
 set (SHARED_LINK_FLAGS " ")
 if (WIN32)
-  if (BUILD_SHARED_LIBS)
-    set_property (TARGET ${HDF5_F90_LIB_TARGET}
-      APPEND PROPERTY COMPILE_DEFINITIONS
-        BUILD_HDF5_DLL
-    )
-    if (MSVC)
-      set (SHARED_LINK_FLAGS "/DLL /DEF:${HDF5_F90_SRC_BINARY_DIR}/hdf5_fortrandll.def")
-    endif (MSVC)
-  endif (BUILD_SHARED_LIBS)
   set_property (TARGET ${HDF5_F90_LIB_TARGET}
       APPEND PROPERTY COMPILE_DEFINITIONS
         HDF5F90_WINDOWS
   )
 endif (WIN32)
-TARGET_FORTRAN_PROPERTIES (${HDF5_F90_LIB_TARGET} " " ${SHARED_LINK_FLAGS})
+TARGET_FORTRAN_PROPERTIES (${HDF5_F90_LIB_TARGET} STATIC " " " ")
 set_target_properties (${HDF5_F90_LIB_TARGET} PROPERTIES LINKER_LANGUAGE Fortran)
 target_link_libraries (${HDF5_F90_LIB_TARGET} ${HDF5_F90_C_LIB_TARGET} ${HDF5_LIB_TARGET})
 if (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
   target_link_libraries (${HDF5_F90_LIB_TARGET} ${MPI_Fortran_LIBRARIES})
 endif (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
 set_global_variable (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_F90_LIB_TARGET}")
-H5_SET_LIB_OPTIONS (${HDF5_F90_LIB_TARGET} ${HDF5_F90_LIB_NAME} ${LIB_TYPE})
+H5_SET_LIB_OPTIONS (${HDF5_F90_LIB_TARGET} ${HDF5_F90_LIB_NAME} STATIC)
 set_target_properties (${HDF5_F90_LIB_TARGET} PROPERTIES
     FOLDER libraries/fortran
     INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
+set (install_targets ${install_targets} ${HDF5_F90_LIB_TARGET})
+
+if (BUILD_SHARED_LIBS)
+  add_library (${HDF5_F90_LIBSH_TARGET} SHARED ${f90_F_SRCS})
+  set (SHARED_LINK_FLAGS " ")
+  if (WIN32)
+    set_property (TARGET ${HDF5_F90_LIBSH_TARGET}
+      APPEND PROPERTY COMPILE_DEFINITIONS
+        BUILD_HDF5_DLL
+    )
+    if (MSVC)
+      set (SHARED_LINK_FLAGS "/DLL /DEF:${HDF5_F90_SRC_BINARY_DIR}/hdf5_fortrandll.def")
+    endif (MSVC)
+    set_property (TARGET ${HDF5_F90_LIBSH_TARGET}
+        APPEND PROPERTY COMPILE_DEFINITIONS
+          HDF5F90_WINDOWS
+    )
+  endif (WIN32)
+  TARGET_FORTRAN_PROPERTIES (${HDF5_F90_LIBSH_TARGET} SHARED " " ${SHARED_LINK_FLAGS})
+  set_target_properties (${HDF5_F90_LIBSH_TARGET} PROPERTIES LINKER_LANGUAGE Fortran)
+  target_link_libraries (${HDF5_F90_LIBSH_TARGET} ${HDF5_F90_C_LIBSH_TARGET} ${HDF5_LIBSH_TARGET})
+  if (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
+    target_link_libraries (${HDF5_F90_LIBSH_TARGET} ${MPI_Fortran_LIBRARIES})
+  endif (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
+  set_global_variable (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_F90_LIBSH_TARGET}")
+  H5_SET_LIB_OPTIONS (${HDF5_F90_LIBSH_TARGET} ${HDF5_F90_LIB_NAME} SHARED)
+  set_target_properties (${HDF5_F90_LIBSH_TARGET} PROPERTIES
+      FOLDER libraries/fortran
+      INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+  )
+  set (install_targets ${install_targets} ${HDF5_F90_LIBSH_TARGET})
+endif (BUILD_SHARED_LIBS)
 
 #-----------------------------------------------------------------------------
 # Add file(s) to CMake Install
@@ -374,14 +412,13 @@ endif (WIN32)
 #-----------------------------------------------------------------------------
 if (HDF5_EXPORTED_TARGETS)
   if (BUILD_SHARED_LIBS)
-    INSTALL_TARGET_PDB (${HDF5_F90_C_LIB_TARGET} ${HDF5_INSTALL_LIB_DIR} fortlibraries)
-    #INSTALL_TARGET_PDB (${HDF5_F90_LIB_TARGET} ${HDF5_INSTALL_LIB_DIR} fortlibraries)
+    INSTALL_TARGET_PDB (${HDF5_F90_C_LIBSH_TARGET} ${HDF5_INSTALL_LIB_DIR} fortlibraries)
+    #INSTALL_TARGET_PDB (${HDF5_F90_LIBSH_TARGET} ${HDF5_INSTALL_LIB_DIR} fortlibraries)
   endif (BUILD_SHARED_LIBS)
 
   install (
       TARGETS
-          ${HDF5_F90_C_LIB_TARGET}
-          ${HDF5_F90_LIB_TARGET}
+          ${install_targets}
       EXPORT
           ${HDF5_EXPORTED_TARGETS}
       LIBRARY DESTINATION ${HDF5_INSTALL_LIB_DIR} COMPONENT fortlibraries

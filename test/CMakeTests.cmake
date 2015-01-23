@@ -517,26 +517,17 @@ add_test (
 ##############################################################################
 ###    P L U G I N  T E S T S
 ##############################################################################
-if (BUILD_SHARED_LIBS)
+if (WIN32)
+  set (CMAKE_SEP "\;")
+else (WIN32)
+  set (CMAKE_SEP ":")
+endif (WIN32)
 
-  if (WIN32)
-    set (CMAKE_SEP "\;")
-  else (WIN32)
-    set (CMAKE_SEP ":")
-  endif (WIN32)
-
-  add_test (NAME H5PLUGIN-plugin COMMAND $<TARGET_FILE:plugin>)
-  set_tests_properties (H5PLUGIN-plugin PROPERTIES
-      ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/testdir1${CMAKE_SEP}${CMAKE_BINARY_DIR}/testdir2;srcdir=${HDF5_TEST_BINARY_DIR}"
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
-  )
-else (BUILD_SHARED_LIBS)
-  message (STATUS " **** Plugins libraries must be built as shared libraries **** ")
-  add_test (
-      NAME H5PLUGIN-SKIPPED
-      COMMAND ${CMAKE_COMMAND} -E echo "SKIP H5PLUGIN TESTING"
-  )
-endif (BUILD_SHARED_LIBS)
+add_test (NAME H5PLUGIN-plugin COMMAND $<TARGET_FILE:plugin>)
+set_tests_properties (H5PLUGIN-plugin PROPERTIES
+    ENVIRONMENT "HDF5_PLUGIN_PATH=${CMAKE_BINARY_DIR}/testdir1${CMAKE_SEP}${CMAKE_BINARY_DIR}/testdir2;srcdir=${HDF5_TEST_BINARY_DIR}"
+    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}
+)
 
 ##############################################################################
 ##############################################################################
@@ -626,6 +617,11 @@ if (HDF5_TEST_VFD)
     set_tests_properties (VFD-${vfdname}-flush2 PROPERTIES DEPENDS VFD-${vfdname}-flush1)
     set_tests_properties (VFD-${vfdname}-flush1 PROPERTIES TIMEOUT 10)
     set_tests_properties (VFD-${vfdname}-flush2 PROPERTIES TIMEOUT 10)
+    if (BUILD_SHARED_LIBS)
+      set_tests_properties (VFD-${vfdname}-flush2-shared PROPERTIES DEPENDS VFD-${vfdname}-flush1-shared)
+      set_tests_properties (VFD-${vfdname}-flush1-shared PROPERTIES TIMEOUT 10)
+      set_tests_properties (VFD-${vfdname}-flush2-shared PROPERTIES TIMEOUT 10)
+    endif (BUILD_SHARED_LIBS)
     if (HDF5_TEST_FHEAP_VFD)
       add_test (
         NAME VFD-${vfdname}-fheap 
@@ -643,6 +639,24 @@ if (HDF5_TEST_VFD)
           ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/${vfdname}"
           WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/${vfdname}
       )
+      if (BUILD_SHARED_LIBS)
+        add_test (
+          NAME VFD-${vfdname}-fheap-shared 
+          COMMAND "${CMAKE_COMMAND}"
+              -D "TEST_PROGRAM=$<TARGET_FILE:fheap-shared>"
+              -D "TEST_ARGS:STRING="
+              -D "TEST_VFD:STRING=${vfdname}"
+              -D "TEST_EXPECT=${resultcode}"
+              -D "TEST_OUTPUT=fheap-shared"
+              -D "TEST_FOLDER=${PROJECT_BINARY_DIR}"
+              -P "${HDF_RESOURCES_DIR}/vfdTest.cmake"
+        )
+        set_tests_properties (VFD-${vfdname}-fheap-shared PROPERTIES
+          TIMEOUT 1800
+          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/${vfdname}"
+          WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/${vfdname}
+      )
+      endif (BUILD_SHARED_LIBS)
     endif (HDF5_TEST_FHEAP_VFD)
   ENDMACRO (ADD_VFD_TEST)
   
@@ -659,11 +673,11 @@ endif (HDF5_TEST_VFD)
 ##############################################################################
 ##############################################################################
 
-if (HDF5_BUILD_GENERATORS AND NOT BUILD_SHARED_LIBS)
+if (HDF5_BUILD_GENERATORS)
   MACRO (ADD_H5_GENERATOR genfile)
     add_executable (${genfile} ${HDF5_TEST_SOURCE_DIR}/${genfile}.c)
-    TARGET_NAMING (${genfile} ${LIB_TYPE})
-    TARGET_C_PROPERTIES (${genfile} " " " ")
+    TARGET_NAMING (${genfile} STATIC)
+    TARGET_C_PROPERTIES (${genfile} STATIC " " " ")
     target_link_libraries (${genfile} ${HDF5_TEST_LIB_TARGET} ${HDF5_LIB_TARGET})
     set_target_properties (${genfile} PROPERTIES FOLDER generator/test)
   ENDMACRO (ADD_H5_GENERATOR genfile)
@@ -695,4 +709,4 @@ if (HDF5_BUILD_GENERATORS AND NOT BUILD_SHARED_LIBS)
     ADD_H5_GENERATOR (${gen})
   endforeach (gen ${H5_GENERATORS})
 
-endif (HDF5_BUILD_GENERATORS AND NOT BUILD_SHARED_LIBS)
+endif (HDF5_BUILD_GENERATORS)

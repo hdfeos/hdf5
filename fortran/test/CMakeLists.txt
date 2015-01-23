@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.1)
 PROJECT (HDF5_FORTRAN_TESTS C CXX Fortran)
 
 #-----------------------------------------------------------------------------
@@ -9,52 +9,88 @@ INCLUDE_DIRECTORIES (${CMAKE_Fortran_MODULE_DIRECTORY} ${HDF5_F90_BINARY_DIR} ${
 #-----------------------------------------------------------------------------
 # Add Test Lib
 #-----------------------------------------------------------------------------
-add_library (${HDF5_F90_C_TEST_LIB_TARGET} ${LIB_TYPE} t.c)
-TARGET_C_PROPERTIES (${HDF5_F90_C_TEST_LIB_TARGET} " " " ")
+add_library (${HDF5_F90_C_TEST_LIB_TARGET} STATIC t.c)
+TARGET_C_PROPERTIES (${HDF5_F90_C_TEST_LIB_TARGET} STATIC " " " ")
 target_link_libraries (${HDF5_F90_C_TEST_LIB_TARGET}
     ${HDF5_F90_C_LIB_TARGET}
     ${HDF5_TEST_LIB_TARGET}
 )
-H5_SET_LIB_OPTIONS (${HDF5_F90_C_TEST_LIB_TARGET} ${HDF5_F90_C_TEST_LIB_NAME} ${LIB_TYPE})
+H5_SET_LIB_OPTIONS (${HDF5_F90_C_TEST_LIB_TARGET} ${HDF5_F90_C_TEST_LIB_NAME} STATIC)
 set_target_properties (${HDF5_F90_C_TEST_LIB_TARGET} PROPERTIES
     FOLDER libraries/test/fortran
     INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
+if (BUILD_SHARED_LIBS)
+  add_library (${HDF5_F90_C_TEST_LIBSH_TARGET} SHARED t.c)
+  TARGET_C_PROPERTIES (${HDF5_F90_C_TEST_LIBSH_TARGET} SHARED " " " ")
+  target_link_libraries (${HDF5_F90_C_TEST_LIBSH_TARGET}
+      ${HDF5_F90_C_LIBSH_TARGET}
+      ${HDF5_TEST_LIBSH_TARGET}
+  )
+  H5_SET_LIB_OPTIONS (${HDF5_F90_C_TEST_LIBSH_TARGET} ${HDF5_F90_C_TEST_LIB_NAME} SHARED)
+  set_target_properties (${HDF5_F90_C_TEST_LIBSH_TARGET} PROPERTIES
+      FOLDER libraries/test/fortran
+      INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+  )
+endif (BUILD_SHARED_LIBS)
 
 # See if the F2008 intrinsic STORAGE_SIZE and C_SIZEOF are supported. If not then
 # fall back to F2003. If F2003 not supported then use F90 for the tests.
 
 if (FORTRAN_HAVE_STORAGE_SIZE AND FORTRAN_HAVE_C_SIZEOF)
- add_library (${HDF5_F90_TEST_LIB_TARGET} ${LIB_TYPE} tf_F08.f90 tf.f90)
+  add_library (${HDF5_F90_TEST_LIB_TARGET} STATIC tf_F08.f90 tf.f90)
+  if (BUILD_SHARED_LIBS)
+    add_library (${HDF5_F90_TEST_LIBSH_TARGET} SHARED tf_F08.f90 tf.f90)
+  endif (BUILD_SHARED_LIBS)
 elseif (HDF5_ENABLE_F2003)
- add_library (${HDF5_F90_TEST_LIB_TARGET} ${LIB_TYPE} tf_F03.f90 tf.f90)
+  add_library (${HDF5_F90_TEST_LIB_TARGET} STATIC tf_F03.f90 tf.f90)
+  if (BUILD_SHARED_LIBS)
+    add_library (${HDF5_F90_TEST_LIBSH_TARGET} SHARED tf_F03.f90 tf.f90)
+  endif (BUILD_SHARED_LIBS)
 else (FORTRAN_HAVE_STORAGE_SIZE AND FORTRAN_HAVE_C_SIZEOF)
- add_library (${HDF5_F90_TEST_LIB_TARGET} ${LIB_TYPE} tf_F90.f90 tf.f90) 
+  add_library (${HDF5_F90_TEST_LIB_TARGET} STATIC tf_F90.f90 tf.f90) 
+  if (BUILD_SHARED_LIBS)
+    add_library (${HDF5_F90_TEST_LIBSH_TARGET} SHARED tf_F90.f90 tf.f90) 
+  endif (BUILD_SHARED_LIBS)
 endif (FORTRAN_HAVE_STORAGE_SIZE AND FORTRAN_HAVE_C_SIZEOF)
 
-
-set (SHARED_LINK_FLAGS " ")
 if (WIN32)
-  if (BUILD_SHARED_LIBS)
-    set_property (TARGET ${HDF5_F90_TEST_LIB_TARGET} APPEND PROPERTY COMPILE_DEFINITIONS BUILD_HDF5_DLL)
-    if (MSVC)
-      set (SHARED_LINK_FLAGS "/DLL")
-    endif (MSVC)
-  endif (BUILD_SHARED_LIBS)
   set_property (TARGET ${HDF5_F90_TEST_LIB_TARGET} APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS)
 endif (WIN32)
-TARGET_FORTRAN_PROPERTIES (${HDF5_F90_TEST_LIB_TARGET} " " ${SHARED_LINK_FLAGS})
+TARGET_FORTRAN_PROPERTIES (${HDF5_F90_TEST_LIB_TARGET} STATIC " " " ")
 set_target_properties (${HDF5_F90_TEST_LIB_TARGET} PROPERTIES LINKER_LANGUAGE Fortran)
 target_link_libraries (${HDF5_F90_TEST_LIB_TARGET}
     ${HDF5_F90_C_TEST_LIB_TARGET}
     ${HDF5_F90_LIB_TARGET}
     ${HDF5_LIB_TARGET}
 )
-H5_SET_LIB_OPTIONS (${HDF5_F90_TEST_LIB_TARGET} ${HDF5_F90_TEST_LIB_NAME} ${LIB_TYPE})
+H5_SET_LIB_OPTIONS (${HDF5_F90_TEST_LIB_TARGET} ${HDF5_F90_TEST_LIB_NAME} STATIC)
 set_target_properties (${HDF5_F90_TEST_LIB_TARGET} PROPERTIES
     FOLDER libraries/test/fortran
     INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
+if (BUILD_SHARED_LIBS)
+  set (SHARED_LINK_FLAGS " ")
+  if (WIN32)
+    set_property (TARGET ${HDF5_F90_TEST_LIBSH_TARGET} APPEND PROPERTY COMPILE_DEFINITIONS BUILD_HDF5_DLL)
+    if (MSVC)
+      set (SHARED_LINK_FLAGS "/DLL")
+    endif (MSVC)
+    set_property (TARGET ${HDF5_F90_TEST_LIBSH_TARGET} APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS)
+  endif (WIN32)
+  TARGET_FORTRAN_PROPERTIES (${HDF5_F90_TEST_LIBSH_TARGET} SHARED " " ${SHARED_LINK_FLAGS})
+  set_target_properties (${HDF5_F90_TEST_LIBSH_TARGET} PROPERTIES LINKER_LANGUAGE Fortran)
+  target_link_libraries (${HDF5_F90_TEST_LIBSH_TARGET}
+      ${HDF5_F90_C_TEST_LIBSH_TARGET}
+      ${HDF5_F90_LIBSH_TARGET}
+      ${HDF5_LIBSH_TARGET}
+  )
+  H5_SET_LIB_OPTIONS (${HDF5_F90_TEST_LIBSH_TARGET} ${HDF5_F90_TEST_LIB_NAME} SHARED)
+  set_target_properties (${HDF5_F90_TEST_LIBSH_TARGET} PROPERTIES
+      FOLDER libraries/test/fortran
+      INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+  )
+endif (BUILD_SHARED_LIBS)
 
 #-----------------------------------------------------------------------------
 # Add Tests
@@ -78,8 +114,8 @@ add_executable (testhdf5_fortran
     tH5Z.f90
     tHDF5.f90
 )
-TARGET_NAMING (testhdf5_fortran ${LIB_TYPE})
-TARGET_FORTRAN_PROPERTIES (testhdf5_fortran " " " ")
+TARGET_NAMING (testhdf5_fortran STATIC)
+TARGET_FORTRAN_PROPERTIES (testhdf5_fortran STATIC " " " ")
 target_link_libraries (testhdf5_fortran 
     ${HDF5_F90_TEST_LIB_TARGET}
     ${HDF5_F90_LIB_TARGET}
@@ -100,8 +136,8 @@ add_executable (testhdf5_fortran_1_8
     tH5MISC_1_8.f90
     tHDF5_1_8.f90
 )
-TARGET_NAMING (testhdf5_fortran_1_8 ${LIB_TYPE})
-TARGET_FORTRAN_PROPERTIES (testhdf5_fortran_1_8 " " " ")
+TARGET_NAMING (testhdf5_fortran_1_8 STATIC)
+TARGET_FORTRAN_PROPERTIES (testhdf5_fortran_1_8 STATIC " " " ")
 target_link_libraries (testhdf5_fortran_1_8 
     ${HDF5_F90_TEST_LIB_TARGET}
     ${HDF5_F90_LIB_TARGET}
@@ -125,8 +161,8 @@ if (HDF5_ENABLE_F2003)
       tH5T_F03.f90
       tHDF5_F03.f90
   )
-  TARGET_NAMING (fortranlib_test_F03 ${LIB_TYPE})
-  TARGET_FORTRAN_PROPERTIES (fortranlib_test_F03 " " " ")
+  TARGET_NAMING (fortranlib_test_F03 STATIC)
+  TARGET_FORTRAN_PROPERTIES (fortranlib_test_F03 STATIC " " " ")
   target_link_libraries (fortranlib_test_F03 
       ${HDF5_F90_TEST_LIB_TARGET}
       ${HDF5_F90_LIB_TARGET}
@@ -141,8 +177,8 @@ endif (HDF5_ENABLE_F2003)
 
 #-- Adding test for fflush1
 add_executable (fflush1 fflush1.f90)
-TARGET_NAMING (fflush1 ${LIB_TYPE})
-TARGET_FORTRAN_PROPERTIES (fflush1 " " " ")
+TARGET_NAMING (fflush1 STATIC)
+TARGET_FORTRAN_PROPERTIES (fflush1 STATIC " " " ")
 target_link_libraries (fflush1 
     ${HDF5_F90_LIB_TARGET}
     ${HDF5_F90_TEST_LIB_TARGET}
@@ -156,8 +192,8 @@ set_target_properties (fflush1 PROPERTIES FOLDER test/fortran)
 
 #-- Adding test for fflush2
 add_executable (fflush2 fflush2.f90)
-TARGET_NAMING (fflush2 ${LIB_TYPE})
-TARGET_FORTRAN_PROPERTIES (fflush2 " " " ")
+TARGET_NAMING (fflush2 STATIC)
+TARGET_FORTRAN_PROPERTIES (fflush2 STATIC " " " ")
 target_link_libraries (fflush2 
     ${HDF5_F90_TEST_LIB_TARGET}
     ${HDF5_F90_LIB_TARGET}

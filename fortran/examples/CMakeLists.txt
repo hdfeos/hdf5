@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.1)
 PROJECT (HDF5_F90_EXAMPLES C CXX Fortran)
 # --------------------------------------------------------------------
 # Notes: When creating examples they should be prefixed
@@ -40,8 +40,8 @@ set (F2003_examples
 
 foreach (example ${examples})
   add_executable (f90_ex_${example} ${HDF5_F90_EXAMPLES_SOURCE_DIR}/${example}.f90)
-  TARGET_NAMING (f90_ex_${example} ${LIB_TYPE})
-  TARGET_FORTRAN_PROPERTIES (f90_ex_${example} " " " ")
+  TARGET_NAMING (f90_ex_${example} STATIC)
+  TARGET_FORTRAN_PROPERTIES (f90_ex_${example} STATIC " " " ")
   if (WIN32)
     set_property (TARGET f90_ex_${example} 
         APPEND PROPERTY COMPILE_DEFINITIONS 
@@ -59,8 +59,8 @@ endforeach (example ${examples})
 if (HDF5_ENABLE_F2003)
   foreach (example ${F2003_examples})
     add_executable (f03_ex_${example} ${HDF5_F90_EXAMPLES_SOURCE_DIR}/${example}.f90)
-    TARGET_NAMING (f03_ex_${example} ${LIB_TYPE})
-    TARGET_FORTRAN_PROPERTIES (f03_ex_${example} " " " ")
+    TARGET_NAMING (f03_ex_${example} STATIC)
+    TARGET_FORTRAN_PROPERTIES (f03_ex_${example} STATIC " " " ")
     if (WIN32)
       set_property (TARGET f03_ex_${example} 
           APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS
@@ -77,8 +77,8 @@ endif (HDF5_ENABLE_F2003)
 
 if (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
   add_executable (f90_ex_ph5example ${HDF5_F90_EXAMPLES_SOURCE_DIR}/ph5example.f90)
-  TARGET_NAMING (f90_ex_ph5example ${LIB_TYPE})
-  TARGET_FORTRAN_PROPERTIES (f90_ex_ph5example " " " ")
+  TARGET_NAMING (f90_ex_ph5example STATIC)
+  TARGET_FORTRAN_PROPERTIES (f90_ex_ph5example STATIC " " " ")
   if (WIN32)
     set_property (TARGET f90_ex_ph5example 
         APPEND PROPERTY COMPILE_DEFINITIONS 

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.1)
 PROJECT (HDF5_TOOLS_LIB)
 
 #-----------------------------------------------------------------------------
@@ -37,21 +37,42 @@ set (H5_TOOLS_LIB_HDRS
     ${HDF5_TOOLS_LIB_SOURCE_DIR}/h5diff.h
 )
 
-add_library (${HDF5_TOOLS_LIB_TARGET} ${LIB_TYPE} ${H5_TOOLS_LIB_SRCS} ${H5_TOOLS_LIB_HDRS})
-TARGET_C_PROPERTIES (${HDF5_TOOLS_LIB_TARGET} " " " ")
+add_library (${HDF5_TOOLS_LIB_TARGET} STATIC ${H5_TOOLS_LIB_SRCS} ${H5_TOOLS_LIB_HDRS})
+TARGET_C_PROPERTIES (${HDF5_TOOLS_LIB_TARGET} STATIC " " " ")
 target_link_libraries (${HDF5_TOOLS_LIB_TARGET} ${HDF5_LIB_TARGET})
 set_global_variable (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_TOOLS_LIB_TARGET}")
 H5_SET_LIB_OPTIONS (
     ${HDF5_TOOLS_LIB_TARGET} ${HDF5_TOOLS_LIB_NAME}
-    ${LIB_TYPE}
+    STATIC
     HDF5_TOOLS_LIB_NAME_RELEASE
-  HDF5_TOOLS_LIB_NAME_DEBUG
+    HDF5_TOOLS_LIB_NAME_DEBUG
 )
 #set_target_properties (${HDF5_TOOLS_LIB_TARGET} PROPERTIES COMPILE_DEFINITIONS H5DIFF_DEBUG)
 set_target_properties (${HDF5_TOOLS_LIB_TARGET} PROPERTIES 
     FOLDER libraries/tools
     INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
+set (install_targets ${HDF5_TOOLS_LIB_TARGET})
+
+if (BUILD_SHARED_LIBS)
+  add_library (${HDF5_TOOLS_LIBSH_TARGET} SHARED ${H5_TOOLS_LIB_SRCS} ${H5_TOOLS_LIB_HDRS})
+  TARGET_C_PROPERTIES (${HDF5_TOOLS_LIBSH_TARGET} SHARED " " " ")
+  target_link_libraries (${HDF5_TOOLS_LIBSH_TARGET} ${HDF5_LIBSH_TARGET})
+  set_global_variable (HDF5_LIBRARIES_TO_EXPORT "${HDF5_LIBRARIES_TO_EXPORT};${HDF5_TOOLS_LIBSH_TARGET}")
+  H5_SET_LIB_OPTIONS (
+      ${HDF5_TOOLS_LIBSH_TARGET} ${HDF5_TOOLS_LIB_NAME}
+      SHARED
+      HDF5_TOOLS_LIB_NAME_RELEASE
+      HDF5_TOOLS_LIB_NAME_DEBUG
+  )
+  #set_target_properties (${HDF5_TOOLS_LIBSH_TARGET} PROPERTIES COMPILE_DEFINITIONS H5DIFF_DEBUG)
+  set_target_properties (${HDF5_TOOLS_LIBSH_TARGET} PROPERTIES 
+      FOLDER libraries/tools
+      INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+      INTERFACE_COMPILE_DEFINITIONS H5_TOOLS_BUILT_AS_DYNAMIC_LIB=1
+  )
+  set (install_targets ${install_targets} ${HDF5_TOOLS_LIBSH_TARGET})
+endif (BUILD_SHARED_LIBS)
 
 ##############################################################################
 ##############################################################################
@@ -76,12 +97,12 @@ install (
 #-----------------------------------------------------------------------------
 if (HDF5_EXPORTED_TARGETS)
   if (BUILD_SHARED_LIBS)
-    INSTALL_TARGET_PDB (${HDF5_TOOLS_LIB_TARGET} ${HDF5_INSTALL_LIB_DIR} toolslibraries)
+    INSTALL_TARGET_PDB (${HDF5_TOOLS_LIBSH_TARGET} ${HDF5_INSTALL_LIB_DIR} toolslibraries)
   endif (BUILD_SHARED_LIBS)
   
   install (
       TARGETS
-          ${HDF5_TOOLS_LIB_TARGET}
+          ${install_targets}
       EXPORT
           ${HDF5_EXPORTED_TARGETS}
       LIBRARY DESTINATION ${HDF5_INSTALL_LIB_DIR} COMPONENT toolslibraries
