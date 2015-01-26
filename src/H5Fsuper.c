@@ -325,7 +325,7 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
     udata.sym_leaf_k = 0;
     if(H5P_get(c_plist, H5F_CRT_BTREE_RANK_NAME, udata.btree_k) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to get rank for btree internal nodes")
-    udata.stored_eoa = HADDR_UNDEF;
+    udata.stored_eof = HADDR_UNDEF;
     udata.drvrinfo_removed = FALSE;
 
     /* Look up the superblock */
@@ -354,10 +354,10 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
     if(!H5F_addr_eq(super_addr, sblock->base_addr)) {
         /* Check if the superblock moved earlier in the file */
         if(H5F_addr_lt(super_addr, sblock->base_addr))
-            udata.stored_eoa -= (sblock->base_addr - super_addr);
+            udata.stored_eof -= (sblock->base_addr - super_addr);
         else
             /* The superblock moved later in the file */
-            udata.stored_eoa += (super_addr - sblock->base_addr);
+            udata.stored_eof += (super_addr - sblock->base_addr);
 
         /* Adjust base address for offsets of the HDF5 data in the file */
         sblock->base_addr = super_addr;
@@ -415,19 +415,19 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
      * possible is if the first file of a family of files was opened
      * individually.
      */
-    if(HADDR_UNDEF == (eof = H5F__get_eof(f)))
+    if(HADDR_UNDEF == (eof = H5FD_get_eof(f->shared->lf, H5FD_MEM_DEFAULT)))
         HGOTO_ERROR(H5E_FILE, H5E_CANTGET, FAIL, "unable to determine file size")
 
     /* (Account for the stored EOA being absolute offset -QAK) */
-    if((eof + sblock->base_addr) < udata.stored_eoa)
-        HGOTO_ERROR(H5E_FILE, H5E_TRUNCATED, FAIL, "truncated file: eof = %llu, sblock->base_addr = %llu, stored_eoa = %llu", (unsigned long long)eof, (unsigned long long)sblock->base_addr, (unsigned long long)udata.stored_eoa)
+    if((eof + sblock->base_addr) < udata.stored_eof)
+        HGOTO_ERROR(H5E_FILE, H5E_TRUNCATED, FAIL, "truncated file: eof = %llu, sblock->base_addr = %llu, stored_eoa = %llu", (unsigned long long)eof, (unsigned long long)sblock->base_addr, (unsigned long long)udata.stored_eof)
 
     /*
      * Tell the file driver how much address space has already been
      * allocated so that it knows how to allocate additional memory.
      */
     /* (Account for the stored EOA being absolute offset -NAF) */
-    if(H5F__set_eoa(f, H5FD_MEM_SUPER, udata.stored_eoa - sblock->base_addr) < 0)
+    if(H5F__set_eoa(f, H5FD_MEM_SUPER, udata.stored_eof - sblock->base_addr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_CANTSET, FAIL, "unable to set end-of-address marker for file")
 
     /* Decode the optional driver information block */
@@ -479,7 +479,7 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
         /* Check for superblock extension being located "outside" the stored
          *      'eoa' value, which can occur with the split/multi VFD.
          */
-        if(H5F_addr_gt(sblock->ext_addr, udata.stored_eoa)) {
+        if(H5F_addr_gt(sblock->ext_addr, udata.stored_eof)) {
             /* Set the 'eoa' for the object header memory type large enough
              *  to give some room for a reasonably sized superblock extension.
              *  (This is _rather_ a kludge -QAK)

@@ -137,7 +137,7 @@ static int H5FD_direct_cmp(const H5FD_t *_f1, const H5FD_t *_f2);
 static herr_t H5FD_direct_query(const H5FD_t *_f1, unsigned long *flags);
 static haddr_t H5FD_direct_get_eoa(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t H5FD_direct_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t addr);
-static haddr_t H5FD_direct_get_eof(const H5FD_t *_file);
+static haddr_t H5FD_direct_get_eof(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t  H5FD_direct_get_handle(H5FD_t *_file, hid_t fapl, void** file_handle);
 static herr_t H5FD_direct_read(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr,
            size_t size, void *buf);
@@ -200,9 +200,15 @@ DESCRIPTION
 static herr_t
 H5FD_direct_init_interface(void)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    herr_t ret_value = SUCCEED;
 
-    FUNC_LEAVE_NOAPI(H5FD_direct_init())
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if(H5FD_direct_init() < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "unable to initialize direct VFD")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* H5FD_direct_init_interface() */
 
 
@@ -804,13 +810,13 @@ H5FD_direct_set_eoa(H5FD_t *_file, H5FD_mem_t UNUSED type, haddr_t addr)
  *-------------------------------------------------------------------------
  */
 static haddr_t
-H5FD_direct_get_eof(const H5FD_t *_file)
+H5FD_direct_get_eof(const H5FD_t *_file, H5FD_mem_t UNUSED type)
 {
     const H5FD_direct_t  *file = (const H5FD_direct_t*)_file;
 
     FUNC_ENTER_NOAPI_NOINIT
 
-    FUNC_LEAVE_NOAPI(MAX(file->eof, file->eoa))
+    FUNC_LEAVE_NOAPI(file->eof)
 }
 
 
@@ -890,8 +896,6 @@ H5FD_direct_read(H5FD_t *_file, H5FD_mem_t UNUSED type, hid_t UNUSED dxpl_id, ha
     if (HADDR_UNDEF==addr)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "addr undefined")
     if (REGION_OVERFLOW(addr, size))
-        HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow")
-    if((addr + size) > file->eoa)
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow")
 
     /* If the system doesn't require data to be aligned, read the data in
@@ -1078,8 +1082,6 @@ H5FD_direct_write(H5FD_t *_file, H5FD_mem_t UNUSED type, hid_t UNUSED dxpl_id, h
     if (HADDR_UNDEF==addr)
         HGOTO_ERROR(H5E_ARGS, H5E_BADVALUE, FAIL, "addr undefined")
     if (REGION_OVERFLOW(addr, size))
-        HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow")
-    if (addr+size>file->eoa)
         HGOTO_ERROR(H5E_ARGS, H5E_OVERFLOW, FAIL, "addr overflow")
 
     /* If the system doesn't require data to be aligned, read the data in

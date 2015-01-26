@@ -91,7 +91,7 @@ set (H5_DEFAULT_VFD H5FD_SEC2)
 
 if (NOT DEFINED "H5_DEFAULT_PLUGINDIR")
   if (WINDOWS)
-    set (H5_DEFAULT_PLUGINDIR "%ALLUSERSPROFILE%/hdf5/lib/plugin")
+    set (H5_DEFAULT_PLUGINDIR "%ALLUSERSPROFILE%\\\\hdf5\\\\lib\\\\plugin")
   else (WINDOWS)
     set (H5_DEFAULT_PLUGINDIR "/usr/local/hdf5/lib/plugin")
   endif (WINDOWS)
@@ -104,15 +104,6 @@ if (WINDOWS)
   # that is, "drive-letter:\" (e.g. "C:") or "drive-letter:/" (e.g. "C:/").
   # (This flag should be _unset_ for all machines, except for Windows)
   set (H5_HAVE_WINDOW_PATH 1)
-endif (WINDOWS)
-
-if (WINDOWS)
-  #-----------------------------------------------------------------------------
-  # These tests need to be manually SET for windows since there is currently
-  # something not quite correct with the actual test implementation. This affects
-  # the 'dt_arith' test and most likely lots of other code
-  # ----------------------------------------------------------------------------
-  set (H5_FP_TO_ULLONG_RIGHT_MAXIMUM "" CACHE INTERNAL "")
 endif (WINDOWS)
 
 # ----------------------------------------------------------------------

@@ -364,10 +364,10 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
             udata->btree_k[H5B_CHUNK_ID] = chunk_btree_k;
 
             /* Remainder of "variable-sized" portion of superblock */
-            H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->base_addr);
-            H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->ext_addr);
-            H5F_addr_decode(udata->f, (const uint8_t **)&p, &udata->stored_eoa);
-            H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->driver_addr);
+            H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->base_addr/*out*/);
+            H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->ext_addr/*out*/);
+            H5F_addr_decode(udata->f, (const uint8_t **)&p, &udata->stored_eof/*out*/);
+            H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->driver_addr/*out*/);
 
             /* Allocate space for the root group symbol table entry */
             HDassert(!sblock->root_ent);
@@ -439,7 +439,7 @@ H5F__cache_superblock_deserialize(const void *image, size_t len,
             /* Base, superblock extension, end of file & root group object header addresses */
             H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->base_addr/*out*/);
             H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->ext_addr/*out*/);
-            H5F_addr_decode(udata->f, (const uint8_t **)&p, &udata->stored_eoa/*out*/);
+            H5F_addr_decode(udata->f, (const uint8_t **)&p, &udata->stored_eof/*out*/);
             H5F_addr_decode(udata->f, (const uint8_t **)&p, &sblock->root_addr/*out*/);
 
             /* Compute checksum for superblock */
@@ -670,7 +670,7 @@ H5F__cache_superblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
 {
     H5F_super_t *sblock = (H5F_super_t *)_thing;      /* Pointer to the object */
     uint8_t *p;                 /* Pointer into raw data buffer */
-    haddr_t rel_eoa;            /* Relative EOA for file */
+    haddr_t rel_eof;            /* Relative EOF for file */
     herr_t ret_value = SUCCEED; /* Return value */
 
     FUNC_ENTER_STATIC
@@ -727,8 +727,15 @@ H5F__cache_superblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
 
         /* Encode the address of global free-space index */
         H5F_addr_encode(f, &p, sblock->ext_addr);
-        rel_eoa = H5F_get_eoa(f, H5FD_MEM_SUPER);
-        H5F_addr_encode(f, &p, (rel_eoa + sblock->base_addr));
+
+        /* Encode the end-of-file address. Note that at this point in time,
+         * the EOF value itself may not be reflective of the file's size, as
+         * we will eventually truncate the file to match the EOA value. As
+         * such, use the EOA value in its place, knowing that the current EOF
+         * value will ultimately match it. */
+        if ((rel_eof = H5FD_get_eoa(f->shared->lf, H5FD_MEM_SUPER)) == HADDR_UNDEF)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGET, FAIL, "driver get_eoa request failed")
+        H5F_addr_encode(f, &p, (rel_eof + sblock->base_addr));
 
         /* Encode the driver informaton block address */
         H5F_addr_encode(f, &p, sblock->driver_addr);
@@ -755,8 +762,14 @@ H5F__cache_superblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
         /* Encode the address of the superblock extension */
         H5F_addr_encode(f, &p, sblock->ext_addr);
 
-        rel_eoa = H5F_get_eoa(f, H5FD_MEM_SUPER);
-        H5F_addr_encode(f, &p, (rel_eoa + sblock->base_addr));
+        /* At this point in time, the EOF value itself may
+         * not be reflective of the file's size, since we'll eventually
+         * truncate it to match the EOA value. As such, use the EOA value
+         * in its place, knowing that the current EOF value will
+         * ultimately match it. */
+        if ((rel_eof = H5FD_get_eoa(f->shared->lf, H5FD_MEM_SUPER)) == HADDR_UNDEF)
+            HGOTO_ERROR(H5E_RESOURCE, H5E_CANTGET, FAIL, "driver get_eoa request failed")
+        H5F_addr_encode(f, &p, (rel_eof + sblock->base_addr));
 
         /* Retrieve information for root group */
         if(NULL == (root_oloc = H5G_oloc(f->shared->root_grp)))
@@ -890,7 +903,7 @@ H5F__cache_drvrinfo_deserialize(const void *image, size_t len,
 
     /* Check arguments */
     HDassert(image);
-    HDassert(image >= H5F_DRVINFOBLOCK_HDR_SIZE);
+    HDassert(len >= H5F_DRVINFOBLOCK_HDR_SIZE);
     HDassert(udata);
     HDassert(udata->f);
 

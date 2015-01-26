@@ -23,8 +23,7 @@ with your system support staff of information how to compile an MPI program,
 how to run an MPI application, and how to access the parallel file system.
 There are sample MPI-IO C and Fortran programs in the appendix section of
 "Sample programs".  You can use them to run simple tests of your MPI compilers
-and the parallel file system. Also, the t_posix_compliant test in testpar
-verifies if the file system is POSIX compliant.
+and the parallel file system.
 
 
 1.2. Further Help
@@ -236,6 +235,7 @@ $ make install
 
 2.5.2 Hopper known issues
 ------------------------------
+Issue 1:
 Sometimes when building the library with make, you might get this problem:
 
 LD_LIBRARY_PATH="$LD_LIBRARY_PATH`echo | \
@@ -253,6 +253,22 @@ LD_LIBRARY_PATH="$LD_LIBRARY_PATH`echo | sed -e 's/-L/:/g' -e 's/
 If that happens, you are probable running with make -j <x>. In that
 case, you need to cleanup everything and start again as detailed above
 but use serial make (do not use -j <x>).
+
+Issue 2:
+* When building using the Cray compilers on Cray machines, HDF5
+  configure mistakenly thinks the compiler is an intel compiler and
+  sets the -std=c99 flag which breaks configure on Cray. To build HDF5
+  properly on a Cray machine, please consult with the instructions in
+  INSTALL_parallel for building on Hopper.
+  (MSC - 2013/04/26 - HDFFV-8429)
+
+Issue 3:
+* On hopper, the build failed when RUNSERIAL and RUNPARALLEL are set
+  to aprun -np X, because the H5lib_settings.c file was not generated
+  properly. Not setting those environment variables works, because
+  configure was able to automatically detect that it's a Cray system
+  and used the proper launch commands when necessary. 
+  (MSC - 2012/04/18)
 
 3. Detail explanation
 ---------------------
@@ -321,11 +337,6 @@ print informational messages stating the failure but will not exit with
 non-zero code.  Failure to support file size greater than 2GB is not a fatal
 error for HDF5 because HDF5 can use other file-drivers such as families of
 files to bypass the file size limit.
-
-The t_posix_compliant tests if the file system is POSIX compliant when POSIX
-and MPI IO APIs are used.  This is for information only and it always exits
-with 0 even when non-compliance errors have occurred.  This is to prevent
-the test from aborting the remaining parallel HDF5 tests unnecessarily.
 
 The t_cache does many small sized I/O requests and may not run well in a
 slow file system such as NFS disk. If it takes a long time to run it, try

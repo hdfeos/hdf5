@@ -162,7 +162,7 @@ typedef struct H5F_superblock_cache_ud_t {
 /* OUT: */
     unsigned sym_leaf_k;    /* Symbol table leaf node's 'K' value */
     unsigned btree_k[H5B_NUM_BTREE_ID]; /* B-tree key values for each type */
-    haddr_t stored_eoa;     /* Relative end-of-addr in file */
+    haddr_t stored_eof;     /* End-of-file in file */
     hbool_t drvrinfo_removed; /* Indicate if the driver info was removed */
 } H5F_superblock_cache_ud_t;
 
@@ -388,7 +388,6 @@ H5_DLL herr_t H5F_efc_destroy(H5F_efc_t *efc);
 H5_DLL herr_t H5F_efc_try_close(H5F_t *f);
 
 /* Functions that get/retrieve values from VFD layer */
-H5_DLL haddr_t H5F__get_eof(const H5F_t *f);
 H5_DLL herr_t H5F__set_eoa(const H5F_t *f, H5F_mem_t type, haddr_t addr);
 H5_DLL herr_t H5F__set_base_addr(const H5F_t *f, haddr_t addr);
 

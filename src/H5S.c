@@ -467,7 +467,7 @@ H5Sextent_copy(hid_t dst_id,hid_t src_id)
 {
     H5S_t	*src;
     H5S_t	*dst;
-    hid_t	ret_value = SUCCEED;
+    herr_t	ret_value = SUCCEED;
 
     FUNC_ENTER_API(FAIL)
     H5TRACE2("e", "ii", dst_id, src_id);
@@ -1304,7 +1304,8 @@ H5S_set_extent_simple(H5S_t *space, unsigned rank, const hsize_t *dims,
     /* Selection related cleanup */
 
     /* Set offset to zeros */
-    HDmemset(space->select.offset, 0, sizeof(hsize_t) * space->extent.rank);
+    for(u = 0; u < space->extent.rank; u++)
+        space->select.offset[u] = 0;
     space->select.offset_changed = FALSE;
 
     /* If the selection is 'all', update the number of elements selected */

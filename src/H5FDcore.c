@@ -138,7 +138,7 @@ static int H5FD_core_cmp(const H5FD_t *_f1, const H5FD_t *_f2);
 static herr_t H5FD_core_query(const H5FD_t *_f1, unsigned long *flags);
 static haddr_t H5FD_core_get_eoa(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t H5FD_core_set_eoa(H5FD_t *_file, H5FD_mem_t type, haddr_t addr);
-static haddr_t H5FD_core_get_eof(const H5FD_t *_file);
+static haddr_t H5FD_core_get_eof(const H5FD_t *_file, H5FD_mem_t type);
 static herr_t  H5FD_core_get_handle(H5FD_t *_file, hid_t fapl, void** file_handle);
 static herr_t H5FD_core_read(H5FD_t *_file, H5FD_mem_t type, hid_t fapl_id, haddr_t addr,
             size_t size, void *buf);
@@ -433,17 +433,22 @@ done:
  *
  * Purpose:     Initializes any interface-specific data or routines.
  *
- * Return:      Success:    The driver ID for the core driver.
- *              Failure:    Negative.
+ * Return:      Non-negative on success/Negative on failure 
  *
  *-------------------------------------------------------------------------
  */
 static herr_t
 H5FD_core_init_interface(void)
 {
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    herr_t ret_value = SUCCEED;
 
-    FUNC_LEAVE_NOAPI(H5FD_core_init())
+    FUNC_ENTER_NOAPI_NOINIT
+
+    if(H5FD_core_init() < 0)
+        HGOTO_ERROR(H5E_VFL, H5E_CANTINIT, FAIL, "unable to initialize core VFD")
+
+done:
+    FUNC_LEAVE_NOAPI(ret_value)
 } /* H5FD_core_init_interface() */
 
 
@@ -1121,13 +1126,13 @@ done:
  *-------------------------------------------------------------------------
  */
 static haddr_t
-H5FD_core_get_eof(const H5FD_t *_file)
+H5FD_core_get_eof(const H5FD_t *_file, H5FD_mem_t UNUSED type)
 {
     const H5FD_core_t   *file = (const H5FD_core_t*)_file;
 
     FUNC_ENTER_NOAPI_NOINIT_NOERR
 
-    FUNC_LEAVE_NOAPI(MAX(file->eof, file->eoa))
+    FUNC_LEAVE_NOAPI(file->eof)
 }
 
 
@@ -1225,8 +1230,6 @@ H5FD_core_read(H5FD_t *_file, H5FD_mem_t UNUSED type, hid_t UNUSED dxpl_id, hadd
         HGOTO_ERROR(H5E_IO, H5E_OVERFLOW, FAIL, "file address overflowed")
     if (REGION_OVERFLOW(addr, size))
         HGOTO_ERROR(H5E_IO, H5E_OVERFLOW, FAIL, "file address overflowed")
-    if((addr + size) > file->eoa)
-        HGOTO_ERROR(H5E_IO, H5E_OVERFLOW, FAIL, "file address overflowed")
 
     /* Read the part which is before the EOF marker */
     if (addr < file->eof) {
@@ -1284,8 +1287,6 @@ H5FD_core_write(H5FD_t *_file, H5FD_mem_t UNUSED type, hid_t UNUSED dxpl_id, had
 
     /* Check for overflow conditions */
     if(REGION_OVERFLOW(addr, size))
-        HGOTO_ERROR(H5E_IO, H5E_OVERFLOW, FAIL, "file address overflowed")
-    if(addr + size > file->eoa)
         HGOTO_ERROR(H5E_IO, H5E_OVERFLOW, FAIL, "file address overflowed")
 
     /*
