@@ -186,7 +186,7 @@ main(void)
         PASSED()
     else
     {
-#if defined H5_HAVE_WIN32_API && !defined (hdf5_EXPORTS)
+#if defined H5_HAVE_WIN32_API && !defined (hdf5_shared_EXPORTS)
     SKIPPED();
     puts("   DLL will flush the file even when calling _exit, skip this test temporarily");
 #elif defined H5_VMS
@@ -209,7 +209,7 @@ main(void)
         PASSED()
     else
     {
-#if defined H5_HAVE_WIN32_API && !defined (hdf5_EXPORTS)
+#if defined H5_HAVE_WIN32_API && !defined (hdf5_shared_EXPORTS)
     SKIPPED();
     puts("   DLL will flush the file even when calling _exit, skip this test temporarily");
 #elif defined H5_VMS
