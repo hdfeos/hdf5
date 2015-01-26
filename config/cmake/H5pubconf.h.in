@@ -148,9 +148,6 @@
 /* Define to 1 if you have the `fork' function. */
 #cmakedefine H5_HAVE_FORK @H5_HAVE_FORK@
 
-/* Define if we have F2003 compiler */
-#cmakedefine H5_HAVE_FORTRAN_2003 @H5_HAVE_FORTRAN_2003@
-
 /* Define to 1 if you have the `frexpf' function. */
 #cmakedefine H5_HAVE_FREXPF @H5_HAVE_FREXPF@
 
