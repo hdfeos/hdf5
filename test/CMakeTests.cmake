@@ -258,6 +258,38 @@ else (HDF5_ENABLE_USING_MEMCHECKER)
       ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
       WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
   )
+  if (BUILD_SHARED_LIBS)
+    add_test (
+        NAME H5TEST-shared-clear-testhdf5-objects
+        COMMAND    ${CMAKE_COMMAND}
+            -E remove 
+            coord.h5
+            dtypes10.h5
+            sys_file1
+            tattr.h5
+            tfile1.h5
+            tfile2.h5
+            tfile3.h5
+            tfile4.h5
+            tfile5.h5
+            tfile6.h5
+            tfile7.h5
+            th5o_file
+            th5s1.h5
+            tselect.h5
+            tsohm.h5
+            tsohm_dst.h5
+            tsohm_src.h5
+        WORKING_DIRECTORY
+            ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+    )
+    add_test (NAME H5TEST-shared-testhdf5 COMMAND $<TARGET_FILE:testhdf5-shared>)
+    set_tests_properties (H5TEST-shared-testhdf5 PROPERTIES
+        DEPENDS H5TEST-shared-clear-testhdf5-objects
+        ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+        WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+    )
+  endif (BUILD_SHARED_LIBS)
 endif (HDF5_ENABLE_USING_MEMCHECKER)
   
 ##############################################################################
@@ -268,7 +300,7 @@ endif (HDF5_ENABLE_USING_MEMCHECKER)
 
 # Remove any output file left over from previous test run
 add_test (
-    NAME H5TEST-clear-objects
+    NAME H5TEST-shared-clear-objects
     COMMAND    ${CMAKE_COMMAND}
         -E remove 
         dt_arith1.h5
@@ -347,6 +379,90 @@ set_tests_properties (H5TEST-flush2 PROPERTIES DEPENDS H5TEST-flush1)
 set_tests_properties (H5TEST-fheap PROPERTIES TIMEOUT 1800)
 set_tests_properties (H5TEST-testmeta PROPERTIES TIMEOUT 1800)
 set_tests_properties (H5TEST-big PROPERTIES TIMEOUT 1800)
+
+if (BUILD_SHARED_LIBS)
+  # Remove any output file left over from previous test run
+  add_test (
+      NAME H5TEST-shared-clear-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove 
+          dt_arith1.h5
+          dt_arith2.h5
+          dtransform.h5
+          dtypes3.h5
+          dtypes4.h5
+          dtypes5.h5
+          efc0.h5
+          efc1.h5
+          efc2.h5
+          efc3.h5
+          efc4.h5
+          efc5.h5
+          extlinks16A00000.h5
+          extlinks16A00001.h5
+          extlinks16A00002.h5
+          extlinks16B-b.h5
+          extlinks16B-g.h5
+          extlinks16B-l.h5
+          extlinks16B-r.h5
+          extlinks16B-s.h5
+          extlinks19B00000.h5
+          extlinks19B00001.h5
+          extlinks19B00002.h5
+          extlinks19B00003.h5
+          extlinks19B00004.h5
+          extlinks19B00005.h5
+          extlinks19B00006.h5
+          extlinks19B00007.h5
+          extlinks19B00008.h5
+          extlinks19B00009.h5
+          extlinks19B00010.h5
+          extlinks19B00011.h5
+          extlinks19B00012.h5
+          extlinks19B00013.h5
+          extlinks19B00014.h5
+          extlinks19B00015.h5
+          extlinks19B00016.h5
+          extlinks19B00017.h5
+          extlinks19B00018.h5
+          extlinks19B00019.h5
+          extlinks19B00020.h5
+          extlinks19B00021.h5
+          extlinks19B00022.h5
+          extlinks19B00023.h5
+          extlinks19B00024.h5
+          extlinks19B00025.h5
+          extlinks19B00026.h5
+          extlinks19B00027.h5
+          extlinks19B00028.h5
+          fheap.h5
+          log_vfd_out.log
+          new_multi_file_v16-r.h5
+          new_multi_file_v16-s.h5
+          objcopy_ext.dat
+          testmeta.h5
+          tstint1.h5
+          tstint2.h5
+          unregister_filter_1.h5
+          unregister_filter_2.h5
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+
+  foreach (test ${H5_TESTS})
+    add_test (NAME H5TEST-shared-${test} COMMAND $<TARGET_FILE:${test}-shared>)
+    set_tests_properties (H5TEST-shared-${test} PROPERTIES
+        DEPENDS H5TEST-shared-clear-objects 
+        ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+        WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+    )
+  endforeach (test ${H5_TESTS})
+
+  set_tests_properties (H5TEST-shared-flush2 PROPERTIES DEPENDS H5TEST-shared-flush1)
+  set_tests_properties (H5TEST-shared-fheap PROPERTIES TIMEOUT 1800)
+  set_tests_properties (H5TEST-shared-testmeta PROPERTIES TIMEOUT 1800)
+  set_tests_properties (H5TEST-shared-big PROPERTIES TIMEOUT 1800)
+endif (BUILD_SHARED_LIBS)
 
 ##############################################################################
 ##############################################################################
@@ -513,6 +629,168 @@ add_test (
     WORKING_DIRECTORY
         ${HDF5_TEST_BINARY_DIR}/H5TEST
 )
+
+if (BUILD_SHARED_LIBS)
+  #-- Adding test for cache
+  add_test (
+      NAME H5TEST-shared-clear-cache-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove 
+          cache_test.h5
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+  add_test (NAME H5TEST-shared-cache COMMAND $<TARGET_FILE:cache-shared>)
+  set_tests_properties (H5TEST-shared-cache PROPERTIES
+      DEPENDS H5TEST-shared-clear-cache-objects
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+
+  #-- Adding test for cache_api
+  add_test (
+      NAME H5TEST-shared-clear-cache_api-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove 
+          cache_api_test.h5
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+  add_test (NAME H5TEST-shared-cache_api COMMAND $<TARGET_FILE:cache_api-shared>)
+  set_tests_properties (H5TEST-shared-cache_api PROPERTIES
+      DEPENDS H5TEST-shared-clear-cache_api-objects 
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+
+  #-- Adding test for cache_tagging
+  add_test (
+      NAME H5TEST-shared-clear-cache_tagging-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove 
+          tagging_test.h5
+          tagging_ext_test.h5
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+  add_test (NAME H5TEST-shared-cache_tagging COMMAND $<TARGET_FILE:cache_tagging-shared>)
+  set_tests_properties (H5TEST-shared-cache_tagging PROPERTIES
+      DEPENDS H5TEST-shared-clear-cache_tagging-objects
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+
+  #-- Adding test for ttsafe
+  add_test (
+      NAME H5TEST-shared-clear-ttsafe-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove 
+          ttsafe_error.h5
+          ttsafe_dcreate.h5
+          ttsafe_cancel.h5
+          ttsafe_acreate.h5
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+  add_test (NAME H5TEST-shared-ttsafe COMMAND $<TARGET_FILE:ttsafe-shared>)
+  set_tests_properties (H5TEST-shared-ttsafe PROPERTIES
+      DEPENDS H5TEST-shared-clear-ttsafe-objects
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+
+  #-- Adding test for err_compat
+  if (HDF5_ENABLE_DEPRECATED_SYMBOLS)
+    add_test (
+        NAME H5TEST-shared-clear-err_compat-objects
+        COMMAND    ${CMAKE_COMMAND}
+            -E remove 
+            err_compat.txt
+            err_compat.txt.err
+        WORKING_DIRECTORY
+            ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+    )
+    add_test (NAME H5TEST-shared-err_compat COMMAND "${CMAKE_COMMAND}"
+        -D "TEST_PROGRAM=$<TARGET_FILE:err_compat-shared>"
+        -D "TEST_ARGS:STRING="
+        -D "TEST_EXPECT=0"
+        -D "TEST_MASK_ERROR=true"
+        -D "TEST_OUTPUT=err_compat.txt"
+        -D "TEST_REFERENCE=err_compat_1"
+        -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/H5TEST-shared"
+        -P "${HDF_RESOURCES_EXT_DIR}/runTest.cmake"
+    )
+    set_tests_properties (H5TEST-shared-err_compat PROPERTIES
+        DEPENDS H5TEST-shared-clear-err_compat-objects
+        ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+        WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+    )
+  endif (HDF5_ENABLE_DEPRECATED_SYMBOLS)
+
+  #-- Adding test for error_test
+  add_test (
+      NAME H5TEST-shared-clear-error_test-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove 
+          error_test.txt
+          error_test.txt.err
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+  add_test (NAME H5TEST-shared-error_test COMMAND "${CMAKE_COMMAND}"
+      -D "TEST_PROGRAM=$<TARGET_FILE:error_test-shared>"
+      -D "TEST_ARGS:STRING="
+      -D "TEST_EXPECT=0"
+      -D "TEST_MASK_ERROR=true"
+      -D "TEST_OUTPUT=error_test.txt"
+      -D "TEST_REFERENCE=error_test_1"
+      -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/H5TEST-shared"
+      -P "${HDF_RESOURCES_EXT_DIR}/runTest.cmake"
+  )
+  set_tests_properties (H5TEST-shared-error_test PROPERTIES 
+      DEPENDS H5TEST-shared-clear-error_test-objects
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared;HDF5_PLUGIN_PRELOAD=::"
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+
+  #-- Adding test for links_env
+  add_test (
+      NAME H5TEST-shared-clear-links_env-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove
+          links_env.txt
+          links_env.txt.err 
+          extlinks_env0.h5
+          extlinks_env1.h5
+          tmp/extlinks_env1.h5
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+  add_test (NAME H5TEST-shared-links_env COMMAND "${CMAKE_COMMAND}"
+      -D "TEST_PROGRAM=$<TARGET_FILE:links_env-shared>"
+      -D "TEST_ARGS:STRING="
+      -D "TEST_ENV_VAR:STRING=HDF5_EXT_PREFIX"
+      -D "TEST_ENV_VALUE:STRING=.:tmp"
+      -D "TEST_EXPECT=0"
+      -D "TEST_OUTPUT=links_env.txt"
+      -D "TEST_REFERENCE=links_env.out"
+      -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/H5TEST-shared"
+      -P "${HDF_RESOURCES_EXT_DIR}/runTest.cmake"
+  )
+  set_tests_properties (H5TEST-shared-links_env PROPERTIES
+      DEPENDS H5TEST-shared-clear-links_env-objects
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+
+  #-- Adding test for libinfo
+  add_test (
+      NAME H5TEST-shared-testlibinfo
+      COMMAND ${CMAKE_COMMAND} -D "TEST_PROGRAM=$<TARGET_FILE:${HDF5_LIB_TARGET}-shared>" -P "${GREP_RUNNER}"
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+  )
+endif (BUILD_SHARED_LIBS)
 
 ##############################################################################
 ###    P L U G I N  T E S T S
