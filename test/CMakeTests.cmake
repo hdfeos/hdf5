@@ -300,7 +300,7 @@ endif (HDF5_ENABLE_USING_MEMCHECKER)
 
 # Remove any output file left over from previous test run
 add_test (
-    NAME H5TEST-shared-clear-objects
+    NAME H5TEST-clear-objects
     COMMAND    ${CMAKE_COMMAND}
         -E remove 
         dt_arith1.h5
