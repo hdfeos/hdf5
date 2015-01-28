@@ -9,6 +9,12 @@
 file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST")
 file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST/tesfiles")
 file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST/tesfiles/plist_files")
+if (BUILD_SHARED_LIBS)
+  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared")
+  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared/tesfiles")
+  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared/tesfiles/plist_files")
+endif (BUILD_SHARED_LIBS)
+
 if (HDF5_TEST_VFD)
   set (VFD_LIST
       sec2
@@ -23,6 +29,9 @@ if (HDF5_TEST_VFD)
   endif (DIRECT_VFD)
   foreach (vfdtest ${VFD_LIST})
     file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/${vfdtest}")
+    #if (BUILD_SHARED_LIBS)
+    #  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/${vfdtest}-shared")
+    #endif (BUILD_SHARED_LIBS)
   endforeach (vfdtest ${VFD_LIST})
 endif (HDF5_TEST_VFD)
 
@@ -35,25 +44,41 @@ set (HDF5_TEST_FILES
 
 foreach (h5_tfile ${HDF5_TEST_FILES})
   set (dest "${PROJECT_BINARY_DIR}/H5TEST/${h5_tfile}")
-  #message (STATUS " Copying ${h5_tfile}")
   add_custom_command (
       TARGET     ${HDF5_TEST_LIB_TARGET}
       POST_BUILD
       COMMAND    ${CMAKE_COMMAND}
       ARGS       -E copy_if_different ${HDF5_TOOLS_SRC_DIR}/testfiles/${h5_tfile} ${dest}
   )
+  if (BUILD_SHARED_LIBS)
+    set (dest "${PROJECT_BINARY_DIR}/H5TEST-shared/${h5_tfile}")
+    add_custom_command (
+        TARGET     ${HDF5_TEST_LIBSH_TARGET}
+        POST_BUILD
+        COMMAND    ${CMAKE_COMMAND}
+        ARGS       -E copy_if_different ${HDF5_TOOLS_SRC_DIR}/testfiles/${h5_tfile} ${dest}
+    )
+  endif (BUILD_SHARED_LIBS)
 endforeach (h5_tfile ${HDF5_TEST_FILES})
 if (HDF5_TEST_VFD)
   foreach (vfdtest ${VFD_LIST})
     foreach (h5_tfile ${HDF5_TEST_FILES})
       set (dest "${PROJECT_BINARY_DIR}/${vfdtest}/${h5_tfile}")
-      #message (STATUS " Copying ${h5_tfile}")
       add_custom_command (
           TARGET     ${HDF5_TEST_LIB_TARGET}
           POST_BUILD
           COMMAND    ${CMAKE_COMMAND}
           ARGS       -E copy_if_different ${HDF5_TOOLS_SRC_DIR}/testfiles/${h5_tfile} ${dest}
       )
+      #if (BUILD_SHARED_LIBS)
+      #  set (dest "${PROJECT_BINARY_DIR}/${vfdtest}-shared/${h5_tfile}")
+      #  add_custom_command (
+      #      TARGET     ${HDF5_TEST_LIBSH_TARGET}
+      #      POST_BUILD
+      #      COMMAND    ${CMAKE_COMMAND}
+      #      ARGS       -E copy_if_different ${HDF5_TOOLS_SRC_DIR}/testfiles/${h5_tfile} ${dest}
+      #  )
+      #endif (BUILD_SHARED_LIBS)
     endforeach (h5_tfile ${HDF5_TEST_FILES})
   endforeach (vfdtest ${VFD_LIST})
 endif (HDF5_TEST_VFD)
@@ -71,25 +96,41 @@ set (HDF5_REFERENCE_FILES
 
 foreach (ref_file ${HDF5_REFERENCE_FILES})
   set (dest "${PROJECT_BINARY_DIR}/H5TEST/${ref_file}")
-  #message (STATUS " Copying ${h5_file}")
   add_custom_command (
       TARGET     ${HDF5_TEST_LIB_TARGET}
       POST_BUILD
       COMMAND    ${CMAKE_COMMAND}
       ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/${ref_file} ${dest}
   )
+  if (BUILD_SHARED_LIBS)
+    set (dest "${PROJECT_BINARY_DIR}/H5TEST-shared/${ref_file}")
+    add_custom_command (
+        TARGET     ${HDF5_TEST_LIBSH_TARGET}
+        POST_BUILD
+        COMMAND    ${CMAKE_COMMAND}
+        ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/${ref_file} ${dest}
+    )
+  endif (BUILD_SHARED_LIBS)
 endforeach (ref_file ${HDF5_REFERENCE_FILES})
 if (HDF5_TEST_VFD)
   foreach (vfdtest ${VFD_LIST})
     foreach (ref_file ${HDF5_REFERENCE_FILES})
       set (dest "${PROJECT_BINARY_DIR}/${vfdtest}/${ref_file}")
-      #message (STATUS " Copying ${h5_file}")
       add_custom_command (
           TARGET     ${HDF5_TEST_LIB_TARGET}
           POST_BUILD
           COMMAND    ${CMAKE_COMMAND}
           ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/${ref_file} ${dest}
       )
+      #if (BUILD_SHARED_LIBS)
+      #  set (dest "${PROJECT_BINARY_DIR}/${vfdtest}/${ref_file}")
+      #  add_custom_command (
+      #      TARGET     ${HDF5_TEST_LIB_TARGET}
+      #      POST_BUILD
+      #      COMMAND    ${CMAKE_COMMAND}
+      #      ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/${ref_file} ${dest}
+      #  )
+      #endif (BUILD_SHARED_LIBS)
     endforeach (ref_file ${HDF5_REFERENCE_FILES})
   endforeach (vfdtest ${VFD_LIST})
 endif (HDF5_TEST_VFD)
@@ -126,13 +167,21 @@ set (HDF5_REFERENCE_PLIST_FILES
 
 foreach (plistfile ${HDF5_REFERENCE_PLIST_FILES})
   set (dest "${PROJECT_BINARY_DIR}/H5TEST/testfiles/plist_files/${plistfile}")
-  #message (STATUS " Copying ${plistfile} to ${dset}")
   add_custom_command (
       TARGET     ${HDF5_TEST_LIB_TARGET}
       POST_BUILD
       COMMAND    ${CMAKE_COMMAND}
       ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/plist_files/${plistfile} ${dest}
   )
+  if (BUILD_SHARED_LIBS)
+    set (dest "${PROJECT_BINARY_DIR}/H5TEST-shared/testfiles/plist_files/${plistfile}")
+    add_custom_command (
+        TARGET     ${HDF5_TEST_LIBSH_TARGET}
+        POST_BUILD
+        COMMAND    ${CMAKE_COMMAND}
+        ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/plist_files/${plistfile} ${dest}
+    )
+  endif (BUILD_SHARED_LIBS)
 endforeach (plistfile ${HDF5_REFERENCE_PLIST_FILES})
 
 # --------------------------------------------------------------------
@@ -177,25 +226,41 @@ set (HDF5_REFERENCE_TEST_FILES
 
 foreach (h5_file ${HDF5_REFERENCE_TEST_FILES})
   set (dest "${HDF5_TEST_BINARY_DIR}/H5TEST/${h5_file}")
-  #message (STATUS " Copying ${h5_file} to ${dest}")
   add_custom_command (
       TARGET     ${HDF5_TEST_LIB_TARGET}
       POST_BUILD
       COMMAND    ${CMAKE_COMMAND}
       ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/${h5_file} ${dest}
   )
+  if (BUILD_SHARED_LIBS)
+    set (dest "${HDF5_TEST_BINARY_DIR}/H5TEST-shared/${h5_file}")
+    add_custom_command (
+        TARGET     ${HDF5_TEST_LIBSH_TARGET}
+        POST_BUILD
+        COMMAND    ${CMAKE_COMMAND}
+        ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/${h5_file} ${dest}
+    )
+  endif (BUILD_SHARED_LIBS)
 endforeach (h5_file ${HDF5_REFERENCE_TEST_FILES})
 if (HDF5_TEST_VFD)
   foreach (vfdtest ${VFD_LIST})
     foreach (h5_file ${HDF5_REFERENCE_TEST_FILES})
       set (dest "${HDF5_TEST_BINARY_DIR}/${vfdtest}/${h5_file}")
-      #message (STATUS " Copying ${h5_file} to ${dest}")
       add_custom_command (
           TARGET     ${HDF5_TEST_LIB_TARGET}
           POST_BUILD
           COMMAND    ${CMAKE_COMMAND}
           ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/${h5_file} ${dest}
       )
+      #if (BUILD_SHARED_LIBS)
+      #  set (dest "${HDF5_TEST_BINARY_DIR}/${vfdtest}/${h5_file}")
+      #  add_custom_command (
+      #      TARGET     ${HDF5_TEST_LIB_TARGET}
+      #      POST_BUILD
+      #      COMMAND    ${CMAKE_COMMAND}
+      #      ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/${h5_file} ${dest}
+      #  )
+      #endif (BUILD_SHARED_LIBS)
     endforeach (h5_file ${HDF5_REFERENCE_TEST_FILES})
   endforeach (vfdtest ${VFD_LIST})
 endif (HDF5_TEST_VFD)
