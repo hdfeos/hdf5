@@ -786,7 +786,7 @@ if (BUILD_SHARED_LIBS)
   #-- Adding test for libinfo
   add_test (
       NAME H5TEST-shared-testlibinfo
-      COMMAND ${CMAKE_COMMAND} -D "TEST_PROGRAM=$<TARGET_FILE:${HDF5_LIB_TARGET}-shared>" -P "${GREP_RUNNER}"
+      COMMAND ${CMAKE_COMMAND} -D "TEST_PROGRAM=$<TARGET_FILE:${HDF5_LIBSH_TARGET}>" -P "${GREP_RUNNER}"
       WORKING_DIRECTORY
           ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
   )
