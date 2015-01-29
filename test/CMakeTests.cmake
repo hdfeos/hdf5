@@ -7,12 +7,12 @@
 
 # make test dir
 file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST")
-file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST/tesfiles")
-file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST/tesfiles/plist_files")
+file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST/testfiles")
+file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST/testfiles/plist_files")
 if (BUILD_SHARED_LIBS)
   file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared")
-  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared/tesfiles")
-  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared/tesfiles/plist_files")
+  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared/testfiles")
+  file (MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/H5TEST-shared/testfiles/plist_files")
 endif (BUILD_SHARED_LIBS)
 
 if (HDF5_TEST_VFD)
