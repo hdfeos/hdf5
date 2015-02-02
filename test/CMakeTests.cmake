@@ -70,15 +70,15 @@ if (HDF5_TEST_VFD)
           COMMAND    ${CMAKE_COMMAND}
           ARGS       -E copy_if_different ${HDF5_TOOLS_SRC_DIR}/testfiles/${h5_tfile} ${dest}
       )
-      #if (BUILD_SHARED_LIBS)
-      #  set (dest "${PROJECT_BINARY_DIR}/${vfdtest}-shared/${h5_tfile}")
-      #  add_custom_command (
-      #      TARGET     ${HDF5_TEST_LIBSH_TARGET}
-      #      POST_BUILD
-      #      COMMAND    ${CMAKE_COMMAND}
-      #      ARGS       -E copy_if_different ${HDF5_TOOLS_SRC_DIR}/testfiles/${h5_tfile} ${dest}
-      #  )
-      #endif (BUILD_SHARED_LIBS)
+      if (BUILD_SHARED_LIBS)
+        set (dest "${PROJECT_BINARY_DIR}/${vfdtest}-shared/${h5_tfile}")
+        add_custom_command (
+            TARGET     ${HDF5_TEST_LIBSH_TARGET}
+            POST_BUILD
+            COMMAND    ${CMAKE_COMMAND}
+            ARGS       -E copy_if_different ${HDF5_TOOLS_SRC_DIR}/testfiles/${h5_tfile} ${dest}
+        )
+      endif (BUILD_SHARED_LIBS)
     endforeach (h5_tfile ${HDF5_TEST_FILES})
   endforeach (vfdtest ${VFD_LIST})
 endif (HDF5_TEST_VFD)
