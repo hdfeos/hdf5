@@ -956,6 +956,23 @@ if (HDF5_TEST_VFD)
           ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/${vfdname}"
           WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/${vfdname}
       )
+      if (BUILD_SHARED_LIBS)
+        add_test (
+          NAME VFD-${vfdname}-${test}-shared 
+          COMMAND "${CMAKE_COMMAND}"
+              -D "TEST_PROGRAM=$<TARGET_FILE:${test}-shared>"
+              -D "TEST_ARGS:STRING="
+              -D "TEST_VFD:STRING=${vfdname}"
+              -D "TEST_EXPECT=${resultcode}"
+              -D "TEST_OUTPUT=${vfdname}-${test}-shared"
+              -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/${vfdname}-shared"
+              -P "${HDF_RESOURCES_DIR}/vfdTest.cmake"
+        )
+        set_tests_properties (VFD-${vfdname}-${test}-shared PROPERTIES
+            ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/${vfdname}-shared"
+            WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/${vfdname}-shared
+        )
+      endif (BUILD_SHARED_LIBS)
     endforeach (test ${H5_VFD_TESTS})
     set_tests_properties (VFD-${vfdname}-flush2 PROPERTIES DEPENDS VFD-${vfdname}-flush1)
     set_tests_properties (VFD-${vfdname}-flush1 PROPERTIES TIMEOUT 10)
@@ -990,14 +1007,14 @@ if (HDF5_TEST_VFD)
               -D "TEST_ARGS:STRING="
               -D "TEST_VFD:STRING=${vfdname}"
               -D "TEST_EXPECT=${resultcode}"
-              -D "TEST_OUTPUT=fheap-shared"
-              -D "TEST_FOLDER=${PROJECT_BINARY_DIR}"
+              -D "TEST_OUTPUT=${vfdname}-fheap-shared"
+              -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/${vfdname}-shared"
               -P "${HDF_RESOURCES_DIR}/vfdTest.cmake"
         )
         set_tests_properties (VFD-${vfdname}-fheap-shared PROPERTIES
           TIMEOUT 1800
-          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/${vfdname}"
-          WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/${vfdname}
+          ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/${vfdname}-shared"
+          WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/${vfdname}-shared
       )
       endif (BUILD_SHARED_LIBS)
     endif (HDF5_TEST_FHEAP_VFD)
