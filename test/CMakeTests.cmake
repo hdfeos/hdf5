@@ -122,15 +122,15 @@ if (HDF5_TEST_VFD)
           COMMAND    ${CMAKE_COMMAND}
           ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/${ref_file} ${dest}
       )
-      #if (BUILD_SHARED_LIBS)
-      #  set (dest "${PROJECT_BINARY_DIR}/${vfdtest}/${ref_file}")
-      #  add_custom_command (
-      #      TARGET     ${HDF5_TEST_LIB_TARGET}
-      #      POST_BUILD
-      #      COMMAND    ${CMAKE_COMMAND}
-      #      ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/${ref_file} ${dest}
-      #  )
-      #endif (BUILD_SHARED_LIBS)
+      if (BUILD_SHARED_LIBS)
+        set (dest "${PROJECT_BINARY_DIR}/${vfdtest}-shared/${ref_file}")
+        add_custom_command (
+            TARGET     ${HDF5_TEST_LIB_TARGET}
+            POST_BUILD
+            COMMAND    ${CMAKE_COMMAND}
+            ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/testfiles/${ref_file} ${dest}
+        )
+      endif (BUILD_SHARED_LIBS)
     endforeach (ref_file ${HDF5_REFERENCE_FILES})
   endforeach (vfdtest ${VFD_LIST})
 endif (HDF5_TEST_VFD)
@@ -252,15 +252,15 @@ if (HDF5_TEST_VFD)
           COMMAND    ${CMAKE_COMMAND}
           ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/${h5_file} ${dest}
       )
-      #if (BUILD_SHARED_LIBS)
-      #  set (dest "${HDF5_TEST_BINARY_DIR}/${vfdtest}/${h5_file}")
-      #  add_custom_command (
-      #      TARGET     ${HDF5_TEST_LIB_TARGET}
-      #      POST_BUILD
-      #      COMMAND    ${CMAKE_COMMAND}
-      #      ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/${h5_file} ${dest}
-      #  )
-      #endif (BUILD_SHARED_LIBS)
+      if (BUILD_SHARED_LIBS)
+        set (dest "${HDF5_TEST_BINARY_DIR}/${vfdtest}-shared/${h5_file}")
+        add_custom_command (
+            TARGET     ${HDF5_TEST_LIB_TARGET}
+            POST_BUILD
+            COMMAND    ${CMAKE_COMMAND}
+            ARGS       -E copy_if_different ${HDF5_TEST_SOURCE_DIR}/${h5_file} ${dest}
+        )
+      endif (BUILD_SHARED_LIBS)
     endforeach (h5_file ${HDF5_REFERENCE_TEST_FILES})
   endforeach (vfdtest ${VFD_LIST})
 endif (HDF5_TEST_VFD)
