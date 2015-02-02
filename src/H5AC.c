@@ -630,8 +630,7 @@ done:
                 H5SL_close(aux_ptr->candidate_slist_ptr);
 
             aux_ptr->magic = 0;
-            H5FL_FREE(H5AC_aux_t, aux_ptr);
-            aux_ptr = NULL;
+            aux_ptr = H5FL_FREE(H5AC_aux_t, aux_ptr);
         } /* end if */
     } /* end if */
 #endif /* H5_HAVE_PARALLEL */
@@ -1011,15 +1010,9 @@ H5AC_insert_entry(H5F_t *f, hid_t dxpl_id, const H5AC_class_t *type, haddr_t add
             HGOTO_ERROR(H5E_CACHE, H5E_CANTINS, FAIL, "H5AC_log_inserted_entry() failed")
 
         /* Check if we should try to flush */
-        if ( aux_ptr->dirty_bytes >= aux_ptr->dirty_bytes_threshold )
-        {
-            if ( H5AC_run_sync_point(f, H5AC_noblock_dxpl_id, 
-                                 H5AC_SYNC_POINT_OP__FLUSH_TO_MIN_CLEAN) < 0 )
-            {
-                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
-                            "Can't run sync point.")
-            }
-        }
+        if(aux_ptr->dirty_bytes >= aux_ptr->dirty_bytes_threshold)
+            if(H5AC_run_sync_point(f, H5AC_noblock_dxpl_id, H5AC_SYNC_POINT_OP__FLUSH_TO_MIN_CLEAN) < 0)
+                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't run sync point.")
     } /* end if */
 }
 #endif /* H5_HAVE_PARALLEL */
@@ -1359,7 +1352,6 @@ H5AC_protect(H5F_t *f,
        (0 == (flags & H5C__READ_ONLY_FLAG)))
 	HGOTO_ERROR(H5E_CACHE, H5E_BADVALUE, NULL, "no write intent on file")
 
-
 #if H5AC__TRACE_FILE_ENABLED
     /* For the protect call, only the addr and type id is really necessary
      * in the trace file.  Include the size of the entry protected as a
@@ -1397,17 +1389,12 @@ H5AC_protect(H5F_t *f,
 
     if ( flags & H5C__READ_ONLY_FLAG ) 
 	protect_flags |= H5C__READ_ONLY_FLAG;
-
     if ( flags & H5C__FLUSH_LAST_FLAG ) 
 	protect_flags |= H5C__FLUSH_LAST_FLAG;
-
 #ifdef H5_HAVE_PARALLEL
-
     if ( flags & H5C__FLUSH_COLLECTIVELY_FLAG )
 	protect_flags |= H5C__FLUSH_COLLECTIVELY_FLAG;
-
 #endif /* H5_HAVE_PARALLEL */
-
 
     thing = H5C_protect(f,
 		        dxpl_id,
@@ -4988,11 +4975,9 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
     HDassert( aux_ptr->metadata_write_strategy == 
               H5AC_METADATA_WRITE_STRATEGY__PROCESS_0_ONLY );
 
-
     /* Query if evictions are allowed */
     if(H5C_get_evictions_enabled((const H5C_t *)cache_ptr, &evictions_enabled) < 0)
         HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "H5C_get_evictions_enabled() failed.")
-
 
     /* Flush if evictions are allowed -- following call
      * will cause process 0 to flush to min clean size,
@@ -5011,7 +4996,6 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
         if(MPI_SUCCESS != (mpi_code = MPI_Barrier(aux_ptr->mpi_comm)))
             HMPI_GOTO_ERROR(FAIL, "MPI_Barrier failed", mpi_code)
 
-
         if(0 == aux_ptr->mpi_rank) {
             herr_t	 result;
 
@@ -5029,7 +5013,6 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
             if(result < 0)
                 HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "H5C_flush_to_min_clean() failed.")
 
-
             /* this call exists primarily for the test code -- it is used
  	     * to enforce POSIX semantics on the process used to simulate
  	     * reads and writes in t_cache.c.
@@ -5037,7 +5020,6 @@ H5AC_rsp__p0_only__flush_to_min_clean(H5F_t *f,
             if(aux_ptr->write_done != NULL)
                 (aux_ptr->write_done)();
         } /* end if */
-
 
         if(H5AC_propagate_flushed_and_still_clean_entries_list(f, dxpl_id, cache_ptr) < 0)
             HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, "Can't propagate clean entries list.")
@@ -5125,9 +5107,7 @@ H5AC_run_sync_point(H5F_t *f,
 	    switch(sync_point_op) {
                 case H5AC_SYNC_POINT_OP__FLUSH_TO_MIN_CLEAN:
 	            if(H5AC_rsp__p0_only__flush_to_min_clean(f, dxpl_id, cache_ptr) < 0)
-                    {
                         HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "H5AC_rsp__p0_only__flush_to_min_clean() failed.")
-                    }
 		    break;
 
 		case H5AC_SYNC_POINT_OP__FLUSH_CACHE:

@@ -241,7 +241,7 @@ static herr_t H5C__epoch_marker_free_icr(void * thing);
 
 static herr_t H5C__epoch_marker_clear(const H5F_t *f, void * thing, 
                                       hbool_t about_to_destroy);
-static herr_t H5C__epoch_marker_fsf_size(void UNUSED * thing, 
+static herr_t H5C__epoch_marker_fsf_size(const void UNUSED * thing, 
                                          size_t UNUSED * fsf_size_ptr);
 
 const H5C_class_t epoch_marker_class =
@@ -344,7 +344,7 @@ H5C__epoch_marker_notify(H5C_notify_action_t UNUSED action,
     FUNC_LEAVE_NOAPI(FAIL)
 } /* end H5C__epoch_marker_notify() */
 
-
+
 static herr_t
 H5C__epoch_marker_free_icr(void UNUSED * thing)
 {
@@ -355,6 +355,7 @@ H5C__epoch_marker_free_icr(void UNUSED * thing)
     FUNC_LEAVE_NOAPI(FAIL)
 } /* end H5C__epoch_marker_free_icr() */
 
+
 static herr_t 
 H5C__epoch_marker_clear(const H5F_t UNUSED *f, void UNUSED * thing, hbool_t UNUSED about_to_destroy)
 {
@@ -365,8 +366,9 @@ H5C__epoch_marker_clear(const H5F_t UNUSED *f, void UNUSED * thing, hbool_t UNUS
     FUNC_LEAVE_NOAPI(FAIL)
 } /* end H5C__epoch_marker_clear() */
 
+
 static herr_t 
-H5C__epoch_marker_fsf_size(void UNUSED * thing, size_t UNUSED *fsf_size_ptr)
+H5C__epoch_marker_fsf_size(const void UNUSED * thing, size_t UNUSED *fsf_size_ptr)
 {
     FUNC_ENTER_STATIC_NOERR /* Yes, even though this pushes an error on the stack */
 
@@ -1177,7 +1179,9 @@ H5C_create(size_t		      max_cache_size,
      * the fields.
      */
 
+#ifndef NDEBUG
     cache_ptr->magic 				= H5C__H5C_T_MAGIC;
+#endif /* NDEBUG */
 
     cache_ptr->flush_in_progress		= FALSE;
 
@@ -1332,7 +1336,9 @@ done:
             if ( cache_ptr->slist_ptr != NULL )
                 H5SL_close(cache_ptr->slist_ptr);
 
+#ifndef NDEBUG
             cache_ptr->magic = 0;
+#endif /* NDEBUG */
             cache_ptr = H5FL_FREE(H5C_t, cache_ptr);
 
         } /* end if */
@@ -1592,7 +1598,9 @@ H5C_dest(H5F_t * f, hid_t dxpl_id)
 #endif /* H5C_DO_SANITY_CHECKS */
 #endif /* NDEBUG */
 
+#ifndef NDEBUG
     cache_ptr->magic = 0;
+#endif /* NDEBUG */
 
     cache_ptr = H5FL_FREE(H5C_t, cache_ptr);
 
@@ -1933,18 +1941,13 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
                     /* increment node pointer now, before we delete its target
                      * from the slist.
                      */
-
                     node_ptr = H5SL_next(node_ptr);
 
                     if ( node_ptr != NULL ) {
-                        next_entry_ptr = 
-                            (H5C_cache_entry_t *)H5SL_item(node_ptr);
-
+                        next_entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
                         if ( NULL == next_entry_ptr )
-                            HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, \
-                                        "next_entry_ptr == NULL ?!?!")
-                        HDassert( next_entry_ptr->magic == \
-                                  H5C__H5C_CACHE_ENTRY_T_MAGIC );
+                            HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "next_entry_ptr == NULL ?!?!")
+                        HDassert( next_entry_ptr->magic == H5C__H5C_CACHE_ENTRY_T_MAGIC );
                         HDassert( next_entry_ptr->is_dirty );
                         HDassert( next_entry_ptr->in_slist );
                         HDassert( entry_ptr != next_entry_ptr );
@@ -1977,15 +1980,12 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
                              * aren't trying to do a destroy here, so that
                              * is not an issue.
                              */
-                            if ( entry_ptr->flush_dep_height == 
-                                 curr_flush_dep_height ) 
-                            {
+                            if(entry_ptr->flush_dep_height == curr_flush_dep_height ) {
 #if H5C_DO_SANITY_CHECKS
                                 flushed_entries_count++;
                                 flushed_entries_size += entry_ptr->size;
                                 entry_size_change = 0;
 #endif /* H5C_DO_SANITY_CHECKS */
-
                                 status = H5C_flush_single_entry(f,
                                                             dxpl_id,
                                                             entry_ptr->addr,
@@ -1997,8 +1997,8 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
                                     /* This shouldn't happen -- if it does, 
                                      * we are toast so just scream and die.
                                      */
-                                    HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,\
-                                             "dirty pinned entry flush failed.")
+                                    HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
+                                                "dirty pinned entry flush failed.")
                                 } /* end if */
 
 #if H5C_DO_SANITY_CHECKS
@@ -2028,13 +2028,9 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
                                         = FALSE;
                                 }
                             } /* end if */
-                            else if(entry_ptr->flush_dep_height < 
-                                    curr_flush_dep_height)
-                                /* This shouldn't happen -- if it does, just 
-                                 * scream and die.  
-                                 */
-                                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,  \
-                                "dirty entry below current flush dep. height.")
+                            else if(entry_ptr->flush_dep_height < curr_flush_dep_height)
+                                /* This shouldn't happen -- if it does, just scream and die.  */
+                                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,  "dirty entry below current flush dep. height.")
                         } /* end if */
                         else {
                             /* Test to see if we are can flush the entry now.
@@ -2042,15 +2038,12 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
                              * aren't trying to do a destroy here, so that
                              * is not an issue.
                              */
-                            if(entry_ptr->flush_dep_height == 
-                               curr_flush_dep_height ) {
-
+                            if(entry_ptr->flush_dep_height == curr_flush_dep_height ) {
 #if H5C_DO_SANITY_CHECKS
                                 flushed_entries_count++;
                                 flushed_entries_size += entry_ptr->size;
                                 entry_size_change = 0;
 #endif /* H5C_DO_SANITY_CHECKS */
-
                                 status = H5C_flush_single_entry(f,
                                                             dxpl_id,
                                                             entry_ptr->addr,
@@ -2062,7 +2055,7 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
                                     /* This shouldn't happen -- if it does, 
                                      * we are toast so just scream and die.
                                      */
-                                    HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,\
+                                    HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
                                                 "Can't flush entry.")
                                 }
 
@@ -2093,13 +2086,9 @@ H5C_flush_cache(H5F_t *f, hid_t dxpl_id, unsigned flags)
                                         = FALSE;
                                 }
                             } /* end if */
-                            else if(entry_ptr->flush_dep_height < 
-                                    curr_flush_dep_height)
-                                /* This shouldn't happen -- if it does, just 
-                                 * scream and die.  
-                                 */
-                                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
-                                 "dirty entry below current flush dep. height.")
+                            else if(entry_ptr->flush_dep_height < curr_flush_dep_height)
+                                /* This shouldn't happen -- if it does, just scream and die.  */
+                                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,  "dirty entry below current flush dep. height.")
                         } /* end else */
                     } /* end if */
                 } /* while ( ( restart_slist_scan ) || ( node_ptr != NULL ) ) */
@@ -2245,7 +2234,6 @@ H5C_flush_to_min_clean(H5F_t * f,
                     "cache write is not permitted!?!\n");
     }
 #if 1 /* original code */
-
     result = H5C_make_space_in_cache(f,
                                      dxpl_id,
                                      (size_t)0,
@@ -2359,7 +2347,6 @@ H5C_flush_to_min_clean(H5F_t * f,
 #endif /* end modified code -- commented out for now */
 
 done:
-
     FUNC_LEAVE_NOAPI(ret_value)
 } /* H5C_flush_to_min_clean() */
 
@@ -2386,7 +2373,11 @@ H5C_get_cache_auto_resize_config(const H5C_t * cache_ptr,
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    if ( ( cache_ptr == NULL ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( cache_ptr == NULL )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     }
@@ -2435,7 +2426,11 @@ H5C_get_cache_size(H5C_t * cache_ptr,
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    if ( ( cache_ptr == NULL ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( cache_ptr == NULL )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     }
@@ -2490,7 +2485,11 @@ H5C_get_cache_hit_rate(H5C_t * cache_ptr, double * hit_rate_ptr)
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    if((cache_ptr == NULL ) || (cache_ptr->magic != H5C__H5C_T_MAGIC))
+    if((cache_ptr == NULL )
+#ifndef NDEBUG
+        || (cache_ptr->magic != H5C__H5C_T_MAGIC)
+#endif /* NDEBUG */
+        )
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     if(hit_rate_ptr == NULL)
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad hit_rate_ptr on entry.")
@@ -2561,7 +2560,11 @@ H5C_get_entry_status(const H5F_t *f,
     /* this test duplicates two of the above asserts, but we need an
      * invocation of HGOTO_ERROR to keep the compiler happy.
      */
-    if ( ( cache_ptr == NULL ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( cache_ptr == NULL )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     }
@@ -2638,7 +2641,11 @@ H5C_get_evictions_enabled(const H5C_t *cache_ptr,
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    if ( ( cache_ptr == NULL ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( cache_ptr == NULL )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     }
@@ -3927,7 +3934,6 @@ H5C_protect(H5F_t *		f,
     flush_collectively = ( (flags & H5C__FLUSH_COLLECTIVELY_FLAG) != 0 );
 #endif /* H5_HAVE_PARALLEL */
 
-
     /* first check to see if the target is in cache */
     H5C__SEARCH_INDEX(cache_ptr, addr, entry_ptr, NULL)
 
@@ -4302,7 +4308,11 @@ H5C_reset_cache_hit_rate_stats(H5C_t * cache_ptr)
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    if ( ( cache_ptr == NULL ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( cache_ptr == NULL )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     }
@@ -4347,7 +4357,11 @@ H5C_set_cache_auto_resize_config(H5C_t *cache_ptr,
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    if ( ( cache_ptr == NULL ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( cache_ptr == NULL )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     }
@@ -4621,7 +4635,11 @@ H5C_set_evictions_enabled(H5C_t *cache_ptr,
 
     FUNC_ENTER_NOAPI(FAIL)
 
-    if ( ( cache_ptr == NULL ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( cache_ptr == NULL )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr on entry.")
     }
@@ -4676,7 +4694,9 @@ H5C_set_prefix(H5C_t * cache_ptr, char * prefix)
     FUNC_ENTER_NOAPI(FAIL)
 
     if ( ( cache_ptr == NULL ) ||
+#ifndef NDEBUG
          ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ||
+#endif /* NDEBUG */
          ( prefix == NULL ) ||
          ( HDstrlen(prefix) >= H5C__PREFIX_LEN ) ) {
 
@@ -4720,7 +4740,11 @@ H5C_set_trace_file_ptr(H5C_t * cache_ptr,
     /* This would normally be an assert, but we need to use an HGOTO_ERROR
      * call to shut up the compiler.
      */
-    if ( ( ! cache_ptr ) || ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ) {
+    if ( ( ! cache_ptr )
+#ifndef NDEBUG
+        || ( cache_ptr->magic != H5C__H5C_T_MAGIC )
+#endif /* NDEBUG */
+        ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr")
     }
@@ -4808,7 +4832,9 @@ H5C_stats(H5C_t * cache_ptr,
      * call to shut up the compiler.
      */
     if ( ( ! cache_ptr ) ||
+#ifndef NDEBUG
          ( cache_ptr->magic != H5C__H5C_T_MAGIC ) ||
+#endif /* NDEBUG */
          ( !cache_name ) ) {
 
         HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "Bad cache_ptr or cache_name")
@@ -5737,15 +5763,9 @@ H5C_unprotect(H5F_t *		  f,
     HDassert( H5F_addr_defined(addr) );
     HDassert( thing );
     HDassert( ! ( pin_entry && unpin_entry ) );
-
-    /* deleted flag must accompany free_file_space */
-    HDassert( ( ! free_file_space ) || ( deleted ) );
-
-    /* deleted flag must accompany take_ownership */
-    HDassert( ( ! take_ownership ) || ( deleted ) );
-
-    /* can't have both free_file_space & take_ownership */
-    HDassert( ! ( free_file_space && take_ownership ) ); 
+    HDassert( ( ! free_file_space ) || ( deleted ) );   /* deleted flag must accompany free_file_space */
+    HDassert( ( ! take_ownership ) || ( deleted ) );    /* deleted flag must accompany take_ownership */
+    HDassert( ! ( free_file_space && take_ownership ) );    /* can't have both free_file_space & take_ownership */
 
     entry_ptr = (H5C_cache_entry_t *)thing;
 
@@ -5836,7 +5856,7 @@ H5C_unprotect(H5F_t *		  f,
             HGOTO_ERROR(H5E_CACHE, H5E_CANTUNPROTECT, FAIL, "Entry already unprotected??")
 
         /* Mark the entry as dirty if appropriate */
-        entry_ptr->is_dirty = (entry_ptr->is_dirty || dirtied );
+        entry_ptr->is_dirty = (entry_ptr->is_dirty || dirtied);
         /* the image_up_to_date field was introduced to support 
          * journaling.  Until we re-introduce journaling, this 
          * field should be equal to !entry_ptr->is_dirty.  
@@ -5891,7 +5911,7 @@ H5C_unprotect(H5F_t *		  f,
          *                                             JRM - 5/19/04
          */
         if ( deleted ) {
-           unsigned    flush_flags = (H5C__FLUSH_CLEAR_ONLY_FLAG |
+            unsigned    flush_flags = (H5C__FLUSH_CLEAR_ONLY_FLAG |
                                          H5C__FLUSH_INVALIDATE_FLAG);
 
 	    /* we can't delete a pinned entry */
@@ -8096,26 +8116,16 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                  */
 
                 node_ptr = H5SL_next(node_ptr);
-
                 if ( node_ptr != NULL ) {
-
                     next_entry_ptr = (H5C_cache_entry_t *)H5SL_item(node_ptr);
-
                     if ( NULL == next_entry_ptr )
-
-                        HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, \
-                                    "next_entry_ptr == NULL ?!?!")
-
-                    HDassert( next_entry_ptr->magic == \
-                              H5C__H5C_CACHE_ENTRY_T_MAGIC );
+                        HGOTO_ERROR(H5E_CACHE, H5E_SYSTEM, FAIL, "next_entry_ptr == NULL ?!?!")
+                    HDassert( next_entry_ptr->magic == H5C__H5C_CACHE_ENTRY_T_MAGIC );
                     HDassert( next_entry_ptr->is_dirty );
                     HDassert( next_entry_ptr->in_slist );
                     HDassert( entry_ptr != next_entry_ptr );
-
                 } else {
-
                     next_entry_ptr = NULL;
-
 	        }
 
                 /* Note that we now remove nodes from the slist as we flush
@@ -8167,9 +8177,7 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                          * H5C_flush_single_entry() to destroy the entry
                          * as pinned entries can't be evicted.
                          */
-                        if ( entry_ptr->flush_dep_height == 
-                             curr_flush_dep_height ) {
-
+                        if(entry_ptr->flush_dep_height == curr_flush_dep_height ) {
                             status = H5C_flush_single_entry(f,
                                                             dxpl_id,
                                                             entry_ptr->addr,
@@ -8184,7 +8192,6 @@ H5C_flush_invalidate_cache(const H5F_t * f,
 
                                 HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
                                             "dirty pinned entry flush failed.")
-
                             } /* end if */
 
 #if H5C_DO_SANITY_CHECKS
@@ -8212,18 +8219,12 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                                 cache_ptr->slist_change_in_serialize = FALSE;
                             }
                         } /* end if */
-                        else if ( entry_ptr->flush_dep_height < 
-                                  curr_flush_dep_height )
-
-                            /* This shouldn't happen -- if it does, just 
-                             * scream and die.  
-                             */
-                            HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,  \
-                                "dirty entry below current flush dep. height.")
+                        else if(entry_ptr->flush_dep_height < curr_flush_dep_height)
+                            /* This shouldn't happen -- if it does, just scream and die.  */
+                            HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,  "dirty entry below current flush dep. height.")
                     } /* end if */
                     else {
-                        if ( entry_ptr->flush_dep_height == 
-                             curr_flush_dep_height ) {
+                        if(entry_ptr->flush_dep_height == curr_flush_dep_height ){
 
                             status = H5C_flush_single_entry(f,
                                     dxpl_id,
@@ -8266,14 +8267,9 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                                 cache_ptr->slist_change_in_serialize = FALSE;
                             }
                         } /* end if */
-                        else if ( entry_ptr->flush_dep_height < 
-                                 curr_flush_dep_height )
-
-                            /* This shouldn't happen -- if it does, just 
-                             * scream and die.  
-                             */
-                            HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
-                                 "dirty entry below current flush dep. height.")
+                        else if(entry_ptr->flush_dep_height < curr_flush_dep_height)
+                            /* This shouldn't happen -- if it does, just scream and die.  */
+                            HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,  "dirty entry below current flush dep. height.")
                     } /* end else */
                 } /* end if */
             } /* end while loop scanning skip list */
@@ -8292,7 +8288,6 @@ H5C_flush_invalidate_cache(const H5F_t * f,
 
                 HDassert( (actual_slist_len + cache_ptr->slist_len) ==
                           (initial_slist_len + cache_ptr->slist_len_increase) );
-
                 HDassert( (actual_slist_size + cache_ptr->slist_size) ==
                           (initial_slist_size + 
                            (size_t)(cache_ptr->slist_size_increase)) );
@@ -8322,10 +8317,8 @@ H5C_flush_invalidate_cache(const H5F_t * f,
 #endif /* NDEBUG */
 
                     next_entry_ptr = entry_ptr->ht_next;
-
-                    HDassert ( ( next_entry_ptr == NULL ) || \
-                               ( next_entry_ptr->magic == \
-                                 H5C__H5C_CACHE_ENTRY_T_MAGIC ) );
+                    HDassert ( ( next_entry_ptr == NULL ) ||
+                               ( next_entry_ptr->magic == H5C__H5C_CACHE_ENTRY_T_MAGIC ) );
 
                     if ( ( ! entry_ptr->flush_me_last ) ||
                          ( ( entry_ptr->flush_me_last ) &&
@@ -8349,9 +8342,7 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                             /* Test to see if we are can flush the entry now.
                              * If we can, go ahead and flush.
                              */
-                            if ( entry_ptr->flush_dep_height == 
-                                 curr_flush_dep_height ) {
-
+                            if(entry_ptr->flush_dep_height == curr_flush_dep_height ){
                                 status = H5C_flush_single_entry(f,
                                     dxpl_id,
                                     entry_ptr->addr,
@@ -8370,14 +8361,9 @@ H5C_flush_invalidate_cache(const H5F_t * f,
                                 }
                                 flushed_during_dep_loop = TRUE;
                             } /* end if */
-                            else if ( entry_ptr->flush_dep_height < 
-                                      curr_flush_dep_height )
-
-                                /* This shouldn't happen -- if it does, just 
-                                 * scream and die.  
-                                 */
-                                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL, \
-                                 "dirty entry below current flush dep. height.")
+                            else if(entry_ptr->flush_dep_height < curr_flush_dep_height)
+                                /* This shouldn't happen -- if it does, just scream and die.  */
+                                HGOTO_ERROR(H5E_CACHE, H5E_CANTFLUSH, FAIL,  "dirty entry below current flush dep. height.")
                         } /* end if */
                     } /* end if */
                     /* We can't do anything if the entry is pinned.  The
@@ -8553,7 +8539,6 @@ done:
  *
  *-------------------------------------------------------------------------
  */
-
 static herr_t
 H5C_flush_single_entry(const H5F_t *	   f,
                        hid_t 		   dxpl_id,
@@ -8592,12 +8577,10 @@ H5C_flush_single_entry(const H5F_t *	   f,
 
 
     /* setup external flags from the flags parameter */
-
     destroy                = ((flags & H5C__FLUSH_INVALIDATE_FLAG) != 0);
     clear_only             = ((flags & H5C__FLUSH_CLEAR_ONLY_FLAG) != 0);
     free_file_space        = ((flags & H5C__FREE_FILE_SPACE_FLAG) != 0);
     take_ownership         = ((flags & H5C__TAKE_OWNERSHIP_FLAG) != 0);
-
 
     /* Set the flag for destroying the entry, based on the 'take ownership'
      * and 'destroy' flags
@@ -8607,10 +8590,8 @@ H5C_flush_single_entry(const H5F_t *	   f,
     else
         destroy_entry = destroy;
 
-
     /* attempt to find the target entry in the hash table */
     H5C__SEARCH_INDEX(cache_ptr, addr, entry_ptr, FAIL)
-
 
     /* we will write the entry to disk if it exists, is dirty, and if the 
      * clear only flag is not set.
@@ -8620,9 +8601,7 @@ H5C_flush_single_entry(const H5F_t *	   f,
     else
         write_entry = FALSE;
 
-
     /* run initial sanity checks */
-
 #if H5C_DO_SANITY_CHECKS
     if ( entry_ptr != NULL ) {
 
@@ -8664,7 +8643,6 @@ H5C_flush_single_entry(const H5F_t *	   f,
                     "Attempt to flush a protected entry.")
     }
 
-
     /* if the entry exists, set entry_ptr->flush_in_progress = TRUE,
      * set entry_ptr->flush_marker = FALSE, and setup the convenience
      * variable type_id.
@@ -8701,20 +8679,14 @@ H5C_flush_single_entry(const H5F_t *	   f,
 
             /* Get the dataset transfer property list */
             if(NULL == (dxpl = H5I_object(dxpl_id)))
-            {
-                HGOTO_ERROR(H5E_CACHE, H5E_BADTYPE, FAIL, \
-                            "not a dataset transfer property list")
-            }
+                HGOTO_ERROR(H5E_CACHE, H5E_BADTYPE, FAIL, "not a dataset transfer property list")
 
             /* Get the collective metadata write property */
-            if( H5P_get(dxpl, H5AC_COLLECTIVE_META_WRITE_NAME, &coll_meta) < 0 )
-            {
-                HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, \
-                            "can't retrieve xfer mode")
-            }
+            if(H5P_get(dxpl, H5AC_COLLECTIVE_META_WRITE_NAME, &coll_meta) < 0)
+                HGOTO_ERROR(H5E_CACHE, H5E_CANTGET, FAIL, "can't retrieve xfer mode")
 
             /* Sanity check collective metadata write flag */
-            HDassert(coll_meta); 
+            HDassert(coll_meta);
         } /* end if */
 #endif /* NDEBUG */
 #endif /* H5_HAVE_PARALLEL */
@@ -9242,11 +9214,13 @@ H5C_flush_single_entry(const H5F_t *	   f,
                     }
                 }
 
+#ifndef NDEBUG
                 /* we are about to discard the in core representation --
                  * set the magic field to bad magic so we can detect a
                  * freed entry if we see one.
                  */
 	        entry_ptr->magic = H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC;
+#endif /* NDEBUG */
 
 
                 /* verify that the image has been freed */
@@ -9262,11 +9236,13 @@ H5C_flush_single_entry(const H5F_t *	   f,
             {
                 HDassert(take_ownership);
 
+#ifndef NDEBUG
                 /* client is taking ownership of the entry.
                  * set bad magic here too so the cache will choke 
                  * unless the entry is re-inserted properly
                  */
 	        entry_ptr->magic = H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC;
+#endif /* NDEBUG */
             }
         } /* if ( destroy ) */
     }
@@ -9471,7 +9447,9 @@ H5C_load_entry(H5F_t *             f,
          * chance that we had to re-try the deserialization.
          */
         entry = (H5C_cache_entry_t *)thing;
+#ifndef NDEBUG
         entry->magic = H5C__H5C_CACHE_ENTRY_T_MAGIC;
+#endif /* NDEBUG */
         entry->type  = type;
 
         /* Get the actual image size for the thing */
@@ -9530,8 +9508,9 @@ H5C_load_entry(H5F_t *             f,
                      * two other fields before the call to free_icr
                      * so as to avoid sanity check failures.
                      */
-
+#ifndef NDEBUG
                     entry->magic = H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC;
+#endif /* NDEBUG */
                     entry->addr  = addr;
 
                     if ( type->free_icr(thing) < 0 )

@@ -63,7 +63,6 @@ typedef struct H5A_iter_cb1 {
 /* Local Prototypes */
 /********************/
 
-static herr_t H5A__open_common(const H5G_loc_t *loc, H5A_t *attr);
 static herr_t H5A__write(H5A_t *attr, const H5T_t *mem_type, const void *buf, hid_t dxpl_id);
 static herr_t H5A__read(const H5A_t *attr, const H5T_t *mem_type, void *buf, hid_t dxpl_id);
 static ssize_t H5A__get_name(H5A_t *attr, size_t buf_size, char *buf);
@@ -562,63 +561,6 @@ done:
 
     FUNC_LEAVE_API(ret_value)
 } /* H5Aopen_by_idx() */
-
-
-/*-------------------------------------------------------------------------
- * Function:	H5A__open_common
- *
- * Purpose:
- *      Finishes initializing an attributes the open
- *
- * Usage:
- *  herr_t H5A__open_common(loc, name, dxpl_id)
- *      const H5G_loc_t *loc;   IN: Pointer to group location for object
- *      H5A_t *attr;            IN/OUT: Pointer to attribute to initialize
- *
- * Return: Non-negative on success/Negative on failure
- *
- * Programmer:	Quincey Koziol
- *		December 18, 2006
- *
- *-------------------------------------------------------------------------
- */
-static herr_t
-H5A__open_common(const H5G_loc_t *loc, H5A_t *attr)
-{
-    herr_t ret_value = SUCCEED;         /* Return value */
-
-    FUNC_ENTER_STATIC
-
-    /* check args */
-    HDassert(loc);
-    HDassert(attr);
-
-#if defined(H5_USING_MEMCHECKER) || !defined(NDEBUG)
-    /* Clear object location */
-    if(H5O_loc_reset(&(attr->oloc)) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, FAIL, "unable to reset location")
-#endif /* H5_USING_MEMCHECKER */
-
-    /* Free any previous group hier. path */
-    if(H5G_name_free(&(attr->path)) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTRELEASE, FAIL, "can't release group hier. path")
-
-    /* Deep copy of the symbol table entry */
-    if(H5O_loc_copy(&(attr->oloc), loc->oloc, H5_COPY_DEEP) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, FAIL, "unable to copy entry")
-
-    /* Deep copy of the group hier. path */
-    if(H5G_name_copy(&(attr->path), loc->path, H5_COPY_DEEP) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTCOPY, FAIL, "unable to copy entry")
-
-    /* Hold the symbol table entry (and file) open */
-    if(H5O_open(&(attr->oloc)) < 0)
-        HGOTO_ERROR(H5E_ATTR, H5E_CANTOPENOBJ, FAIL, "unable to open")
-    attr->obj_opened = TRUE;
-
-done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* H5A__open_common() */
 
 
 /*--------------------------------------------------------------------------
@@ -1392,46 +1334,6 @@ done:
 
     FUNC_LEAVE_API(ret_value)
 } /* end H5Aget_info_by_idx() */
-
-
-/*-------------------------------------------------------------------------
- * Function:	H5A__get_info
- *
- * Purpose:	Retrieve information about an attribute.
- *
- * Return:	Success:	Non-negative
- *		Failure:	Negative
- *
- * Programmer:	Quincey Koziol
- *              February  6, 2007
- *
- *-------------------------------------------------------------------------
- */
-herr_t
-H5A__get_info(const H5A_t *attr, H5A_info_t *ainfo)
-{
-    herr_t ret_value = SUCCEED;         /* Return value */
-
-    FUNC_ENTER_PACKAGE_NOERR
-
-    /* Check args */
-    HDassert(attr);
-    HDassert(ainfo);
-
-    /* Set info for attribute */
-    ainfo->cset = attr->shared->encoding;
-    ainfo->data_size = attr->shared->data_size;
-    if(attr->shared->crt_idx == H5O_MAX_CRT_ORDER_IDX) {
-        ainfo->corder_valid = FALSE;
-        ainfo->corder = 0;
-    } /* end if */
-    else {
-        ainfo->corder_valid = TRUE;
-        ainfo->corder = attr->shared->crt_idx;
-    } /* end else */
-
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5A__get_info() */
 
 
 /*-------------------------------------------------------------------------

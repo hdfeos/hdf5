@@ -84,8 +84,7 @@ static herr_t H5FA__cache_dblock_image_len(const void *thing, size_t *image_len)
 static herr_t H5FA__cache_dblock_serialize(const H5F_t *f, void *image, size_t len,
     void *thing);
 static herr_t H5FA__cache_dblock_free_icr(void *thing);
-
-static herr_t H5FA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr);
+static herr_t H5FA__cache_dblock_fsf_size(const void *thing, size_t *fsf_size_ptr);
 
 static herr_t H5FA__cache_dblk_page_get_load_size(const void *udata, size_t *image_len);
 static void *H5FA__cache_dblk_page_deserialize(const void *image, size_t len,
@@ -528,10 +527,9 @@ H5FA__cache_dblock_deserialize(const void *image, size_t len,
 
     /* Allocate the fixed array data block */
     if(NULL == (dblock = H5FA__dblock_alloc(udata->hdr)))
-	H5E_THROW(H5E_CANTALLOC, \
-                  "memory allocation failed for fixed array data block")
+	H5E_THROW(H5E_CANTALLOC, "memory allocation failed for fixed array data block")
 
-    HDassert(((!dblock->npages) && (len == (size_t)H5FA_DBLOCK_SIZE(dblock))) \
+    HDassert(((!dblock->npages) && (len == (size_t)H5FA_DBLOCK_SIZE(dblock))) 
              || (len == (size_t)H5FA_DBLOCK_PREFIX_SIZE(dblock)));
 
     /* Set the fixed array data block's information */
@@ -662,7 +660,7 @@ H5FA__cache_dblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     uint8_t *p;             /* Pointer into raw data buffer */
     uint32_t metadata_chksum; /* Computed metadata checksum value */
 
-    /* Sanity check */
+    /* Check arguments */
     HDassert(f);
     HDassert(image);
     HDassert(dblock);
@@ -732,19 +730,12 @@ END_FUNC(STATIC)   /* end H5FA__cache_dblock_serialize() */
  */
 BEGIN_FUNC(STATIC, ERR,
 herr_t, SUCCEED, FAIL,
-H5FA__cache_dblock_free_icr(void *thing))
+H5FA__cache_dblock_free_icr(void *_thing))
 
-    H5FA_dblock_t *dblock = NULL;
+    H5FA_dblock_t *dblock = (H5FA_dblock_t *)_thing;    /* Pointer to the object */
 
     /* Check arguments */
-    HDassert(thing);
-
-    dblock = (H5FA_dblock_t *)thing;
-
     HDassert(dblock);
-    HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
-    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
-              &(H5AC_FARRAY_DBLOCK[0]));
 
     /* Release the fixed array data block */
     if(H5FA__dblock_dest(dblock) < 0)
@@ -786,20 +777,15 @@ END_FUNC(STATIC)   /* end H5FA__cache_dblock_free_icr() */
  */
 BEGIN_FUNC(STATIC, NOERR,
 herr_t, SUCCEED, FAIL,
-H5FA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr))
+H5FA__cache_dblock_fsf_size(const void *_thing, size_t *fsf_size_ptr))
 
-    H5FA_dblock_t *dblock = NULL;
+    const H5FA_dblock_t *dblock = (const H5FA_dblock_t *)_thing;    /* Pointer to the object */
 
     /* Check arguments */
-    HDassert(thing);
-    HDassert(fsf_size_ptr);
-
-    dblock = (H5FA_dblock_t *)thing;
-
     HDassert(dblock);
     HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
-    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
-              &(H5AC_FARRAY_DBLOCK[0]));
+    HDassert(dblock->cache_info.type == H5AC_FARRAY_DBLOCK);
+    HDassert(fsf_size_ptr);
 
     *fsf_size_ptr = dblock->size;
 

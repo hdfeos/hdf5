@@ -43,7 +43,7 @@
 #include "H5Eprivate.h"		/* Error handling		  	*/
 #include "H5EApkg.h"		/* Extensible Arrays			*/
 #include "H5MFprivate.h"	/* File memory management		*/
-#include "H5VMprivate.h"		/* Vectors and arrays 			*/
+#include "H5VMprivate.h"	/* Vectors and arrays 			*/
 #include "H5WBprivate.h"        /* Wrapped Buffers                      */
 
 
@@ -107,7 +107,7 @@ static herr_t H5EA__cache_dblock_serialize(const H5F_t *f, void *image, size_t l
     void *thing);
 static herr_t H5EA__cache_dblock_notify(H5AC_notify_action_t action, void *thing);
 static herr_t H5EA__cache_dblock_free_icr(void *thing);
-static herr_t H5EA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr);
+static herr_t H5EA__cache_dblock_fsf_size(const void *thing, size_t *fsf_size_ptr);
 
 static herr_t H5EA__cache_dblk_page_get_load_size(const void *udata, size_t *image_len);
 static void *H5EA__cache_dblk_page_deserialize(const void *image, size_t len,
@@ -584,8 +584,7 @@ H5EA__cache_iblock_deserialize(const void *image, size_t len,
     haddr_t             arr_addr;       /* Address of array header in the file */
     size_t              u;              /* Local index variable */
 
-
-    /* Sanity check */
+    /* Check arguments */
     HDassert(hdr);
 
     /* Allocate the extensible array index block */
@@ -833,11 +832,7 @@ H5EA__cache_iblock_notify(H5AC_notify_action_t action, void *_thing))
             break;
 
         default:
-#ifdef NDEBUG
             H5E_THROW(H5E_BADVALUE, "unknown action from metadata cache")
-#else /* NDEBUG */
-            HDassert(0 && "Unknown action?!?");
-#endif /* NDEBUG */
     } /* end switch */
 
 CATCH
@@ -1196,11 +1191,7 @@ H5EA__cache_sblock_notify(H5AC_notify_action_t action, void *_thing))
             break;
 
         default:
-#ifdef NDEBUG
             H5E_THROW(H5E_BADVALUE, "unknown action from metadata cache")
-#else /* NDEBUG */
-            HDassert(0 && "Unknown action?!?");
-#endif /* NDEBUG */
     } /* end switch */
 
 CATCH
@@ -1324,7 +1315,7 @@ H5EA__cache_dblock_deserialize(const void *image, size_t len,
     uint32_t            computed_chksum; /* Computed metadata checksum value */
     haddr_t             arr_addr;       /* Address of array header in the file */
 
-    /* Sanity check */
+    /* Check arguments */
     HDassert(udata);
     HDassert(udata->hdr);
     HDassert(udata->parent);
@@ -1335,7 +1326,7 @@ H5EA__cache_dblock_deserialize(const void *image, size_t len,
     if(NULL == (dblock = H5EA__dblock_alloc(udata->hdr, udata->parent, udata->nelmts)))
 	H5E_THROW(H5E_CANTALLOC, "memory allocation failed for extensible array data block")
 
-    HDassert(((!dblock->npages) && (len == H5EA_DBLOCK_SIZE(dblock))) || \
+    HDassert(((!dblock->npages) && (len == H5EA_DBLOCK_SIZE(dblock))) || 
              (len == H5EA_DBLOCK_PREFIX_SIZE(dblock)));
 
     /* Set the extensible array data block's information */
@@ -1537,7 +1528,7 @@ H5EA__cache_dblock_notify(H5AC_notify_action_t action, void *_thing))
     /* Local variables */
     H5EA_dblock_t *dblock = (H5EA_dblock_t *)_thing;      /* Pointer to the object */
 
-    /* Sanity check */
+    /* Check arguments */
     HDassert(dblock);
 
     /* Determine which action to take */
@@ -1560,11 +1551,7 @@ H5EA__cache_dblock_notify(H5AC_notify_action_t action, void *_thing))
             break;
 
         default:
-#ifdef NDEBUG
             H5E_THROW(H5E_BADVALUE, "unknown action from metadata cache")
-#else /* NDEBUG */
-            HDassert(0 && "Unknown action?!?");
-#endif /* NDEBUG */
     } /* end switch */
 
 CATCH
@@ -1633,20 +1620,16 @@ END_FUNC(STATIC)   /* end H5EA__cache_dblock_free_icr() */
  */
 BEGIN_FUNC(STATIC, NOERR,
 herr_t, SUCCEED, FAIL,
-H5EA__cache_dblock_fsf_size(void *thing, size_t *fsf_size_ptr))
+H5EA__cache_dblock_fsf_size(const void *_thing, size_t *fsf_size_ptr))
 
-    H5EA_dblock_t *dblock = NULL;
+    /* Local variables */
+    const H5EA_dblock_t *dblock = (const H5EA_dblock_t *)_thing;        /* Pointer to the object */
 
     /* Check arguments */
-    HDassert(thing);
-    HDassert(fsf_size_ptr);
-
-    dblock = (H5EA_dblock_t *)thing;
-
     HDassert(dblock);
     HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
-    HDassert((const H5AC_class_t *)(dblock->cache_info.type) == \
-              &(H5AC_EARRAY_DBLOCK[0]));
+    HDassert(dblock->cache_info.type == H5AC_EARRAY_DBLOCK);
+    HDassert(fsf_size_ptr);
 
     *fsf_size_ptr = dblock->size;
 
@@ -1820,7 +1803,7 @@ H5EA__cache_dblk_page_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     uint8_t *p;                 /* Pointer into raw data buffer */
     uint32_t metadata_chksum;   /* Computed metadata checksum value */
 
-    /* check arguments */
+    /* Check arguments */
     HDassert(f);
     HDassert(image);
     HDassert(dblk_page);
@@ -1895,11 +1878,7 @@ H5EA__cache_dblk_page_notify(H5AC_notify_action_t action, void *_thing))
             break;
 
         default:
-#ifdef NDEBUG
             H5E_THROW(H5E_BADVALUE, "unknown action from metadata cache")
-#else /* NDEBUG */
-            HDassert(0 && "Unknown action?!?");
-#endif /* NDEBUG */
     } /* end switch */
 
 CATCH

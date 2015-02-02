@@ -367,7 +367,7 @@ H5D__chunk_direct_write(const H5D_t *dset, hid_t dxpl_id, uint32_t filters,
 	idx_info.storage = &(dset->shared->layout.storage.u.chunk);
 
 	/* Set up the size of chunk for user data */
-        H5_ASSIGN_OVERFLOW(udata.nbytes, data_size, size_t, uint32_t);
+	udata.nbytes = data_size;
 
         /* Create the chunk it if it doesn't exist, or reallocate the chunk
          *  if its size changed.

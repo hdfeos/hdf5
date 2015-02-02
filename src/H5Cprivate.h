@@ -700,7 +700,7 @@ typedef struct H5C_t H5C_t;
  *
  *      The typedef for the clear callback is as follows:
  *
- *      typedef herr_t (*H5C_get_fsf_size_func_t)(void * thing,
+ *      typedef herr_t (*H5C_get_fsf_size_t)(const void * thing,
  *                                                size_t *fsf_size_ptr);
  *
  *      The parameters of the clear callback are as follows:
@@ -780,7 +780,7 @@ typedef herr_t (*H5C_clear_func_t)(const H5F_t *f,
                                    	void * thing, 
                                    	hbool_t about_to_destroy);
 
-typedef herr_t (*H5C_get_fsf_size_t)(void * thing,
+typedef herr_t (*H5C_get_fsf_size_t)(const void * thing,
                                      	size_t *fsf_size_ptr);
 
 #define H5C__CLASS_NO_FLAGS_SET			((unsigned)0x0)
