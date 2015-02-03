@@ -52,8 +52,7 @@ foreach (example ${examples})
   )
   if (WIN32)
     set_property (TARGET f90_ex_${example} 
-        APPEND PROPERTY COMPILE_DEFINITIONS 
-          HDF5F90_WINDOWS
+        APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS
     )
   endif (WIN32)
 endforeach (example ${examples})
@@ -94,8 +93,7 @@ if (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
   )
   if (WIN32)
     set_property (TARGET f90_ex_ph5example 
-        APPEND PROPERTY COMPILE_DEFINITIONS 
-          HDF5F90_WINDOWS
+        APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS
     )
   endif (WIN32)
 endif (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
