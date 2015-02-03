@@ -247,12 +247,6 @@ endif (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
 #-----------------------------------------------------------------------------
 add_library (${HDF5_F90_LIB_TARGET} STATIC ${f90_F_SRCS})
 set (SHARED_LINK_FLAGS " ")
-if (WIN32)
-  set_property (TARGET ${HDF5_F90_LIB_TARGET}
-      APPEND PROPERTY COMPILE_DEFINITIONS
-        HDF5F90_WINDOWS
-  )
-endif (WIN32)
 TARGET_FORTRAN_PROPERTIES (${HDF5_F90_LIB_TARGET} STATIC " " " ")
 set_target_properties (${HDF5_F90_LIB_TARGET} PROPERTIES LINKER_LANGUAGE Fortran)
 target_link_libraries (${HDF5_F90_LIB_TARGET} ${HDF5_F90_C_LIB_TARGET} ${HDF5_LIB_TARGET})
@@ -265,24 +259,20 @@ set_target_properties (${HDF5_F90_LIB_TARGET} PROPERTIES
     FOLDER libraries/fortran
     INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
+if (WIN32)
+  set_property (TARGET ${HDF5_F90_LIB_TARGET}
+      APPEND PROPERTY COMPILE_DEFINITIONS
+        HDF5F90_WINDOWS
+  )
+endif (WIN32)
 set (install_targets ${install_targets} ${HDF5_F90_LIB_TARGET})
 
 if (BUILD_SHARED_LIBS)
   add_library (${HDF5_F90_LIBSH_TARGET} SHARED ${f90_F_SRCS})
   set (SHARED_LINK_FLAGS " ")
-  if (WIN32)
-    set_property (TARGET ${HDF5_F90_LIBSH_TARGET}
-      APPEND PROPERTY COMPILE_DEFINITIONS
-        BUILD_HDF5_DLL
-    )
-    if (MSVC)
-      set (SHARED_LINK_FLAGS "/DLL /DEF:${HDF5_F90_SRC_BINARY_DIR}/hdf5_fortrandll.def")
-    endif (MSVC)
-    set_property (TARGET ${HDF5_F90_LIBSH_TARGET}
-        APPEND PROPERTY COMPILE_DEFINITIONS
-          HDF5F90_WINDOWS
-    )
-  endif (WIN32)
+  if (WIN32 AND MSVC)
+    set (SHARED_LINK_FLAGS "/DLL /DEF:${HDF5_F90_SRC_BINARY_DIR}/hdf5_fortrandll.def")
+  endif (WIN32 AND MSVC)
   TARGET_FORTRAN_PROPERTIES (${HDF5_F90_LIBSH_TARGET} SHARED " " ${SHARED_LINK_FLAGS})
   set_target_properties (${HDF5_F90_LIBSH_TARGET} PROPERTIES LINKER_LANGUAGE Fortran)
   target_link_libraries (${HDF5_F90_LIBSH_TARGET} ${HDF5_F90_C_LIBSH_TARGET} ${HDF5_LIBSH_TARGET})
@@ -297,6 +287,11 @@ if (BUILD_SHARED_LIBS)
       INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
       INTERFACE_COMPILE_DEFINITIONS H5_BUILT_AS_DYNAMIC_LIB=1
   )
+  if (WIN32)
+    set_property (TARGET ${HDF5_F90_LIBSH_TARGET}
+      APPEND PROPERTY COMPILE_DEFINITIONS "BUILD_HDF5_DLL;HDF5F90_WINDOWS"
+    )
+  endif (WIN32)
   set (install_targets ${install_targets} ${HDF5_F90_LIBSH_TARGET})
 endif (BUILD_SHARED_LIBS)
 

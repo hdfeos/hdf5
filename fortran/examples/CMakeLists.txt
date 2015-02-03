@@ -42,18 +42,20 @@ foreach (example ${examples})
   add_executable (f90_ex_${example} ${HDF5_F90_EXAMPLES_SOURCE_DIR}/${example}.f90)
   TARGET_NAMING (f90_ex_${example} STATIC)
   TARGET_FORTRAN_PROPERTIES (f90_ex_${example} STATIC " " " ")
+  target_link_libraries (f90_ex_${example}
+      ${HDF5_F90_LIB_TARGET}
+      ${HDF5_LIB_TARGET}
+  )
+  set_target_properties (f90_ex_${example} PROPERTIES
+      LINKER_LANGUAGE Fortran
+      FOLDER examples/fortran
+  )
   if (WIN32)
     set_property (TARGET f90_ex_${example} 
         APPEND PROPERTY COMPILE_DEFINITIONS 
           HDF5F90_WINDOWS
     )
   endif (WIN32)
-  target_link_libraries (f90_ex_${example}
-      ${HDF5_F90_LIB_TARGET}
-      ${HDF5_LIB_TARGET}
-  )
-  set_target_properties (f90_ex_${example} PROPERTIES LINKER_LANGUAGE Fortran)
-  set_target_properties (f90_ex_${example} PROPERTIES FOLDER examples/fortran)
 endforeach (example ${examples})
 
 if (HDF5_ENABLE_F2003)
@@ -61,17 +63,19 @@ if (HDF5_ENABLE_F2003)
     add_executable (f03_ex_${example} ${HDF5_F90_EXAMPLES_SOURCE_DIR}/${example}.f90)
     TARGET_NAMING (f03_ex_${example} STATIC)
     TARGET_FORTRAN_PROPERTIES (f03_ex_${example} STATIC " " " ")
+    target_link_libraries (f03_ex_${example}
+        ${HDF5_F90_LIB_TARGET}
+        ${HDF5_LIB_TARGET}
+    )
+    set_target_properties (f03_ex_${example} PROPERTIES
+        LINKER_LANGUAGE Fortran
+        FOLDER examples/fortran03
+    )
     if (WIN32)
       set_property (TARGET f03_ex_${example} 
           APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS
       )
     endif (WIN32)
-    target_link_libraries (f03_ex_${example}
-        ${HDF5_F90_LIB_TARGET}
-        ${HDF5_LIB_TARGET}
-    )
-    set_target_properties (f03_ex_${example} PROPERTIES LINKER_LANGUAGE Fortran)
-    set_target_properties (f03_ex_${example} PROPERTIES FOLDER examples/fortran03)
   endforeach (example ${F2003_examples})
 endif (HDF5_ENABLE_F2003)
 
@@ -79,19 +83,21 @@ if (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
   add_executable (f90_ex_ph5example ${HDF5_F90_EXAMPLES_SOURCE_DIR}/ph5example.f90)
   TARGET_NAMING (f90_ex_ph5example STATIC)
   TARGET_FORTRAN_PROPERTIES (f90_ex_ph5example STATIC " " " ")
+  target_link_libraries (f90_ex_ph5example
+      ${HDF5_F90_LIB_TARGET}
+      ${HDF5_LIB_TARGET}
+      ${MPI_Fortran_LIBRARIES}
+  )
+  set_target_properties (f90_ex_ph5example PROPERTIES
+      LINKER_LANGUAGE Fortran
+      FOLDER examples/fortran
+  )
   if (WIN32)
     set_property (TARGET f90_ex_ph5example 
         APPEND PROPERTY COMPILE_DEFINITIONS 
           HDF5F90_WINDOWS
     )
   endif (WIN32)
-  target_link_libraries (f90_ex_ph5example
-      ${HDF5_F90_LIB_TARGET}
-      ${HDF5_LIB_TARGET}
-      ${MPI_Fortran_LIBRARIES}
-  )
-  set_target_properties (f90_ex_ph5example PROPERTIES LINKER_LANGUAGE Fortran)
-  set_target_properties (f90_ex_ph5example PROPERTIES FOLDER examples/fortran)
 endif (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
 
 if (BUILD_TESTING)
