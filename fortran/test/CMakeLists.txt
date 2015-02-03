@@ -110,6 +110,7 @@ add_executable (testhdf5_fortran
     tH5F.f90
     tH5G.f90
     tH5I.f90
+    tH5MISC_1_8.f90
     tH5P.f90
     tH5R.f90
     tH5S.f90
