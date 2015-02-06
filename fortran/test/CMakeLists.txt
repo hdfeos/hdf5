@@ -133,6 +133,37 @@ if (WIN32 AND MSVC)
 endif (WIN32 AND MSVC)
 set_target_properties (testhdf5_fortran PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties (testhdf5_fortran PROPERTIES FOLDER test/fortran)
+if (BUILD_SHARED_LIBS)
+  add_executable (testhdf5_fortran-shared
+      fortranlib_test.f90
+      tH5A.f90
+      tH5D.f90
+      tH5E.f90
+      tH5F.f90
+      tH5G.f90
+      tH5I.f90
+      tH5P.f90
+      tH5R.f90
+      tH5S.f90
+      tH5Sselect.f90
+      tH5T.f90
+      tH5VL.f90
+      tH5Z.f90
+      tHDF5.f90
+  )
+  TARGET_NAMING (testhdf5_fortran-shared SHARED)
+  TARGET_FORTRAN_PROPERTIES (testhdf5_fortran-shared SHARED " " " ")
+  target_link_libraries (testhdf5_fortran-shared 
+      ${HDF5_F90_TEST_LIBSH_TARGET}
+      ${HDF5_F90_LIBSH_TARGET}
+      ${HDF5_LIBSH_TARGET}
+  )
+  if (WIN32 AND MSVC)
+    target_link_libraries (testhdf5_fortran-shared "ws2_32.lib")
+  endif (WIN32 AND MSVC)
+  set_target_properties (testhdf5_fortran-shared PROPERTIES LINKER_LANGUAGE Fortran)
+  set_target_properties (testhdf5_fortran-shared PROPERTIES FOLDER test/fortran)
+endif (BUILD_SHARED_LIBS)
 
 #-- Adding test for testhdf5_fortran_1_8
 add_executable (testhdf5_fortran_1_8
@@ -155,6 +186,28 @@ if (WIN32 AND MSVC)
 endif (WIN32 AND MSVC)
 set_target_properties (testhdf5_fortran_1_8 PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties (testhdf5_fortran_1_8 PROPERTIES FOLDER test/fortran)
+if (BUILD_SHARED_LIBS)
+  add_executable (testhdf5_fortran_1_8-shared
+      fortranlib_test_1_8.f90
+      tH5O.f90
+      tH5A_1_8.f90
+      tH5G_1_8.f90
+      tH5MISC_1_8.f90
+      tHDF5_1_8.f90
+  )
+  TARGET_NAMING (testhdf5_fortran_1_8-shared SHARED)
+  TARGET_FORTRAN_PROPERTIES (testhdf5_fortran_1_8-shared SHARED " " " ")
+  target_link_libraries (testhdf5_fortran_1_8-shared 
+      ${HDF5_F90_TEST_LIBSH_TARGET}
+      ${HDF5_F90_LIBSH_TARGET}
+      ${HDF5_LIBSH_TARGET}
+  )
+  if (WIN32 AND MSVC)
+    target_link_libraries (testhdf5_fortran_1_8-shared "ws2_32.lib")
+  endif (WIN32 AND MSVC)
+  set_target_properties (testhdf5_fortran_1_8-shared PROPERTIES LINKER_LANGUAGE Fortran)
+  set_target_properties (testhdf5_fortran_1_8-shared PROPERTIES FOLDER test/fortran)
+endif (BUILD_SHARED_LIBS)
 
 #-- Adding test for fortranlib_test_F03
 if (HDF5_ENABLE_F2003)
@@ -180,6 +233,30 @@ if (HDF5_ENABLE_F2003)
   endif (WIN32 AND MSVC)
   set_target_properties (fortranlib_test_F03 PROPERTIES LINKER_LANGUAGE Fortran)
   set_target_properties (fortranlib_test_F03 PROPERTIES FOLDER test/fortran)
+  if (BUILD_SHARED_LIBS)
+    add_executable (fortranlib_test_F03-shared
+        fortranlib_test_F03.f90
+        tH5E_F03.f90
+        tH5F_F03.f90
+        tH5L_F03.f90
+        tH5O_F03.f90
+        tH5P_F03.f90
+        tH5T_F03.f90
+        tHDF5_F03.f90
+    )
+    TARGET_NAMING (fortranlib_test_F03-shared SHARED)
+    TARGET_FORTRAN_PROPERTIES (fortranlib_test_F03-shared SHARED " " " ")
+    target_link_libraries (fortranlib_test_F03-shared 
+        ${HDF5_F90_TEST_LIBSH_TARGET}
+        ${HDF5_F90_LIBSH_TARGET}
+        ${HDF5_LIBSH_TARGET}
+    )
+    if (WIN32 AND MSVC)
+      target_link_libraries (fortranlib_test_F03-shared "ws2_32.lib")
+    endif (WIN32 AND MSVC)
+    set_target_properties (fortranlib_test_F03-shared PROPERTIES LINKER_LANGUAGE Fortran)
+    set_target_properties (fortranlib_test_F03-shared PROPERTIES FOLDER test/fortran)
+  endif (BUILD_SHARED_LIBS)
 endif (HDF5_ENABLE_F2003)
 
 #-- Adding test for fflush1
@@ -196,6 +273,21 @@ if (WIN32 AND MSVC)
 endif (WIN32 AND MSVC)
 set_target_properties (fflush1 PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties (fflush1 PROPERTIES FOLDER test/fortran)
+if (BUILD_SHARED_LIBS)
+  add_executable (fflush1-shared fflush1.f90)
+  TARGET_NAMING (fflush1-shared SHARED)
+  TARGET_FORTRAN_PROPERTIES (fflush1-shared SHARED " " " ")
+  target_link_libraries (fflush1-shared 
+      ${HDF5_F90_LIBSH_TARGET}
+      ${HDF5_F90_TEST_LIBSH_TARGET}
+      ${HDF5_LIBSH_TARGET}
+  )
+  if (WIN32 AND MSVC)
+    target_link_libraries (fflush1-shared "ws2_32.lib")
+  endif (WIN32 AND MSVC)
+  set_target_properties (fflush1-shared PROPERTIES LINKER_LANGUAGE Fortran)
+  set_target_properties (fflush1-shared PROPERTIES FOLDER test/fortran)
+endif (BUILD_SHARED_LIBS)
 
 #-- Adding test for fflush2
 add_executable (fflush2 fflush2.f90)
@@ -211,5 +303,20 @@ if (WIN32 AND MSVC)
 endif (WIN32 AND MSVC)
 set_target_properties (fflush2 PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties (fflush2 PROPERTIES FOLDER test/fortran)
+if (BUILD_SHARED_LIBS)
+  add_executable (fflush2-shared fflush2.f90)
+  TARGET_NAMING (fflush2-shared SHARED)
+  TARGET_FORTRAN_PROPERTIES (fflush2-shared SHARED " " " ")
+  target_link_libraries (fflush2-shared 
+      ${HDF5_F90_TEST_LIBSH_TARGET}
+      ${HDF5_F90_LIBSH_TARGET}
+      ${HDF5_LIBSH_TARGET}
+  )
+  if (WIN32 AND MSVC)
+    target_link_libraries (fflush2-shared "ws2_32.lib")
+  endif (WIN32 AND MSVC)
+  set_target_properties (fflush2-shared PROPERTIES LINKER_LANGUAGE Fortran)
+  set_target_properties (fflush2-shared PROPERTIES FOLDER test/fortran)
+endif (BUILD_SHARED_LIBS)
 
 include (CMakeTests.cmake)

@@ -24,3 +24,25 @@ add_test (NAME FORTRAN_fflush1 COMMAND $<TARGET_FILE:fflush1>)
 #-- Adding test for fflush2
 add_test (NAME FORTRAN_fflush2 COMMAND $<TARGET_FILE:fflush2>)
 set_tests_properties (FORTRAN_fflush2 PROPERTIES DEPENDS FORTRAN_fflush1)
+
+if (BUILD_SHARED_LIBS)
+  add_test (NAME FORTRAN_testhdf5_fortran-shared COMMAND $<TARGET_FILE:testhdf5_fortran-shared>)
+  set_tests_properties (FORTRAN_testhdf5_fortran-shared PROPERTIES PASS_REGULAR_EXPRESSION "[ ]*0 error.s")
+
+  #-- Adding test for testhdf5_fortran_1_8
+  add_test (NAME FORTRAN_testhdf5_fortran_1_8-shared COMMAND $<TARGET_FILE:testhdf5_fortran_1_8-shared>)
+  set_tests_properties (FORTRAN_testhdf5_fortran_1_8-shared PROPERTIES PASS_REGULAR_EXPRESSION "[ ]*0 error.s")
+
+  #-- Adding test for fortranlib_test_F03
+  if (HDF5_ENABLE_F2003)
+    add_test (NAME FORTRAN_fortranlib_test_F03-shared COMMAND $<TARGET_FILE:fortranlib_test_F03-shared>)
+    set_tests_properties (FORTRAN_fortranlib_test_F03-shared PROPERTIES PASS_REGULAR_EXPRESSION "[ ]*0 error.s")
+  endif (HDF5_ENABLE_F2003)
+
+  #-- Adding test for fflush1
+  add_test (NAME FORTRAN_fflush1-shared COMMAND $<TARGET_FILE:fflush1-shared>)
+
+  #-- Adding test for fflush2
+  add_test (NAME FORTRAN_fflush2-shared COMMAND $<TARGET_FILE:fflush2-shared>)
+  set_tests_properties (FORTRAN_fflush2-shared PROPERTIES DEPENDS FORTRAN_fflush1-shared)
+endif (BUILD_SHARED_LIBS)

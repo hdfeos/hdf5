@@ -50,11 +50,6 @@ foreach (example ${examples})
       LINKER_LANGUAGE Fortran
       FOLDER examples/fortran
   )
-  if (WIN32)
-    set_property (TARGET f90_ex_${example} 
-        APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS
-    )
-  endif (WIN32)
 endforeach (example ${examples})
 
 if (HDF5_ENABLE_F2003)
@@ -70,11 +65,6 @@ if (HDF5_ENABLE_F2003)
         LINKER_LANGUAGE Fortran
         FOLDER examples/fortran03
     )
-    if (WIN32)
-      set_property (TARGET f03_ex_${example} 
-          APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS
-      )
-    endif (WIN32)
   endforeach (example ${F2003_examples})
 endif (HDF5_ENABLE_F2003)
 
@@ -91,11 +81,6 @@ if (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
       LINKER_LANGUAGE Fortran
       FOLDER examples/fortran
   )
-  if (WIN32)
-    set_property (TARGET f90_ex_ph5example 
-        APPEND PROPERTY COMPILE_DEFINITIONS HDF5F90_WINDOWS
-    )
-  endif (WIN32)
 endif (H5_HAVE_PARALLEL AND MPI_Fortran_FOUND)
 
 if (BUILD_TESTING)
