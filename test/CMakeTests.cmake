@@ -432,7 +432,14 @@ add_test (
 )
 
 foreach (test ${H5_TESTS})
-  add_test (NAME H5TEST-${test} COMMAND $<TARGET_FILE:${test}>)
+  if (${test} STREQUAL "big" AND CYGWIN)
+    add_test (
+        NAME H5TEST-${test}-SKIPPED
+        COMMAND ${CMAKE_COMMAND} -E echo "SKIP ${test}"
+    )
+  else (${test} STREQUAL "big" AND CYGWIN)
+    add_test (NAME H5TEST-${test} COMMAND $<TARGET_FILE:${test}>)
+  endif (${test} STREQUAL "big" AND CYGWIN)
   set_tests_properties (H5TEST-${test} PROPERTIES
       DEPENDS H5TEST-clear-objects 
       ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
@@ -515,7 +522,14 @@ if (BUILD_SHARED_LIBS)
   )
 
   foreach (test ${H5_TESTS})
-    add_test (NAME H5TEST-shared-${test} COMMAND $<TARGET_FILE:${test}-shared>)
+    if (${test} STREQUAL "big" AND CYGWIN)
+      add_test (
+          NAME H5TEST-shared-${test}-SKIPPED
+          COMMAND ${CMAKE_COMMAND} -E echo "SKIP ${test}-shared"
+      )
+    else (${test} STREQUAL "big" AND CYGWIN)
+      add_test (NAME H5TEST-shared-${test} COMMAND $<TARGET_FILE:${test}-shared>)
+    endif (${test} STREQUAL "big" AND CYGWIN)
     set_tests_properties (H5TEST-shared-${test} PROPERTIES
         DEPENDS H5TEST-shared-clear-objects 
         ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
@@ -536,20 +550,22 @@ endif (BUILD_SHARED_LIBS)
 ##############################################################################
 
 #-- Adding test for cache
-add_test (
-    NAME H5TEST-clear-cache-objects
-    COMMAND    ${CMAKE_COMMAND}
-        -E remove 
-        cache_test.h5
-    WORKING_DIRECTORY
-        ${HDF5_TEST_BINARY_DIR}/H5TEST
-)
-add_test (NAME H5TEST-cache COMMAND $<TARGET_FILE:cache>)
-set_tests_properties (H5TEST-cache PROPERTIES
-    DEPENDS H5TEST-clear-cache-objects
-    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
-    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-)
+if (NOT CYGWIN)
+  add_test (
+      NAME H5TEST-clear-cache-objects
+      COMMAND    ${CMAKE_COMMAND}
+          -E remove 
+          cache_test.h5
+      WORKING_DIRECTORY
+          ${HDF5_TEST_BINARY_DIR}/H5TEST
+  )
+  add_test (NAME H5TEST-cache COMMAND $<TARGET_FILE:cache>)
+  set_tests_properties (H5TEST-cache PROPERTIES
+      DEPENDS H5TEST-clear-cache-objects
+      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+  )
+endif (NOT CYGWIN)
 
 #-- Adding test for cache_api
 add_test (
@@ -697,20 +713,22 @@ add_test (
 
 if (BUILD_SHARED_LIBS)
   #-- Adding test for cache
-  add_test (
-      NAME H5TEST-shared-clear-cache-objects
-      COMMAND    ${CMAKE_COMMAND}
-          -E remove 
-          cache_test.h5
-      WORKING_DIRECTORY
-          ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
-  )
-  add_test (NAME H5TEST-shared-cache COMMAND $<TARGET_FILE:cache-shared>)
-  set_tests_properties (H5TEST-shared-cache PROPERTIES
-      DEPENDS H5TEST-shared-clear-cache-objects
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
-  )
+  if (NOT CYGWIN)
+    add_test (
+        NAME H5TEST-shared-clear-cache-objects
+        COMMAND    ${CMAKE_COMMAND}
+            -E remove 
+            cache_test.h5
+        WORKING_DIRECTORY
+            ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+    )
+    add_test (NAME H5TEST-shared-cache COMMAND $<TARGET_FILE:cache-shared>)
+    set_tests_properties (H5TEST-shared-cache PROPERTIES
+        DEPENDS H5TEST-shared-clear-cache-objects
+        ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST-shared"
+        WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST-shared
+    )
+  endif (NOT CYGWIN)
 
   #-- Adding test for cache_api
   add_test (
@@ -887,7 +905,7 @@ if (HDF5_TEST_VFD)
       ohdr
       stab
       gheap
-      cache
+#      cache
       cache_api
       cache_tagging
       pool
@@ -936,7 +954,7 @@ if (HDF5_TEST_VFD)
       unregister
   )
   if (NOT CYGWIN)
-    set (H5_VFD_TESTS ${H5_VFD_TESTS} big)
+    set (H5_VFD_TESTS ${H5_VFD_TESTS} big cache)
   endif (NOT CYGWIN)
 
   MACRO (CHECK_VFD_TEST vfdtest vfdname resultcode)
