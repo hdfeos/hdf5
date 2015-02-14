@@ -13,6 +13,17 @@
  * access to either file, you may request a copy from help@hdfgroup.org.     *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+/*-------------------------------------------------------------------------
+ *
+ * Created:		H5SMcache.c
+ *			Nov 13 2006
+ *			James Laird <jlaird@hdfgroup.org>
+ *
+ * Purpose:		Implement shared message metadata cache methods.
+ *
+ *-------------------------------------------------------------------------
+ */
+
 /****************/
 /* Module Setup */
 /****************/
@@ -47,21 +58,21 @@
 /********************/
 
 /* Metadata cache (H5AC) callbacks */
-static herr_t H5SM_cache_table_get_load_size(const void *udata_ptr, size_t *image_len_ptr);
-static void *H5SM_cache_table_deserialize(const void *image_ptr, size_t len,
-    void *udata_ptr, hbool_t *dirty_ptr); 
-static herr_t H5SM_cache_table_image_len(const void *thing, size_t *image_len_ptr);
-static herr_t H5SM_cache_table_serialize(const H5F_t *f, void *image_ptr,
+static herr_t H5SM__cache_table_get_load_size(const void *udata, size_t *image_len);
+static void *H5SM__cache_table_deserialize(const void *image, size_t len,
+    void *udata, hbool_t *dirty); 
+static herr_t H5SM__cache_table_image_len(const void *thing, size_t *image_len);
+static herr_t H5SM__cache_table_serialize(const H5F_t *f, void *image,
     size_t len, void *thing); 
-static herr_t H5SM_cache_table_free_icr(void *thing);
+static herr_t H5SM__cache_table_free_icr(void *thing);
 
-static herr_t H5SM_cache_list_get_load_size(const void *udata_ptr, size_t *image_len_ptr);
-static void *H5SM_cache_list_deserialize(const void *image_ptr, size_t len,
-    void *udata_ptr, hbool_t *dirty_ptr); 
-static herr_t H5SM_cache_list_image_len(const void *thing, size_t *image_len_ptr);
-static herr_t H5SM_cache_list_serialize(const H5F_t *f, void *image_ptr,
+static herr_t H5SM__cache_list_get_load_size(const void *udata, size_t *image_len);
+static void *H5SM__cache_list_deserialize(const void *image, size_t len,
+    void *udata, hbool_t *dirty); 
+static herr_t H5SM__cache_list_image_len(const void *thing, size_t *image_len);
+static herr_t H5SM__cache_list_serialize(const H5F_t *f, void *image,
     size_t len, void *thing);
-static herr_t H5SM_cache_list_free_icr(void *thing);
+static herr_t H5SM__cache_list_free_icr(void *thing);
 
 
 /*********************/
@@ -74,13 +85,13 @@ const H5AC_class_t H5AC_SOHM_TABLE[1] = {{
     "shared message table",             /* Metadata client name (for debugging) */
     H5FD_MEM_SOHM_TABLE,                /* File space memory type for client */
     H5AC__CLASS_NO_FLAGS_SET,           /* Client class behavior flags */
-    H5SM_cache_table_get_load_size,     /* 'get_load_size' callback */
-    H5SM_cache_table_deserialize,       /* 'deserialize' callback */
-    H5SM_cache_table_image_len,         /* 'image_len' callback */
+    H5SM__cache_table_get_load_size,    /* 'get_load_size' callback */
+    H5SM__cache_table_deserialize,      /* 'deserialize' callback */
+    H5SM__cache_table_image_len,        /* 'image_len' callback */
     NULL,                               /* 'pre_serialize' callback */
-    H5SM_cache_table_serialize,         /* 'serialize' callback */
+    H5SM__cache_table_serialize,        /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
-    H5SM_cache_table_free_icr,          /* 'free_icr' callback */
+    H5SM__cache_table_free_icr,         /* 'free_icr' callback */
     NULL,			        /* 'clear' callback */
     NULL,                               /* 'fsf_size' callback */
 }};
@@ -90,13 +101,13 @@ const H5AC_class_t H5AC_SOHM_LIST[1] = {{
     "shared message list",              /* Metadata client name (for debugging) */
     H5FD_MEM_SOHM_TABLE,                /* File space memory type for client */
     H5AC__CLASS_NO_FLAGS_SET,           /* Client class behavior flags */
-    H5SM_cache_list_get_load_size,      /* 'get_load_size' callback */
-    H5SM_cache_list_deserialize,        /* 'deserialize' callback */
-    H5SM_cache_list_image_len,          /* 'image_len' callback */
+    H5SM__cache_list_get_load_size,     /* 'get_load_size' callback */
+    H5SM__cache_list_deserialize,       /* 'deserialize' callback */
+    H5SM__cache_list_image_len,         /* 'image_len' callback */
     NULL,                               /* 'pre_serialize' callback */
-    H5SM_cache_list_serialize,          /* 'serialize' callback */
+    H5SM__cache_list_serialize,         /* 'serialize' callback */
     NULL,                               /* 'notify' callback */
-    H5SM_cache_list_free_icr,           /* 'free_icr' callback */
+    H5SM__cache_list_free_icr,          /* 'free_icr' callback */
     NULL,			        /* 'clear' callback */
     NULL,                               /* 'fsf_size' callback */
 }};
@@ -114,11 +125,11 @@ const H5AC_class_t H5AC_SOHM_LIST[1] = {{
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_table_get_load_size()
+ * Function:    H5SM__cache_table_get_load_size()
  *
- * Purpose: Return the size of the master table of Shared Object Header 
- *	Message indexes on disk.  As this cache client doesn't use 
- *	speculative reads, this value should be accurate.
+ * Purpose:	Return the size of the master table of Shared Object Header 
+ *		Message indexes on disk.  As this cache client doesn't use 
+ *		speculative reads, this value should be accurate.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -129,31 +140,30 @@ const H5AC_class_t H5AC_SOHM_LIST[1] = {{
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5SM_cache_table_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
+H5SM__cache_table_get_load_size(const void *_udata, size_t *image_len)
 {
-    const H5SM_table_cache_ud_t *udata;
+    const H5SM_table_cache_ud_t *udata = (const H5SM_table_cache_ud_t *)_udata;     /* User data for callback */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
-    HDassert(udata_ptr);
-    HDassert(image_len_ptr);
-    udata = (const H5SM_table_cache_ud_t *)udata_ptr;
+    /* Check arguments */
     HDassert(udata);
     HDassert(udata->f);
+    HDassert(image_len);
 
-    *image_len_ptr = H5SM_TABLE_SIZE(udata->f);
+    *image_len = H5SM_TABLE_SIZE(udata->f);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5SM_cache_table_get_load_size() */
+} /* end H5SM__cache_table_get_load_size() */
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_table_deserialize
+ * Function:    H5SM__cache_table_deserialize
  *
- * Purpose: Given a buffer containing the on disk representation of the 
- *	master table of Shared Object Header Message indexes, deserialize
- *	the table, copy the contents into a newly allocated instance of 
- *	H5SM_master_table_t, and return a pointer to the new instance.
+ * Purpose:	Given a buffer containing the on disk representation of the 
+ *		master table of Shared Object Header Message indexes, deserialize
+ *		the table, copy the contents into a newly allocated instance of 
+ *		H5SM_master_table_t, and return a pointer to the new instance.
  *
  * Return:      Success:        Pointer to in core representation
  *              Failure:        NULL
@@ -164,28 +174,27 @@ H5SM_cache_table_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static void *
-H5SM_cache_table_deserialize(const void *image_ptr, size_t len, void *udata_ptr,
-    hbool_t *dirty_ptr)
+H5SM__cache_table_deserialize(const void *_image, size_t len, void *_udata,
+    hbool_t UNUSED *dirty)
 {
-    H5SM_table_cache_ud_t *udata = NULL;    /* pointer to user data */
-    H5F_t		  *f = NULL;        /* file pointer -- from user data */
-    H5SM_master_table_t   *table = NULL;    /* shared message table that we deserializing */
-    const uint8_t         *p;               /* Pointer into input buffer */
-    uint32_t               stored_chksum;   /* Stored metadata checksum value */
-    uint32_t               computed_chksum; /* Computed metadata checksum value */
-    size_t                 x;               /* Counter variable for index headers */
-    void *                 ret_value;       /* Return value */
+    H5F_t		   *f;                  /* File pointer -- from user data */
+    H5SM_master_table_t    *table = NULL;       /* Shared message table that we deserializing */
+    H5SM_table_cache_ud_t  *udata = (H5SM_table_cache_ud_t *)_udata;    /* Pointer to user data */
+    const uint8_t          *image = (const uint8_t *)_image;    /* Pointer into input buffer */
+    uint32_t                stored_chksum;      /* Stored metadata checksum value */
+    uint32_t                computed_chksum;    /* Computed metadata checksum value */
+    size_t                  u;                  /* Counter variable for index headers */
+    void *                  ret_value;          /* Return value */
 
-    FUNC_ENTER_NOAPI(NULL)
+    FUNC_ENTER_STATIC
 
-    HDassert(image_ptr);
-    HDassert(len > 0 );
-    HDassert(udata_ptr);
-    HDassert(dirty_ptr);
-    udata = (H5SM_table_cache_ud_t *)udata_ptr;
+    /* Check arguments */
+    HDassert(image);
+    HDassert(len > 0);
     HDassert(udata);
     HDassert(udata->f);
     f = udata->f;
+    HDassert(dirty);
 
     /* Verify that we're reading version 0 of the table; this is the only
      * version defined so far.
@@ -206,60 +215,57 @@ H5SM_cache_table_deserialize(const void *image_ptr, size_t len, void *udata_ptr,
     table->table_size = H5SM_TABLE_SIZE(f);
     HDassert(table->table_size == len);
 
-    /* Get temporary pointer to serialized table */
-    p = (const uint8_t *)image_ptr;
-
     /* Check magic number */
-    if(HDmemcmp(p, H5SM_TABLE_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5SM_TABLE_MAGIC, (size_t)H5_SIZEOF_MAGIC))
         HGOTO_ERROR(H5E_SOHM, H5E_CANTLOAD, NULL, "bad SOHM table signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Allocate space for the index headers in memory*/
     if(NULL == (table->indexes = (H5SM_index_header_t *)H5FL_ARR_MALLOC(H5SM_index_header_t, (size_t)table->num_indexes)))
         HGOTO_ERROR(H5E_SOHM, H5E_NOSPACE, NULL, "memory allocation failed for SOHM indexes")
 
     /* Read in the index headers */
-    for(x = 0; x < table->num_indexes; ++x) {
+    for(u = 0; u < table->num_indexes; ++u) {
         /* Verify correct version of index list */
-        if(H5SM_LIST_VERSION != *p++) 
+        if(H5SM_LIST_VERSION != *image++) 
             HGOTO_ERROR(H5E_SOHM, H5E_VERSION, NULL, "bad shared message list version number")
 
         /* Type of the index (list or B-tree) */
-        table->indexes[x].index_type= (H5SM_index_type_t)*p++;
+        table->indexes[u].index_type= (H5SM_index_type_t)*image++;
 
         /* Type of messages in the index */
-        UINT16DECODE(p, table->indexes[x].mesg_types);
+        UINT16DECODE(image, table->indexes[u].mesg_types);
 
         /* Minimum size of message to share */
-        UINT32DECODE(p, table->indexes[x].min_mesg_size);
+        UINT32DECODE(image, table->indexes[u].min_mesg_size);
 
         /* List cutoff; fewer than this number and index becomes a list */
-        UINT16DECODE(p, table->indexes[x].list_max);
+        UINT16DECODE(image, table->indexes[u].list_max);
 
         /* B-tree cutoff; more than this number and index becomes a B-tree */
-        UINT16DECODE(p, table->indexes[x].btree_min);
+        UINT16DECODE(image, table->indexes[u].btree_min);
 
         /* Number of messages shared */
-        UINT16DECODE(p, table->indexes[x].num_messages);
+        UINT16DECODE(image, table->indexes[u].num_messages);
 
         /* Address of the actual index */
-        H5F_addr_decode(f, &p, &(table->indexes[x].index_addr));
+        H5F_addr_decode(f, &image, &(table->indexes[u].index_addr));
 
         /* Address of the index's heap */
-        H5F_addr_decode(f, &p, &(table->indexes[x].heap_addr));
+        H5F_addr_decode(f, &image, &(table->indexes[u].heap_addr));
 
         /* Compute the size of a list index for this SOHM index */
-        table->indexes[x].list_size = H5SM_LIST_SIZE(f, table->indexes[x].list_max);
+        table->indexes[u].list_size = H5SM_LIST_SIZE(f, table->indexes[u].list_max);
     } /* end for */
 
     /* Read in checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image_ptr) == table->table_size);
+    HDassert((size_t)(image - (const uint8_t *)_image) == table->table_size);
 
     /* Compute checksum on entire header */
-    computed_chksum = H5_checksum_metadata(image_ptr, (table->table_size - H5SM_SIZEOF_CHECKSUM), 0);
+    computed_chksum = H5_checksum_metadata(_image, (table->table_size - H5SM_SIZEOF_CHECKSUM), 0);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
@@ -274,15 +280,15 @@ done:
             HDONE_ERROR(H5E_SOHM, H5E_CANTFREE, NULL, "unable to destroy sohm table")
 
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5SM_cache_table_deserialize() */
+} /* end H5SM__cache_table_deserialize() */
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_table_image_len
+ * Function:    H5SM__cache_table_image_len
  *
- * Purpose: Compute the size in bytes of the specified instance of
- *      H5SM_master_table_t on disk, and return it in *image_len_ptr.
- *      On failure, the value of *image_len_ptr is undefined.
+ * Purpose:	Compute the size in bytes of the specified instance of
+ *		H5SM_master_table_t on disk, and return it in *image_len.
+ *		On failure, the value of *image_len is undefined.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -293,23 +299,22 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5SM_cache_table_image_len(const void *thing, size_t *image_len_ptr)
+H5SM__cache_table_image_len(const void *_thing, size_t *image_len)
 {
-    const H5SM_master_table_t *table = NULL;
+    const H5SM_master_table_t *table = (const H5SM_master_table_t *)_thing;     /* Shared message table to query */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
-    HDassert(thing);
-    HDassert(image_len_ptr);
-    table = (const H5SM_master_table_t *)thing;
+    /* Check arguments */
     HDassert(table);
     HDassert(table->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(table->cache_info.type == H5AC_SOHM_TABLE);
+    HDassert(image_len);
 
-    *image_len_ptr = table->table_size;
+    *image_len = table->table_size;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5SM_cache_table_image_len() */
+} /* end H5SM__cache_table_image_len() */
 
 /***************************************/
 /* no H5SM_cache_table_pre_serialize() */
@@ -317,10 +322,10 @@ H5SM_cache_table_image_len(const void *thing, size_t *image_len_ptr)
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_table_serialize
+ * Function:    H5SM__cache_table_serialize
  *
- * Purpose: Serialize the contents of the supplied shared message table, and
- *      load this data into the supplied buffer.
+ * Purpose:	Serialize the contents of the supplied shared message table, and
+ *		load this data into the supplied buffer.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -331,20 +336,19 @@ H5SM_cache_table_image_len(const void *thing, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5SM_cache_table_serialize(const H5F_t *f, void *image_ptr, size_t len,
-    void *thing)
+H5SM__cache_table_serialize(const H5F_t *f, void *_image, size_t len,
+    void *_thing)
 {
-    H5SM_master_table_t *table = NULL;
-    uint8_t             *p = NULL;         /* Pointer into raw data buffer */
-    uint32_t             computed_chksum;  /* Computed metadata checksum value */
-    size_t               x;                /* Counter variable */
+    H5SM_master_table_t *table = (H5SM_master_table_t *)_thing; /* Shared message table to encode */
+    uint8_t            *image = (uint8_t *)_image;      /* Pointer into raw data buffer */
+    uint32_t            computed_chksum;    /* Computed metadata checksum value */
+    size_t              u;                  /* Counter variable */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
+    /* Check arguments */
     HDassert(f);
-    HDassert(image_ptr);
-    HDassert(thing);
-    table = (H5SM_master_table_t *)thing;
+    HDassert(image);
     HDassert(table);
     HDassert(table->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(table->cache_info.type == H5AC_SOHM_TABLE);
@@ -355,52 +359,49 @@ H5SM_cache_table_serialize(const H5F_t *f, void *image_ptr, size_t len,
      */
     HDassert(H5F_SOHM_VERS(f) == HDF5_SHAREDHEADER_VERSION);
 
-    /* Get temporary pointer to buffer for serialized table */
-    p = (uint8_t *)image_ptr;
-
     /* Encode magic number */
-    HDmemcpy(p, H5SM_TABLE_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5SM_TABLE_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* Encode each index header */
-   for(x = 0; x < table->num_indexes; ++x) {
+   for(u = 0; u < table->num_indexes; ++u) {
         /* Version for this list */
-        *p++ = H5SM_LIST_VERSION;
+        *image++ = H5SM_LIST_VERSION;
 
         /* Is message index a list or a B-tree? */
-        *p++ = table->indexes[x].index_type;
+        *image++ = table->indexes[u].index_type;
 
         /* Type of messages in the index */
-        UINT16ENCODE(p, table->indexes[x].mesg_types);
+        UINT16ENCODE(image, table->indexes[u].mesg_types);
 
         /* Minimum size of message to share */
-        UINT32ENCODE(p, table->indexes[x].min_mesg_size);
+        UINT32ENCODE(image, table->indexes[u].min_mesg_size);
 
         /* List cutoff; fewer than this number and index becomes a list */
-        UINT16ENCODE(p, table->indexes[x].list_max);
+        UINT16ENCODE(image, table->indexes[u].list_max);
 
         /* B-tree cutoff; more than this number and index becomes a B-tree */
-        UINT16ENCODE(p, table->indexes[x].btree_min);
+        UINT16ENCODE(image, table->indexes[u].btree_min);
 
         /* Number of messages shared */
-        UINT16ENCODE(p, table->indexes[x].num_messages);
+        UINT16ENCODE(image, table->indexes[u].num_messages);
 
         /* Address of the actual index */
-        H5F_addr_encode(f, &p, table->indexes[x].index_addr);
+        H5F_addr_encode(f, &image, table->indexes[u].index_addr);
 
         /* Address of the index's heap */
-        H5F_addr_encode(f, &p, table->indexes[x].heap_addr);
+        H5F_addr_encode(f, &image, table->indexes[u].heap_addr);
     } /* end for */
 
     /* Compute checksum on buffer */
-    computed_chksum = H5_checksum_metadata(image_ptr, (table->table_size - H5SM_SIZEOF_CHECKSUM), 0);
-    UINT32ENCODE(p, computed_chksum);
+    computed_chksum = H5_checksum_metadata(_image, (table->table_size - H5SM_SIZEOF_CHECKSUM), 0);
+    UINT32ENCODE(image, computed_chksum);
 
     /* sanity check */
-    HDassert((size_t)(p - ((uint8_t *)image_ptr)) == table->table_size);
+    HDassert((size_t)(image - ((uint8_t *)_image)) == table->table_size);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5SM_cache_table_serialize() */
+} /* end H5SM__cache_table_serialize() */
 
 /*****************************************/
 /* no H5SM_cache_table_notify() function */
@@ -408,9 +409,13 @@ H5SM_cache_table_serialize(const H5F_t *f, void *image_ptr, size_t len,
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_table_free_icr
+ * Function:    H5SM__cache_table_free_icr
  *
- * Purpose: Free memory used by the SOHM table.
+ * Purpose:	Free memory used by the SOHM table.
+ *
+ * Note:	The metadata cache sets the object's cache_info.magic to
+ *		H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling a free_icr
+ *		callback (checked in assert).
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -421,21 +426,15 @@ H5SM_cache_table_serialize(const H5F_t *f, void *image_ptr, size_t len,
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5SM_cache_table_free_icr(void *thing)
+H5SM__cache_table_free_icr(void *_thing)
 {
-    H5SM_master_table_t *table = NULL;
+    H5SM_master_table_t *table = (H5SM_master_table_t *)_thing;  /* Shared message table to release */
     herr_t               ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
-    HDassert(thing);
-    table = (H5SM_master_table_t *)thing;
+    /* Check arguments */
     HDassert(table);
-
-    /* the metadata cache sets cache_info.magic to
-     * H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling the
-     * free_icr routine.  Hence the following assert:
-     */
     HDassert(table->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
     HDassert(table->cache_info.type == H5AC_SOHM_TABLE);
 
@@ -449,11 +448,11 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_list_get_load_size()
+ * Function:    H5SM__cache_list_get_load_size()
  *
- * Purpose: Return the on disk size of list of SOHM messages.  In this case,
- *	we simply look up the size in the user data, and return that value
- *	in *image_len_ptr.
+ * Purpose:	Return the on disk size of list of SOHM messages.  In this case,
+ *		we simply look up the size in the user data, and return that value
+ *		in *image_len.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -465,31 +464,30 @@ done:
  */
 
 static herr_t
-H5SM_cache_list_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
+H5SM__cache_list_get_load_size(const void *_udata, size_t *image_len)
 {
-    const H5SM_list_cache_ud_t *udata;        /* User data for callback */
+    const H5SM_list_cache_ud_t *udata = (const H5SM_list_cache_ud_t *)_udata;        /* User data for callback */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
-    HDassert(udata_ptr);
-    HDassert(image_len_ptr);
-    udata = (const H5SM_list_cache_ud_t *)udata_ptr;
+    /* Check arguments */
     HDassert(udata);
     HDassert(udata->header);
     HDassert(udata->header->list_size > 0);
+    HDassert(image_len);
 
-    *image_len_ptr = udata->header->list_size;
+    *image_len = udata->header->list_size;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5SM_cache_list_get_load_size() */
+} /* end H5SM__cache_list_get_load_size() */
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_list_deserialize
+ * Function:    H5SM__cache_list_deserialize
  *
- * Purpose: Given a buffer containing the on disk image of a list of 
- *	SOHM message, deserialize the list, load it into a newly allocated 
- *	instance of H5SM_list_t, and return a pointer to same.
+ * Purpose:	Given a buffer containing the on disk image of a list of 
+ *		SOHM message, deserialize the list, load it into a newly allocated 
+ *		instance of H5SM_list_t, and return a pointer to same.
  *
  * Return:      Success:        Pointer to in core representation
  *              Failure:        NULL
@@ -500,28 +498,27 @@ H5SM_cache_list_get_load_size(const void *udata_ptr, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static void *
-H5SM_cache_list_deserialize(const void *image_ptr, size_t len, void *udata_ptr,
-    hbool_t *dirty_ptr)
+H5SM__cache_list_deserialize(const void *_image, size_t len, void *_udata,
+    hbool_t UNUSED *dirty)
 {
     H5SM_list_t          *list = NULL;     /* The SOHM list being read in */
-    H5SM_list_cache_ud_t *udata = NULL;    /* User data for callback */
+    H5SM_list_cache_ud_t *udata = (H5SM_list_cache_ud_t *)_udata;    /* User data for callback */
     H5SM_bt2_ctx_t        ctx;             /* Message encoding context */
-    const uint8_t        *p;               /* Pointer into input buffer */
+    const uint8_t        *image = (const uint8_t *)_image;      /* Pointer into input buffer */
     uint32_t              stored_chksum;   /* Stored metadata checksum value */
     uint32_t              computed_chksum; /* Computed metadata checksum value */
-    size_t                x;               /* Counter variable for messages in list */
+    size_t                u;               /* Counter variable for messages in list */
     void *                ret_value;       /* Return value */
 
-    FUNC_ENTER_NOAPI(NULL)
+    FUNC_ENTER_STATIC
 
-    HDassert(image_ptr);
-    HDassert(len > 0 );
-    HDassert(udata_ptr);
-    HDassert(dirty_ptr);
-    udata = (H5SM_list_cache_ud_t *)udata_ptr;
+    /* Check arguments */
+    HDassert(image);
+    HDassert(len > 0);
     HDassert(udata);
     HDassert(udata->header);
     HDassert(udata->header->list_size == len);
+    HDassert(dirty);
 
     /* Allocate space for the SOHM list data structure */
     if(NULL == (list = H5FL_MALLOC(H5SM_list_t)))
@@ -533,39 +530,36 @@ H5SM_cache_list_deserialize(const void *image_ptr, size_t len, void *udata_ptr,
         HGOTO_ERROR(H5E_SOHM, H5E_NOSPACE, NULL, "file allocation failed for SOHM list")
     list->header = udata->header;
 
-    /* Get temporary pointer to serialized list index */
-    p = (const uint8_t *)image_ptr;
-
     /* Check magic number */
-    if(HDmemcmp(p, H5SM_LIST_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5SM_LIST_MAGIC, (size_t)H5_SIZEOF_MAGIC))
         HGOTO_ERROR(H5E_SOHM, H5E_CANTLOAD, NULL, "bad SOHM list signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Read messages into the list array */
     ctx.sizeof_addr = H5F_SIZEOF_ADDR(udata->f);
-    for(x = 0; x < udata->header->num_messages; x++) {
-        if(H5SM_message_decode(p, &(list->messages[x]), &ctx) < 0)
+    for(u = 0; u < udata->header->num_messages; u++) {
+        if(H5SM_message_decode(image, &(list->messages[u]), &ctx) < 0)
             HGOTO_ERROR(H5E_SOHM, H5E_CANTLOAD, NULL, "can't decode shared message")
 
-        p += H5SM_SOHM_ENTRY_SIZE(udata->f);
+        image += H5SM_SOHM_ENTRY_SIZE(udata->f);
     } /* end for */
 
     /* Read in checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image_ptr) <= udata->header->list_size);
+    HDassert((size_t)(image - (const uint8_t *)_image) <= udata->header->list_size);
 
     /* Compute checksum on entire header */
-    computed_chksum = H5_checksum_metadata(image_ptr, ((size_t)(p - (const uint8_t *)image_ptr) - H5SM_SIZEOF_CHECKSUM), 0);
+    computed_chksum = H5_checksum_metadata(_image, ((size_t)(image - (const uint8_t *)_image) - H5SM_SIZEOF_CHECKSUM), 0);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
         HGOTO_ERROR(H5E_SOHM, H5E_BADVALUE, NULL, "incorrect metadata checksum for shared message list")
 
     /* Initialize the rest of the array */
-    for(x = udata->header->num_messages; x < udata->header->list_max; x++)
-        list->messages[x].location = H5SM_NO_LOC;
+    for(u = udata->header->num_messages; u < udata->header->list_max; u++)
+        list->messages[u].location = H5SM_NO_LOC;
 
     /* Set return value */
     ret_value = list;
@@ -578,13 +572,13 @@ done:
     } /* end if */
 
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5SM_cache_list_deserialize() */
+} /* end H5SM__cache_list_deserialize() */
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_list_image_len
+ * Function:    H5SM__cache_list_image_len
  *
- * Purpose: Get the size of the shared message list on disk.
+ * Purpose:	Get the size of the shared message list on disk.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -595,24 +589,23 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5SM_cache_list_image_len(const void *thing, size_t *image_len_ptr)
+H5SM__cache_list_image_len(const void *_thing, size_t *image_len)
 {
-    const H5SM_list_t *list;
+    const H5SM_list_t *list = (const H5SM_list_t *)_thing;      /* Shared message list to query */
 
-    FUNC_ENTER_NOAPI_NOINIT_NOERR
+    FUNC_ENTER_STATIC_NOERR
 
-    HDassert(thing);
-    HDassert(image_len_ptr);
-    list = (const H5SM_list_t *)thing;
+    /* Check arguments */
     HDassert(list);
     HDassert(list->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(list->cache_info.type == H5AC_SOHM_LIST);
     HDassert(list->header);
+    HDassert(image_len);
 
-    *image_len_ptr = list->header->list_size;
+    *image_len = list->header->list_size;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
-} /* end H5SM_cache_list_image_len() */
+} /* end H5SM__cache_list_image_len() */
 
 /**************************************/
 /* no H5SM_cache_list_pre_serialize() */
@@ -620,10 +613,10 @@ H5SM_cache_list_image_len(const void *thing, size_t *image_len_ptr)
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_list_serialize
+ * Function:    H5SM__cache_list_serialize
  *
- * Purpose: Serialize the contents of the supplied shared message list, and
- *      load this data into the supplied buffer.
+ * Purpose:	Serialize the contents of the supplied shared message list, and
+ *		load this data into the supplied buffer.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -634,45 +627,41 @@ H5SM_cache_list_image_len(const void *thing, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5SM_cache_list_serialize(const H5F_t *f, void *image_ptr, size_t len,
-    void *thing)
+H5SM__cache_list_serialize(const H5F_t *f, void *_image, size_t len,
+    void *_thing)
 {
-    H5SM_list_t *list = NULL;   /* instance being serialized */
+    H5SM_list_t *list = (H5SM_list_t *)_thing ;   /* Instance being serialized */
     H5SM_bt2_ctx_t ctx;         /* Message encoding context */
-    uint8_t *p;                 /* Pointer into raw data buffer */
+    uint8_t *image = (uint8_t *)_image;         /* Pointer into raw data buffer */
     uint32_t computed_chksum;   /* Computed metadata checksum value */
     size_t mesgs_serialized;    /* Number of messages serialized */
-    size_t x;                   /* Local index variable */
+    size_t u;                   /* Local index variable */
     herr_t       ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
+    /* Check arguments */
     HDassert(f);
-    HDassert(image_ptr);
-    HDassert(thing);
-    list = (H5SM_list_t *)thing;
+    HDassert(image);
     HDassert(list);
     HDassert(list->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(list->cache_info.type == H5AC_SOHM_LIST);
     HDassert(list->header);
     HDassert(list->header->list_size == len);
 
-    /* Get temporary pointer to buffer for serialized list index */
-    p = (uint8_t *)image_ptr;
-
     /* Encode magic number */
-    HDmemcpy(p, H5SM_LIST_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5SM_LIST_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* serialize messages from the messages array */
     mesgs_serialized = 0;
     ctx.sizeof_addr = H5F_SIZEOF_ADDR(f);
-    for(x = 0; ((x < list->header->list_max) && (mesgs_serialized < list->header->num_messages)); x++) {
-        if(list->messages[x].location != H5SM_NO_LOC) {
-            if(H5SM_message_encode(p, &(list->messages[x]), &ctx) < 0)
+    for(u = 0; ((u < list->header->list_max) && (mesgs_serialized < list->header->num_messages)); u++) {
+        if(list->messages[u].location != H5SM_NO_LOC) {
+            if(H5SM_message_encode(image, &(list->messages[u]), &ctx) < 0)
                 HGOTO_ERROR(H5E_SOHM, H5E_CANTFLUSH, FAIL, "unable to serialize shared message")
 
-            p += H5SM_SOHM_ENTRY_SIZE(f);
+            image += H5SM_SOHM_ENTRY_SIZE(f);
             ++mesgs_serialized;
         } /* end if */
     } /* end for */
@@ -680,19 +669,19 @@ H5SM_cache_list_serialize(const H5F_t *f, void *image_ptr, size_t len,
     HDassert(mesgs_serialized == list->header->num_messages);
 
     /* Compute checksum on buffer */
-    computed_chksum = H5_checksum_metadata(image_ptr, (size_t)(p - (uint8_t *)image_ptr), 0);
-    UINT32ENCODE(p, computed_chksum);
+    computed_chksum = H5_checksum_metadata(_image, (size_t)(image - (uint8_t *)_image), 0);
+    UINT32ENCODE(image, computed_chksum);
 
 #ifdef H5_CLEAR_MEMORY
-    HDmemset(p, 0, (list->header->list_size - (size_t)(p - (uint8_t *)image_ptr)));
+    HDmemset(image, 0, (list->header->list_size - (size_t)(image - (uint8_t *)_image)));
 #endif /* H5_CLEAR_MEMORY */
 
     /* sanity check */
-    HDassert((size_t)(p - (uint8_t *)image_ptr) <= list->header->list_size);
+    HDassert((size_t)(image - (uint8_t *)_image) <= list->header->list_size);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5SM_cache_list_serialize() */
+} /* end H5SM__cache_list_serialize() */
 
 /****************************************/
 /* no H5SM_cache_list_notify() function */
@@ -700,9 +689,13 @@ done:
 
 
 /*-------------------------------------------------------------------------
- * Function:    H5SM_cache_list_free_icr
+ * Function:    H5SM__cache_list_free_icr
  *
- * Purpose: Free all memory used by the list.
+ * Purpose:	Free all memory used by the list.
+ *
+ * Note:	The metadata cache sets the object's cache_info.magic to
+ *		H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling a free_icr
+ *		callback (checked in assert).
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -713,21 +706,15 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5SM_cache_list_free_icr(void *thing)
+H5SM__cache_list_free_icr(void *_thing)
 {
-    H5SM_list_t *list = NULL;
+    H5SM_list_t *list = (H5SM_list_t *)_thing;  /* Shared message list to release */
     herr_t       ret_value = SUCCEED;    /* Return value */
 
-    FUNC_ENTER_NOAPI_NOINIT
+    FUNC_ENTER_STATIC
 
-    HDassert(thing);
-    list = (H5SM_list_t *)thing;
+    /* Check arguments */
     HDassert(list);
-
-    /* the metadata cache sets cache_info.magic to
-     * H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC before calling the
-     * free_icr routine.  Hence the following assert:
-     */
     HDassert(list->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_BAD_MAGIC);
     HDassert(list->cache_info.type == H5AC_SOHM_LIST);
 

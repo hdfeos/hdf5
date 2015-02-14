@@ -202,7 +202,7 @@ H5B2__cache_hdr_get_load_size(const void *_udata, size_t *image_len)
  *-------------------------------------------------------------------------
  */
 static void *
-H5B2__cache_hdr_deserialize(const void *image, size_t UNUSED len,
+H5B2__cache_hdr_deserialize(const void *_image, size_t UNUSED len,
     void *_udata, hbool_t UNUSED *dirty)
 {
     H5B2_hdr_t		*hdr = NULL;    /* B-tree header */
@@ -212,7 +212,7 @@ H5B2__cache_hdr_deserialize(const void *image, size_t UNUSED len,
     uint16_t            depth;          /* Depth of B-tree */
     uint32_t            stored_chksum;  /* Stored metadata checksum value */
     uint32_t            computed_chksum; /* Computed metadata checksum value */
-    const uint8_t	*p;             /* Pointer into raw data buffer */
+    const uint8_t	*image = (const uint8_t *)_image;       /* Pointer into raw data buffer */
     H5B2_hdr_t		*ret_value;     /* Return value */
 
     FUNC_ENTER_STATIC
@@ -226,48 +226,47 @@ H5B2__cache_hdr_deserialize(const void *image, size_t UNUSED len,
 	HGOTO_ERROR(H5E_BTREE, H5E_CANTALLOC, NULL, "allocation failed for B-tree header")
 
     /* Get temporary pointer to serialized header */
-    p = (const uint8_t *)image;
 
     /* Magic number */
-    if(HDmemcmp(p, H5B2_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5B2_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC))
 	HGOTO_ERROR(H5E_BTREE, H5E_BADVALUE, NULL, "wrong B-tree header signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Version */
-    if(*p++ != H5B2_HDR_VERSION)
+    if(*image++ != H5B2_HDR_VERSION)
 	HGOTO_ERROR(H5E_BTREE, H5E_BADRANGE, NULL, "wrong B-tree header version")
 
     /* B-tree class */
-    id = (H5B2_subid_t)*p++;
+    id = (H5B2_subid_t)*image++;
     if(id >= H5B2_NUM_BTREE_ID)
 	HGOTO_ERROR(H5E_BTREE, H5E_BADTYPE, NULL, "incorrect B-tree type")
 
     /* Node size (in bytes) */
-    UINT32DECODE(p, cparam.node_size);
+    UINT32DECODE(image, cparam.node_size);
 
     /* Raw key size (in bytes) */
-    UINT16DECODE(p, cparam.rrec_size);
+    UINT16DECODE(image, cparam.rrec_size);
 
     /* Depth of tree */
-    UINT16DECODE(p, depth);
+    UINT16DECODE(image, depth);
 
     /* Split & merge %s */
-    cparam.split_percent = *p++;
-    cparam.merge_percent = *p++;
+    cparam.split_percent = *image++;
+    cparam.merge_percent = *image++;
 
     /* Root node pointer */
-    H5F_addr_decode(udata->f, (const uint8_t **)&p, &(hdr->root.addr));
-    UINT16DECODE(p, hdr->root.node_nrec);
-    H5F_DECODE_LENGTH(udata->f, p, hdr->root.all_nrec);
+    H5F_addr_decode(udata->f, (const uint8_t **)&image, &(hdr->root.addr));
+    UINT16DECODE(image, hdr->root.node_nrec);
+    H5F_DECODE_LENGTH(udata->f, image, hdr->root.all_nrec);
 
     /* Metadata checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image) == hdr->hdr_size);
+    HDassert((size_t)(image - (const uint8_t *)_image) == hdr->hdr_size);
 
     /* Compute checksum on entire header */
-    computed_chksum = H5_checksum_metadata(image, (hdr->hdr_size - H5B2_SIZEOF_CHKSUM), 0);
+    computed_chksum = H5_checksum_metadata(_image, (hdr->hdr_size - H5B2_SIZEOF_CHKSUM), 0);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
@@ -282,7 +281,7 @@ H5B2__cache_hdr_deserialize(const void *image, size_t UNUSED len,
     hdr->addr = udata->addr;
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image) <= len);
+    HDassert((size_t)(image - (const uint8_t *)_image) <= len);
 
     /* Set return value */
     ret_value = hdr;
@@ -341,12 +340,12 @@ H5B2__cache_hdr_image_len(const void *_thing, size_t *image_len)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5B2__cache_hdr_serialize(const H5F_t *f, void *image, size_t UNUSED len,
+H5B2__cache_hdr_serialize(const H5F_t *f, void *_image, size_t UNUSED len,
     void *_thing)
 {
-    H5B2_hdr_t *hdr = (H5B2_hdr_t *)_thing;      /* Pointer to the B-tree header */
-    uint8_t *p;                 /* Pointer into raw data buffer */
-    uint32_t metadata_chksum;   /* Computed metadata checksum value */
+    H5B2_hdr_t *hdr = (H5B2_hdr_t *)_thing;     /* Pointer to the B-tree header */
+    uint8_t *image = (uint8_t *)_image;         /* Pointer into raw data buffer */
+    uint32_t metadata_chksum;                   /* Computed metadata checksum value */
 
     FUNC_ENTER_STATIC_NOERR
 
@@ -355,47 +354,44 @@ H5B2__cache_hdr_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     HDassert(image);
     HDassert(hdr);
 
-    /* Get temporary pointer to serialized header */
-    p = (uint8_t *)image;
-
     /* Magic number */
-    HDmemcpy(p, H5B2_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5B2_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* Version # */
-    *p++ = H5B2_HDR_VERSION;
+    *image++ = H5B2_HDR_VERSION;
 
     /* B-tree type */
-    *p++ = hdr->cls->id;
+    *image++ = hdr->cls->id;
 
     /* Node size (in bytes) */
-    UINT32ENCODE(p, hdr->node_size);
+    UINT32ENCODE(image, hdr->node_size);
 
     /* Raw key size (in bytes) */
-    UINT16ENCODE(p, hdr->rrec_size);
+    UINT16ENCODE(image, hdr->rrec_size);
 
     /* Depth of tree */
-    UINT16ENCODE(p, hdr->depth);
+    UINT16ENCODE(image, hdr->depth);
 
     /* Split & merge %s */
     H5_CHECK_OVERFLOW(hdr->split_percent, /* From: */ unsigned, /* To: */ uint8_t);
-    *p++ = (uint8_t)hdr->split_percent;
+    *image++ = (uint8_t)hdr->split_percent;
     H5_CHECK_OVERFLOW(hdr->merge_percent, /* From: */ unsigned, /* To: */ uint8_t);
-    *p++ = (uint8_t)hdr->merge_percent;
+    *image++ = (uint8_t)hdr->merge_percent;
 
     /* Root node pointer */
-    H5F_addr_encode(f, &p, hdr->root.addr);
-    UINT16ENCODE(p, hdr->root.node_nrec);
-    H5F_ENCODE_LENGTH(f, p, hdr->root.all_nrec);
+    H5F_addr_encode(f, &image, hdr->root.addr);
+    UINT16ENCODE(image, hdr->root.node_nrec);
+    H5F_ENCODE_LENGTH(f, image, hdr->root.all_nrec);
 
     /* Compute metadata checksum */
-    metadata_chksum = H5_checksum_metadata(image, (hdr->hdr_size - H5B2_SIZEOF_CHKSUM), 0);
+    metadata_chksum = H5_checksum_metadata(_image, (hdr->hdr_size - H5B2_SIZEOF_CHKSUM), 0);
 
     /* Metadata checksum */
-    UINT32ENCODE(p, metadata_chksum);
+    UINT32ENCODE(image, metadata_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (uint8_t *)image) <= len);
+    HDassert((size_t)(image - (uint8_t *)_image) <= len);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* H5B2__cache_hdr_serialize() */
@@ -481,12 +477,12 @@ H5B2__cache_int_get_load_size(const void *_udata, size_t *image_len)
  *-------------------------------------------------------------------------
  */
 static void *
-H5B2__cache_int_deserialize(const void *image, size_t UNUSED len,
+H5B2__cache_int_deserialize(const void *_image, size_t UNUSED len,
     void *_udata, hbool_t UNUSED *dirty)
 {
     H5B2_internal_cache_ud_t *udata = (H5B2_internal_cache_ud_t *)_udata;     /* Pointer to user data */
     H5B2_internal_t	*internal = NULL;       /* Internal node read */
-    const uint8_t	*p;             /* Pointer into raw data buffer */
+    const uint8_t	*image = (const uint8_t *)_image;       /* Pointer into raw data buffer */
     uint8_t		*native;        /* Pointer to native record info */
     H5B2_node_ptr_t	*int_node_ptr;  /* Pointer to node pointer info */
     uint32_t            stored_chksum;  /* Stored metadata checksum value */
@@ -512,19 +508,17 @@ H5B2__cache_int_deserialize(const void *image, size_t UNUSED len,
     /* Share B-tree information */
     internal->hdr = udata->hdr;
 
-    p = (const uint8_t *)image;
-
     /* Magic number */
-    if(HDmemcmp(p, H5B2_INT_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5B2_INT_MAGIC, (size_t)H5_SIZEOF_MAGIC))
         HGOTO_ERROR(H5E_BTREE, H5E_BADVALUE, NULL, "wrong B-tree internal node signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Version */
-    if(*p++ != H5B2_INT_VERSION)
+    if(*image++ != H5B2_INT_VERSION)
 	HGOTO_ERROR(H5E_BTREE, H5E_BADRANGE, NULL, "wrong B-tree internal node version")
 
     /* B-tree type */
-    if(*p++ != (uint8_t)udata->hdr->cls->id)
+    if(*image++ != (uint8_t)udata->hdr->cls->id)
 	HGOTO_ERROR(H5E_BTREE, H5E_BADTYPE, NULL, "incorrect B-tree type")
 
     /* Allocate space for the native keys in memory */
@@ -543,11 +537,11 @@ H5B2__cache_int_deserialize(const void *image, size_t UNUSED len,
     native = internal->int_native;
     for(u = 0; u < internal->nrec; u++) {
         /* Decode record */
-        if((udata->hdr->cls->decode)(p, native, udata->hdr->cb_ctx) < 0)
+        if((udata->hdr->cls->decode)(image, native, udata->hdr->cb_ctx) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTDECODE, NULL, "unable to decode B-tree record")
 
         /* Move to next record */
-        p += udata->hdr->rrec_size;
+        image += udata->hdr->rrec_size;
         native += udata->hdr->cls->nrec_size;
     } /* end for */
 
@@ -555,10 +549,10 @@ H5B2__cache_int_deserialize(const void *image, size_t UNUSED len,
     int_node_ptr = internal->node_ptrs;
     for(u = 0; u < (unsigned)(internal->nrec + 1); u++) {
         /* Decode node pointer */
-        H5F_addr_decode(udata->f, (const uint8_t **)&p, &(int_node_ptr->addr));
-        UINT64DECODE_VAR(p, int_node_ptr->node_nrec, udata->hdr->max_nrec_size);
+        H5F_addr_decode(udata->f, (const uint8_t **)&image, &(int_node_ptr->addr));
+        UINT64DECODE_VAR(image, int_node_ptr->node_nrec, udata->hdr->max_nrec_size);
         if(udata->depth > 1)
-            UINT64DECODE_VAR(p, int_node_ptr->all_nrec, udata->hdr->node_info[udata->depth - 1].cum_max_nrec_size)
+            UINT64DECODE_VAR(image, int_node_ptr->all_nrec, udata->hdr->node_info[udata->depth - 1].cum_max_nrec_size)
         else
             int_node_ptr->all_nrec = int_node_ptr->node_nrec;
 
@@ -567,13 +561,13 @@ H5B2__cache_int_deserialize(const void *image, size_t UNUSED len,
     } /* end for */
 
     /* Compute checksum on internal node */
-    computed_chksum = H5_checksum_metadata(image, (size_t)(p - (const uint8_t *)image), 0);
+    computed_chksum = H5_checksum_metadata(_image, (size_t)(image - (const uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check parsing */
-    HDassert((size_t)(p - (const uint8_t *)image) <= len);
+    HDassert((size_t)(image - (const uint8_t *)_image) <= len);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
@@ -637,11 +631,11 @@ H5B2__cache_int_image_len(const void *_thing, size_t *image_len)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5B2__cache_int_serialize(const H5F_t *f, void *image, size_t UNUSED len,
+H5B2__cache_int_serialize(const H5F_t *f, void *_image, size_t UNUSED len,
     void *_thing)
 {
     H5B2_internal_t *internal = (H5B2_internal_t *)_thing;      /* Pointer to the B-tree internal node */
-    uint8_t *p;             /* Pointer into raw data buffer */
+    uint8_t *image = (uint8_t *)_image; /* Pointer into raw data buffer */
     uint8_t *native;        /* Pointer to native record info */
     H5B2_node_ptr_t *int_node_ptr;      /* Pointer to node pointer info */
     uint32_t metadata_chksum; /* Computed metadata checksum value */
@@ -656,29 +650,26 @@ H5B2__cache_int_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     HDassert(internal);
     HDassert(internal->hdr);
 
-    /* Get temporary pointer to serialized header */
-    p = (uint8_t *)image;
-
     /* Magic number */
-    HDmemcpy(p, H5B2_INT_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5B2_INT_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* Version # */
-    *p++ = H5B2_INT_VERSION;
+    *image++ = H5B2_INT_VERSION;
 
     /* B-tree type */
-    *p++ = internal->hdr->cls->id;
-    HDassert((size_t)(p - (uint8_t *)image) == (H5B2_INT_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
+    *image++ = internal->hdr->cls->id;
+    HDassert((size_t)(image - (uint8_t *)_image) == (H5B2_INT_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
 
     /* Serialize records for internal node */
     native = internal->int_native;
     for(u = 0; u < internal->nrec; u++) {
         /* Encode record */
-        if((internal->hdr->cls->encode)(p, native, internal->hdr->cb_ctx) < 0)
+        if((internal->hdr->cls->encode)(image, native, internal->hdr->cb_ctx) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTENCODE, FAIL, "unable to encode B-tree record")
 
         /* Move to next record */
-        p += internal->hdr->rrec_size;
+        image += internal->hdr->rrec_size;
         native += internal->hdr->cls->nrec_size;
     } /* end for */
 
@@ -686,23 +677,23 @@ H5B2__cache_int_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     int_node_ptr = internal->node_ptrs;
     for(u = 0; u < (unsigned)(internal->nrec + 1); u++) {
         /* Encode node pointer */
-        H5F_addr_encode(f, &p, int_node_ptr->addr);
-        UINT64ENCODE_VAR(p, int_node_ptr->node_nrec, internal->hdr->max_nrec_size);
+        H5F_addr_encode(f, &image, int_node_ptr->addr);
+        UINT64ENCODE_VAR(image, int_node_ptr->node_nrec, internal->hdr->max_nrec_size);
         if(internal->depth > 1)
-            UINT64ENCODE_VAR(p, int_node_ptr->all_nrec, internal->hdr->node_info[internal->depth - 1].cum_max_nrec_size);
+            UINT64ENCODE_VAR(image, int_node_ptr->all_nrec, internal->hdr->node_info[internal->depth - 1].cum_max_nrec_size);
 
         /* Move to next node pointer */
         int_node_ptr++;
     } /* end for */
 
     /* Compute metadata checksum */
-    metadata_chksum = H5_checksum_metadata(image, (size_t)(p - (uint8_t *)image), 0);
+    metadata_chksum = H5_checksum_metadata(_image, (size_t)(image - (uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32ENCODE(p, metadata_chksum);
+    UINT32ENCODE(image, metadata_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (uint8_t *)image) <= len);
+    HDassert((size_t)(image - (uint8_t *)_image) <= len);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
@@ -789,12 +780,12 @@ H5B2__cache_leaf_get_load_size(const void *_udata, size_t *image_len)
  *-------------------------------------------------------------------------
  */
 static void *
-H5B2__cache_leaf_deserialize(const void *image, size_t UNUSED len,
+H5B2__cache_leaf_deserialize(const void *_image, size_t UNUSED len,
     void *_udata, hbool_t UNUSED *dirty)
 {
     H5B2_leaf_cache_ud_t *udata = (H5B2_leaf_cache_ud_t *)_udata;
     H5B2_leaf_t		*leaf = NULL;   /* Pointer to lead node loaded */
-    const uint8_t	*p;             /* Pointer into raw data buffer */
+    const uint8_t	*image = (const uint8_t *)_image;       /* Pointer into raw data buffer */
     uint8_t		*native;        /* Pointer to native keys */
     uint32_t            stored_chksum;  /* Stored metadata checksum value */
     uint32_t            computed_chksum; /* Computed metadata checksum value */
@@ -819,19 +810,17 @@ H5B2__cache_leaf_deserialize(const void *image, size_t UNUSED len,
     /* Share B-tree header information */
     leaf->hdr = udata->hdr;
 
-    p = (const uint8_t *)image;
-
     /* Magic number */
-    if(HDmemcmp(p, H5B2_LEAF_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5B2_LEAF_MAGIC, (size_t)H5_SIZEOF_MAGIC))
 	HGOTO_ERROR(H5E_BTREE, H5E_BADVALUE, NULL, "wrong B-tree leaf node signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Version */
-    if(*p++ != H5B2_LEAF_VERSION)
+    if(*image++ != H5B2_LEAF_VERSION)
 	HGOTO_ERROR(H5E_BTREE, H5E_BADRANGE, NULL, "wrong B-tree leaf node version")
 
     /* B-tree type */
-    if(*p++ != (uint8_t)udata->hdr->cls->id)
+    if(*image++ != (uint8_t)udata->hdr->cls->id)
 	HGOTO_ERROR(H5E_BTREE, H5E_BADTYPE, NULL, "incorrect B-tree type")
 
     /* Allocate space for the native keys in memory */
@@ -845,29 +834,29 @@ H5B2__cache_leaf_deserialize(const void *image, size_t UNUSED len,
     native = leaf->leaf_native;
     for(u = 0; u < leaf->nrec; u++) {
         /* Decode record */
-        if((udata->hdr->cls->decode)(p, native, udata->hdr->cb_ctx) < 0)
+        if((udata->hdr->cls->decode)(image, native, udata->hdr->cb_ctx) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTENCODE, NULL, "unable to decode B-tree record")
 
         /* Move to next record */
-        p += udata->hdr->rrec_size;
+        image += udata->hdr->rrec_size;
         native += udata->hdr->cls->nrec_size;
     } /* end for */
 
     /* Compute checksum on leaf node */
-    computed_chksum = H5_checksum_metadata(image, (size_t)(p - (const uint8_t *)image), 0);
+    computed_chksum = H5_checksum_metadata(_image, (size_t)(image - (const uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check parsing */
-    HDassert((size_t)(p - (const uint8_t *)image) <= udata->hdr->node_size);
+    HDassert((size_t)(image - (const uint8_t *)_image) <= udata->hdr->node_size);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
 	HGOTO_ERROR(H5E_BTREE, H5E_BADVALUE, NULL, "incorrect metadata checksum for v2 leaf node")
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image) <= len);
+    HDassert((size_t)(image - (const uint8_t *)_image) <= len);
 
     /* Set return value */
     ret_value = leaf;
@@ -927,11 +916,11 @@ H5B2__cache_leaf_image_len(const void *_thing, size_t *image_len)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5B2__cache_leaf_serialize(const H5F_t *f, void *image, size_t UNUSED len,
+H5B2__cache_leaf_serialize(const H5F_t *f, void *_image, size_t UNUSED len,
     void *_thing)
 {
     H5B2_leaf_t *leaf = (H5B2_leaf_t *)_thing;      /* Pointer to the B-tree leaf node  */
-    uint8_t *p;                 /* Pointer into raw data buffer */
+    uint8_t *image = (uint8_t *)_image;         /* Pointer into raw data buffer */
     uint8_t *native;            /* Pointer to native keys */
     uint32_t metadata_chksum;   /* Computed metadata checksum value */
     unsigned u;                 /* Local index variable */
@@ -945,39 +934,37 @@ H5B2__cache_leaf_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     HDassert(leaf);
     HDassert(leaf->hdr);
 
-    p = (uint8_t *)image;
-
     /* magic number */
-    HDmemcpy(p, H5B2_LEAF_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5B2_LEAF_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* version # */
-    *p++ = H5B2_LEAF_VERSION;
+    *image++ = H5B2_LEAF_VERSION;
 
     /* b-tree type */
-    *p++ = leaf->hdr->cls->id;
-    HDassert((size_t)(p - (uint8_t *)image) == (H5B2_LEAF_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
+    *image++ = leaf->hdr->cls->id;
+    HDassert((size_t)(image - (uint8_t *)_image) == (H5B2_LEAF_PREFIX_SIZE - H5B2_SIZEOF_CHKSUM));
 
     /* Serialize records for leaf node */
     native = leaf->leaf_native;
     for(u = 0; u < leaf->nrec; u++) {
         /* Encode record */
-        if((leaf->hdr->cls->encode)(p, native, leaf->hdr->cb_ctx) < 0)
+        if((leaf->hdr->cls->encode)(image, native, leaf->hdr->cb_ctx) < 0)
             HGOTO_ERROR(H5E_BTREE, H5E_CANTENCODE, FAIL, "unable to encode B-tree record")
 
         /* Move to next record */
-        p += leaf->hdr->rrec_size;
+        image += leaf->hdr->rrec_size;
         native += leaf->hdr->cls->nrec_size;
     } /* end for */
 
     /* Compute metadata checksum */
-    metadata_chksum = H5_checksum_metadata(image, (size_t)((const uint8_t *)p - (const uint8_t *)image), 0);
+    metadata_chksum = H5_checksum_metadata(_image, (size_t)((const uint8_t *)image - (const uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32ENCODE(p, metadata_chksum);
+    UINT32ENCODE(image, metadata_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (uint8_t *)image) <= len);
+    HDassert((size_t)(image - (uint8_t *)_image) <= len);
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

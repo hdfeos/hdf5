@@ -63,11 +63,11 @@
 /********************/
 
 /* Metadata cache (H5AC) callbacks */
-static herr_t H5G__cache_node_get_load_size(const void *udata_ptr, size_t *image_len_ptr);
-static void *H5G__cache_node_deserialize(const void *image_ptr, size_t len,
-    void *udata_ptr, hbool_t *dirty_ptr);
-static herr_t H5G__cache_node_image_len(const void *thing, size_t *image_len_ptr);
-static herr_t H5G__cache_node_serialize(const H5F_t *f, void *image_ptr,
+static herr_t H5G__cache_node_get_load_size(const void *udata, size_t *image_len);
+static void *H5G__cache_node_deserialize(const void *image, size_t len,
+    void *udata, hbool_t *dirty);
+static herr_t H5G__cache_node_image_len(const void *thing, size_t *image_len);
+static herr_t H5G__cache_node_serialize(const H5F_t *f, void *image,
     size_t len, void *thing);
 static herr_t H5G__cache_node_free_icr(void *thing);
 
@@ -114,14 +114,14 @@ H5FL_SEQ_EXTERN(H5G_entry_t);
 /*-------------------------------------------------------------------------
  * Function:    H5G__cache_node_get_load_size()
  *
- * Purpose:  Determine the size of the on disk image of the node, and 
- *	return this value in *image_len_ptr.
+ * Purpose:	Determine the size of the on disk image of the node, and 
+ *		return this value in *image_len.
  *
- *	Note that this computation requires access to the file pointer,
- *	which is not provided in the parameter list for this callback.
- *	Finesse this issue by passing in the file pointer twice to the
- *	H5AC_protect() call -- once as the file pointer proper, and 
- *	again as the user data.
+ *		Note that this computation requires access to the file pointer,
+ *		which is not provided in the parameter list for this callback.
+ *		Finesse this issue by passing in the file pointer twice to the
+ *		H5AC_protect() call -- once as the file pointer proper, and 
+ *		again as the user data.
  *      
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -132,7 +132,7 @@ H5FL_SEQ_EXTERN(H5G_entry_t);
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5G__cache_node_get_load_size(const void *_udata, size_t *image_len_ptr)
+H5G__cache_node_get_load_size(const void *_udata, size_t *image_len)
 {
     const H5F_t	       *f = (const H5F_t *)_udata;   /* User data for callback */
 
@@ -140,10 +140,10 @@ H5G__cache_node_get_load_size(const void *_udata, size_t *image_len_ptr)
 
     /* Sanity checks */
     HDassert(f);
-    HDassert(image_len_ptr);
+    HDassert(image_len);
 
     /* report image length */
-    *image_len_ptr = (size_t)(H5G_NODE_SIZE(f));
+    *image_len = (size_t)(H5G_NODE_SIZE(f));
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5G__cache_node_get_load_size() */
@@ -152,15 +152,15 @@ H5G__cache_node_get_load_size(const void *_udata, size_t *image_len_ptr)
 /*-------------------------------------------------------------------------
  * Function:    H5G__cache_node_deserialize
  *
- * Purpose: Given a buffer containing the on disk image of a symbol table
- *	node, allocate an instance of H5G_node_t, load the contence of the
- *	image into it, and return a pointer to the instance.
+ * Purpose:	Given a buffer containing the on disk image of a symbol table
+ *		node, allocate an instance of H5G_node_t, load the contence of the
+ *		image into it, and return a pointer to the instance.
  *
- *	Note that deserializing the image requires access to the file 
- *	pointer, which is not included in the parameter list for this 
- *	callback.  Finesse this issue by passing in the file pointer 
- *	twice to the H5AC_protect() call -- once as the file pointer 
- *	proper, and again as the user data
+ *		Note that deserializing the image requires access to the file 
+ *		pointer, which is not included in the parameter list for this 
+ *		callback.  Finesse this issue by passing in the file pointer 
+ *		twice to the H5AC_protect() call -- once as the file pointer 
+ *		proper, and again as the user data
  *
  * Return:      Success:        Pointer to in core representation
  *              Failure:        NULL
@@ -171,21 +171,21 @@ H5G__cache_node_get_load_size(const void *_udata, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static void *
-H5G__cache_node_deserialize(const void *image_ptr, size_t len, void *_udata,
-    hbool_t *dirty_ptr)
+H5G__cache_node_deserialize(const void *_image, size_t len, void *_udata,
+    hbool_t UNUSED *dirty)
 {
     H5F_t                  *f = (H5F_t *)_udata;        /* User data for callback */
     H5G_node_t             *sym = NULL; /* Symbol table node created */
-    const uint8_t          *p;          /* Pointer to image to deserialize */
+    const uint8_t          *image = (const uint8_t *)_image;    /* Pointer to image to deserialize */
     void *                  ret_value;  /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Sanity checks */
-    HDassert(image_ptr);
+    HDassert(image);
     HDassert(len > 0);
     HDassert(f);
-    HDassert(dirty_ptr);
+    HDassert(dirty);
 
     /* Allocate symbol table data structures */
     if(NULL == (sym = H5FL_CALLOC(H5G_node_t)))
@@ -194,26 +194,23 @@ H5G__cache_node_deserialize(const void *image_ptr, size_t len, void *_udata,
     if(NULL == (sym->entry = H5FL_SEQ_CALLOC(H5G_entry_t, (size_t)(2 * H5F_SYM_LEAF_K(f)))))
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
 
-    /* Get temporary pointer to serialized node */
-    p = (const uint8_t *)image_ptr;
-
     /* magic */
-    if(HDmemcmp(p, H5G_NODE_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5G_NODE_MAGIC, (size_t)H5_SIZEOF_MAGIC))
         HGOTO_ERROR(H5E_SYM, H5E_CANTLOAD, NULL, "bad symbol table node signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* version */
-    if(H5G_NODE_VERS != *p++)
+    if(H5G_NODE_VERS != *image++)
         HGOTO_ERROR(H5E_SYM, H5E_CANTLOAD, NULL, "bad symbol table node version")
 
     /* reserved */
-    p++;
+    image++;
 
     /* number of symbols */
-    UINT16DECODE(p, sym->nsyms);
+    UINT16DECODE(image, sym->nsyms);
 
     /* entries */
-    if(H5G__ent_decode_vec(f, &p, sym->entry, sym->nsyms) < 0)
+    if(H5G__ent_decode_vec(f, &image, sym->entry, sym->nsyms) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTLOAD, NULL, "unable to decode symbol table entries")
 
     /* Set return value */
@@ -243,7 +240,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5G__cache_node_image_len(const void *_thing, size_t *image_len_ptr)
+H5G__cache_node_image_len(const void *_thing, size_t *image_len)
 {
     const H5G_node_t *sym = (const H5G_node_t *)_thing; /* Pointer to object */
 
@@ -253,9 +250,9 @@ H5G__cache_node_image_len(const void *_thing, size_t *image_len_ptr)
     HDassert(sym);
     HDassert(sym->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(sym->cache_info.type == H5AC_SNODE);
-    HDassert(image_len_ptr);
+    HDassert(image_len);
 
-    *image_len_ptr = sym->node_size;
+    *image_len = sym->node_size;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5G__cache_node_image_len() */
@@ -269,10 +266,10 @@ H5G__cache_node_image_len(const void *_thing, size_t *image_len_ptr)
 /*-------------------------------------------------------------------------
  * Function:    H5G__cache_node_serialize
  *
- * Purpose: Given a correctly sized buffer and an instace of H5G_node_t,
- *	serialize the contents of the instance of H5G_node_t, and write
- *	this data into the supplied buffer.  This buffer will be written
- *	to disk.
+ * Purpose:	Given a correctly sized buffer and an instace of H5G_node_t,
+ *		serialize the contents of the instance of H5G_node_t, and write
+ *		this data into the supplied buffer.  This buffer will be written
+ *		to disk.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -283,45 +280,42 @@ H5G__cache_node_image_len(const void *_thing, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5G__cache_node_serialize(const H5F_t *f, void *image_ptr, size_t len,
+H5G__cache_node_serialize(const H5F_t *f, void *_image, size_t len,
     void *_thing)
 {
     H5G_node_t *sym = (H5G_node_t *)_thing;     /* Pointer to object */
-    uint8_t    *p;                      /* Pointer into raw data buffer */
+    uint8_t    *image = (uint8_t *)_image;      /* Pointer into raw data buffer */
     herr_t      ret_value = SUCCEED;    /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Sanity checks */
     HDassert(f);
-    HDassert(image_ptr);
+    HDassert(image);
     HDassert(sym);
     HDassert(sym->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(sym->cache_info.type == H5AC_SNODE);
     HDassert(len == sym->node_size);
 
-    /* Get temporary pointer to serialized symbol table node */
-    p = (uint8_t *)image_ptr;
-
     /* magic number */
-    HDmemcpy(p, H5G_NODE_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5G_NODE_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* version number */
-    *p++ = H5G_NODE_VERS;
+    *image++ = H5G_NODE_VERS;
 
     /* reserved */
-    *p++ = 0;
+    *image++ = 0;
 
     /* number of symbols */
-    UINT16ENCODE(p, sym->nsyms);
+    UINT16ENCODE(image, sym->nsyms);
 
     /* entries */
-    if(H5G__ent_encode_vec(f, &p, sym->entry, sym->nsyms) < 0)
+    if(H5G__ent_encode_vec(f, &image, sym->entry, sym->nsyms) < 0)
         HGOTO_ERROR(H5E_SYM, H5E_CANTENCODE, FAIL, "can't serialize")
 
     /* Clear rest of symbol table node */
-    HDmemset(p, 0, sym->node_size - (size_t)(p - (uint8_t *)image_ptr));
+    HDmemset(image, 0, sym->node_size - (size_t)(image - (uint8_t *)_image));
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)

@@ -16,6 +16,8 @@
 /*-------------------------------------------------------------------------
  *
  * Created:		H5FAcache.c
+ *			Jul  2 2009
+ *			Quincey Koziol <koziol@hdfgroup.org>
  *
  * Purpose:		Implement fixed array metadata cache methods.
  *
@@ -84,7 +86,7 @@ static herr_t H5FA__cache_dblock_image_len(const void *thing, size_t *image_len)
 static herr_t H5FA__cache_dblock_serialize(const H5F_t *f, void *image, size_t len,
     void *thing);
 static herr_t H5FA__cache_dblock_free_icr(void *thing);
-static herr_t H5FA__cache_dblock_fsf_size(const void *thing, size_t *fsf_size_ptr);
+static herr_t H5FA__cache_dblock_fsf_size(const void *thing, size_t *fsf_size);
 
 static herr_t H5FA__cache_dblk_page_get_load_size(const void *udata, size_t *image_len);
 static void *H5FA__cache_dblk_page_deserialize(const void *image, size_t len,
@@ -209,14 +211,14 @@ END_FUNC(STATIC)   /* end H5FA__cache_hdr_get_load_size() */
  */
 BEGIN_FUNC(STATIC, ERR,
 void *, NULL, NULL,
-H5FA__cache_hdr_deserialize(const void *image, size_t len,
+H5FA__cache_hdr_deserialize(const void *_image, size_t len,
     void *_udata, hbool_t UNUSED *dirty))
 
     /* Local variables */
     H5FA_cls_id_t       id;		/* ID of fixed array class, as found in file */
     H5FA_hdr_t		*hdr = NULL;    /* Fixed array info */
     H5FA_hdr_cache_ud_t *udata = (H5FA_hdr_cache_ud_t *)_udata;
-    const uint8_t	*p;             /* Pointer into raw data buffer */
+    const uint8_t	*image = (const uint8_t *)_image;       /* Pointer into raw data buffer */
     uint32_t            stored_chksum;  /* Stored metadata checksum value */
     uint32_t            computed_chksum; /* Computed metadata checksum value */
 
@@ -232,35 +234,32 @@ H5FA__cache_hdr_deserialize(const void *image, size_t len,
     /* Set the fixed array header's address */
     hdr->addr = udata->addr;
 
-    /* Get temporary pointer to serialized header */
-    p = (const uint8_t *)image;
-
     /* Magic number */
-    if(HDmemcmp(p, H5FA_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5FA_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC))
 	H5E_THROW(H5E_BADVALUE, "wrong fixed array header signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Version */
-    if(*p++ != H5FA_HDR_VERSION)
+    if(*image++ != H5FA_HDR_VERSION)
 	H5E_THROW(H5E_VERSION, "wrong fixed array header version")
 
     /* Fixed array class */
-    id = (H5FA_cls_id_t)*p++;
+    id = (H5FA_cls_id_t)*image++;
     if(id >= H5FA_NUM_CLS_ID)
 	H5E_THROW(H5E_BADTYPE, "incorrect fixed array class")
     hdr->cparam.cls = H5FA_client_class_g[id];
 
     /* General array creation/configuration information */
-    hdr->cparam.raw_elmt_size = *p++;         	   /* Element size in file (in bytes) */
-    hdr->cparam.max_dblk_page_nelmts_bits = *p++;  /* Log2(Max. # of elements in data block page) -
+    hdr->cparam.raw_elmt_size = *image++;         	   /* Element size in file (in bytes) */
+    hdr->cparam.max_dblk_page_nelmts_bits = *image++;  /* Log2(Max. # of elements in data block page) -
 						      i.e. # of bits needed to store max. # of
 						      elements in data block page. */
 
     /* Array statistics */
-    H5F_DECODE_LENGTH(udata->f, p, hdr->cparam.nelmts);	/* Number of elements */
+    H5F_DECODE_LENGTH(udata->f, image, hdr->cparam.nelmts);	/* Number of elements */
 
     /* Internal information */
-    H5F_addr_decode(udata->f, &p, &hdr->dblk_addr); 		/* Address of index block */
+    H5F_addr_decode(udata->f, &image, &hdr->dblk_addr); 		/* Address of index block */
 
     /* Check for data block */
     if(H5F_addr_defined(hdr->dblk_addr)) {
@@ -283,17 +282,17 @@ H5FA__cache_hdr_deserialize(const void *image, size_t len,
 
     /* Sanity check */
     /* (allow for checksum not decoded yet) */
-    HDassert((size_t)(p - (const uint8_t *)image) == (len - H5FA_SIZEOF_CHKSUM));
+    HDassert((size_t)(image - (const uint8_t *)_image) == (len - H5FA_SIZEOF_CHKSUM));
 
     /* Compute checksum on entire header */
     /* (including the filter information, if present) */
-    computed_chksum = H5_checksum_metadata(image, (size_t)(p - (const uint8_t *)image), 0);
+    computed_chksum = H5_checksum_metadata(_image, (size_t)(image - (const uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image) == len);
+    HDassert((size_t)(image - (const uint8_t *)_image) == len);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
@@ -362,12 +361,12 @@ END_FUNC(STATIC)   /* end H5FA__cache_hdr_image_len() */
  */
 BEGIN_FUNC(STATIC, NOERR,
 herr_t, SUCCEED, -,
-H5FA__cache_hdr_serialize(const H5F_t *f, void *image, size_t UNUSED len,
+H5FA__cache_hdr_serialize(const H5F_t *f, void *_image, size_t UNUSED len,
     void *_thing))
 
     /* Local variables */
     H5FA_hdr_t *hdr = (H5FA_hdr_t *)_thing;     /* Pointer to the fixed array header */
-    uint8_t *p;                 /* Pointer into raw data buffer */
+    uint8_t *image = (uint8_t *)_image;         /* Pointer into raw data buffer */
     uint32_t metadata_chksum;   /* Computed metadata checksum value */
 
     /* check arguments */
@@ -375,37 +374,34 @@ H5FA__cache_hdr_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     HDassert(image);
     HDassert(hdr);
 
-    /* Get temporary pointer to serialized image */
-    p = (uint8_t *)image;
-
     /* Magic number */
-    HDmemcpy(p, H5FA_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5FA_HDR_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* Version # */
-    *p++ = H5FA_HDR_VERSION;
+    *image++ = H5FA_HDR_VERSION;
 
     /* Fixed array type */
-    *p++ = hdr->cparam.cls->id;
+    *image++ = hdr->cparam.cls->id;
 
     /* General array creation/configuration information */
-    *p++ = hdr->cparam.raw_elmt_size;          /* Element size in file (in bytes) */
-    *p++ = hdr->cparam.max_dblk_page_nelmts_bits;  /* Log2(Max. # of elements in data block page) - i.e. # of bits needed to store max. # of elements in data block page */
+    *image++ = hdr->cparam.raw_elmt_size;          /* Element size in file (in bytes) */
+    *image++ = hdr->cparam.max_dblk_page_nelmts_bits;  /* Log2(Max. # of elements in data block page) - i.e. # of bits needed to store max. # of elements in data block page */
 
     /* Array statistics */
-    H5F_ENCODE_LENGTH(f, p, hdr->stats.nelmts);       /* Number of elements for the fixed array */
+    H5F_ENCODE_LENGTH(f, image, hdr->stats.nelmts);       /* Number of elements for the fixed array */
 
     /* Internal information */
-    H5F_addr_encode(f, &p, hdr->dblk_addr);  /* Address of fixed array data block */
+    H5F_addr_encode(f, &image, hdr->dblk_addr);  /* Address of fixed array data block */
 
     /* Compute metadata checksum */
-    metadata_chksum = H5_checksum_metadata(image, (size_t)(p - (uint8_t *)image), 0);
+    metadata_chksum = H5_checksum_metadata(_image, (size_t)(image - (uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32ENCODE(p, metadata_chksum);
+    UINT32ENCODE(image, metadata_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (uint8_t *)image) <= len);
+    HDassert((size_t)(image - (uint8_t *)_image) <= len);
 
 END_FUNC(STATIC)   /* end H5FA__cache_hdr_serialize() */
 
@@ -510,13 +506,13 @@ END_FUNC(STATIC)   /* end H5FA__cache_dblock_get_load_size() */
  */
 BEGIN_FUNC(STATIC, ERR,
 void *, NULL, NULL,
-H5FA__cache_dblock_deserialize(const void *image, size_t len,
+H5FA__cache_dblock_deserialize(const void *_image, size_t len,
     void *_udata, hbool_t UNUSED *dirty))
 
     /* Local variables */
     H5FA_dblock_t  *dblock = NULL;  /* Data block info */
     H5FA_dblock_cache_ud_t *udata = (H5FA_dblock_cache_ud_t *)_udata; /* User data for loading data block */
-    const uint8_t  *p;              /* Pointer into raw data buffer */
+    const uint8_t  *image = (const uint8_t *)_image;    /* Pointer into raw data buffer */
     uint32_t       stored_chksum;   /* Stored metadata checksum value */
     uint32_t       computed_chksum; /* Computed metadata checksum value */
     haddr_t        arr_addr;        /* Address of array header in the file */
@@ -535,57 +531,54 @@ H5FA__cache_dblock_deserialize(const void *image, size_t len,
     /* Set the fixed array data block's information */
     dblock->addr = udata->dblk_addr;
 
-    /* Get temporary pointer to serialized image */
-    p = (const uint8_t *)image;
-
     /* Magic number */
-    if(HDmemcmp(p, H5FA_DBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5FA_DBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC))
 	H5E_THROW(H5E_BADVALUE, "wrong fixed array data block signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Version */
-    if(*p++ != H5FA_DBLOCK_VERSION)
+    if(*image++ != H5FA_DBLOCK_VERSION)
 	H5E_THROW(H5E_VERSION, "wrong fixed array data block version")
 
     /* Fixed array type */
-    if(*p++ != (uint8_t)udata->hdr->cparam.cls->id)
+    if(*image++ != (uint8_t)udata->hdr->cparam.cls->id)
 	H5E_THROW(H5E_BADTYPE, "incorrect fixed array class")
 
     /* Address of header for array that owns this block (just for file integrity checks) */
-    H5F_addr_decode(udata->hdr->f, &p, &arr_addr);
+    H5F_addr_decode(udata->hdr->f, &image, &arr_addr);
     if(H5F_addr_ne(arr_addr, udata->hdr->addr))
 	H5E_THROW(H5E_BADVALUE, "wrong fixed array header address")
 
     /* Page initialization flags */
     if(dblock->npages > 0) {
-	HDmemcpy(dblock->dblk_page_init, p, dblock->dblk_page_init_size);
-        p += dblock->dblk_page_init_size;
+	HDmemcpy(dblock->dblk_page_init, image, dblock->dblk_page_init_size);
+        image += dblock->dblk_page_init_size;
     } /* end if */
 
     /* Only decode elements if the data block is not paged */
     if(!dblock->npages) {
         /* Decode elements in data block */
         /* Convert from raw elements on disk into native elements in memory */
-        if((udata->hdr->cparam.cls->decode)(p, dblock->elmts, (size_t)udata->hdr->cparam.nelmts, udata->hdr->cb_ctx) < 0)
+        if((udata->hdr->cparam.cls->decode)(image, dblock->elmts, (size_t)udata->hdr->cparam.nelmts, udata->hdr->cb_ctx) < 0)
             H5E_THROW(H5E_CANTDECODE, "can't decode fixed array data elements")
-        p += (udata->hdr->cparam.nelmts * udata->hdr->cparam.raw_elmt_size);
+        image += (udata->hdr->cparam.nelmts * udata->hdr->cparam.raw_elmt_size);
     } /* end if */
 
     /* Sanity check */
     /* (allow for checksum not decoded yet) */
-    HDassert((size_t)(p - (const uint8_t *)image) == (len - H5FA_SIZEOF_CHKSUM));
+    HDassert((size_t)(image - (const uint8_t *)_image) == (len - H5FA_SIZEOF_CHKSUM));
 
     /* Set the data block's size */
     dblock->size = H5FA_DBLOCK_SIZE(dblock);
 
     /* Compute checksum on data block */
-    computed_chksum = H5_checksum_metadata(image, (size_t)(p - (const uint8_t *)image), 0);
+    computed_chksum = H5_checksum_metadata(_image, (size_t)(image - (const uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image) == len);
+    HDassert((size_t)(image - (const uint8_t *)_image) == len);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
@@ -652,12 +645,12 @@ END_FUNC(STATIC)   /* end H5FA__cache_dblock_image_len() */
  */
 BEGIN_FUNC(STATIC, ERR,
 herr_t, SUCCEED, FAIL,
-H5FA__cache_dblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
+H5FA__cache_dblock_serialize(const H5F_t *f, void *_image, size_t UNUSED len,
     void *_thing))
 
     /* Local variables */
     H5FA_dblock_t *dblock = (H5FA_dblock_t *)_thing;      /* Pointer to the object to serialize */
-    uint8_t *p;             /* Pointer into raw data buffer */
+    uint8_t *image = (uint8_t *)_image;         /* Pointer into raw data buffer */
     uint32_t metadata_chksum; /* Computed metadata checksum value */
 
     /* Check arguments */
@@ -666,27 +659,24 @@ H5FA__cache_dblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     HDassert(dblock);
     HDassert(dblock->hdr);
 
-    /* Get temporary pointer to serialization buffer */
-    p = (uint8_t *)image;
-
     /* Magic number */
-    HDmemcpy(p, H5FA_DBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC);
-    p += H5_SIZEOF_MAGIC;
+    HDmemcpy(image, H5FA_DBLOCK_MAGIC, (size_t)H5_SIZEOF_MAGIC);
+    image += H5_SIZEOF_MAGIC;
 
     /* Version # */
-    *p++ = H5FA_DBLOCK_VERSION;
+    *image++ = H5FA_DBLOCK_VERSION;
 
     /* Fixed array type */
-    *p++ = dblock->hdr->cparam.cls->id;
+    *image++ = dblock->hdr->cparam.cls->id;
 
     /* Address of array header for array which owns this block */
-    H5F_addr_encode(f, &p, dblock->hdr->addr);
+    H5F_addr_encode(f, &image, dblock->hdr->addr);
 
     /* Page init flags */
     if(dblock->npages > 0) {
         /* Store the 'page init' bitmasks */
-        HDmemcpy(p, dblock->dblk_page_init, dblock->dblk_page_init_size);
-        p += dblock->dblk_page_init_size;
+        HDmemcpy(image, dblock->dblk_page_init, dblock->dblk_page_init_size);
+        image += dblock->dblk_page_init_size;
     } /* end if */
 
     /* Only encode elements if the data block is not paged */
@@ -695,19 +685,19 @@ H5FA__cache_dblock_serialize(const H5F_t *f, void *image, size_t UNUSED len,
 
         /* Convert from native elements in memory into raw elements on disk */
         H5_CHECK_OVERFLOW(dblock->hdr->cparam.nelmts, /* From: */hsize_t, /* To: */size_t);
-        if((dblock->hdr->cparam.cls->encode)(p, dblock->elmts, (size_t)dblock->hdr->cparam.nelmts, dblock->hdr->cb_ctx) < 0)
+        if((dblock->hdr->cparam.cls->encode)(image, dblock->elmts, (size_t)dblock->hdr->cparam.nelmts, dblock->hdr->cb_ctx) < 0)
             H5E_THROW(H5E_CANTENCODE, "can't encode fixed array data elements")
-        p += (dblock->hdr->cparam.nelmts * dblock->hdr->cparam.raw_elmt_size);
+        image += (dblock->hdr->cparam.nelmts * dblock->hdr->cparam.raw_elmt_size);
     } /* end if */
 
     /* Compute metadata checksum */
-    metadata_chksum = H5_checksum_metadata(image, (size_t)(p - (uint8_t *)image), 0);
+    metadata_chksum = H5_checksum_metadata(_image, (size_t)(image - (uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32ENCODE(p, metadata_chksum);
+    UINT32ENCODE(image, metadata_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (uint8_t *)image) <= len);
+    HDassert((size_t)(image - (uint8_t *)_image) <= len);
 
 CATCH
 
@@ -777,7 +767,7 @@ END_FUNC(STATIC)   /* end H5FA__cache_dblock_free_icr() */
  */
 BEGIN_FUNC(STATIC, NOERR,
 herr_t, SUCCEED, FAIL,
-H5FA__cache_dblock_fsf_size(const void *_thing, size_t *fsf_size_ptr))
+H5FA__cache_dblock_fsf_size(const void *_thing, size_t *fsf_size))
 
     const H5FA_dblock_t *dblock = (const H5FA_dblock_t *)_thing;    /* Pointer to the object */
 
@@ -785,9 +775,9 @@ H5FA__cache_dblock_fsf_size(const void *_thing, size_t *fsf_size_ptr))
     HDassert(dblock);
     HDassert(dblock->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(dblock->cache_info.type == H5AC_FARRAY_DBLOCK);
-    HDassert(fsf_size_ptr);
+    HDassert(fsf_size);
 
-    *fsf_size_ptr = dblock->size;
+    *fsf_size = dblock->size;
 
 END_FUNC(STATIC)   /* end H5FA__cache_dblock_fsf_size() */
 
@@ -839,13 +829,13 @@ END_FUNC(STATIC)   /* end H5FA__cache_dblk_page_get_load_size() */
  */
 BEGIN_FUNC(STATIC, ERR,
 void *, NULL, NULL,
-H5FA__cache_dblk_page_deserialize(const void *image, size_t len,
+H5FA__cache_dblk_page_deserialize(const void *_image, size_t len,
     void *_udata, hbool_t UNUSED *dirty))
 
     /* Local variables */
     H5FA_dblk_page_t	*dblk_page = NULL; /* Data block page info */
     H5FA_dblk_page_cache_ud_t *udata = (H5FA_dblk_page_cache_ud_t *)_udata; /* User data for loading data block page */
-    const uint8_t	*p;             /* Pointer into raw data buffer */
+    const uint8_t	*image = (const uint8_t *)_image;       /* Pointer into raw data buffer */
     uint32_t            stored_chksum;  /* Stored metadata checksum value */
     uint32_t            computed_chksum; /* Computed metadata checksum value */
 
@@ -862,32 +852,29 @@ H5FA__cache_dblk_page_deserialize(const void *image, size_t len,
     /* Set the fixed array data block's information */
     dblk_page->addr = udata->dblk_page_addr;
 
-    /* Get temporary pointer to serialized image */
-    p = (const uint8_t *)image;
-
     /* Internal information */
 
     /* Decode elements in data block page */
     /* Convert from raw elements on disk into native elements in memory */
-    if((udata->hdr->cparam.cls->decode)(p, dblk_page->elmts, udata->nelmts, udata->hdr->cb_ctx) < 0)
+    if((udata->hdr->cparam.cls->decode)(image, dblk_page->elmts, udata->nelmts, udata->hdr->cb_ctx) < 0)
         H5E_THROW(H5E_CANTDECODE, "can't decode fixed array data elements")
-    p += (udata->nelmts * udata->hdr->cparam.raw_elmt_size);
+    image += (udata->nelmts * udata->hdr->cparam.raw_elmt_size);
 
     /* Sanity check */
     /* (allow for checksum not decoded yet) */
-    HDassert((size_t)(p - (const uint8_t *)image) == (len - H5FA_SIZEOF_CHKSUM));
+    HDassert((size_t)(image - (const uint8_t *)_image) == (len - H5FA_SIZEOF_CHKSUM));
 
     /* Set the data block page's size */
     dblk_page->size = len;
 
     /* Compute checksum on data block */
-    computed_chksum = H5_checksum_metadata(image, (size_t)(p - (const uint8_t *)image), 0);
+    computed_chksum = H5_checksum_metadata(_image, (size_t)(image - (const uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32DECODE(p, stored_chksum);
+    UINT32DECODE(image, stored_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (const uint8_t *)image) == dblk_page->size);
+    HDassert((size_t)(image - (const uint8_t *)_image) == dblk_page->size);
 
     /* Verify checksum */
     if(stored_chksum != computed_chksum)
@@ -951,12 +938,12 @@ END_FUNC(STATIC)   /* end H5FA__cache_dblk_page_image_len() */
  */
 BEGIN_FUNC(STATIC, ERR,
 herr_t, SUCCEED, FAIL,
-H5FA__cache_dblk_page_serialize(const H5F_t *f, void *image, size_t UNUSED len,
+H5FA__cache_dblk_page_serialize(const H5F_t *f, void *_image, size_t UNUSED len,
     void *_thing))
 
     /* Local variables */
     H5FA_dblk_page_t *dblk_page = (H5FA_dblk_page_t *)_thing;      /* Pointer to the object to serialize */
-    uint8_t *p;                 /* Pointer into raw data buffer */
+    uint8_t *image = (uint8_t *)_image;         /* Pointer into raw data buffer */
     uint32_t metadata_chksum;   /* Computed metadata checksum value */
 
     /* Sanity check */
@@ -965,26 +952,23 @@ H5FA__cache_dblk_page_serialize(const H5F_t *f, void *image, size_t UNUSED len,
     HDassert(dblk_page);
     HDassert(dblk_page->hdr);
 
-    /* Get temporary pointer to serialization buffer */
-    p = (uint8_t *)image;
-
     /* Internal information */
 
     /* Encode elements in data block page */
 
     /* Convert from native elements in memory into raw elements on disk */
-    if((dblk_page->hdr->cparam.cls->encode)(p, dblk_page->elmts, dblk_page->nelmts, dblk_page->hdr->cb_ctx) < 0)
+    if((dblk_page->hdr->cparam.cls->encode)(image, dblk_page->elmts, dblk_page->nelmts, dblk_page->hdr->cb_ctx) < 0)
         H5E_THROW(H5E_CANTENCODE, "can't encode fixed array data elements")
-    p += (dblk_page->nelmts * dblk_page->hdr->cparam.raw_elmt_size);
+    image += (dblk_page->nelmts * dblk_page->hdr->cparam.raw_elmt_size);
 
     /* Compute metadata checksum */
-    metadata_chksum = H5_checksum_metadata(image, (size_t)(p - (uint8_t *)image), 0);
+    metadata_chksum = H5_checksum_metadata(_image, (size_t)(image - (uint8_t *)_image), 0);
 
     /* Metadata checksum */
-    UINT32ENCODE(p, metadata_chksum);
+    UINT32ENCODE(image, metadata_chksum);
 
     /* Sanity check */
-    HDassert((size_t)(p - (uint8_t *)image) <= len);
+    HDassert((size_t)(image - (uint8_t *)_image) <= len);
 
 CATCH
 

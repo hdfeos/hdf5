@@ -62,11 +62,11 @@
 /********************/
 
 /* Metadata cache callbacks */
-static herr_t H5HG__cache_heap_get_load_size(const void *udata_ptr, size_t *image_len_ptr);
-static void *H5HG__cache_heap_deserialize(const void *image_ptr, size_t len,
-    void *udata_ptr, hbool_t *dirty_ptr); 
-static herr_t H5HG__cache_heap_image_len(const void *thing, size_t *image_len_ptr);
-static herr_t H5HG__cache_heap_serialize(const H5F_t *f, void *image_ptr,
+static herr_t H5HG__cache_heap_get_load_size(const void *udata, size_t *image_len);
+static void *H5HG__cache_heap_deserialize(const void *image, size_t len,
+    void *udata, hbool_t *dirty); 
+static herr_t H5HG__cache_heap_image_len(const void *thing, size_t *image_len);
+static herr_t H5HG__cache_heap_serialize(const H5F_t *f, void *image,
     size_t len, void *thing); 
 static herr_t H5HG__cache_heap_free_icr(void *thing);
 
@@ -122,13 +122,13 @@ const H5AC_class_t H5AC_GHEAP[1] = {{
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5HG__cache_heap_get_load_size(const void UNUSED *_udata, size_t *image_len_ptr)
+H5HG__cache_heap_get_load_size(const void UNUSED *_udata, size_t *image_len)
 {
     FUNC_ENTER_STATIC_NOERR
 
-    HDassert(image_len_ptr);
+    HDassert(image_len);
 
-    *image_len_ptr = (size_t)H5HG_MINSIZE;
+    *image_len = (size_t)H5HG_MINSIZE;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5HG__cache_heap_get_load_size() */
@@ -154,25 +154,23 @@ H5HG__cache_heap_get_load_size(const void UNUSED *_udata, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static void *
-H5HG__cache_heap_deserialize(const void *image_ptr, size_t len, void *_udata,
-    hbool_t *dirty_ptr)
+H5HG__cache_heap_deserialize(const void *_image, size_t len, void *_udata,
+    hbool_t UNUSED *dirty)
 {
     H5F_t       *f = (H5F_t *)_udata;   /* File pointer -- obtained from user data */
-    H5HG_heap_t *heap = NULL;
-    uint8_t     *p;
-    size_t       nalloc;
-    size_t       need;
-    size_t       max_idx = 0;
-    void *       ret_value;      /* Return value */
+    H5HG_heap_t *heap = NULL;   /* New global heap */
+    uint8_t     *image;         /* Pointer to image to decode */
+    void        *ret_value;     /* Return value */
 
     FUNC_ENTER_STATIC
 
     /* Sanity checks */
-    HDassert(image_ptr);
+    HDassert(_image);
     HDassert(len >= (size_t)H5HG_MINSIZE);
     HDassert(f);
-    HDassert(dirty_ptr);
+    HDassert(dirty);
 
+    /* Allocate a new global heap */
     if(NULL == (heap = H5FL_CALLOC(H5HG_heap_t)))
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
     heap->shared = H5F_SHARED(f);
@@ -180,31 +178,34 @@ H5HG__cache_heap_deserialize(const void *image_ptr, size_t len, void *_udata,
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
 
     /* copy the image buffer into the newly allocate chunk */
-    HDmemcpy(heap->chunk, image_ptr, len);
+    HDmemcpy(heap->chunk, _image, len);
 
-    p = heap->chunk;
+    image = heap->chunk;
 
     /* Magic number */
-    if(HDmemcmp(p, H5HG_MAGIC, (size_t)H5_SIZEOF_MAGIC))
+    if(HDmemcmp(image, H5HG_MAGIC, (size_t)H5_SIZEOF_MAGIC))
         HGOTO_ERROR(H5E_HEAP, H5E_CANTLOAD, NULL, "bad global heap collection signature")
-    p += H5_SIZEOF_MAGIC;
+    image += H5_SIZEOF_MAGIC;
 
     /* Version */
-    if(H5HG_VERSION != *p++) 
+    if(H5HG_VERSION != *image++) 
         HGOTO_ERROR(H5E_HEAP, H5E_CANTLOAD, NULL, "wrong version number in global heap")
 
     /* Reserved */
-    p += 3;
+    image += 3;
 
     /* Size */
-    H5F_DECODE_LENGTH(f, p, heap->size);
+    H5F_DECODE_LENGTH(f, image, heap->size);
     HDassert(heap->size >= H5HG_MINSIZE);
     HDassert((len == H5HG_MINSIZE) /* first try */ || 
              ((len == heap->size) && (len > H5HG_MINSIZE))); /* second try */
     
     if(len == heap->size) {     /* proceed with the deserialize */
+        size_t       max_idx = 0;
+        size_t       nalloc;
+
         /* Decode each object */
-        p = heap->chunk + H5HG_SIZEOF_HDR(f);
+        image = heap->chunk + H5HG_SIZEOF_HDR(f);
         nalloc = H5HG_NOBJS(f, heap->size);
 
         /* Calloc the obj array because the file format spec makes no guarantee
@@ -214,22 +215,23 @@ H5HG__cache_heap_deserialize(const void *image_ptr, size_t len, void *_udata,
             HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
         heap->nalloc = nalloc;
 
-        while(p < (heap->chunk + heap->size)) {
-            if((p + H5HG_SIZEOF_OBJHDR(f)) > (heap->chunk + heap->size)) {
+        while(image < (heap->chunk + heap->size)) {
+            if((image + H5HG_SIZEOF_OBJHDR(f)) > (heap->chunk + heap->size)) {
                 /*
                  * The last bit of space is too tiny for an object header, so
                  * we assume that it's free space.
                  */
                 HDassert(NULL == heap->obj[0].begin);
-                heap->obj[0].size = (size_t)(((const uint8_t *)heap->chunk + heap->size) - p);
-                heap->obj[0].begin = p;
-                p += heap->obj[0].size;
+                heap->obj[0].size = (size_t)(((const uint8_t *)heap->chunk + heap->size) - image);
+                heap->obj[0].begin = image;
+                image += heap->obj[0].size;
             } /* end if */
             else {
+                size_t need;
                 unsigned idx;
-                uint8_t *begin = p;
+                uint8_t *begin = image;
 
-                UINT16DECODE(p, idx);
+                UINT16DECODE(image, idx);
 
                 /* Check if we need more room to store heap objects */
                 if(idx >= heap->nalloc) {
@@ -253,9 +255,9 @@ H5HG__cache_heap_deserialize(const void *image_ptr, size_t len, void *_udata,
                     HDassert(heap->nalloc > heap->nused);
                 } /* end if */
 
-                UINT16DECODE(p, heap->obj[idx].nrefs);
-                p += 4; /*reserved*/
-                H5F_DECODE_LENGTH(f, p, heap->obj[idx].size);
+                UINT16DECODE(image, heap->obj[idx].nrefs);
+                image += 4; /*reserved*/
+                H5F_DECODE_LENGTH(f, image, heap->obj[idx].size);
                 heap->obj[idx].begin = begin;
 
                 /*
@@ -274,11 +276,11 @@ H5HG__cache_heap_deserialize(const void *image_ptr, size_t len, void *_udata,
                 else
                     need = heap->obj[idx].size;
 
-                p = begin + need;
+                image = begin + need;
             } /* end else */
         } /* end while */
 
-        HDassert(p == heap->chunk + heap->size);
+        HDassert(image == heap->chunk + heap->size);
         HDassert(H5HG_ISALIGNED(heap->obj[0].size));
 
         /* Set the next index value to use */
@@ -317,7 +319,7 @@ done:
  * Function:    H5HG__cache_heap_image_len
  *
  * Purpose:	Return the on disk image size of the global heap to the 
- *		metadata cache via the image_len_ptr.
+ *		metadata cache via the image_len.
  *
  * Return:      Success:        SUCCEED
  *              Failure:        FAIL
@@ -328,7 +330,7 @@ done:
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5HG__cache_heap_image_len(const void *_thing, size_t *image_len_ptr)
+H5HG__cache_heap_image_len(const void *_thing, size_t *image_len)
 {
     const H5HG_heap_t *heap = (const H5HG_heap_t *)_thing;
 
@@ -339,9 +341,9 @@ H5HG__cache_heap_image_len(const void *_thing, size_t *image_len_ptr)
     HDassert(heap->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(heap->cache_info.type == H5AC_GHEAP);
     HDassert(heap->size >= H5HG_MINSIZE);
-    HDassert(image_len_ptr);
+    HDassert(image_len);
 
-    *image_len_ptr = heap->size;
+    *image_len = heap->size;
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5HG__cache_heap_image_len() */
@@ -368,7 +370,7 @@ H5HG__cache_heap_image_len(const void *_thing, size_t *image_len_ptr)
  *-------------------------------------------------------------------------
  */
 static herr_t
-H5HG__cache_heap_serialize(const H5F_t *f, void *image_ptr, size_t len,
+H5HG__cache_heap_serialize(const H5F_t *f, void *image, size_t len,
     void *_thing)
 {
     H5HG_heap_t *heap = (H5HG_heap_t *)_thing;
@@ -376,7 +378,7 @@ H5HG__cache_heap_serialize(const H5F_t *f, void *image_ptr, size_t len,
     FUNC_ENTER_STATIC_NOERR
 
     HDassert(f);
-    HDassert(image_ptr);
+    HDassert(image);
     HDassert(heap);
     HDassert(heap->cache_info.magic == H5C__H5C_CACHE_ENTRY_T_MAGIC);
     HDassert(heap->cache_info.type == H5AC_GHEAP);
@@ -384,7 +386,7 @@ H5HG__cache_heap_serialize(const H5F_t *f, void *image_ptr, size_t len,
     HDassert(heap->chunk);
 
     /* copy the image into the buffer */
-    HDmemcpy(image_ptr, heap->chunk, len);
+    HDmemcpy(image, heap->chunk, len);
 
     FUNC_LEAVE_NOAPI(SUCCEED)
 } /* end H5HG__cache_heap_serialize() */
