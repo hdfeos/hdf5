@@ -216,7 +216,6 @@ typedef struct H5FA_hdr_cache_ud_t {
 /* Info needed for loading data block */
 typedef struct H5FA_dblock_cache_ud_t {
     H5FA_hdr_t *hdr;            /* Shared fixed array information */
-    hsize_t     nelmts;         /* Number of elements in data block */
     haddr_t     dblk_addr;      /* Address of data block on disk */
 } H5FA_dblock_cache_ud_t;
 
@@ -274,11 +273,11 @@ H5_DLL H5FA_dblock_t *H5FA__dblock_alloc(H5FA_hdr_t *hdr);
 H5_DLL haddr_t H5FA__dblock_create(H5FA_hdr_t *hdr, hid_t dxpl_id, hbool_t *hdr_dirty);
 H5_DLL unsigned H5FA__dblock_sblk_idx(const H5FA_hdr_t *hdr, hsize_t idx);
 H5_DLL H5FA_dblock_t *H5FA__dblock_protect(H5FA_hdr_t *hdr, hid_t dxpl_id,
-    haddr_t dblk_addr, hsize_t dblk_nelmts, unsigned flags);
+    haddr_t dblk_addr, unsigned flags);
 H5_DLL herr_t H5FA__dblock_unprotect(H5FA_dblock_t *dblock, hid_t dxpl_id,
     unsigned cache_flags);
 H5_DLL herr_t H5FA__dblock_delete(H5FA_hdr_t *hdr, hid_t dxpl_id,
-    haddr_t dblk_addr, hsize_t dblk_nelmts);
+    haddr_t dblk_addr);
 H5_DLL herr_t H5FA__dblock_dest(H5FA_dblock_t *dblock);
 
 /* Data block page routines */

@@ -202,7 +202,7 @@ H5FA__dblock_debug(H5F_t *f, hid_t dxpl_id, haddr_t addr, FILE *stream, int inde
 	H5E_THROW(H5E_CANTPROTECT, "unable to load fixed array header")
 
     /* Protect data block */
-    if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, addr, hdr->cparam.nelmts, H5AC__READ_ONLY_FLAG)))
+    if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, addr, H5AC__READ_ONLY_FLAG)))
         H5E_THROW(H5E_CANTPROTECT, "unable to protect fixed array data block, address = %llu", (unsigned long long)addr)
 
     /* Print opening message */

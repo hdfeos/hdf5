@@ -359,7 +359,7 @@ HDfprintf(stderr, "%s: fixed array data block address not defined!\n", FUNC, idx
     HDassert(idx < hdr->cparam.nelmts);
 
     /* Protect data block */
-    if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, hdr->dblk_addr, hdr->stats.nelmts, H5AC__NO_FLAGS_SET)))
+    if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, hdr->dblk_addr, H5AC__NO_FLAGS_SET)))
 	H5E_THROW(H5E_CANTPROTECT, "unable to protect fixed array data block, address = %llu", (unsigned long long)hdr->dblk_addr)
 
     /* Check for paging data block */
@@ -467,7 +467,7 @@ HDfprintf(stderr, "%s: Index %Hu\n", FUNC, idx);
     else {
         /* Get the data block */
         HDassert(H5F_addr_defined(hdr->dblk_addr));
-        if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, hdr->dblk_addr, hdr->stats.nelmts, H5AC__READ_ONLY_FLAG)))
+        if(NULL == (dblock = H5FA__dblock_protect(hdr, dxpl_id, hdr->dblk_addr, H5AC__READ_ONLY_FLAG)))
             H5E_THROW(H5E_CANTPROTECT, "unable to protect fixed array data block, address = %llu", (unsigned long long)hdr->dblk_addr)
 
         /* Check for paged data block */

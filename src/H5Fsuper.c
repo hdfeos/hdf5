@@ -268,12 +268,11 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
 
     FUNC_ENTER_PACKAGE_TAG(dxpl_id, H5AC__SUPERBLOCK_TAG, FAIL)
 
-    /* Find the superblock */
-
     /* Get the DXPL plist object for DXPL ID */
     if(NULL == (dxpl = (H5P_genplist_t *)H5I_object(dxpl_id)))
         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "can't get property list")
 
+    /* Find the superblock */
     if(H5FD_locate_signature(f->shared->lf, dxpl, &super_addr) < 0)
         HGOTO_ERROR(H5E_FILE, H5E_NOTHDF5, FAIL, "unable to locate file signature")
     if(HADDR_UNDEF == super_addr)
@@ -291,24 +290,12 @@ H5F__super_read(H5F_t *f, hid_t dxpl_id)
     /* Must tell cache at protect time that the super block is to be
      * flushed last (and collectively in the parallel case).
      */
-
+    rw_flags = H5AC__FLUSH_LAST_FLAG;
 #ifdef H5_HAVE_PARALLEL
-
-    if(H5F_INTENT(f) & H5F_ACC_RDWR)
-        rw_flags = H5AC__FLUSH_LAST_FLAG | H5C__FLUSH_COLLECTIVELY_FLAG;
-    else
-        rw_flags = H5AC__FLUSH_LAST_FLAG | 
-                   H5C__FLUSH_COLLECTIVELY_FLAG | 
-                   H5AC__READ_ONLY_FLAG;
-
-#else /* H5_HAVE_PARALLEL */
-
-    if(H5F_INTENT(f) & H5F_ACC_RDWR)
-        rw_flags = H5AC__FLUSH_LAST_FLAG;  /* i.e. r/w access */
-    else
-        rw_flags = H5AC__READ_ONLY_FLAG | H5AC__FLUSH_LAST_FLAG;
-
+    rw_flags |= H5C__FLUSH_COLLECTIVELY_FLAG;
 #endif /* H5_HAVE_PARALLEL */
+    if(!(H5F_INTENT(f) & H5F_ACC_RDWR))
+        rw_flags |= H5AC__READ_ONLY_FLAG;
 
     /* Get the shared file creation property list */
     if(NULL == (c_plist = (H5P_genplist_t *)H5I_object(f->shared->fcpl_id)))

@@ -427,7 +427,7 @@ H5FA__hdr_protect(H5F_t *f, hid_t dxpl_id, haddr_t fa_addr, void *ctx_udata,
 
     /* Protect the header */
     if(NULL == (ret_value = (H5FA_hdr_t *)H5AC_protect(f, dxpl_id, H5AC_FARRAY_HDR, fa_addr, &udata, flags)))
-        H5E_THROW(H5E_CANTPROTECT, "unable to protect fix array header, address = %llu", (unsigned long long)fa_addr)
+        H5E_THROW(H5E_CANTPROTECT, "unable to protect fixed array header, address = %llu", (unsigned long long)fa_addr)
 
 CATCH
 
@@ -509,7 +509,7 @@ HDfprintf(stderr, "%s: hdr->dblk_addr = %a\n", FUNC, hdr->dblk_addr);
 #endif /* H5FA_DEBUG */
 
         /* Delete Fixed Array Data block */
-        if(H5FA__dblock_delete(hdr, dxpl_id, hdr->dblk_addr, hdr->cparam.nelmts) < 0)
+        if(H5FA__dblock_delete(hdr, dxpl_id, hdr->dblk_addr) < 0)
             H5E_THROW(H5E_CANTDELETE, "unable to delete fixed array data block")
     } /* end if */
 
