@@ -26,7 +26,7 @@ AC_PREREQ([2.69])
 ## NOTE: Do not forget to change the version number here when we do a
 ## release!!!
 ##
-AC_INIT([HDF5], [1.9.214], [help@hdfgroup.org])
+AC_INIT([HDF5], [1.9.215], [help@hdfgroup.org])
 AC_CONFIG_SRCDIR([src/H5.c])
 AC_CONFIG_HEADER([src/H5config.h])
 
@@ -749,14 +749,8 @@ AC_PROG_INSTALL
 
 
 ## ----------------------------------------------------------------------
-## Check that the tr utility is working properly.
-
+## Set up ${TR} which is used to process DEBUG_PKG.
 AC_PATH_PROG([TR], [tr])
-
-TR_TEST=`echo Test | ${TR} ${as_cr_letters}"," ${as_cr_LETTERS}" "`
-if test "X${TR_TEST}" != "XTEST"; then
-  AC_MSG_ERROR([tr program doesn't work])
-fi
 
 
 ## ----------------------------------------------------------------------

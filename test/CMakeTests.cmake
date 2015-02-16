@@ -434,7 +434,7 @@ add_test (
 foreach (test ${H5_TESTS})
   if (${test} STREQUAL "big" AND CYGWIN)
     add_test (
-        NAME H5TEST-${test}-SKIPPED
+        NAME H5TEST-${test}
         COMMAND ${CMAKE_COMMAND} -E echo "SKIP ${test}"
     )
   else (${test} STREQUAL "big" AND CYGWIN)
@@ -524,7 +524,7 @@ if (BUILD_SHARED_LIBS)
   foreach (test ${H5_TESTS})
     if (${test} STREQUAL "big" AND CYGWIN)
       add_test (
-          NAME H5TEST-shared-${test}-SKIPPED
+          NAME H5TEST-shared-${test}
           COMMAND ${CMAKE_COMMAND} -E echo "SKIP ${test}-shared"
       )
     else (${test} STREQUAL "big" AND CYGWIN)
