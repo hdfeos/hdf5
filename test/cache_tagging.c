@@ -156,7 +156,7 @@ print_entry_type_to_screen(int id)
             printf("Fractal Heap Indirect Block(12)");
             break;
         case 13:
-            printf("Free Space Header(12)");
+            printf("Free Space Header(13)");
             break;
         case 14:
             printf("Free Space Section(14)");

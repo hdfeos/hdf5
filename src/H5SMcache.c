@@ -444,7 +444,7 @@ H5SM__cache_table_free_icr(void *_thing)
 
 done:
     FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5O_cache_table_free_icr() */
+} /* end H5SM_cache_table_free_icr() */
 
 
 /*-------------------------------------------------------------------------

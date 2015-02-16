@@ -1025,7 +1025,6 @@ mdc_api_call_smoke_check(int express_test)
      */
 
     /* setup the file name */
-
     if ( pass ) {
 
         if ( h5_fixname(FILENAME[1], H5P_DEFAULT, filename, sizeof(filename))
@@ -1064,9 +1063,7 @@ mdc_api_call_smoke_check(int express_test)
     /* verify that the cache is now set to the alternate config */
     validate_mdc_config(file_id, &mod_config_1, TRUE, 2);
 
-
     /* create the datasets */
-
     if ( pass ) {
 
         i = 0;
@@ -1256,7 +1253,6 @@ mdc_api_call_smoke_check(int express_test)
     validate_mdc_config(file_id, &mod_config_2, TRUE, 3);
 
     /* do random reads on all datasets */
-
     n = 0;
     while ( ( pass ) && ( n < NUM_RANDOM_ACCESSES ) )
     {
@@ -1382,7 +1378,6 @@ mdc_api_call_smoke_check(int express_test)
     validate_mdc_config(file_id, &mod_config_3, TRUE, 4);
 
     /* do random reads on data set 0 only */
-
     m = 0;
     n = 0;
     while ( ( pass ) && ( n < NUM_RANDOM_ACCESSES ) )
@@ -1463,7 +1458,6 @@ mdc_api_call_smoke_check(int express_test)
 
         n++;
     }
-
 
     /* close file space 0 */
     if ( pass ) {

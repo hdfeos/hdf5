@@ -1770,13 +1770,6 @@ serve_sync_request(struct mssg_t * mssg_ptr)
  *
  * Programmer:	JRM -- 12/21/05
  *
- * Modifications:
- *
- *		JRM -- 5/9/06
- *		Added code supporting a write ack message.  This is a
- *		speculative fix to a bug observed on Cobalt.  If it
- *		doesn't work, it will help narrow down the possibilities.
- *
  *****************************************************************************/
 static hbool_t
 serve_write_request(struct mssg_t * mssg_ptr)
@@ -2713,7 +2706,6 @@ datum_notify(H5C_notify_action_t action, void *thing)
                     }
 
 #if 0 /* This has been useful debugging code -- keep it for now. */
-
 	            if ( mssg.req != READ_REQ_REPLY_CODE ) {
 
 		        HDfprintf(stdout, 
@@ -5190,19 +5182,6 @@ unpin_entry(H5F_t * file_ptr,
  *
  * Programmer:	JRM -- 12/21/05
  *
- * Modifications:
- *
- *		JRM -- 5/9/06
- *		Added code supporting the write request ack message.  This
- *		message was added to eliminate one possible cause of a
- *		bug spotted on cobalt.  If this doesn't fix the problem,
- *		it will narrow things down a bit.
- *
- *		JRM -- 5/10/06
- *		Added call to do_sync().  This is part of an attempt to
- *		optimize out the slowdown caused by the addition of the
- *		write request ack message.
- *
  *****************************************************************************/
 static hbool_t
 server_smoke_check(void)
@@ -5558,17 +5537,12 @@ smoke_check_1(int metadata_write_strategy)
 {
     const char * fcn_name = "smoke_check_1()";
     hbool_t success = TRUE;
-    hbool_t report_progress = FALSE;
-    int chk_pnt = 0;
     int i;
     int max_nerrors;
     hid_t fid = -1;
     H5F_t * file_ptr = NULL;
     H5C_t * cache_ptr = NULL;
     struct mssg_t mssg;
-
-    if ( report_progress ) /* 0 */
-        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
     switch ( metadata_write_strategy ) {
 
@@ -5591,20 +5565,11 @@ smoke_check_1(int metadata_write_strategy)
 	    break;
     }
 
-    if ( report_progress ) /* 1 */
-        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
-
     nerrors = 0;
     init_data();
     reset_stats();
 
-    if ( report_progress ) /* 2 */
-        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
-
     if ( world_mpi_rank == world_server_mpi_rank ) {
-
-        if ( report_progress ) /* 3 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
 	if ( ! server_main() ) {
 
@@ -5615,16 +5580,9 @@ smoke_check_1(int metadata_write_strategy)
                           world_mpi_rank, fcn_name);
             }
         }
-
-        if ( report_progress ) /* 4 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
-
     }
     else /* run the clients */
     {
-        if ( report_progress ) /* 3 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
-
         if ( ! setup_cache_for_test(&fid, &file_ptr, &cache_ptr,
                                     metadata_write_strategy) ) {
 
@@ -5637,25 +5595,16 @@ smoke_check_1(int metadata_write_strategy)
             }
         }
 
-        if ( report_progress ) /* 4 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
-
         for ( i = 0; i < (virt_num_data_entries / 2); i++ )
         {
             insert_entry(cache_ptr, file_ptr, i, H5AC__NO_FLAGS_SET);
         }
-
-        if ( report_progress ) /* 5 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
         for ( i = (virt_num_data_entries / 2) - 1; i >= 0; i-- )
         {
 	    lock_entry(file_ptr, i);
 	    unlock_entry(file_ptr, i, H5AC__NO_FLAGS_SET);
         }
-
-        if ( report_progress ) /* 6 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
         /* Move the first half of the entries... */
         for ( i = 0; i < (virt_num_data_entries / 2); i++ )
@@ -5665,9 +5614,6 @@ smoke_check_1(int metadata_write_strategy)
 	    move_entry(file_ptr, i, (i + (virt_num_data_entries / 2)));
         }
 
-        if ( report_progress ) /* 7 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
-
         /* ...and then move them back. */
         for ( i = (virt_num_data_entries / 2) - 1; i >= 0; i-- )
         {
@@ -5675,9 +5621,6 @@ smoke_check_1(int metadata_write_strategy)
 	    unlock_entry(file_ptr, i, H5AC__NO_FLAGS_SET);
 	    move_entry(file_ptr, i, (i + (virt_num_data_entries / 2)));
         }
-
-        if ( report_progress ) /* 8 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
         if ( fid >= 0 ) {
 
@@ -5691,9 +5634,6 @@ smoke_check_1(int metadata_write_strategy)
             }
         }
 
-        if ( report_progress ) /* 9 */
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
-
         /* verify that all instance of datum are back where the started
          * and are clean.
          */
@@ -5703,9 +5643,6 @@ smoke_check_1(int metadata_write_strategy)
             HDassert( data_index[i] == i );
             HDassert( ! (data[i].dirty) );
         }
-
-        if ( report_progress ) 
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
         /* compose the done message */
         mssg.req       = DONE_REQ_CODE;
@@ -5731,13 +5668,7 @@ smoke_check_1(int metadata_write_strategy)
                 }
             }
         }
-
-        if ( report_progress ) 
-            HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
     }
-
-    if ( report_progress ) 
-        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
     max_nerrors = get_max_nerrors();
 
@@ -5753,9 +5684,6 @@ smoke_check_1(int metadata_write_strategy)
             H5_FAILED();
         }
     }
-
-    if ( report_progress ) 
-        HDfprintf(stdout, "%d:sc1:cp=%d\n", world_mpi_rank, chk_pnt++);
 
     success = ( ( success ) && ( max_nerrors == 0 ) );
 
@@ -5778,14 +5706,6 @@ smoke_check_1(int metadata_write_strategy)
  *		Failure:	FALSE
  *
  * Programmer:	JRM -- 1/12/06
- *
- * Modifications:
- *
- *		JRM -- 4/13/06
- *		Added pinned entry tests.
- *
- *		JRM -- 4/28/06
- *		Modified test to move pinned entries.
  *
  *****************************************************************************/
 static hbool_t
@@ -6012,14 +5932,6 @@ smoke_check_2(int metadata_write_strategy)
  *		Failure:	FALSE
  *
  * Programmer:	JRM -- 1/13/06
- *
- * Modifications:
- *
- *		Added code intended to ensure correct operation with large
- *		numbers of processors.
- *							JRM - 1/31/06
- *
- *		Added pinned entry tests.		JRM - 4/14/06
  *
  *****************************************************************************/
 static hbool_t
@@ -6346,16 +6258,6 @@ smoke_check_3(int metadata_write_strategy)
  *
  * Programmer:	JRM -- 1/13/06
  *
- * Modifications:
- *
- *		Added code intended to insure correct operation with large
- *		numbers of processors.
- *							JRM - 1/31/06
- *
- *		Added code testing pinned insertion of entries.
- *
- *							JRM - 8/15/06
- *
  *****************************************************************************/
 static hbool_t
 smoke_check_4(int metadata_write_strategy)
@@ -6669,12 +6571,6 @@ smoke_check_4(int metadata_write_strategy)
  *
  * Programmer:	JRM -- 5/18/06
  *
- * Modifications:
- *
- *		JRM -- 7/12/06
- *		Added test code for H5AC_expunge_entry() and
- *		H5AC_resize_entry().
- *
  *****************************************************************************/
 static hbool_t
 smoke_check_5(int metadata_write_strategy)
@@ -6909,16 +6805,6 @@ smoke_check_5(int metadata_write_strategy)
  *		Failure:	FALSE
  *
  * Programmer:	JRM -- 6/13/06
- *
- * Modifications:
- *
- *		JRM -- 7/11/06
- *		Updated for H5AC_expunge_entry() and
- *		H5AC_resize_entry().
- *
- *		JRM -- 2/14/08
- *		Updated for changes in H5AC_set_cache_auto_resize_config
- *		to support the new flash cache size increment code.
  *
  *****************************************************************************/
 static hbool_t

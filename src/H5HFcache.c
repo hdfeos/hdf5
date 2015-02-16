@@ -115,7 +115,7 @@ static herr_t H5HF__cache_verify_hdr_descendants_clean(H5F_t *f, hid_t dxpl_id,
 static herr_t H5HF__cache_verify_iblock_descendants_clean(H5F_t *f, hid_t dxpl_id,
     H5HF_indirect_t *iblock, unsigned *iblock_status, hbool_t *clean);
 static herr_t H5HF__cache_verify_iblocks_dblocks_clean(H5F_t *f,
-    H5HF_indirect_t *iblock, hbool_t *clean, hbool_t *had_dblocks);
+    H5HF_indirect_t *iblock, hbool_t *clean, hbool_t *has_dblocks);
 static herr_t H5HF__cache_verify_descendant_iblocks_clean(H5F_t *f, hid_t dxpl_id,
     H5HF_indirect_t *iblock, hbool_t *clean, hbool_t *has_iblocks);
 #endif /* NDEBUG */
@@ -125,7 +125,7 @@ static herr_t H5HF__cache_verify_descendant_iblocks_clean(H5F_t *f, hid_t dxpl_i
 /* Package Variables */
 /*********************/
 
-/* H5HF inherits cache-like properties from H5AC */
+/* H5HF header inherits cache-like properties from H5AC */
 const H5AC_class_t H5AC_FHEAP_HDR[1] = {{
     H5AC_FHEAP_HDR_ID,                  /* Metadata client ID */
     "fractal heap header",              /* Metadata client name (for debugging) */
@@ -142,7 +142,7 @@ const H5AC_class_t H5AC_FHEAP_HDR[1] = {{
     NULL,                               /* 'fsf_size' callback */
 }};
 
-/* H5HF inherits cache-like properties from H5AC */
+/* H5HF indirect block inherits cache-like properties from H5AC */
 const H5AC_class_t H5AC_FHEAP_IBLOCK[1] = {{
     H5AC_FHEAP_IBLOCK_ID,               /* Metadata client ID */
     "fractal heap indirect block",      /* Metadata client name (for debugging) */
@@ -159,7 +159,7 @@ const H5AC_class_t H5AC_FHEAP_IBLOCK[1] = {{
     NULL,                               /* 'fsf_size' callback */
 }};
 
-/* H5HF inherits cache-like properties from H5AC */
+/* H5HF direct block inherits cache-like properties from H5AC */
 const H5AC_class_t H5AC_FHEAP_DBLOCK[1] = {{
     H5AC_FHEAP_DBLOCK_ID,               /* Metadata client ID */
     "fractal heap direct block",        /* Metadata client name (for debugging) */
@@ -964,7 +964,6 @@ H5HF__cache_iblock_deserialize(const void *_image, size_t len, void *_udata,
 
     /* Allocate & decode child block entry tables */
     HDassert(iblock->nrows > 0);
-
     if(NULL == (iblock->ents = H5FL_SEQ_MALLOC(H5HF_indirect_ent_t, (size_t)(iblock->nrows * hdr->man_dtable.cparam.width))))
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed for direct entries")
 
@@ -992,7 +991,6 @@ H5HF__cache_iblock_deserialize(const void *_image, size_t len, void *_udata,
 
             /* Decode extra information for direct blocks */
             if(u < (hdr->man_dtable.max_direct_rows * hdr->man_dtable.cparam.width)) {
-
                 /* Size of filtered direct block */
                 H5F_DECODE_LENGTH(udata->f, image, iblock->filt_ents[u].size);
 
@@ -1000,7 +998,7 @@ H5HF__cache_iblock_deserialize(const void *_image, size_t len, void *_udata,
                 /* (either both the address & size are defined or both are
                  *  not defined)
                  */
-                HDassert((H5F_addr_defined(iblock->ents[u].addr) && iblock->filt_ents[u].size) 
+                HDassert((H5F_addr_defined(iblock->ents[u].addr) && iblock->filt_ents[u].size)
                     || (!H5F_addr_defined(iblock->ents[u].addr) && iblock->filt_ents[u].size == 0));
 
                 /* I/O filter mask for filtered direct block */
@@ -1609,7 +1607,7 @@ H5HF__cache_dblock_deserialize(const void *_image, size_t len, void *_udata,
     dblock->write_size = 0;
 
     /* Allocate block buffer */
-    /* XXX: Change to using free-list factories */
+/* XXX: Change to using free-list factories */
     if(NULL == (dblock->blk = H5FL_BLK_MALLOC(direct_block, (size_t)dblock->size)))
         HGOTO_ERROR(H5E_RESOURCE, H5E_NOSPACE, NULL, "memory allocation failed")
 
@@ -1680,7 +1678,6 @@ H5HF__cache_dblock_deserialize(const void *_image, size_t len, void *_udata,
     dblock->parent = par_info->iblock;
     dblock->fd_parent = par_info->iblock;
     dblock->par_entry = par_info->entry;
-
     if(dblock->parent) {
         /* Share parent block */
         if(H5HF_iblock_incr(dblock->parent) < 0)
@@ -2762,7 +2759,7 @@ done:
 #ifndef NDEBUG
 static herr_t
 H5HF__cache_verify_iblocks_dblocks_clean(H5F_t *f, H5HF_indirect_t *iblock, 
-    hbool_t *clean, hbool_t *had_dblocks)
+    hbool_t *clean, hbool_t *has_dblocks)
 {
     unsigned	num_direct_rows;
     unsigned	max_dblock_index;
@@ -2778,7 +2775,7 @@ H5HF__cache_verify_iblocks_dblocks_clean(H5F_t *f, H5HF_indirect_t *iblock,
     HDassert(iblock->cache_info.type == H5AC_FHEAP_IBLOCK);
     HDassert(clean);
     HDassert(*clean);
-    HDassert(had_dblocks);
+    HDassert(has_dblocks);
 
     i = 0;
     num_direct_rows = MIN(iblock->nrows, iblock->hdr->man_dtable.max_direct_rows);
@@ -2805,7 +2802,7 @@ H5HF__cache_verify_iblocks_dblocks_clean(H5F_t *f, H5HF_indirect_t *iblock,
                     HGOTO_ERROR(H5E_HEAP, H5E_CANTGET, FAIL, "can't get dblock status")
                 HDassert(dblock_status & H5AC_ES__IN_CACHE);
 
-	        *had_dblocks = TRUE;
+	        *has_dblocks = TRUE;
                 if(dblock_status & H5AC_ES__IS_DIRTY)
 		    *clean = FALSE;
 
@@ -2892,9 +2889,8 @@ H5HF__cache_verify_descendant_iblocks_clean(H5F_t *f, hid_t dxpl_id,
 
     i = first_iblock_index;
     while((*clean) && (i <= last_iblock_index)) {
-        haddr_t           child_iblock_addr;
+        haddr_t           child_iblock_addr = iblock->ents[i].addr;
 
-        child_iblock_addr = iblock->ents[i].addr;
 	if(H5F_addr_defined(child_iblock_addr)) {
             unsigned 	      child_iblock_status = 0;
 
@@ -2958,11 +2954,8 @@ H5HF__cache_verify_descendant_iblocks_clean(H5F_t *f, hid_t dxpl_id,
 		 * problems, or we think of a better way.
                  */
                 if(*clean) {
-                    H5HF_indirect_t *child_iblock;
-                    hbool_t	      unprotect_child_iblock;
-
-		    child_iblock = NULL;
-		    unprotect_child_iblock = FALSE;
+                    H5HF_indirect_t *child_iblock = NULL;
+                    hbool_t unprotect_child_iblock = FALSE;
 
 		    if(0 == (child_iblock_status & H5AC_ES__IS_PINNED)) {
 			/* child iblock is not pinned */

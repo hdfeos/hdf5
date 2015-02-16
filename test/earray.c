@@ -193,7 +193,6 @@ char filename_g[EARRAY_FILENAME_LEN];
 h5_stat_size_t empty_size_g;
 
 /* H5EA test object inherits cache-like properties from H5AC */
-
 const H5AC_class_t H5AC_EARRAY_TEST[1] = {{
     /* id            */ H5AC_TEST_ID,
     /* name          */ "earray test",

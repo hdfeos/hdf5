@@ -120,6 +120,7 @@ const H5AC_class_t H5AC_OHDR[1] = {{
     NULL,                               /* 'fsf_size' callback */
 }};
 
+/* H5O object header chunk inherits cache-like properties from H5AC */
 const H5AC_class_t H5AC_OHDR_CHK[1] = {{
     H5AC_OHDR_CHK_ID,                   /* Metadata client ID */
     "object header continuation chunk", /* Metadata client name (for debugging) */
@@ -135,7 +136,6 @@ const H5AC_class_t H5AC_OHDR_CHK[1] = {{
     H5O__cache_chk_clear,               /* 'clear' callback */
     NULL,                               /* 'fsf_size' callback */
 }};
-
 
 /* Declare external the free list for H5O_unknown_t's */
 H5FL_EXTERN(H5O_unknown_t);

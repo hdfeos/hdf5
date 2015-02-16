@@ -679,7 +679,7 @@ H5HL__cache_datablock_deserialize(const void *image, size_t len, void *_udata,
     HDassert(dirty);
 
     /* Allocate space in memory for the heap data block */
-    if(NULL == (dblk = H5HL_dblk_new(udata->heap))) 
+    if(NULL == (dblk = H5HL_dblk_new(udata->heap)))
         HGOTO_ERROR(H5E_HEAP, H5E_CANTALLOC, NULL, "memory allocation failed")
 
     /* Check for heap still retaining image */
