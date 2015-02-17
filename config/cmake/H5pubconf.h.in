@@ -211,23 +211,11 @@
 /* Define to 1 if you have the `dmalloc' library (-ldmalloc). */
 #cmakedefine H5_HAVE_LIBDMALLOC @H5_HAVE_LIBDMALLOC@
 
-/* Define to 1 if you have the `lmpe' library (-llmpe). */
-#cmakedefine H5_HAVE_LIBLMPE @H5_HAVE_LIBLMPE@
-
 /* Define to 1 if you have the `m' library (-lm). */
 #cmakedefine H5_HAVE_LIBM @H5_HAVE_LIBM@
 
 /* Define to 1 if you have the `mpe' library (-lmpe). */
 #cmakedefine H5_HAVE_LIBMPE @H5_HAVE_LIBMPE@
-
-/* Define to 1 if you have the `mpi' library (-lmpi). */
-#cmakedefine H5_HAVE_LIBMPI @H5_HAVE_LIBMPI@
-
-/* Define to 1 if you have the `mpich' library (-lmpich). */
-#cmakedefine H5_HAVE_LIBMPICH @H5_HAVE_LIBMPICH@
-
-/* Define to 1 if you have the `mpio' library (-lmpio). */
-#cmakedefine H5_HAVE_LIBMPIO @H5_HAVE_LIBMPIO@
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
 #cmakedefine H5_HAVE_LIBNSL @H5_HAVE_LIBNSL@

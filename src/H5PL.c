@@ -85,6 +85,7 @@ typedef const void *(__cdecl *H5PL_get_plugin_info_t)(void);
 typedef const void *(*H5PL_get_plugin_info_t)(void);
 #endif /* H5_HAVE_WIN32_API */
 
+/* Whether to preload pathnames for plugin libraries */
 #define H5PL_DEFAULT_PATH       H5_DEFAULT_PLUGINDIR
 
 /* Special symbol to indicate no plugin loading */
@@ -137,8 +138,8 @@ static char             *H5PL_path_table_g[H5PL_MAX_PATH_NUM];
 static size_t           H5PL_num_paths_g = 0;
 static hbool_t          H5PL_path_found_g = FALSE;
 
-/* Whether to preload pathnames for plugin libraries */
-static hbool_t          H5PL_no_plugin_g = FALSE;
+/* Enable all plugin libraries */
+static int          H5PL_plugin_g = INT_MAX;
 
 
 /*--------------------------------------------------------------------------
@@ -165,7 +166,7 @@ H5PL__init_interface(void)
     if(NULL != (preload_path = HDgetenv("HDF5_PLUGIN_PRELOAD"))) {
         /* Special symbal "::" means no plugin during data reading. */
         if(!HDstrcmp(preload_path, H5PL_NO_PLUGIN))
-            H5PL_no_plugin_g = TRUE;
+            H5PL_plugin_g = 0;
     } /* end if */
 
     FUNC_LEAVE_NOAPI(SUCCEED)
@@ -173,33 +174,69 @@ H5PL__init_interface(void)
 
 
 /*-------------------------------------------------------------------------
- * Function:	H5PL_no_plugin
+ * Function: H5PLset_loading_state
  *
- * Purpose:	Quick way for filter module to query whether to load plugin 
+ * Purpose: Control the loading of dynamic plugins.
  *
- * Return:	TRUE:	No plugin loading during data reading
+ * This function will not allow plugins if the pathname from the HDF5_PLUGIN_PRELOAD
+ * environment variable is set to the special "::" string.
  *
- * 		FALSE:	Load plugin during data reading
+ * plugin bit = 0, will prevent the use of that dynamic plugin.
+ * plugin bit = 1, will allow the use of that dynamic plugin.
  *
- * Programmer:	Raymond Lu
- *              20 February 2013
+ * H5PL_TYPE_FILTER changes just dynamic filters
+ * A negative value will enable all dynamic plugins
+ * A zero value will disable all dynamic plugins
+ *
+ * Return: Non-negative or success
  *
  *-------------------------------------------------------------------------
  */
-htri_t
-H5PL_no_plugin(void)
+herr_t
+H5PLset_loading_state(int plugin_flags)
 {
-    htri_t ret_value;
-
-    FUNC_ENTER_NOAPI(FAIL)
-
-    ret_value = (htri_t)H5PL_no_plugin_g;
-
+    char *preload_path;
+    herr_t ret_value = SUCCEED; /* Return value */
+    FUNC_ENTER_API(FAIL)
+    /* check for global setting first */
+    if(plugin_flags < 0)
+        plugin_flags = INT_MAX;
+    /* change the bit value of the requested plugin(s) */
+    H5PL_plugin_g = plugin_flags;
+    /* check if special ENV variable is set and disable all plugins */
+    if(NULL != (preload_path = HDgetenv("HDF5_PLUGIN_PRELOAD"))) {
+        /* Special symbol "::" means no plugin during data reading. */
+        if(!HDstrcmp(preload_path, H5PL_NO_PLUGIN))
+            H5PL_plugin_g = 0;
+    }
 done:
-    FUNC_LEAVE_NOAPI(ret_value)
-} /* end H5PL_no_plugin() */
+    FUNC_LEAVE_API(ret_value)
+} /* end H5PLset_loading_state() */
 
-
+
+/*-------------------------------------------------------------------------
+ * Function: H5PLget_loading_state
+ *
+ * Purpose: Query state of the loading of dynamic plugins.
+ *
+ * This function will return the state of the global flag.
+ *
+ * Return: Zero if all plugins are disabled, negative if all
+ * plugins are enabled, positive if one or more of the plugins are enabled.
+ *
+ *-------------------------------------------------------------------------
+ */
+herr_t
+H5PLget_loading_state(int* plugin_flags)
+{
+    herr_t ret_value = SUCCEED; /* Return value */
+    FUNC_ENTER_API(FAIL)
+    *plugin_flags = H5PL_plugin_g;
+    done:
+    FUNC_LEAVE_API(ret_value)
+} /* end H5PLget_loading_state() */
+
+
 /*-------------------------------------------------------------------------
  * Function:	H5PL_term_interface
  *
@@ -274,8 +311,16 @@ H5PL_load(H5PL_type_t type, int id)
     FUNC_ENTER_NOAPI(NULL)
 
     /* Check for "no plugins" indicated" */
-    if(H5PL_no_plugin_g)
-        HGOTO_ERROR(H5E_PLUGIN, H5E_CANTLOAD, NULL, "required dynamically loaded plugin filter '%d' is not available", id)
+    if(0 == H5PL_plugin_g)
+        HGOTO_ERROR(H5E_PLUGIN, H5E_CANTLOAD, NULL, "required dynamically loaded plugin filter '%d' is not available globally", id)
+    switch (type) {
+    case H5PL_TYPE_FILTER:
+        if((H5PL_plugin_g & H5PL_FILTER_PLUGIN) == 0)
+            HGOTO_ERROR(H5E_PLUGIN, H5E_CANTLOAD, NULL, "required dynamically loaded filter plugin '%d' is not available", id)
+        break;
+    default:
+        HGOTO_ERROR(H5E_PLUGIN, H5E_CANTLOAD, NULL, "required dynamically loaded plugin '%d' is not available", id)
+    }
 
     /* Initialize the location paths for dynamic libraries, if they aren't
      * already set up.
