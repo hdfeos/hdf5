@@ -783,5 +783,10 @@ void validate_mdc_config(hid_t file_id,
                          hbool_t compare_init,
                          int test_num);
 
+/** Debugging functions -- normally commented out ***/
+#if 0
+void dump_LRU(H5F_t * file_ptr);
+#endif 
+
 #endif /* _CACHE_COMMON_H */
 

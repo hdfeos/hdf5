@@ -5979,3 +5979,73 @@ validate_mdc_config(hid_t file_id,
 
 } /* validate_mdc_config() */
 
+
+#if 0 /* debugging functions -- normally commented out */
+/*-------------------------------------------------------------------------
+ * Function:    dump_LRU
+ *
+ * Purpose:     Display a summarize list of the contents of the LRU 
+ *              from head to tail.
+ *
+ * Return:      void
+ *
+ * Programmer:  John Mainzer
+ *              2/16/15
+ *
+ *-------------------------------------------------------------------------
+ */
+void
+dump_LRU(H5F_t * file_ptr)
+{
+    const char * hdr_0 =
+        " Entry  Entry   Entry       Entry         Entry               \n";
+    const char * hdr_1 =
+        " Num:   Dirty:  Size:       Addr:         Type:               \n";
+    const char * hdr_2 =
+        "==============================================================\n";
+    int i = 0;
+    H5C_cache_entry_t * entry_ptr = NULL;
+    H5C_t *cache_ptr = file_ptr->shared->cache;
+
+    HDassert(cache_ptr);
+    HDassert(cache_ptr->magic == H5C__H5C_T_MAGIC);
+
+    entry_ptr = cache_ptr->LRU_head_ptr;
+
+    HDfprintf(stdout, 
+              "\n\nIndex len/size/clean size/dirty size = %d/%lld/%lld/%lld\n",
+              cache_ptr->index_len, (long long)(cache_ptr->index_size),
+              (long long)(cache_ptr->clean_index_size),
+              (long long)(cache_ptr->dirty_index_size));
+    HDfprintf(stdout, "\nLRU len/size = %d/%lld.\n\n",
+              cache_ptr->LRU_list_len, (long long)(cache_ptr->LRU_list_size));
+
+    if ( entry_ptr != NULL )
+    {
+        HDfprintf(stdout, "%s%s%s", hdr_0, hdr_1, hdr_2);
+    }
+
+    while ( entry_ptr != NULL )
+    {
+        HDfprintf(stdout, 
+                  "  %3d     %d     %10lld  0x%010llx  %s(%d)\n",
+                  i, 
+                  (int)(entry_ptr->is_dirty), 
+                  (long long)(entry_ptr->size),
+                  (long long)(entry_ptr->addr),
+                  entry_ptr->type->name,
+                  entry_ptr->type->id);
+        i++;
+        entry_ptr = entry_ptr->next;
+    } 
+
+    if ( cache_ptr->LRU_list_len > 0 )
+    {
+        HDfprintf(stdout, "%s\n", hdr_2);
+    }
+
+    return;
+
+} /* dump_LRU() */
+
+#endif /* debugging functions -- normally commented out */
