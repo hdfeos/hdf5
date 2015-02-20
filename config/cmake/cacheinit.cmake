@@ -8,8 +8,6 @@ set (HDF_PACKAGE_EXT "" CACHE STRING "Name of HDF package extension" FORCE)
 
 set (HDF5_BUILD_FORTRAN ON CACHE BOOL "Build FORTRAN support" FORCE)
 
-set (HDF5_BUILD_HL_LIB ON CACHE BOOL "Build HIGH Level HDF5 Library" FORCE)
-
 set (HDF5_BUILD_GENERATORS OFF CACHE BOOL "Build Test Generators" FORCE)
 
 set (HDF5_ENABLE_Z_LIB_SUPPORT ON CACHE BOOL "Enable Zlib Filters" FORCE)

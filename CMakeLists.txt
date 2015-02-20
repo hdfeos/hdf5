@@ -798,6 +798,27 @@ if (BUILD_TESTING)
 endif (BUILD_TESTING)
 
 #-----------------------------------------------------------------------------
+# Option to build examples
+#-----------------------------------------------------------------------------
+if (EXISTS "${HDF5_SOURCE_DIR}/examples" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/examples")
+  option (HDF5_BUILD_EXAMPLES  "Build HDF5 Library Examples" ON)
+  if (HDF5_BUILD_EXAMPLES)
+    add_subdirectory (${HDF5_SOURCE_DIR}/examples ${PROJECT_BINARY_DIR}/examples)
+  endif (HDF5_BUILD_EXAMPLES)
+endif (EXISTS "${HDF5_SOURCE_DIR}/examples" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/examples")
+
+#-----------------------------------------------------------------------------
+# Option to build High Level API's
+#-----------------------------------------------------------------------------
+if (EXISTS "${HDF5_SOURCE_DIR}/hl" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/hl")
+  option (HDF5_BUILD_HL_LIB  "Build HIGH Level HDF5 Library" ON)
+  if (HDF5_BUILD_HL_LIB)
+    set (H5_INCLUDE_HL 1)
+    add_subdirectory (${HDF5_SOURCE_DIR}/hl ${PROJECT_BINARY_DIR}/hl)
+  endif (HDF5_BUILD_HL_LIB)
+endif (EXISTS "${HDF5_SOURCE_DIR}/hl" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/hl")
+
+#-----------------------------------------------------------------------------
 # Option to build Fortran bindings/tests/examples
 # Make sure this appears before the CONFIGURE_FILE step
 # so that fortran name mangling is detected before writing H5pubconf.h
@@ -835,16 +856,6 @@ if (EXISTS "${HDF5_SOURCE_DIR}/fortran" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/for
 endif (EXISTS "${HDF5_SOURCE_DIR}/fortran" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/fortran")
 
 #-----------------------------------------------------------------------------
-# Option to build examples
-#-----------------------------------------------------------------------------
-if (EXISTS "${HDF5_SOURCE_DIR}/examples" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/examples")
-  option (HDF5_BUILD_EXAMPLES  "Build HDF5 Library Examples" ON)
-  if (HDF5_BUILD_EXAMPLES)
-    add_subdirectory (${HDF5_SOURCE_DIR}/examples ${PROJECT_BINARY_DIR}/examples)
-  endif (HDF5_BUILD_EXAMPLES)
-endif (EXISTS "${HDF5_SOURCE_DIR}/examples" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/examples")
-
-#-----------------------------------------------------------------------------
 # Option to build HDF5 C++ Library
 #-----------------------------------------------------------------------------
 if (EXISTS "${HDF5_SOURCE_DIR}/c++" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/c++")
@@ -870,17 +881,6 @@ if (EXISTS "${HDF5_SOURCE_DIR}/tools" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/tools
     add_subdirectory (${HDF5_SOURCE_DIR}/tools ${PROJECT_BINARY_DIR}/tools)
   endif (HDF5_BUILD_TOOLS)
 endif (EXISTS "${HDF5_SOURCE_DIR}/tools" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/tools")
-
-#-----------------------------------------------------------------------------
-# Option to build High Level API's
-#-----------------------------------------------------------------------------
-if (EXISTS "${HDF5_SOURCE_DIR}/hl" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/hl")
-  option (HDF5_BUILD_HL_LIB  "Build HIGH Level HDF5 Library" ON)
-  if (HDF5_BUILD_HL_LIB)
-    set (H5_INCLUDE_HL 1)
-    add_subdirectory (${HDF5_SOURCE_DIR}/hl ${PROJECT_BINARY_DIR}/hl)
-  endif (HDF5_BUILD_HL_LIB)
-endif (EXISTS "${HDF5_SOURCE_DIR}/hl" AND IS_DIRECTORY "${HDF5_SOURCE_DIR}/hl")
 
 #-----------------------------------------------------------------------------
 # Check if Fortran's default real is double precision. If it is and HL is 
