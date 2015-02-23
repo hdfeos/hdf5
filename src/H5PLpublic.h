@@ -33,16 +33,17 @@ typedef enum H5PL_type_t {
     H5PL_TYPE_NONE         = 1    /*this must be last!       */
 } H5PL_type_t;
 
-/* Common dynamic plugin flags */
+/* Common dynamic plugin type flags */
 #define H5PL_FILTER_PLUGIN 0x0001
+#define H5PL_ALL_PLUGIN 0xFFFF
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* plugin state */
-H5_DLL herr_t H5PLset_loading_state(int plugin_flags);
-H5_DLL herr_t H5PLget_loading_state(int* plugin_flags/*out*/);
+H5_DLL herr_t H5PLset_loading_state(unsigned int plugin_type);
+H5_DLL herr_t H5PLget_loading_state(unsigned int* plugin_type/*out*/);
 
 #ifdef __cplusplus
 }
