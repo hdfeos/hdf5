@@ -95,6 +95,7 @@ if (BUILD_SHARED_LIBS)
       COMPILE_DEFINITIONS "H5_BUILT_AS_DYNAMIC_LIB"
       INTERFACE_INCLUDE_DIRECTORIES "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
       INTERFACE_COMPILE_DEFINITIONS H5_BUILT_AS_DYNAMIC_LIB=1
+      Fortran_MODULE_DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/shared
   )
   if (WIN32)
     set_property (TARGET ${HDF5_F90_TEST_LIBSH_TARGET} APPEND PROPERTY
@@ -165,8 +166,11 @@ if (BUILD_SHARED_LIBS)
   if (WIN32 AND MSVC)
     target_link_libraries (testhdf5_fortran-shared "ws2_32.lib")
   endif (WIN32 AND MSVC)
-  set_target_properties (testhdf5_fortran-shared PROPERTIES LINKER_LANGUAGE Fortran)
-  set_target_properties (testhdf5_fortran-shared PROPERTIES FOLDER test/fortran)
+  set_target_properties (testhdf5_fortran-shared PROPERTIES
+        LINKER_LANGUAGE Fortran
+        FOLDER test/fortran
+        Fortran_MODULE_DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/shared
+  )
 endif (BUILD_SHARED_LIBS)
 
 #-- Adding test for testhdf5_fortran_1_8
@@ -209,8 +213,11 @@ if (BUILD_SHARED_LIBS)
   if (WIN32 AND MSVC)
     target_link_libraries (testhdf5_fortran_1_8-shared "ws2_32.lib")
   endif (WIN32 AND MSVC)
-  set_target_properties (testhdf5_fortran_1_8-shared PROPERTIES LINKER_LANGUAGE Fortran)
-  set_target_properties (testhdf5_fortran_1_8-shared PROPERTIES FOLDER test/fortran)
+  set_target_properties (testhdf5_fortran_1_8-shared PROPERTIES
+        LINKER_LANGUAGE Fortran
+        FOLDER test/fortran
+        Fortran_MODULE_DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/shared
+  )
 endif (BUILD_SHARED_LIBS)
 
 #-- Adding test for fortranlib_test_F03
@@ -258,8 +265,11 @@ if (HDF5_ENABLE_F2003)
     if (WIN32 AND MSVC)
       target_link_libraries (fortranlib_test_F03-shared "ws2_32.lib")
     endif (WIN32 AND MSVC)
-    set_target_properties (fortranlib_test_F03-shared PROPERTIES LINKER_LANGUAGE Fortran)
-    set_target_properties (fortranlib_test_F03-shared PROPERTIES FOLDER test/fortran)
+    set_target_properties (fortranlib_test_F03-shared PROPERTIES
+        LINKER_LANGUAGE Fortran
+        FOLDER test/fortran
+        Fortran_MODULE_DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/shared
+  )
   endif (BUILD_SHARED_LIBS)
 endif (HDF5_ENABLE_F2003)
 
@@ -289,8 +299,11 @@ if (BUILD_SHARED_LIBS)
   if (WIN32 AND MSVC)
     target_link_libraries (fflush1-shared "ws2_32.lib")
   endif (WIN32 AND MSVC)
-  set_target_properties (fflush1-shared PROPERTIES LINKER_LANGUAGE Fortran)
-  set_target_properties (fflush1-shared PROPERTIES FOLDER test/fortran)
+  set_target_properties (fflush1-shared PROPERTIES
+        LINKER_LANGUAGE Fortran
+        FOLDER test/fortran
+        Fortran_MODULE_DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/shared
+  )
 endif (BUILD_SHARED_LIBS)
 
 #-- Adding test for fflush2
@@ -319,8 +332,11 @@ if (BUILD_SHARED_LIBS)
   if (WIN32 AND MSVC)
     target_link_libraries (fflush2-shared "ws2_32.lib")
   endif (WIN32 AND MSVC)
-  set_target_properties (fflush2-shared PROPERTIES LINKER_LANGUAGE Fortran)
-  set_target_properties (fflush2-shared PROPERTIES FOLDER test/fortran)
+  set_target_properties (fflush2-shared PROPERTIES
+        LINKER_LANGUAGE Fortran
+        FOLDER test/fortran
+        Fortran_MODULE_DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/shared
+  )
 endif (BUILD_SHARED_LIBS)
 
 include (CMakeTests.cmake)
