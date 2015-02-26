@@ -136,8 +136,10 @@ target_link_libraries (testhdf5_fortran
 if (WIN32 AND MSVC)
   target_link_libraries (testhdf5_fortran "ws2_32.lib")
 endif (WIN32 AND MSVC)
-set_target_properties (testhdf5_fortran PROPERTIES LINKER_LANGUAGE Fortran)
-set_target_properties (testhdf5_fortran PROPERTIES FOLDER test/fortran)
+set_target_properties (testhdf5_fortran PROPERTIES
+    LINKER_LANGUAGE Fortran
+    FOLDER test/fortran
+)
 if (BUILD_SHARED_LIBS)
   add_executable (testhdf5_fortran-shared
       fortranlib_test.f90
@@ -192,8 +194,10 @@ target_link_libraries (testhdf5_fortran_1_8
 if (WIN32 AND MSVC)
   target_link_libraries (testhdf5_fortran_1_8 "ws2_32.lib")
 endif (WIN32 AND MSVC)
-set_target_properties (testhdf5_fortran_1_8 PROPERTIES LINKER_LANGUAGE Fortran)
-set_target_properties (testhdf5_fortran_1_8 PROPERTIES FOLDER test/fortran)
+set_target_properties (testhdf5_fortran_1_8 PROPERTIES
+    LINKER_LANGUAGE Fortran
+    FOLDER test/fortran
+)
 if (BUILD_SHARED_LIBS)
   add_executable (testhdf5_fortran_1_8-shared
       fortranlib_test_1_8.f90
@@ -242,8 +246,10 @@ if (HDF5_ENABLE_F2003)
   if (WIN32 AND MSVC)
     target_link_libraries (fortranlib_test_F03 "ws2_32.lib")
   endif (WIN32 AND MSVC)
-  set_target_properties (fortranlib_test_F03 PROPERTIES LINKER_LANGUAGE Fortran)
-  set_target_properties (fortranlib_test_F03 PROPERTIES FOLDER test/fortran)
+  set_target_properties (fortranlib_test_F03 PROPERTIES
+      LINKER_LANGUAGE Fortran
+      FOLDER test/fortran
+  )
   if (BUILD_SHARED_LIBS)
     add_executable (fortranlib_test_F03-shared
         fortranlib_test_F03.f90
@@ -285,8 +291,10 @@ target_link_libraries (fflush1
 if (WIN32 AND MSVC)
   target_link_libraries (fflush1 "ws2_32.lib")
 endif (WIN32 AND MSVC)
-set_target_properties (fflush1 PROPERTIES LINKER_LANGUAGE Fortran)
-set_target_properties (fflush1 PROPERTIES FOLDER test/fortran)
+set_target_properties (fflush1 PROPERTIES
+    LINKER_LANGUAGE Fortran
+    FOLDER test/fortran
+)
 if (BUILD_SHARED_LIBS)
   add_executable (fflush1-shared fflush1.f90)
   TARGET_NAMING (fflush1-shared SHARED)
@@ -318,8 +326,10 @@ target_link_libraries (fflush2
 if (WIN32 AND MSVC)
   target_link_libraries (fflush2 "ws2_32.lib")
 endif (WIN32 AND MSVC)
-set_target_properties (fflush2 PROPERTIES LINKER_LANGUAGE Fortran)
-set_target_properties (fflush2 PROPERTIES FOLDER test/fortran)
+set_target_properties (fflush2 PROPERTIES
+    LINKER_LANGUAGE Fortran
+    FOLDER test/fortran
+)
 if (BUILD_SHARED_LIBS)
   add_executable (fflush2-shared fflush2.f90)
   TARGET_NAMING (fflush2-shared SHARED)
