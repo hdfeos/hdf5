@@ -189,17 +189,18 @@ am_libh5test_la_OBJECTS = h5test.lo testframe.lo cache_common.lo \
 libh5test_la_OBJECTS = $(am_libh5test_la_OBJECTS)
 @HAVE_SHARED_CONDITIONAL_FALSE@am_libh5test_la_rpath =
 @HAVE_SHARED_CONDITIONAL_TRUE@am_libh5test_la_rpath =
-am__EXEEXT_1 = testhdf5$(EXEEXT) lheap$(EXEEXT) ohdr$(EXEEXT) \
-	stab$(EXEEXT) gheap$(EXEEXT) cache$(EXEEXT) cache_api$(EXEEXT) \
-	cache_tagging$(EXEEXT) pool$(EXEEXT) accum$(EXEEXT) \
-	hyperslab$(EXEEXT) istore$(EXEEXT) bittests$(EXEEXT) \
-	dt_arith$(EXEEXT) dtypes$(EXEEXT) dsets$(EXEEXT) \
-	cmpd_dset$(EXEEXT) filter_fail$(EXEEXT) extend$(EXEEXT) \
-	external$(EXEEXT) efc$(EXEEXT) objcopy$(EXEEXT) links$(EXEEXT) \
-	twriteorder$(EXEEXT) unlink$(EXEEXT) big$(EXEEXT) \
-	mtime$(EXEEXT) fillval$(EXEEXT) mount$(EXEEXT) flush1$(EXEEXT) \
-	flush2$(EXEEXT) app_ref$(EXEEXT) enum$(EXEEXT) \
-	set_extent$(EXEEXT) ttsafe$(EXEEXT) enc_dec_plist$(EXEEXT) \
+am__EXEEXT_1 = test2d$(EXEEXT) testhdf5$(EXEEXT) lheap$(EXEEXT) \
+	ohdr$(EXEEXT) stab$(EXEEXT) gheap$(EXEEXT) cache$(EXEEXT) \
+	cache_api$(EXEEXT) cache_tagging$(EXEEXT) pool$(EXEEXT) \
+	accum$(EXEEXT) hyperslab$(EXEEXT) istore$(EXEEXT) \
+	bittests$(EXEEXT) dt_arith$(EXEEXT) dtypes$(EXEEXT) \
+	dsets$(EXEEXT) cmpd_dset$(EXEEXT) filter_fail$(EXEEXT) \
+	extend$(EXEEXT) external$(EXEEXT) efc$(EXEEXT) \
+	objcopy$(EXEEXT) links$(EXEEXT) twriteorder$(EXEEXT) \
+	unlink$(EXEEXT) big$(EXEEXT) mtime$(EXEEXT) fillval$(EXEEXT) \
+	mount$(EXEEXT) flush1$(EXEEXT) flush2$(EXEEXT) \
+	app_ref$(EXEEXT) enum$(EXEEXT) set_extent$(EXEEXT) \
+	ttsafe$(EXEEXT) enc_dec_plist$(EXEEXT) \
 	enc_dec_plist_with_endianess$(EXEEXT) getname$(EXEEXT) \
 	vfd$(EXEEXT) ntypes$(EXEEXT) dangle$(EXEEXT) \
 	dtransform$(EXEEXT) reserved$(EXEEXT) cross_read$(EXEEXT) \
@@ -550,6 +551,10 @@ tcheck_version_SOURCES = tcheck_version.c
 tcheck_version_OBJECTS = tcheck_version.$(OBJEXT)
 tcheck_version_LDADD = $(LDADD)
 tcheck_version_DEPENDENCIES = libh5test.la $(LIBHDF5)
+test2d_SOURCES = test2d.c
+test2d_OBJECTS = test2d.$(OBJEXT)
+test2d_LDADD = $(LDADD)
+test2d_DEPENDENCIES = libh5test.la $(LIBHDF5)
 am_testhdf5_OBJECTS = testhdf5.$(OBJEXT) tarray.$(OBJEXT) \
 	tattr.$(OBJEXT) tchecksum.$(OBJEXT) tconfig.$(OBJEXT) \
 	tfile.$(OBJEXT) tgenprop.$(OBJEXT) th5o.$(OBJEXT) \
@@ -652,10 +657,10 @@ SOURCES = $(libdynlib1_la_SOURCES) $(libdynlib2_la_SOURCES) \
 	set_extent.c space_overflow.c stab.c swmr_addrem_writer.c \
 	swmr_generator.c swmr_reader.c swmr_remove_reader.c \
 	swmr_remove_writer.c swmr_sparse_reader.c swmr_sparse_writer.c \
-	swmr_writer.c tcheck_version.c $(testhdf5_SOURCES) testmeta.c \
-	$(ttsafe_SOURCES) twriteorder.c unlink.c unregister.c \
-	$(use_append_chunk_SOURCES) $(use_append_mchunks_SOURCES) \
-	vfd.c
+	swmr_writer.c tcheck_version.c test2d.c $(testhdf5_SOURCES) \
+	testmeta.c $(ttsafe_SOURCES) twriteorder.c unlink.c \
+	unregister.c $(use_append_chunk_SOURCES) \
+	$(use_append_mchunks_SOURCES) vfd.c
 DIST_SOURCES = $(am__libdynlib1_la_SOURCES_DIST) \
 	$(am__libdynlib2_la_SOURCES_DIST) \
 	$(am__libdynlib3_la_SOURCES_DIST) $(libh5test_la_SOURCES) \
@@ -677,10 +682,10 @@ DIST_SOURCES = $(am__libdynlib1_la_SOURCES_DIST) \
 	set_extent.c space_overflow.c stab.c swmr_addrem_writer.c \
 	swmr_generator.c swmr_reader.c swmr_remove_reader.c \
 	swmr_remove_writer.c swmr_sparse_reader.c swmr_sparse_writer.c \
-	swmr_writer.c tcheck_version.c $(testhdf5_SOURCES) testmeta.c \
-	$(ttsafe_SOURCES) twriteorder.c unlink.c unregister.c \
-	$(use_append_chunk_SOURCES) $(use_append_mchunks_SOURCES) \
-	vfd.c
+	swmr_writer.c tcheck_version.c test2d.c $(testhdf5_SOURCES) \
+	testmeta.c $(ttsafe_SOURCES) twriteorder.c unlink.c \
+	unregister.c $(use_append_chunk_SOURCES) \
+	$(use_append_mchunks_SOURCES) vfd.c
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1214,7 +1219,7 @@ check_SCRIPTS = $(TEST_SCRIPT)
 # These tests (fheap, btree2) are under development and are not used by
 # the library yet. Move them to the end so that their failure do not block
 # other current library code tests.
-TEST_PROG = testhdf5 lheap ohdr stab gheap cache cache_api cache_tagging \
+TEST_PROG = test2d testhdf5 lheap ohdr stab gheap cache cache_api cache_tagging \
            pool accum hyperslab istore bittests dt_arith \
            dtypes dsets cmpd_dset filter_fail extend external efc objcopy\
 	   links twriteorder unlink \
@@ -1800,6 +1805,10 @@ tcheck_version$(EXEEXT): $(tcheck_version_OBJECTS) $(tcheck_version_DEPENDENCIES
 	@rm -f tcheck_version$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(tcheck_version_OBJECTS) $(tcheck_version_LDADD) $(LIBS)
 
+test2d$(EXEEXT): $(test2d_OBJECTS) $(test2d_DEPENDENCIES) $(EXTRA_test2d_DEPENDENCIES) 
+	@rm -f test2d$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test2d_OBJECTS) $(test2d_LDADD) $(LIBS)
+
 testhdf5$(EXEEXT): $(testhdf5_OBJECTS) $(testhdf5_DEPENDENCIES) $(EXTRA_testhdf5_DEPENDENCIES) 
 	@rm -f testhdf5$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(testhdf5_OBJECTS) $(testhdf5_LDADD) $(LIBS)
@@ -1936,6 +1945,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tchecksum.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tconfig.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tcoords.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test2d.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testframe.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testhdf5.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testmeta.Po@am__quote@
@@ -2180,6 +2190,13 @@ recheck: all $(check_PROGRAMS) $(check_SCRIPTS)
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
+test2d.log: test2d$(EXEEXT)
+	@p='test2d$(EXEEXT)'; \
+	b='test2d'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testhdf5.log: testhdf5$(EXEEXT)
 	@p='testhdf5$(EXEEXT)'; \
 	b='testhdf5'; \
