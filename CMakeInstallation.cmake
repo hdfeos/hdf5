@@ -325,7 +325,6 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED AND NOT HDF5_NO_PACKAGES)
     set (CPACK_PACKAGE_ICON "${HDF_RESOURCES_EXT_DIR}\\\\hdf.bmp")
     set (CPACK_NSIS_DISPLAY_NAME "${CPACK_NSIS_PACKAGE_NAME}")
     set (CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_VENDOR}\\\\${CPACK_PACKAGE_NAME}\\\\${CPACK_PACKAGE_VERSION}")
-    set (CPACK_MONOLITHIC_INSTALL ON)
     set (CPACK_NSIS_CONTACT "${HDF5_PACKAGE_BUGREPORT}")
     set (CPACK_NSIS_MODIFY_PATH ON)
     
@@ -369,6 +368,9 @@ if (NOT HDF5_EXTERNALLY_CONFIGURED AND NOT HDF5_NO_PACKAGES)
 #
 #  This image must be 493 by 312 pixels.
 #
+    set(CPACK_WIX_PROPERTY_ARPCOMMENTS "HDF5 (Hierarchical Data Format 5) Software Library and Utilities")
+    set(CPACK_WIX_PROPERTY_ARPURLINFOABOUT "${HDF5_PACKAGE_URL}")
+    set(CPACK_WIX_PROPERTY_ARPHELPLINK "${HDF5_PACKAGE_BUGREPORT}")
   elseif (APPLE)
     list (APPEND CPACK_GENERATOR "DragNDrop") 
     set (CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE ON)
@@ -474,6 +476,21 @@ The HDF5 data model, file format, API, library, and tools are open and distribut
   endif (HDF5_PACKAGE_EXTLIBS)
   
   include (CPack)
+
+  cpack_add_install_type(Full DISPLAY_NAME "Everything")
+  cpack_add_install_type(Developer)
+
+  cpack_add_component_group(Runtime)
+
+  cpack_add_component_group(Development
+      EXPANDED
+      DESCRIPTION "All of the tools you'll need to develop HDF5 applications"
+  )
+
+  cpack_add_component_group(Applications
+      EXPANDED
+      DESCRIPTION "Tools for HDF5 files"
+  )
 
   #---------------------------------------------------------------------------
   # Now list the cpack commands
