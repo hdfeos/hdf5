@@ -1847,8 +1847,20 @@ test_misc11(void)
     ret = H5Pset_sizes(fcpl, (size_t)MISC11_SIZEOF_OFF, (size_t)MISC11_SIZEOF_LEN);
     CHECK(ret, FAIL, "H5Pset_sizes");
 
+    /* This should fail as (32770*2) will exceed ^16 - 2 bytes for storing btree entries */
+    H5E_BEGIN_TRY {
+	ret=H5Pset_sym_k(fcpl, 32770, 0);
+    } H5E_END_TRY;
+    VERIFY(ret, FAIL, "H5Pset_sym_k");
+
     ret=H5Pset_sym_k(fcpl,MISC11_SYM_IK,MISC11_SYM_LK);
     CHECK(ret, FAIL, "H5Pset_sym_k");
+
+    /* This should fail as (32770*2) will exceed ^16 - 2 bytes for storing btree entries */
+    H5E_BEGIN_TRY {
+	ret=H5Pset_istore_k(fcpl, 32770);
+    } H5E_END_TRY;
+    VERIFY(ret, FAIL, "H5Pset_istore_k");
 
     ret=H5Pset_istore_k(fcpl,MISC11_ISTORE_IK);
     CHECK(ret, FAIL, "H5Pset_istore_k");
@@ -2427,17 +2439,17 @@ test_misc13(void)
 static void
 test_misc14(void)
 {
-    hid_t file_id;              /* File ID */
-    hid_t fapl;                 /* File access property list ID */
-    hid_t DataSpace;            /* Dataspace ID */
-    hid_t Dataset1;             /* Dataset ID #1 */
-    hid_t Dataset2;             /* Dataset ID #2 */
-    hid_t Dataset3;             /* Dataset ID #3 */
-    double data1 = 5.0;         /* Data to write for dataset #1 */
-    double data2 = 10.0;        /* Data to write for dataset #2 */
-    double data3 = 15.0;        /* Data to write for dataset #3 */
-    double rdata;               /* Data read in */
-    herr_t ret;                 /* Generic return value */
+    hid_t file_id;                  /* File ID */
+    hid_t fapl;                     /* File access property list ID */
+    hid_t DataSpace;                /* Dataspace ID */
+    hid_t Dataset1;                 /* Dataset ID #1 */
+    hid_t Dataset2;                 /* Dataset ID #2 */
+    hid_t Dataset3;                 /* Dataset ID #3 */
+    double data1 = 5.0F;            /* Data to write for dataset #1 */
+    double data2 = 10.0F;           /* Data to write for dataset #2 */
+    double data3 = 15.0F;           /* Data to write for dataset #3 */
+    double rdata;                   /* Data read in */
+    herr_t ret;                     /* Generic return value */
 
     /* Test creating two datasets and deleting the second */
 
@@ -4949,7 +4961,7 @@ test_misc28(void)
      * bytes). */
     fapl = H5Pcreate(H5P_FILE_ACCESS);
     CHECK(fapl, FAIL, "H5Pcreate");
-    ret = H5Pset_cache(fapl, MISC28_NSLOTS, MISC28_NSLOTS, MISC28_SIZE, 0.75);
+    ret = H5Pset_cache(fapl, MISC28_NSLOTS, MISC28_NSLOTS, MISC28_SIZE, 0.75F);
     CHECK(ret, FAIL, "H5Pset_cache");
 
     /* Create the dcpl and set the chunk size */

@@ -145,10 +145,17 @@ H5MM_realloc(void *mem, size_t size)
 
     HDassert(mem || size);
 
-    if(NULL == mem && 0 == size)
-        ret_value = NULL;   /* Not defined in the standard, return NULL */
-    else
+    if(NULL == mem && 0 == size) {  
+        /* Not defined in the standard, return NULL */
+        ret_value = NULL;
+    }
+    else {
         ret_value = HDrealloc(mem, size);
+
+        /* Some platforms do not return NULL if size is zero. */
+        if(0 == size)
+            ret_value = NULL;
+    }
 
     FUNC_LEAVE_NOAPI(ret_value)
 } /* end H5MM_realloc() */
