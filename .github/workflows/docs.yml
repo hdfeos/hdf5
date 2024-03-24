@@ -1,0 +1,56 @@
+name: doxygen gh-pages
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+    branches: [ develop ]
+    paths-ignore:
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      - 'doc/**'
+      - 'release_docs/**'
+      - 'ACKNOWLEDGEMENTS'
+      - 'COPYING**'
+      - '**.md'
+
+# Using concurrency to cancel any in-progress job or run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Sources
+        uses: actions/checkout@v4.1.1
+
+      - name: Install Dependencies
+        run: |
+          sudo apt update -y
+          sudo apt install -y libunwind-dev
+          sudo apt-get install -y graphviz
+          sudo apt-get install -y --no-install-recommends doxygen
+          sudo apt-get install -y cmake
+          
+      - name: Build Develop Documentation
+        run: |
+          mkdir build
+          cd build
+          cmake -DHDF5_BUILD_DOC:BOOL=ON ..
+          make doxygen
+          pwd
+          ls -l hdf5lib_docs
+          cd hdf5lib_docs/html
+          touch .nojekyll
+
+      - name: Deploy Develop
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          publish_dir: /home/runner/work/hdf5/hdf5/build/hdf5lib_docs/html
+          destination_dir: develop
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+

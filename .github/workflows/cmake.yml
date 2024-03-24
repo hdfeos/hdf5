@@ -85,4 +85,3 @@ jobs:
         uses: ./.github/workflows/cygwin-cmake.yml
         with:
             build_mode: "Release"
-            

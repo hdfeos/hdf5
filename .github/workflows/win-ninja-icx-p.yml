@@ -1,0 +1,44 @@
+name: win ninja icx p
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: latestrc
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "17"
+      - name: Install Intel OneAPI
+        uses: awvwgk/setup-fortran@main
+        with:
+          compiler: intel
+          version: '2024.0'
+      - name: Install Intel MPI
+        uses: mpi4py/setup-mpi@v1
+        with:
+          mpi: intelmpi
+      - name: Checkout HDF5
+        uses: actions/checkout@v4.1.1
+      - name: Set oneAPI
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
+      - name: Set MPI
+        shell: cmd
+        run: |
+          "C:\Program Files (x86)\Intel\oneAPI\mpi\latest\env\vars.bat"
+      - name: Configure & Build & Test
+        shell: cmd
+        run: |
+          cd hdf5
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_C_COMPILER="C:/Program Files (x86)/Intel/oneAPI/mpi/latest/bin/mpicc.bat" -DCMAKE_Fortran_COMPILER="C:/Program Files (x86)/Intel/oneAPI/mpi/latest/bin/mpiifort.bat" -DHDF5_ENABLE_PARALLEL:BOOL=ON -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF ..
+          ninja
+          ninja test

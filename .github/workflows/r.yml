@@ -1,0 +1,41 @@
+name: r
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  test: # make sure the action works on a clean machine without building
+    name: ${{ matrix.os.name }} ${{ matrix.os.architecture }} ${{ matrix.os.version }} on ${{ matrix.os.host }}
+    runs-on: ${{ matrix.os.host }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - name: openbsd
+            architecture: x86_64
+            version: '7.4'
+            host: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+
+      - name: ${{ matrix.os.name }}
+        uses: cross-platform-actions/action@v0.23.0
+        env:
+          FOO: A
+          BAR: B        
+        with:
+          environment_variables: FOO BAR        
+          operating_system: ${{ matrix.os.name }}
+          architecture: ${{ matrix.os.architecture }}
+          version: '${{ matrix.os.version }}'
+          shell: bash          
+          run: |
+            sudo pkg_add cmake
+            mkdir build
+            cd build
+            cmake -DCMAKE_BUILD_TYPE=Release \
+            -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF ..
+            ctest -T Build --output-on-error -j
+            ctest -T Test --output-on-error -j
