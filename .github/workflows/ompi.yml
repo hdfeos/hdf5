@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   test:
     name: ompi
-    runs-on:ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: get
         uses: actions/checkout@v4
