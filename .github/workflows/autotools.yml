@@ -88,3 +88,5 @@ jobs:
         uses: ./.github/workflows/julia-auto.yml
         with:
             build_mode: "production"
+
+            
