@@ -83,5 +83,5 @@ jobs:
       working-directory: ${{ runner.workspace }}/build
 
     - name: Test
-      run: ctest --build-and-test . -V
+      run: ctest --test-dir . -V
       working-directory: ${{ runner.workspace }}/build
