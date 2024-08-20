@@ -9,7 +9,7 @@ jobs:
       - name: Install Android NDK
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r26c
+          ndk-version: r26d
 
       - name: Checkout HDF5
         uses: actions/checkout@v4
@@ -17,7 +17,7 @@ jobs:
       - name: Test HDF5
         run: |
           echo $NDK
-          export NDK=/usr/local/lib/android/sdk/ndk/26.2.11394342/
+          export NDK=/usr/local/lib/android/sdk/ndk/27.0.12077973/
           export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
           export TARGET=aarch64-linux-android
           export AR=$TOOLCHAIN/bin/llvm-ar
