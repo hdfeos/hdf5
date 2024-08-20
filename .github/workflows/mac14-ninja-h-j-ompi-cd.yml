@@ -28,8 +28,8 @@ jobs:
         -D MPIEXEC_MAX_NUMPROCS:STRING=2 \
         -D SITE:STRING=mac14 \
         ..
-        ctest -T Build --output-on-error -j
-        ctest -T Test --output-on-error -j
+        ctest -T Build  -j
+        ctest -T Test  -j
         if [[ $? -ne 0 ]]; then
           ctest -T Submit
         fi

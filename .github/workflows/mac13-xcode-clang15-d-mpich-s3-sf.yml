@@ -31,5 +31,5 @@ jobs:
             -DMPIEXEC_MAX_NUMPROCS:STRING=3 \
             -G Xcode ..
           cmake --build . --config Debug
-          ctest --test-dir . -C Debug -E MPI_TEST_H5DIFF-h5diff -VV --output-on-error
+          ctest --test-dir . -C Debug -E MPI_TEST_H5DIFF-h5diff -VV 
           sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_CONFIG_NAME=Debug  -P cmake_install.cmake
