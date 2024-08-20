@@ -1,4 +1,4 @@
-name: mac13 ninja clang15 f h d mpich sf
+name: mac13 ninja clang15 d h f mpich sf
 
 on: [push, pull_request]
 
@@ -70,6 +70,6 @@ jobs:
     - name: Test
       run: |
         ctest --test-dir . -C ${{ matrix.build_type }} \
-        -E MPI_TEST_H5DIFF-h5diff -VV --output-on-error
+        -E MPI_TEST_H5DIFF-h5diff -VV
       working-directory: ${{ runner.workspace }}/build
       shell: bash
