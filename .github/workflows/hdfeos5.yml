@@ -40,7 +40,7 @@ jobs:
           make
           sudo make install
       - name: Install HDF-EOS5
-       env:
+        env:
           EDL: ${{ secrets.EARTHDATA_LOGIN }}
           EDP: ${{ secrets.EARTHDATA_PASSWORD }}
         run: |
