@@ -78,7 +78,7 @@
 | Debug | [![d](https://github.com/hdfeos/hdf5/actions/workflows/d.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/d.yml) |
 | Off   | [![mac13 off](https://github.com/hdfeos/hdf5/actions/workflows/mac13-off.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac13-off.yml) |
 | Shared | [![nbsd f -sh](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f-sh.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f-sh.yml) |
-
+| Leak | [![lin clang s_l](https://github.com/hdfeos/hdf5/actions/workflows/lin-clang-s_l.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-clang-s_l.yml) |
 
 ### Languages
 

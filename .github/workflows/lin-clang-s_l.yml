@@ -1,0 +1,22 @@
+name: lin clang s_l
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ develop ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get Sources
+      uses: actions/checkout@v4.1.7
+    - name: Build and Test
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_C_COMPILER=clang \
+              -DHDF5_ENABLE_SANITIZERS:BOOL=ON \
+              -DUSE_SANITIZER=Leak \
+              ..
+        make
+        make test
