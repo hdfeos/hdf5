@@ -22,6 +22,7 @@ jobs:
       - name: Test HDF5
         run: |
           export PATH=/usr/bin:$PATH
+          uname -a
           ./autogen.sh
           ./configure
           make

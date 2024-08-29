@@ -18,6 +18,7 @@ jobs:
       - name: test
         run: |
           export PATH=/usr/bin:$PATH
+          uname -a
           mkdir build
           cd build
           cmake -G Ninja \
