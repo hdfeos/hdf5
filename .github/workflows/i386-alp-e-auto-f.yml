@@ -18,8 +18,10 @@ jobs:
           branch: edge
           packages: >
             autoconf
+            automake
             build-base
             libgit2-dev
+            libtool
             gcc
             gfortran
             perl
