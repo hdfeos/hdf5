@@ -1,0 +1,33 @@
+name: i386 alp e auto f
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup alpine
+        uses: jirutka/setup-alpine@v1
+        with:
+          arch: x86
+          branch: edge
+          packages: >
+            autoconf
+            build-base
+            libgit2-dev
+            gcc
+            gfortran
+            perl
+      - name: run script
+        run: |
+          uname -a
+          ./autogen.sh
+          ./configure --enable-fortran --enable-hl --enable-shared --enable-cxx
+          make
+          make check
+        shell: alpine.sh --root {0}
