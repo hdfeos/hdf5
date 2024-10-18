@@ -2,7 +2,7 @@ name: fbsd auto ompi
 
 on:
   push:
-    branches: develop
+    branches: develop-
 
 jobs:
   test:

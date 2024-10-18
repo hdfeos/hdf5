@@ -1,6 +1,8 @@
 name: nbsd
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [develop]
 
 jobs:
   test:
@@ -38,6 +40,7 @@ jobs:
             mkdir build
             cd build
             cmake \
+            -DBUILDNAME="-sh" \
             -D BUILD_SHARED_LIBS:BOOL=OFF \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -D SITE:STRING=nbsd ..

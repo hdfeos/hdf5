@@ -1,6 +1,8 @@
 name: nbsd f sh
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [develop-]
 
 jobs:
   test:

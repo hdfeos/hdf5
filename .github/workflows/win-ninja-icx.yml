@@ -1,6 +1,22 @@
 name: win ninja icx
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  WINDOWS_BASEKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/e83a8e64-04fc-45df-85c6-c2208d03bdb5/w_BaseKit_p_2024.2.0.635_offline.exe
+  WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/0d500705-397e-41b3-8b2b-2a3da1753fc2/w_HPCKit_p_2024.2.0.633_offline.exe
+  WINDOWS_CPP_COMPONENTS: intel.oneapi.win.cpp-dpcpp-common
+  WINDOWS_DPCPP_COMPONENTS: intel.oneapi.win.cpp-dpcpp-common
+  WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler  
+  CACHE_NUMBER: 6
+  SAMPLES_TAG: 2024.2.0
+  AI_SAMPLES_TAG: 2024.1.0
+  COMPILER_VERSION: 2024.2.0
+  TBB_VERSION: 2021.13.0
+  VS_VER: vs2022
 
 jobs:
   build:
@@ -8,29 +24,32 @@ jobs:
     steps:
       - name: Install CMake and Ninja
         uses: lukka/get-cmake@latest
+      - name: cache intel install
+        id: cache-install
+        uses: actions/cache@v2
         with:
-          cmakeVersion: latestrc
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "17"
-      - name: Install Intel OneAPI
-        uses: awvwgk/setup-fortran@main
-        with:
-          compiler: intel
-          version: '2024.0'
+          path: |
+              C:\Program Files (x86)\Intel\oneAPI\setvars-vcvarsall.bat
+              C:\Program Files (x86)\Intel\oneAPI\compiler
+          key: install-${{ env.CACHE_NUMBER }}-${{ env.WINDOWS_HPCKIT_URL }}-${{ env.WINDOWS_CPP_COMPONENTS }}-${{ env.WINDOWS_FORTRAN_COMPONENTS }}-compiler-${{ hashFiles('**/scripts/cache_exclude_windows.sh') }}
+      - name: install intel
+        run: |
+          git clone --depth=1 https://github.com/oneapi-src/oneapi-ci.git oneapi-ci
+          cd oneapi-ci
+          scripts/install_windows.bat ${{ env.WINDOWS_HPCKIT_URL }} ${{ env.WINDOWS_CPP_COMPONENTS }}:${{ env.WINDOWS_FORTRAN_COMPONENTS }}
+          cd ..
       - name: Checkout HDF5
-        uses: actions/checkout@v4.1.1
-      - name: Set oneAPI
+        uses: actions/checkout@v4
         shell: cmd
+        env:
+          vc_arch: x64
         run: |
-          "C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
-      - name: Configure & Build & Test
-        shell: cmd
-        run: |
-          cd hdf5
+          set LIB=C:\Program Files (x86)\Intel\oneAPI\mpi\2021.13\lib;C:\Program Files (x86)\Intel\oneAPI\compiler\2024.2\lib;%LIB%
+          set LIBPATH=C:\Program Files (x86)\Intel\oneAPI\mpi\latest\lib;C:\Program Files (x86)\Intel\oneAPI\compiler\2024.2\lib;%LIBPATH%
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
+          set SETVARS="%ProgramFiles(x86)%\Intel\oneAPI\setvars.bat"
+          call %SETVARS%	  
           mkdir build
           cd build
-          cmake -G Ninja -DCMAKE_C_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/latest/bin/icx.exe" -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF ..
-          ninja
-          ninja test
+          cmake -G Ninja -DCMAKE_C_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/latest/bin/icx.exe" -DCMAKE_CXX_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/latest/bin/icpx.exe" -DCMAKE_Fortran_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/2024.2/bin/ifx.exe" -DBUILD_SHARED_LIBS:BOOL=OFF  -DHDF5_BUILD_FORTRAN:BOOL=OFF  -DHDF5_ENABLE_PARALLEL:BOOL=OFF  -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF -DHDF5_ENABLE_SUBFILING_VFD:BOOL=OFF -DCTEST_DROP_SITE_INIT=my.cdash.org -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" -DSITE=win -DBUILDNAME="ninja/icx" ..
+          ctest -D Experimental		

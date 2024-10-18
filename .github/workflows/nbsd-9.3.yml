@@ -1,7 +1,9 @@
 name: nbsd 9.3
 
-on: [push, pull_request]
-
+on:
+  push:
+    branches: [develop-]
+    
 jobs:
   test:
     name: nbsd
