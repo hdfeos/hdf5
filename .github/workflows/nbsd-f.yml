@@ -44,5 +44,5 @@ jobs:
             -DBUILDNAME:STRING=f \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
-            -DSITE:STRING=nbsd ..
+            -DSITE:STRING=nbsd-9.3 ..
             ctest -D Experimental

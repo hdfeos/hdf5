@@ -33,7 +33,6 @@ jobs:
           run: |
             sudo pkgin -y install git
             sudo pkgin -y install cmake
-            sudo pkgin -y install jpeg-9e
             sudo pkgin -y install mozilla-rootcerts
             sudo pkgin -y install mozilla-rootcerts-openssl
             export LD_LIBRARY_PATH=/usr/pkg/lib
