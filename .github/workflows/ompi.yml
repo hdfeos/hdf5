@@ -1,6 +1,9 @@
 name: ompi
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - develop
 
 jobs:
   test:
@@ -14,7 +17,7 @@ jobs:
           path: .
 
       - name: test
-        uses: cross-platform-actions/action@v0.23.0
+        uses: cross-platform-actions/action@master
         env:
           FOO: A
           BAR: B
@@ -22,7 +25,7 @@ jobs:
           environment_variables: FOO BAR
           operating_system: openbsd
           architecture: x86-64
-          version: '7.4'
+          version: '7.6'
           shell: bash
           run: |
             sudo pkg_add cmake

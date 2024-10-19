@@ -10,7 +10,7 @@ env:
   WINDOWS_HPCKIT_URL: https://registrationcenter-download.intel.com/akdlm/IRC_NAS/0d500705-397e-41b3-8b2b-2a3da1753fc2/w_HPCKit_p_2024.2.0.633_offline.exe
   WINDOWS_CPP_COMPONENTS: intel.oneapi.win.cpp-dpcpp-common
   WINDOWS_DPCPP_COMPONENTS: intel.oneapi.win.cpp-dpcpp-common
-  WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler  
+  WINDOWS_FORTRAN_COMPONENTS: intel.oneapi.win.ifort-compiler
   CACHE_NUMBER: 6
   SAMPLES_TAG: 2024.2.0
   AI_SAMPLES_TAG: 2024.1.0
@@ -40,6 +40,7 @@ jobs:
           cd ..
       - name: Checkout HDF5
         uses: actions/checkout@v4
+      - name: Configure & Build & Test
         shell: cmd
         env:
           vc_arch: x64
@@ -48,8 +49,8 @@ jobs:
           set LIBPATH=C:\Program Files (x86)\Intel\oneAPI\mpi\latest\lib;C:\Program Files (x86)\Intel\oneAPI\compiler\2024.2\lib;%LIBPATH%
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" %vc_arch%
           set SETVARS="%ProgramFiles(x86)%\Intel\oneAPI\setvars.bat"
-          call %SETVARS%	  
+          call %SETVARS%
           mkdir build
           cd build
           cmake -G Ninja -DCMAKE_C_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/latest/bin/icx.exe" -DCMAKE_CXX_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/latest/bin/icpx.exe" -DCMAKE_Fortran_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/2024.2/bin/ifx.exe" -DBUILD_SHARED_LIBS:BOOL=OFF  -DHDF5_BUILD_FORTRAN:BOOL=OFF  -DHDF5_ENABLE_PARALLEL:BOOL=OFF  -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF -DHDF5_ENABLE_SUBFILING_VFD:BOOL=OFF -DCTEST_DROP_SITE_INIT=my.cdash.org -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" -DSITE=win -DBUILDNAME="ninja/icx" ..
-          ctest -D Experimental		
+          ctest -D Experimental
