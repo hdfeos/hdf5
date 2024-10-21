@@ -16,7 +16,7 @@ jobs:
         id: runcmd
         with:
           arch: ppc64le
-          distro: ubuntu_latest
+          distro: ubuntu
           githubToken: ${{ github.token }}
           install: |
             apt-get update -q -y
