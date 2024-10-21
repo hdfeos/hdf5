@@ -40,7 +40,7 @@
 
 | Test    | Status |
 | --------| ------ |
-| Solaris | | [![sol](https://github.com/hdfeos/hdf5/actions/workflows/sol.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/sol.yml) |
+| Solaris | [![sol](https://github.com/hdfeos/hdf5/actions/workflows/sol.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/sol.yml) |
 
 ### Windows
 
