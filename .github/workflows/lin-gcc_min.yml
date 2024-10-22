@@ -1,6 +1,6 @@
 name: lin gcc_min
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   gcc_min:
@@ -22,4 +22,5 @@ jobs:
           -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
           -DSITE:STRING=lin \
            ..
-          ctest -D Experimental
+          ctest -T Build
+          ctest -T Test

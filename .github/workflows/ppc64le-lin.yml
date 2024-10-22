@@ -1,6 +1,6 @@
 name: ppc64le lin
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   ppc64le_job:
@@ -9,14 +9,14 @@ jobs:
 
     steps:
       - name: Get Sources
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Run
         uses: uraimo/run-on-arch-action@v2
         id: runcmd
         with:
           arch: ppc64le
-          distro: ubuntu
+          distro: ubuntu_latest
           githubToken: ${{ github.token }}
           install: |
             apt-get update -q -y
@@ -27,12 +27,13 @@ jobs:
             mkdir build
             cd build
             cmake \
+            -DBUILDNAME:STRING="r"  \
+            -D CMAKE_BUILD_TYPE=Release \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -D SITE:STRING=ppc64le \
             ..
             ctest -D Experimental
 
       - name: Get the output
-        # Echo the `uname` output parameter from the `runcmd` step
         run: |
           echo "The uname output was ${{ steps.runcmd.outputs.uname }}"
