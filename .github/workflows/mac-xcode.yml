@@ -21,5 +21,5 @@ jobs:
           cmake -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF -G Xcode ..
           cmake --build . --config Release
           ctest --test-dir . -C Release
-          sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_CONFIG_NAME=Debug -P cmake_install.cmake
+          sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_CONFIG_NAME=Release -P cmake_install.cmake
           
