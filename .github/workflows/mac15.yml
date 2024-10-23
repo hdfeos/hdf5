@@ -1,0 +1,24 @@
+name: mac15
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ develop ]
+    
+jobs:
+  build:
+    name: mac15
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: install
+        run: brew install curl openssl libaec
+      - name: test
+        run: |
+          export OPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@3/3.1.1
+          mkdir build
+          cd build
+          cmake -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF..
+          cmake --build . --config Release
+          ctest --test-dir . -C Release
+          sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_CONFIG_NAME=Release -P cmake_install.cmake
