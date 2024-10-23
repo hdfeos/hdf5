@@ -39,4 +39,5 @@ jobs:
             -DMPIEXEC_PREFLAGS="-oversubscribe" \
             -DSITE:STRING=obsd \
             ..
-            ctest -D Experimental
+            ctest -T Build
+            ctest -T Test

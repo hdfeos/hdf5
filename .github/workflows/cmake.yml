@@ -120,4 +120,3 @@ jobs:
         uses: ./.github/workflows/julia-cmake.yml
         with:
           build_mode: "Release"      
-
