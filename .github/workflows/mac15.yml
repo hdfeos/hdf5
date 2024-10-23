@@ -18,7 +18,7 @@ jobs:
           export OPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@3/3.1.1
           mkdir build
           cd build
-          cmake -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF..
+          cmake -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF ..
           cmake --build . --config Release
           ctest --test-dir . -C Release
           sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_INSTALL_CONFIG_NAME=Release -P cmake_install.cmake
