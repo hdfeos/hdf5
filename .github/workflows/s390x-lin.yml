@@ -1,6 +1,6 @@
 name: s390x lin
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   s390x_job:
