@@ -29,6 +29,8 @@ jobs:
             sudo pkg install -y perl5
             sudo pkg install -y cmake
             sudo pkg install -y openmpi
+            sudo hostname localhost
+            export NPROCS=2
             mkdir build
             cd build
             cmake \
