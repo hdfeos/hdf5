@@ -4,6 +4,7 @@
 
 | Test | Status |
 | -----| ------ |
+| i386 | ![i386 alp](https://github.com/hdfeos/hdf5/actions/workflows/i386.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/i386.yml) |
 | amd64 | [![amd64](https://github.com/hdfeos/hdf5/actions/workflows/r.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/r.yml) |
 | arm64 | [![arm64](https://github.com/hdfeos/hdf5/actions/workflows/arm64.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/arm64.yml) |
 | armv7 | [![armv7 lin](https://github.com/hdfeos/hdf5/actions/workflows/armv7-lin.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/armv7-lin.yml) |
@@ -91,7 +92,7 @@
 
 | Test  | Status |
 | ------| ------ |
-| Fortran | [![nbsd f](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f.yml) [![s390x lin f](https://github.com/hdfeos/hdf5/actions/workflows/s390x-lin-f.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/s390x-lin-f.yml) |
+| Fortran | ![i386 alp f](https://github.com/hdfeos/hdf5/actions/workflows/i386-alp-f.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/i386-alp-f.yml) [![nbsd f](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f.yml) [![s390x lin f](https://github.com/hdfeos/hdf5/actions/workflows/s390x-lin-f.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/s390x-lin-f.yml) |
 | Java  | [![fbsd f j](https://github.com/hdfeos/hdf5/actions/workflows/fbsd-f-j.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/fbsd-f-j.yml) [![arm64 fbsd f j](https://github.com/hdfeos/hdf5/actions/workflows/arm64-fbsd-f-j.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/arm64-fbsd-f-j.yml) [![nbsd f j](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f-j.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f-j.yml) [![arm64 fbsd f j](https://github.com/hdfeos/hdf5/actions/workflows/arm64-fbsd-f-j.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/arm64-fbsd-f-j.yml) [![fbsd lf j](https://github.com/hdfeos/hdf5/actions/workflows/fbsd-lf-j.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/fbsd-lf-j.yml) [![mac ninja clang j ompi](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml) [![mac14 ninja h j ompi](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-h-j-ompi-cd.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-h-j-ompi-cd.yml) |
 | Julia | [![lin jl](https://github.com/hdfeos/hdf5/actions/workflows/lin-jl.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-jl.yml) [![lin auto jl](https://github.com/hdfeos/hdf5/actions/workflows/lin-auto-jl.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-auto-jl.yml) |
 | Python | [![lin spack h5py](https://github.com/hdfeos/hdf5/actions/workflows/lin-spack-h5py.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-spack-h5py.yml) [![mac spack h5py](https://github.com/hdfeos/hdf5/actions/workflows/mac-spack-h5py.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-spack-h5py.yml) |
