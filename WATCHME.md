@@ -4,7 +4,7 @@
 
 | Test | Status |
 | -----| ------ |
-| i386 |  [![i386 alp](https://github.com/hdfeos/hdf5/actions/workflows/i386.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/i386.yml) |
+| i386 |  [![i386 alp](https://github.com/hdfeos/hdf5/actions/workflows/i386-alp.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/i386-alp.yml) |
 | amd64 | [![amd64](https://github.com/hdfeos/hdf5/actions/workflows/r.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/r.yml) |
 | arm64 | [![arm64](https://github.com/hdfeos/hdf5/actions/workflows/arm64.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/arm64.yml) |
 | armv7 | [![armv7 lin](https://github.com/hdfeos/hdf5/actions/workflows/armv7-lin.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/armv7-lin.yml) |
