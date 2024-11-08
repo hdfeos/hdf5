@@ -25,4 +25,4 @@ jobs:
           cd build
           cmake -DSITE:STRING=alp.i386 -DBUILDNAME:STRING="r" -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" ..
           ctest -D Experimental -C Release
-        shell: bash
+        shell: alpine.sh --root {0}
