@@ -260,8 +260,6 @@ Macros</h2></td></tr>
 <tr class="separator:a950067e3ee0400a154c0dc2f8076cce9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a667df33694861e41d1b9eb3a55b373"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_fpublic_8h.html#a2a667df33694861e41d1b9eb3a55b373">H5F_UNLIMITED</a>&#160;&#160;&#160;<a class="el" href="_h5public_8h.html#a95782c58865515978907a9ced9e013e8">HSIZE_UNDEF</a></td></tr>
 <tr class="separator:a2a667df33694861e41d1b9eb3a55b373"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47d050173da48a2b85c730446f0771c0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_fpublic_8h.html#a47d050173da48a2b85c730446f0771c0">H5F_LIBVER_LATEST</a>&#160;&#160;&#160;<a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2a7e8e06822de9c57c31c7dd404520974d">H5F_LIBVER_V200</a></td></tr>
-<tr class="separator:a47d050173da48a2b85c730446f0771c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a67d0d121762e7c44c4ef3f40a49611"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_fpublic_8h.html#a3a67d0d121762e7c44c4ef3f40a49611">H5F_NUM_METADATA_READ_RETRY_TYPES</a>&#160;&#160;&#160;21</td></tr>
 <tr class="separator:a3a67d0d121762e7c44c4ef3f40a49611"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef18fabdccce8db11b6dd3e231028028"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_fpublic_8h.html#aef18fabdccce8db11b6dd3e231028028">H5F_RFIC_UNUSUAL_NUM_UNUSED_NUMERIC_BITS</a>&#160;&#160;&#160;    (0x0001u)</td></tr>
@@ -312,7 +310,9 @@ Enumerations</h2></td></tr>
 &#160;&#160;<a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2ac1b80c0874a79934aef1f7f44863853b">H5F_LIBVER_V112</a> = 3
 , <a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2a9ecfa96a6f297e218c21c715312d74de">H5F_LIBVER_V114</a> = 4
 , <a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2a7e8e06822de9c57c31c7dd404520974d">H5F_LIBVER_V200</a> = 5
-, <a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2ad9414980f8bf2492af3ab67813b42e07">H5F_LIBVER_NBOUNDS</a>
+, <a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2aa1212669916e7389d0a687a3673153b0">H5F_LIBVER_LATEST</a> = 5
+, <br />
+&#160;&#160;<a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2ad9414980f8bf2492af3ab67813b42e07">H5F_LIBVER_NBOUNDS</a>
 <br />
  }</td></tr>
 <tr class="separator:a2d963b599894f684571fbd4d5e8a96a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -643,20 +643,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a47d050173da48a2b85c730446f0771c0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a47d050173da48a2b85c730446f0771c0">&#9670;&nbsp;</a></span>H5F_LIBVER_LATEST</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define H5F_LIBVER_LATEST&#160;&#160;&#160;<a class="el" href="_h5_fpublic_8h.html#a2d963b599894f684571fbd4d5e8a96a2a7e8e06822de9c57c31c7dd404520974d">H5F_LIBVER_V200</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="a950067e3ee0400a154c0dc2f8076cce9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a950067e3ee0400a154c0dc2f8076cce9">&#9670;&nbsp;</a></span>H5F_MPIO_DEBUG_KEY</h2>
 
@@ -948,17 +934,19 @@ Functions</h2></td></tr>
 <p>Library's format versions </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a98f42cdc2fe42fe92b77dac0ade24a66"></a>H5F_LIBVER_ERROR&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2abed98059b4a02d048b1eb3985fba5fa1"></a>H5F_LIBVER_EARLIEST&#160;</td><td class="fielddoc"><p>Use the earliest possible format for storing objects </p>
+<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2abed98059b4a02d048b1eb3985fba5fa1"></a>H5F_LIBVER_EARLIEST&#160;</td><td class="fielddoc"><p>Use the earliest possible file format for storing objects </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a434ca8def77a117013577c8cec6af0d8"></a>H5F_LIBVER_V18&#160;</td><td class="fielddoc"><p>Use the latest v18 format for storing objects </p>
+<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a434ca8def77a117013577c8cec6af0d8"></a>H5F_LIBVER_V18&#160;</td><td class="fielddoc"><p>Use the 1.8 file format for storing objects </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a33c6cdc401a3a32dbf63d74019fad4b3"></a>H5F_LIBVER_V110&#160;</td><td class="fielddoc"><p>Use the latest v110 format for storing objects </p>
+<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a33c6cdc401a3a32dbf63d74019fad4b3"></a>H5F_LIBVER_V110&#160;</td><td class="fielddoc"><p>Use the 1.10 file format for storing objects </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2ac1b80c0874a79934aef1f7f44863853b"></a>H5F_LIBVER_V112&#160;</td><td class="fielddoc"><p>Use the latest v112 format for storing objects </p>
+<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2ac1b80c0874a79934aef1f7f44863853b"></a>H5F_LIBVER_V112&#160;</td><td class="fielddoc"><p>Use the 1.12 file format for storing objects </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a9ecfa96a6f297e218c21c715312d74de"></a>H5F_LIBVER_V114&#160;</td><td class="fielddoc"><p>Use the latest v114 format for storing objects </p>
+<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a9ecfa96a6f297e218c21c715312d74de"></a>H5F_LIBVER_V114&#160;</td><td class="fielddoc"><p>Use the 1.14 file format for storing objects </p>
 </td></tr>
-<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a7e8e06822de9c57c31c7dd404520974d"></a>H5F_LIBVER_V200&#160;</td><td class="fielddoc"><p>Use the latest v200 format for storing objects </p>
+<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2a7e8e06822de9c57c31c7dd404520974d"></a>H5F_LIBVER_V200&#160;</td><td class="fielddoc"><p>Use the 2.0 file format for storing objects </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2aa1212669916e7389d0a687a3673153b0"></a>H5F_LIBVER_LATEST&#160;</td><td class="fielddoc"><p>Use the latest file format for storing objects </p>
 </td></tr>
 <tr><td class="fieldname"><a id="a2d963b599894f684571fbd4d5e8a96a2ad9414980f8bf2492af3ab67813b42e07"></a>H5F_LIBVER_NBOUNDS&#160;</td><td class="fielddoc"><p>Sentinel </p>
 </td></tr>

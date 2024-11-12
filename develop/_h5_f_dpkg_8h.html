@@ -133,6 +133,7 @@ $(document).ready(function(){initNavTree('_h5_f_dpkg_8h.html',''); initResizable
 
 <div class="header">
   <div class="summary">
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
@@ -174,6 +175,17 @@ $(document).ready(function(){initNavTree('_h5_f_dpkg_8h.html',''); initResizable
 </map>
 </div>
 </div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:a9a37637f4d9fe586f815526264b9e982"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_f_dpkg_8h.html#a9a37637f4d9fe586f815526264b9e982">H5FD_MAXADDR</a>&#160;&#160;&#160;(((<a class="el" href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a>)1 &lt;&lt; (8 * sizeof(<a class="el" href="_h5public_8h.html#a7231b68f6d5811a693d4cbc937a34604">HDoff_t</a>) - 1)) - 1)</td></tr>
+<tr class="separator:a9a37637f4d9fe586f815526264b9e982"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6f1816e88b46ccef6ed94ce5117b0413"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_f_dpkg_8h.html#a6f1816e88b46ccef6ed94ce5117b0413">H5FD_ADDR_OVERFLOW</a>(A)&#160;&#160;&#160;(<a class="el" href="_h5public_8h.html#a676244a60b85ee8bbd111afd4a8fce3c">HADDR_UNDEF</a> == (A) || ((A) &amp; ~(<a class="el" href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a>)<a class="el" href="_h5_f_dpkg_8h.html#a9a37637f4d9fe586f815526264b9e982">H5FD_MAXADDR</a>))</td></tr>
+<tr class="separator:a6f1816e88b46ccef6ed94ce5117b0413"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e46389e3ee3cb2991c31cec27f981dc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_f_dpkg_8h.html#a6e46389e3ee3cb2991c31cec27f981dc">H5FD_SIZE_OVERFLOW</a>(Z)&#160;&#160;&#160;((Z) &amp; ~(<a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a>)<a class="el" href="_h5_f_dpkg_8h.html#a9a37637f4d9fe586f815526264b9e982">H5FD_MAXADDR</a>)</td></tr>
+<tr class="separator:a6e46389e3ee3cb2991c31cec27f981dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a893ebcc4b896ebf1ab9e783e8f7a9a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_f_dpkg_8h.html#a4a893ebcc4b896ebf1ab9e783e8f7a9a">H5FD_REGION_OVERFLOW</a>(A,  Z)</td></tr>
+<tr class="separator:a4a893ebcc4b896ebf1ab9e783e8f7a9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a54ff00670d12323ab7c15d43e469dfdd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_f_dpkg_8h.html#a54ff00670d12323ab7c15d43e469dfdd">H5FD__alloc_real</a> (<a class="el" href="struct_h5_f_d__t.html">H5FD_t</a> *file, <a class="el" href="_h5_f_dpublic_8h.html#a02887a6f018be1a0ce7358522095578b">H5FD_mem_t</a> type, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> size, <a class="el" href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a> *align_addr, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> *align_size)</td></tr>
@@ -246,6 +258,91 @@ Variables</h2></td></tr>
 <tr class="memitem:adb938e00b615767885e4211707f28639"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#aa8f6c28736dbd0f18388c67911d38aca">htri_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_h5_f_dpkg_8h.html#adb938e00b615767885e4211707f28639">H5FD_ignore_disabled_file_locks_p</a></td></tr>
 <tr class="separator:adb938e00b615767885e4211707f28639"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="a6f1816e88b46ccef6ed94ce5117b0413"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6f1816e88b46ccef6ed94ce5117b0413">&#9670;&nbsp;</a></span>H5FD_ADDR_OVERFLOW</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define H5FD_ADDR_OVERFLOW</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">A</td><td>)</td>
+          <td>&#160;&#160;&#160;(<a class="el" href="_h5public_8h.html#a676244a60b85ee8bbd111afd4a8fce3c">HADDR_UNDEF</a> == (A) || ((A) &amp; ~(<a class="el" href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a>)<a class="el" href="_h5_f_dpkg_8h.html#a9a37637f4d9fe586f815526264b9e982">H5FD_MAXADDR</a>))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9a37637f4d9fe586f815526264b9e982"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a37637f4d9fe586f815526264b9e982">&#9670;&nbsp;</a></span>H5FD_MAXADDR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define H5FD_MAXADDR&#160;&#160;&#160;(((<a class="el" href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a>)1 &lt;&lt; (8 * sizeof(<a class="el" href="_h5public_8h.html#a7231b68f6d5811a693d4cbc937a34604">HDoff_t</a>) - 1)) - 1)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4a893ebcc4b896ebf1ab9e783e8f7a9a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a893ebcc4b896ebf1ab9e783e8f7a9a">&#9670;&nbsp;</a></span>H5FD_REGION_OVERFLOW</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define H5FD_REGION_OVERFLOW</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">A, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">Z&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Value:</b><div class="fragment"><div class="line">    (<a class="code" href="_h5_f_dpkg_8h.html#a6f1816e88b46ccef6ed94ce5117b0413">H5FD_ADDR_OVERFLOW</a>(A) || <a class="code" href="_h5_f_dpkg_8h.html#a6e46389e3ee3cb2991c31cec27f981dc">H5FD_SIZE_OVERFLOW</a>(Z) || <a class="code" href="_h5public_8h.html#a676244a60b85ee8bbd111afd4a8fce3c">HADDR_UNDEF</a> == (A) + (Z) ||                           \</div>
+<div class="line">     (<a class="code" href="_h5public_8h.html#a7231b68f6d5811a693d4cbc937a34604">HDoff_t</a>)((A) + (Z)) &lt; (<a class="code" href="_h5public_8h.html#a7231b68f6d5811a693d4cbc937a34604">HDoff_t</a>)(A))</div>
+<div class="ttc" id="a_h5_f_dpkg_8h_html_a6e46389e3ee3cb2991c31cec27f981dc"><div class="ttname"><a href="_h5_f_dpkg_8h.html#a6e46389e3ee3cb2991c31cec27f981dc">H5FD_SIZE_OVERFLOW</a></div><div class="ttdeci">#define H5FD_SIZE_OVERFLOW(Z)</div><div class="ttdef"><b>Definition:</b> H5FDpkg.h:53</div></div>
+<div class="ttc" id="a_h5_f_dpkg_8h_html_a6f1816e88b46ccef6ed94ce5117b0413"><div class="ttname"><a href="_h5_f_dpkg_8h.html#a6f1816e88b46ccef6ed94ce5117b0413">H5FD_ADDR_OVERFLOW</a></div><div class="ttdeci">#define H5FD_ADDR_OVERFLOW(A)</div><div class="ttdef"><b>Definition:</b> H5FDpkg.h:52</div></div>
+<div class="ttc" id="a_h5public_8h_html_a676244a60b85ee8bbd111afd4a8fce3c"><div class="ttname"><a href="_h5public_8h.html#a676244a60b85ee8bbd111afd4a8fce3c">HADDR_UNDEF</a></div><div class="ttdeci">#define HADDR_UNDEF</div><div class="ttdef"><b>Definition:</b> H5public.h:352</div></div>
+<div class="ttc" id="a_h5public_8h_html_a7231b68f6d5811a693d4cbc937a34604"><div class="ttname"><a href="_h5public_8h.html#a7231b68f6d5811a693d4cbc937a34604">HDoff_t</a></div><div class="ttdeci">off_t HDoff_t</div><div class="ttdef"><b>Definition:</b> H5public.h:316</div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a6e46389e3ee3cb2991c31cec27f981dc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e46389e3ee3cb2991c31cec27f981dc">&#9670;&nbsp;</a></span>H5FD_SIZE_OVERFLOW</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define H5FD_SIZE_OVERFLOW</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">Z</td><td>)</td>
+          <td>&#160;&#160;&#160;((Z) &amp; ~(<a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a>)<a class="el" href="_h5_f_dpkg_8h.html#a9a37637f4d9fe586f815526264b9e982">H5FD_MAXADDR</a>)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="a54ff00670d12323ab7c15d43e469dfdd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a54ff00670d12323ab7c15d43e469dfdd">&#9670;&nbsp;</a></span>H5FD__alloc_real()</h2>
