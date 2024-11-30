@@ -1,0 +1,34 @@
+name: mac14 xcode16 d -sz s3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: develop
+
+jobs:
+  build:
+    name: Generate Xcode project
+    runs-on: macos-14
+    steps:
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: 16.1
+      - uses: actions/checkout@v4
+        with:
+          repository: HDFGroup/hdf5
+      - name: install
+        run: brew install curl openssl
+      - name: test
+        run: |
+          export OPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@3/3.1.1
+          mkdir build
+          cd build
+          cmake \
+	  -D BUILDNAME:STRING="xcode-16/d/-sz/+s3" \
+	  -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
+	  -D HDF5_ENABLE_ROS3_VFD:BOOL=ON \
+	  -D HDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
+	  -D SITE:STRING="mac-14" \
+	  -G Xcode \
+	  ..
+          ctest -D Experimental -C Debug
