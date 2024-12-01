@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>HDF5: HDF5 Table Specification Version 1.0</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
-<script type="text/javascript">var page_layout=1;</script>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
@@ -136,208 +135,50 @@ $(document).ready(function(){initNavTree('_t_b_l.html',''); initResizable(); });
 <div class="title">HDF5 Table Specification Version 1.0 </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><html>
-<head>
-   <title>HDF5 Table Specification</title>
-</head>
-
-The HDF5 specification defines the standard objects and storage for the
-standard HDF5 objects. (For information about the HDF5 library, model and
-specification, see the HDF documentation.)&nbsp; This document is an additional
-specification do define a standard profile for how to store tables in HDF5.
-Table data in HDF5 is stored as HDF5 datasets with standard attributes to define
-the properties of the tables.
-
-<h2>
-1. Overview</h2>
-A generic table is a sequence of records, each record has a name and a type.
-Table data is stored as an HDF5 one dimensional compound dataset.&nbsp; A table
-is defined as a collection of records whose values are stored in fixed-length
-fields. All records have the same structure and all values in each field have
-the same data type.
-<p>The dataset for a table is distinguished from other datasets by giving
-it an attribute &quot;CLASS=TABLE&quot;.&nbsp;&nbsp;
-Optional attributes allow the storage of a title for the Table and for
-each column, and a fill value for each column.
-<h2>
-2.&nbsp; Table Attributes</h2>
-The attributes for the Table are strings.&nbsp;They are written with the <a href="RM_H5LT.html#H5LTset_attribute_string"><code>H5LTset_attribute_string</code></a>
-Lite API function.&nbsp; "Required" attributes must always be used. "Optional" attributes
-must be used when required.
-<br>&nbsp;
-<h4>
-Attributes</h4>
-
-<dl>
-<dt>
-Attribute name="<b>CLASS</b>" (Required)</dt>
-
-<dd>
-This attribute is type H5T_C_S1, with size 5.</dd>
-
-<dd>
-For all Tables, the value of this attribute is &quot;TABLE&quot;.</dd>
-
-<dd>
-This attribute identifies this data set as intended to be interpreted as Table that conforms to the specifications on this page.</dd>
-</dl>
-
-<dl>
-Attribute name="<b>VERSION</b>" (Required)
-
-<dd>
-This attribute is of type H5T_C_S1, with size corresponding to the length
-of the version string.&nbsp; This attribute identifies the version number
-of this specification to which it conforms.&nbsp; The current version number
-is &quot;0.2&quot;.</dd>
-
-</dl>
-
-<dl>
-<dt>
-Attribute name="<b>TITLE</b>" (Optional)</dt>
-
-<dd>
-The <b>TITLE</b> is an optional String that is to be used as the
-informative title of the whole table.
-The <b>TITLE</b> is set with the parameter <code> table_title</code> of the function
-<a href="RM_H5TB.html#H5TBmake_table"> <code> H5TBmake_table</code></a>.&nbsp;</dd>
-</dl>
-
-<dl>
-<dt>
-Attribute name="<b>FIELD_(n)_NAME</b>" (Required)</dt>
-
-<dd>
-The <b>FIELD_(n)_NAME</b> is an optional String that is to be used as the
-informative title of column <b>n</b> of the table.
-For each of the fields the word FIELD_ is concatenated with
-      the zero based field (n) index together with the name of the field.</dd>
-
-</dl>
-<dl>
-<dt>
-Attribute name="<b>FIELD_(n)_FILL</b>" (Optional)</dt>
-
-<dd>
-The <b>FIELD_(n)_FILL</b> is an optional String that is the fill value for
-column <b>n</b> of the table.
-For each of the fields the word FIELD_ is concatenated with
-      the zero based field (n) index together with the fill value, if present.
-This value is written only when a fill value is defined for the table.</dd>
-
-</dl>
-
-<dl>
-
-<br>&nbsp;
-<center><table BORDER=2 BGCOLOR="#FFFFFF" >
+<div class="textblock"><p>The HDF5 specification defines the standard objects and storage for the standard HDF5 objects. (For information about the HDF5 library, model and specification, see the HDF documentation.) This document is an additional specification do define a standard profile for how to store tables in HDF5. Table data in HDF5 is stored as HDF5 datasets with standard attributes to define the properties of the tables.</p>
+<h1><a class="anchor" id="sec_tab_spec_intro"></a>
+Introduction</h1>
+<p>A generic table is a sequence of records, each record has a name and a type. Table data is stored as an HDF5 one dimensional compound dataset. A table is defined as a collection of records whose values are stored in fixed-length fields. All records have the same structure and all values in each field have the same data type.</p>
+<p>The dataset for a table is distinguished from other datasets by giving it an attribute "CLASS=TABLE". Optional attributes allow the storage of a title for the Table and for each column, and a fill value for each column.</p>
+<h1><a class="anchor" id="sec_tab_spec_attr"></a>
+Table Attributes</h1>
+<p>The attributes for the Table are strings. They are written with the <a class="el" href="group___h5_l_t.html#ga53f56fbb2742d54f7a31f67de1abf179" title="Creates and writes a string attribute.">H5LTset_attribute_string</a> Lite API function. "Required" attributes must always be used. "Optional" attributes must be used when required. </p><table class="doxtable">
 <caption><b>Table 1. Attributes of an Image Dataset</b></caption>
-
 <tr>
-<td><b>Attribute Name</b></td>
-
-<td><b>(R = Required</b>
-<br><b>O= Optional)</b></td>
-
-<td><b>Type</b></td>
-
-<td><b>String Size</b></td>
-
-<td><b>Value</b></td>
-</tr>
-
+<th><b>Attribute Name</b> </th><th><b>Required</b><br  />
+<b>Optional</b> </th><th><b>Type</b> </th><th><b>String Size</b> </th><th><b>Value</b> </th><th><b>Description</b>  </th></tr>
 <tr>
-<td>CLASS</td>
-
-<td>R</td>
-
-<td>String</td>
-
-<td>5</td>
-
-<td>&quot;TABLE&quot;</td>
-</tr>
-
+<td>CLASS </td><td>Required </td><td>String </td><td>5 </td><td>&quot;TABLE&quot; </td><td>This attribute is type <a class="el" href="group___p_d_t_s.html#ga7f6b6959fefe56d2e871659110936d2d">H5T_C_S1</a>, with size 5. For all Tables, the value of this attribute is <b>TABLE</b>. This attribute identifies this data set as intended to be interpreted as Table that conforms to the specifications on this page.  </td></tr>
 <tr>
-<td>VERSION</td>
-
-<td>R</td>
-
-<td>String</td>
-
-<td>3</td>
-
-<td>&quot;0.2&quot;</td>
-</tr>
-
+<td>VERSION </td><td>Required </td><td>String </td><td>3 </td><td>&quot;0.2&quot; </td><td>This attribute is of type <a class="el" href="group___p_d_t_s.html#ga7f6b6959fefe56d2e871659110936d2d">H5T_C_S1</a>, with size corresponding to the length of the version string. This attribute identifies the version number of this specification to which it conforms. The current version number is "0.2".  </td></tr>
 <tr>
-<td>TITLE</td>
-
-<td>O</td>
-
-<td>String</td>
-
-<td>&nbsp;</td>
-
-<td>
-
+<td>TITLE </td><td>Optional </td><td>String </td><td>&#160; </td><td>&#160; </td><td>The <b>TITLE</b> is an optional String that is to be used as the informative title of the whole table. The <b>TITLE</b> is set with the parameter table_title of the function <a class="el" href="group___h5_t_b.html#gacce384a15825421d1bddfc7b3ab1e7d0" title="Creates and writes a table.">H5TBmake_table</a>.  </td></tr>
 <tr>
-<td>FIELD_(n)_NAME</td>
-
-<td>R</td>
-
-<td>String</td>
-
-<td>&nbsp;</td>
-
-<td>
-&nbsp;
-
+<td>FIELD_(n)_NAME </td><td>Required </td><td>String </td><td>&#160; </td><td>&#160; </td><td>The <b>FIELD_(n)_NAME</b> is an optional String that is to be used as the informative title of column n of the table. For each of the fields the word <b>FIELD_</b> is concatenated with the zero based field (n) index together with the name of the field.  </td></tr>
 <tr>
-<td>FIELD_(n)_FILL</td>
-
-<td>O*</td>
-
-<td>String</td>
-
-<td>&nbsp;</td>
-
-<td>
-&nbsp;
+<td>FIELD_(n)_FILL </td><td>Optional </td><td>String </td><td>&#160; </td><td>&#160; </td><td>The <b>FIELD_(n)_FILL</b> is an optional String that is the fill value for column n of the table. For each of the fields the word <b>FIELD_</b> is concatenated with the zero based field (n) index together with the fill value, if present. This value is written only when a fill value is defined for the table.  </td></tr>
 </table>
-</center>
-
-  </dl>
-<p>
-<center>
-&nbsp;
-</center>
-<i>* </i>The attribute FIELD_(n)_FILL is written to the table if a fill value is
-specified on the creation of the Table. Otherwise, it is not.<p>The following
-section of code shows the calls necessary to the creation of a table.
-
-<p><code>/* Create a new HDF5 file using default properties. */<br>
- file_id = H5Fcreate( &quot;my_table.h5&quot;, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );</code> </p>
-
-<p><code>/* Call the make table function */<br>
-</code> <code>H5TBmake_table( "Table Title", file_id, "Table1", NFIELDS, NRECORDS, dst_size,&nbsp;<br>
-                       field_names, dst_offset, field_type,&nbsp;<br>
-                       chunk_size, fill_data, compress, p_data  )&nbsp;</code> </p>
-
-<p><code> /* Close the file. */<br>
- status = H5Fclose( file_id );</code> </p>
-
-</body>
- </div></div><!-- contents -->
+<p>The following section of code shows the calls necessary to the creation of a table. </p><div class="fragment"><div class="line"><span class="comment">// Create a new HDF5 file using default properties.</span></div>
+<div class="line">file_id = <a class="code" href="group___h5_f.html#gae64b51ee9ac0781bc4ccc599d98387f4">H5Fcreate</a>(<span class="stringliteral">&quot;my_table.h5&quot;</span>, <a class="code" href="_h5_fpublic_8h.html#a5a2d6726f9ad8d2bca8df2b817e5ad6a">H5F_ACC_TRUNC</a>, <a class="code" href="_h5_ppublic_8h.html#afa85e97bfbf9bf1c58e39263846c568f">H5P_DEFAULT</a>, <a class="code" href="_h5_ppublic_8h.html#afa85e97bfbf9bf1c58e39263846c568f">H5P_DEFAULT</a>);</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Call the make table function</span></div>
+<div class="line"><a class="code" href="group___h5_t_b.html#gacce384a15825421d1bddfc7b3ab1e7d0">H5TBmake_table</a>(<span class="stringliteral">&quot;Table Title&quot;</span>, file_id, <span class="stringliteral">&quot;Table1&quot;</span>, NFIELDS, NRECORDS, dst_size, field_names, dst_offset, field_type, chunk_size, fill_data, compress, p_data);</div>
+<div class="line"> </div>
+<div class="line"><span class="comment">// Close the file.</span></div>
+<div class="line">status = <a class="code" href="group___h5_f.html#gac55cd91d80822e4f8c2a7f04ea71b124">H5Fclose</a>(file_id);</div>
+<div class="ttc" id="a_h5_fpublic_8h_html_a5a2d6726f9ad8d2bca8df2b817e5ad6a"><div class="ttname"><a href="_h5_fpublic_8h.html#a5a2d6726f9ad8d2bca8df2b817e5ad6a">H5F_ACC_TRUNC</a></div><div class="ttdeci">#define H5F_ACC_TRUNC</div><div class="ttdef"><b>Definition:</b> H5Fpublic.h:30</div></div>
+<div class="ttc" id="a_h5_ppublic_8h_html_afa85e97bfbf9bf1c58e39263846c568f"><div class="ttname"><a href="_h5_ppublic_8h.html#afa85e97bfbf9bf1c58e39263846c568f">H5P_DEFAULT</a></div><div class="ttdeci">#define H5P_DEFAULT</div><div class="ttdef"><b>Definition:</b> H5Ppublic.h:220</div></div>
+<div class="ttc" id="agroup___h5_f_html_gac55cd91d80822e4f8c2a7f04ea71b124"><div class="ttname"><a href="group___h5_f.html#gac55cd91d80822e4f8c2a7f04ea71b124">H5Fclose</a></div><div class="ttdeci">herr_t H5Fclose(hid_t file_id)</div><div class="ttdoc">Terminates access to an HDF5 file.</div></div>
+<div class="ttc" id="agroup___h5_f_html_gae64b51ee9ac0781bc4ccc599d98387f4"><div class="ttname"><a href="group___h5_f.html#gae64b51ee9ac0781bc4ccc599d98387f4">H5Fcreate</a></div><div class="ttdeci">hid_t H5Fcreate(const char *filename, unsigned flags, hid_t fcpl_id, hid_t fapl_id)</div><div class="ttdoc">Creates an HDF5 file.</div></div>
+<div class="ttc" id="agroup___h5_t_b_html_gacce384a15825421d1bddfc7b3ab1e7d0"><div class="ttname"><a href="group___h5_t_b.html#gacce384a15825421d1bddfc7b3ab1e7d0">H5TBmake_table</a></div><div class="ttdeci">H5_HLDLL herr_t H5TBmake_table(const char *table_title, hid_t loc_id, const char *dset_name, hsize_t nfields, hsize_t nrecords, size_t type_size, const char *field_names[], const size_t *field_offset, const hid_t *field_types, hsize_t chunk_size, void *fill_data, int compress, const void *buf)</div><div class="ttdoc">Creates and writes a table.</div></div>
+</div><!-- fragment --><p>For more information see the <a class="el" href="group___h5_t_b.html">HDF5 Table APIs (H5TB)</a> reference manual page and the <a class="el" href="_h5_t_b__u_g.html">HDF5 High Level Table</a>, which includes examples. </p>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated by
-    <a href="http://www.doxygen.org/index.html">
-    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>

@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>HDF5: Datasets (H5D)</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
-<script type="text/javascript">var page_layout=1;</script>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
 <link href="navtree.css" rel="stylesheet" type="text/css"/>
@@ -601,6 +600,8 @@ Functions</h2></td></tr>
 <div class="ttc" id="astruct_h5_o__info2__t_html"><div class="ttname"><a href="struct_h5_o__info2__t.html">H5O_info2_t</a></div><div class="ttdef"><b>Definition:</b> H5Opublic.h:145</div></div>
 <div class="ttc" id="astruct_h5_o__info2__t_html_a6e12ef8203e400ee995a41a24e981539"><div class="ttname"><a href="struct_h5_o__info2__t.html#a6e12ef8203e400ee995a41a24e981539">H5O_info2_t::type</a></div><div class="ttdeci">H5O_type_t type</div><div class="ttdef"><b>Definition:</b> H5Opublic.h:149</div></div>
 </div><!-- fragment --> </dd></dl>
+<dl class="section attention"><dt>Attention</dt><dd><b>Leaving callback functions:</b><br  />
+ The callback function must return normally, even in the case of error. Returning with H5_ITER_ERROR, instead of leaving by means of exceptions, exit() function, etc... will allow the HDF5 library to manage its resources and maintain a consistent state. See <a class="el" href="_r_m.html#cpp_c_api_note">C++ Developers using HDF5 C-API functions</a> warning for detail.</dd></dl>
 <dl class="section since"><dt>Since</dt><dd>1.14.0 </dd></dl>
 
 </div>
@@ -1163,6 +1164,8 @@ Applications sometimes write data only to portions of an allocated dataset. It i
 <p><code>op</code> is a callback function that handles the gathered data. It is optional if <code>dst_buf</code> is large enough to hold all of the gathered data; required otherwise.</p>
 <p>If no callback function is provided, <a class="el" href="group___h5_d.html#ga1f6a428a8234d7c2ccba7da4742d79be" title="Gathers data from a selection within a memory buffer raw data chunk in a dataset.">H5Dgather()</a> simply gathers the data into <code>dst_buf</code> and returns. If a callback function is provided, <a class="el" href="group___h5_d.html#ga1f6a428a8234d7c2ccba7da4742d79be" title="Gathers data from a selection within a memory buffer raw data chunk in a dataset.">H5Dgather()</a> repeatedly gathers up to <code>dst_buf_size</code> bytes to process the serialized data.</p>
 <p>The callback function <code>op</code> should process, store, or otherwise, make use of the data returned in <code>dst_buf</code> before it returns, because the buffer will be overwritten unless it is the last call to the callback. This function will be repeatedly called until all gathered elements have been passed to the callback in <code>dst_buf</code>. The callback function should return zero (0) to indicate success, and a negative value to indicate failure.</p>
+<dl class="section attention"><dt>Attention</dt><dd><b>Leaving callback functions:</b><br  />
+ The callback function must return normally, even in the case of error. Returning with H5_ITER_ERROR, instead of leaving by means of exceptions, exit() function, etc... will allow the HDF5 library to manage its resources and maintain a consistent state. See <a class="el" href="_r_m.html#cpp_c_api_note">C++ Developers using HDF5 C-API functions</a> warning for detail.</dd></dl>
 <dl class="section since"><dt>Since</dt><dd>1.10.2 </dd></dl>
 
 </div>
@@ -1749,6 +1752,8 @@ Applications sometimes write data only to portions of an allocated dataset. It i
 <p><a class="el" href="group___h5_d.html#ga71421c684884ab49765748720fe938db" title="Iterates over all selected elements in a dataspace.">H5Diterate()</a> iterates over all the data elements in the memory buffer <code>buf</code>, executing the callback function <code>op</code> once for each such data element.</p>
 <dl class="section attention"><dt>Attention</dt><dd>Unlike other HDF5 iterators, this iteration operation cannot be restarted at the point of exit; a second <a class="el" href="group___h5_d.html#ga71421c684884ab49765748720fe938db" title="Iterates over all selected elements in a dataspace.">H5Diterate()</a> call will always restart at the beginning.</dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>Modifying the selection of <code>space_id</code> during iteration will lead to undefined behavior.</dd></dl>
+<dl class="section attention"><dt>Attention</dt><dd><b>Leaving callback functions:</b><br  />
+ The callback function must return normally, even in the case of error. Returning with H5_ITER_ERROR, instead of leaving by means of exceptions, exit() function, etc... will allow the HDF5 library to manage its resources and maintain a consistent state. See <a class="el" href="_r_m.html#cpp_c_api_note">C++ Developers using HDF5 C-API functions</a> warning for detail.</dd></dl>
 <dl class="section since"><dt>Since</dt><dd>1.10.2 </dd></dl>
 
 </div>
@@ -2024,7 +2029,7 @@ Applications sometimes write data only to portions of an allocated dataset. It i
 <p><code>offset</code> is an array specifying the logical position of the first element of the chunk in the dataset's dataspace. The length of the <code>offset</code> array must equal the number of dimensions, or rank, of the dataspace. The values in <code>offset</code> must not exceed the dimension limits and must specify a point that falls on a dataset chunk boundary.</p>
 <p>The mask <code>filters</code> indicates which filters were used when the chunk was written. A zero value (all bits 0) indicates that all enabled filters are applied on the chunk. A filter is skipped if the bit corresponding to the filter's position in the pipeline (0 ≤ position &lt; 32) is turned on.</p>
 <p><code>buf</code> is the memory buffer containing the chunk read from the dataset in the file.</p>
-<dl class="section attention"><dt>Attention</dt><dd>Exercise caution when using <a class="el" href="group___h5_d.html#gac1092a63b718ec949d6539590a914b60" title="Reads a raw data chunk directly from a dataset in a file into a buffer.">H5Dread_chunk()</a> and <a class="el" href="group___h5_d.html#ga416ccd200929b11386a10e9024977109" title="Writes a raw data chunk from a buffer directly to a dataset in a file.">H5Dwrite_chunk()</a>, as they read and write data chunks directly in a file. <a class="el" href="group___h5_d.html#ga416ccd200929b11386a10e9024977109" title="Writes a raw data chunk from a buffer directly to a dataset in a file.">H5Dwrite_chunk()</a> bypasses hyperslab selection, the conversion of data from one datatype to another, and the filter pipeline to write the chunk. Developers should have experience with these processes before using this function. Please see Using the Direct Chunk Write Function for more information.</dd></dl>
+<dl class="section attention"><dt>Attention</dt><dd>Exercise caution when using <a class="el" href="group___h5_d.html#gac1092a63b718ec949d6539590a914b60" title="Reads a raw data chunk directly from a dataset in a file into a buffer.">H5Dread_chunk()</a> and <a class="el" href="group___h5_d.html#ga416ccd200929b11386a10e9024977109" title="Writes a raw data chunk from a buffer directly to a dataset in a file.">H5Dwrite_chunk()</a>, as they read and write data chunks directly in a file. <a class="el" href="group___h5_d.html#ga416ccd200929b11386a10e9024977109" title="Writes a raw data chunk from a buffer directly to a dataset in a file.">H5Dwrite_chunk()</a> bypasses hyperslab selection, the conversion of data from one datatype to another, and the filter pipeline to write the chunk. Developers should have experience with these processes before using this function. Please see <a class="el" href="_h5_d_o__u_g.html#subsec_hldo_direct_chunk_using">Using the Direct Chunk Write Function</a> for more information.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd><a class="el" href="group___h5_d.html#gac1092a63b718ec949d6539590a914b60" title="Reads a raw data chunk directly from a dataset in a file into a buffer.">H5Dread_chunk()</a> and <a class="el" href="group___h5_d.html#ga416ccd200929b11386a10e9024977109" title="Writes a raw data chunk from a buffer directly to a dataset in a file.">H5Dwrite_chunk()</a> are currently not supported with parallel HDF5 and do not support variable-length datatypes.</dd></dl>
 <dl class="section since"><dt>Since</dt><dd>1.10.2 </dd></dl>
 
@@ -2676,9 +2681,7 @@ If a dataset's storage layout is 'compact', care must be taken when writing data
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated by
-    <a href="http://www.doxygen.org/index.html">
-    <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.9.1 </li>
+    <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.1 </li>
   </ul>
 </div>
 </body>
