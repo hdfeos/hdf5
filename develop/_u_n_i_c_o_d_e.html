@@ -199,7 +199,7 @@ Storage Size</h2>
 System Dependencies</h2>
 <p><b>Linux</b>, <b>Unix</b>, and similar systems generally handle UTF-8 encodings in correct and predictable ways. There is an apparent consensus in the Linux community that "UTF-8 is just the right way to go."</p>
 <p><b>Mac OS</b> systems generally handle UTF-8 encodings correctly.</p>
-<p><b>Windows</b> systems use a different Unicode encoding, UCS-2 (discussed in this UTF-16 article) at the system level. Within an HDF5 file and application on a Windows system, UTF-8 encoding should work correctly and as expected. Problems may arise, however, when that UTF-8 encoding is exposed directly to the Windows system. For example: </p><ul>
+<p><b>Windows</b> systems use a different Unicode encoding, <a href="https://en.wikipedia.org/wiki/UTF-16">UCS-2</a> (discussed in this UTF-16 article) at the system level. Within an HDF5 file and application on a Windows system, UTF-8 encoding should work correctly and as expected. Problems may arise, however, when that UTF-8 encoding is exposed directly to the Windows system. For example: </p><ul>
 <li>File open and close calls on files with UTF-8 encoded names are likely to fail as the HDF5 open and close operations interact directly with the Windows file system interface. </li>
 <li>Anytime an HDF5 command-line utility (<a class="el" href="_h5_t_o_o_l__l_s__u_g.html">The HDF5 h5ls Tool</a> or <a class="el" href="_h5_t_o_o_l__d_p__u_g.html">The HDF5 h5dump Tool</a>, for example) emits text output, the Windows system must interpret the character encodings. If that output is UTF-8 encoded, Windows will correctly interpret only those characters in the ASCII subset of UTF-8.</li>
 </ul>
