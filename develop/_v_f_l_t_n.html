@@ -192,7 +192,7 @@ Creating and Opening Files</h2>
 <div class="line">    ....</div>
 <div class="line">}</div>
 <div class="ttc" id="a_h5_f_dsec2_8h_html_a15ae1f958e1cf11cb239916d76b10606"><div class="ttname"><a href="_h5_f_dsec2_8h.html#a15ae1f958e1cf11cb239916d76b10606">H5FD_SEC2</a></div><div class="ttdeci">#define H5FD_SEC2</div><div class="ttdef"><b>Definition:</b> H5FDsec2.h:24</div></div>
-<div class="ttc" id="a_h5public_8h_html_a8c86e866f40d7167cf9a1934c72b856f"><div class="ttname"><a href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a></div><div class="ttdeci">uint64_t haddr_t</div><div class="ttdef"><b>Definition:</b> H5public.h:345</div></div>
+<div class="ttc" id="a_h5public_8h_html_a8c86e866f40d7167cf9a1934c72b856f"><div class="ttname"><a href="_h5public_8h.html#a8c86e866f40d7167cf9a1934c72b856f">haddr_t</a></div><div class="ttdeci">uint64_t haddr_t</div><div class="ttdef"><b>Definition:</b> H5public.h:352</div></div>
 <div class="ttc" id="agroup___f_a_p_l_html_ga43a733fe9723dd15f5ad7abda909a1b8"><div class="ttname"><a href="group___f_a_p_l.html#ga43a733fe9723dd15f5ad7abda909a1b8">H5Pget_driver</a></div><div class="ttdeci">hid_t H5Pget_driver(hid_t plist_id)</div><div class="ttdoc">Returns low-lever driver identifier.</div></div>
 <div class="ttc" id="agroup___f_a_p_l_html_ga9195cb7b6c33ed8947486669702a4375"><div class="ttname"><a href="group___f_a_p_l.html#ga9195cb7b6c33ed8947486669702a4375">H5Pget_fapl_family</a></div><div class="ttdeci">herr_t H5Pget_fapl_family(hid_t fapl_id, hsize_t *memb_size, hid_t *memb_fapl_id)</div><div class="ttdoc">Returns file access property list information.</div></div>
 </div><!-- fragment --><h2><a class="anchor" id="subsec_vfl_use_per"></a>
@@ -283,7 +283,7 @@ Mode Functions</h2>
 <div class="line">    fa-&gt;memb_fapl_id = <a class="code" href="group___p_l_c_r.html#gad2663ccbcbf76b96cde4c104588ae21b">H5Pcopy</a>(file-&gt;memb_fapl_id);</div>
 <div class="line">    <span class="keywordflow">return</span> fa;</div>
 <div class="line">}</div>
-<div class="ttc" id="astruct_h5_f_d__t_html"><div class="ttname"><a href="struct_h5_f_d__t.html">H5FD_t</a></div><div class="ttdef"><b>Definition:</b> H5FDdevelop.h:332</div></div>
+<div class="ttc" id="astruct_h5_f_d__t_html"><div class="ttname"><a href="struct_h5_f_d__t.html">H5FD_t</a></div><div class="ttdef"><b>Definition:</b> H5FDdevelop.h:340</div></div>
 </div><!-- fragment --><h2><a class="anchor" id="subsec_vfl_imp_file"></a>
 File Functions</h2>
 <p>The higher layers of the library expect files to have a name and allow the file to be accessed in various modes. The driver must be able to create a new file, replace an existing file, or open an existing file. Opening or creating a file should return a handle, a pointer to a specialization of the <a class="el" href="struct_h5_f_d__t.html">H5FD_t</a> struct, which allows read-only or read-write access and which will be passed to the other driver functions as they are called.(Read-only access is only appropriate when opening an existing file.) </p><div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">struct </span>{</div>
@@ -293,7 +293,7 @@ File Functions</h2>
 <div class="line">    <span class="comment">// Private fields -- driver-defined</span></div>
 <div class="line"> </div>
 <div class="line">} <a class="code" href="struct_h5_f_d__t.html">H5FD_t</a>;</div>
-<div class="ttc" id="astruct_h5_f_d__class__t_html"><div class="ttname"><a href="struct_h5_f_d__class__t.html">H5FD_class_t</a></div><div class="ttdef"><b>Definition:</b> H5FDdevelop.h:191</div></div>
+<div class="ttc" id="astruct_h5_f_d__class__t_html"><div class="ttname"><a href="struct_h5_f_d__class__t.html">H5FD_class_t</a></div><div class="ttdef"><b>Definition:</b> H5FDdevelop.h:199</div></div>
 </div><!-- fragment --><p>Example: The family driver requires handles to the underlying storage, the size of the members for this particular file (which might be different than the member size specified in the file access property list if an existing file family is being opened), the name used to open the file in case additional members must be created, and the flags to use for creating those additional members. The eoa member caches the size of the format address space so the family members don't have to be queried in order to find it. </p><div class="fragment"><div class="line"><span class="comment">// The description of a file belonging to this driver.</span></div>
 <div class="line"><span class="keyword">typedef</span> <span class="keyword">struct </span>H5FD_family_t {</div>
 <div class="line">    <a class="code" href="struct_h5_f_d__t.html">H5FD_t</a>      pub;            <span class="comment">// public stuff, must be first</span></div>
@@ -364,7 +364,7 @@ Open Files</h2>
 <div class="ttc" id="a_h5_fpublic_8h_html_a402673dec5c537b27a49a9a8bd6140b4"><div class="ttname"><a href="_h5_fpublic_8h.html#a402673dec5c537b27a49a9a8bd6140b4">H5F_ACC_RDWR</a></div><div class="ttdeci">#define H5F_ACC_RDWR</div><div class="ttdef"><b>Definition:</b> H5Fpublic.h:29</div></div>
 <div class="ttc" id="a_h5_fpublic_8h_html_a5f311bcbc21086812e8b754f6354262b"><div class="ttname"><a href="_h5_fpublic_8h.html#a5f311bcbc21086812e8b754f6354262b">H5F_ACC_CREAT</a></div><div class="ttdeci">#define H5F_ACC_CREAT</div><div class="ttdef"><b>Definition:</b> H5Fpublic.h:33</div></div>
 <div class="ttc" id="a_h5_fpublic_8h_html_a7a47250dc1435705233dca7297ba3d90"><div class="ttname"><a href="_h5_fpublic_8h.html#a7a47250dc1435705233dca7297ba3d90">H5F_ACC_EXCL</a></div><div class="ttdeci">#define H5F_ACC_EXCL</div><div class="ttdef"><b>Definition:</b> H5Fpublic.h:31</div></div>
-<div class="ttc" id="a_h5public_8h_html_a676244a60b85ee8bbd111afd4a8fce3c"><div class="ttname"><a href="_h5public_8h.html#a676244a60b85ee8bbd111afd4a8fce3c">HADDR_UNDEF</a></div><div class="ttdeci">#define HADDR_UNDEF</div><div class="ttdef"><b>Definition:</b> H5public.h:357</div></div>
+<div class="ttc" id="a_h5public_8h_html_a676244a60b85ee8bbd111afd4a8fce3c"><div class="ttname"><a href="_h5public_8h.html#a676244a60b85ee8bbd111afd4a8fce3c">HADDR_UNDEF</a></div><div class="ttdeci">#define HADDR_UNDEF</div><div class="ttdef"><b>Definition:</b> H5public.h:364</div></div>
 </div><!-- fragment --><h2><a class="anchor" id="subsec_vfl_imp_close"></a>
 Closing Files</h2>
 <p>Closing a file simply means that all cached data should be flushed to the next lower layer, the file should be closed at the next lower layer, and all file-related data structures should be freed. All information needed by the close function is already present in the file handle. </p><table class="doxtable">
@@ -453,7 +453,7 @@ Allocatiion of Format Regions</h2>
 <div class="line"><span class="keywordflow">for</span> (mt = 0; mt &lt; <a class="code" href="_h5_fpublic_8h.html#a51e588cd954ea2388816bd0818850eb5a3be201777da432df4a8e2c1b618a7566">H5FD_MEM_NTYPES</a>; mt++) {</div>
 <div class="line">    map[mt] = (<a class="code" href="_h5_fpublic_8h.html#a51e588cd954ea2388816bd0818850eb5a4337f7056fb57717e82fa1081f496d75">H5FD_MEM_OHDR</a>==  mt) ? mt : <a class="code" href="_h5_fpublic_8h.html#a51e588cd954ea2388816bd0818850eb5ae536846ac8d6ecd1a2a8479409df1bce">H5FD_MEM_SUPER</a>;</div>
 <div class="line">}</div>
-<div class="ttc" id="a_h5_f_dpublic_8h_html_a02887a6f018be1a0ce7358522095578b"><div class="ttname"><a href="_h5_f_dpublic_8h.html#a02887a6f018be1a0ce7358522095578b">H5FD_mem_t</a></div><div class="ttdeci">enum H5F_mem_t H5FD_mem_t</div><div class="ttdef"><b>Definition:</b> H5FDpublic.h:265</div></div>
+<div class="ttc" id="a_h5_f_dpublic_8h_html_a02887a6f018be1a0ce7358522095578b"><div class="ttname"><a href="_h5_f_dpublic_8h.html#a02887a6f018be1a0ce7358522095578b">H5FD_mem_t</a></div><div class="ttdeci">enum H5F_mem_t H5FD_mem_t</div><div class="ttdef"><b>Definition:</b> H5FDpublic.h:276</div></div>
 <div class="ttc" id="a_h5_fpublic_8h_html_a51e588cd954ea2388816bd0818850eb5a3be201777da432df4a8e2c1b618a7566"><div class="ttname"><a href="_h5_fpublic_8h.html#a51e588cd954ea2388816bd0818850eb5a3be201777da432df4a8e2c1b618a7566">H5FD_MEM_NTYPES</a></div><div class="ttdeci">@ H5FD_MEM_NTYPES</div><div class="ttdef"><b>Definition:</b> H5Fpublic.h:148</div></div>
 <div class="ttc" id="a_h5_fpublic_8h_html_a51e588cd954ea2388816bd0818850eb5a4337f7056fb57717e82fa1081f496d75"><div class="ttname"><a href="_h5_fpublic_8h.html#a51e588cd954ea2388816bd0818850eb5a4337f7056fb57717e82fa1081f496d75">H5FD_MEM_OHDR</a></div><div class="ttdeci">@ H5FD_MEM_OHDR</div><div class="ttdef"><b>Definition:</b> H5Fpublic.h:146</div></div>
 <div class="ttc" id="a_h5_fpublic_8h_html_a51e588cd954ea2388816bd0818850eb5ae536846ac8d6ecd1a2a8479409df1bce"><div class="ttname"><a href="_h5_fpublic_8h.html#a51e588cd954ea2388816bd0818850eb5ae536846ac8d6ecd1a2a8479409df1bce">H5FD_MEM_SUPER</a></div><div class="ttdeci">@ H5FD_MEM_SUPER</div><div class="ttdef"><b>Definition:</b> H5Fpublic.h:141</div></div>
@@ -684,7 +684,7 @@ Registration of a Driver</h1>
 <div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> H5FD_SEC2_g;</div>
 <div class="line">}</div>
-<div class="ttc" id="a_h5_f_ddevelop_8h_html_a4c63846487a43d7a3d589ac2852c9078"><div class="ttname"><a href="_h5_f_ddevelop_8h.html#a4c63846487a43d7a3d589ac2852c9078">H5FD_FLMAP_SINGLE</a></div><div class="ttdeci">#define H5FD_FLMAP_SINGLE</div><div class="ttdef"><b>Definition:</b> H5FDdevelop.h:140</div></div>
+<div class="ttc" id="a_h5_f_ddevelop_8h_html_a4c63846487a43d7a3d589ac2852c9078"><div class="ttname"><a href="_h5_f_ddevelop_8h.html#a4c63846487a43d7a3d589ac2852c9078">H5FD_FLMAP_SINGLE</a></div><div class="ttdeci">#define H5FD_FLMAP_SINGLE</div><div class="ttdef"><b>Definition:</b> H5FDdevelop.h:148</div></div>
 <div class="ttc" id="a_h5_f_ddevelop_8h_html_a576ba6b6ebc34ae422bf40700a4c372d"><div class="ttname"><a href="_h5_f_ddevelop_8h.html#a576ba6b6ebc34ae422bf40700a4c372d">H5FDregister</a></div><div class="ttdeci">hid_t H5FDregister(const H5FD_class_t *cls)</div></div>
 </div><!-- fragment --><p>A driver can be removed from the library by unregistering it </p><table class="doxtable">
 <tr>

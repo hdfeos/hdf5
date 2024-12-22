@@ -257,7 +257,7 @@ Lock disable scheme interactions</h2>
 </ul>
 <p>If you want to check that file locking is on, you'll need to check the fapl setting AND check the environment variable, which can override the fapl.</p>
 <p><b>!!! WARNING !!!</b></p>
-<p>Disabling the file locks is at your own risk. If more than one writer process modifies an HDF5 file at the same time, the file could be corrupted. If a reader process reads a file that is being modified by a writer, the writer process might attempt to read garbage and encounter errors or even crash.</p>
+<p>Disabling the file locks is at your own risk. If more than one writer process modifies an HDF5 file at the same time, the file could be corrupted. If a reader process reads a file that is being modified by a writer, the reader process might attempt to read garbage and encounter errors or even crash.</p>
 <p>In the case of:</p>
 <ul>
 <li>A single process accessing a file with write access</li>
