@@ -151,7 +151,7 @@ if (HDF5_ENABLE_ZLIB_SUPPORT)
     set (HDF5_ENABLE_ZLIB_SUPPORT OFF CACHE BOOL "" FORCE)
     message (FATAL_ERROR " ZLib support in HDF5 was enabled but not found")
   endif ()
-  message(STATUS "H5_ZLIB_HEADER=${H5_ZLIB_HEADER}")
+  message (VERBOSE "H5_ZLIB_HEADER=${H5_ZLIB_HEADER}")
 endif ()
 
 #-----------------------------------------------------------------------------
