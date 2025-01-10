@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['raw_20i_20o_20flow_20notes_0',['HDF5 Raw I/O Flow Notes',['../_i_o_f_l_o_w.html',1,'']]],
+  ['reader_20swmr_1',['Introduction to Single-Writer/Multiple-Reader (SWMR)',['../_s_w_m_r_t_n.html',1,'']]],
+  ['reading_20from_20and_20writing_20to_20a_20dataset_2',['Reading From and Writing To a Dataset',['../_l_b_dset_r_w.html',1,'LearnBasics']]],
+  ['reading_20from_20or_20writing_20to_20a_20subset_20of_20a_20dataset_3',['Reading From or Writing To a Subset of a Dataset',['../_l_b_dset_sub_r_w.html',1,'LearnBasics']]],
+  ['readme_4',['readme',['../md__r_e_a_d_m_e.html',1,'README'],['../md__h_d_f5_examples_2_r_e_a_d_m_e.html',1,'README']]],
+  ['reads_5',['Functions with No Access Property List Parameter that May Generate Metadata Reads',['../maybe_metadata_reads.html',1,'']]],
+  ['reference_20manual_6',['HDF5 Reference Manual',['../_r_m.html',1,'']]],
+  ['reference_20manual_20rm_20page_20template_7',['Reference Manual (RM) Page Template',['../_r_m_t.html',1,'']]],
+  ['references_8',['HDF5 References',['../_h5_r__u_g.html',1,'']]],
+  ['regularly_20spaced_20data_9',['Writing by Regularly Spaced Data',['../_intro_par_regular_spaced.html',1,'IntroParHDF5']]],
+  ['relative_20names_10',['Creating Groups using Absolute and Relative Names',['../_l_b_grp_create_names.html',1,'LearnBasics']]],
+  ['release_20process_11',['Release Process',['../md_release__docs_2_r_e_l_e_a_s_e___p_r_o_c_e_s_s.html',1,'']]],
+  ['release_20version_20numbers_12',['HDF5 Library Release Version Numbers',['../_r_e_l_v_e_r_s_i_o_n.html',1,'']]],
+  ['release_5fdocs_20tt_20directory_13',['The &lt;tt&gt;release_docs&lt;/tt&gt; directory',['../md_release__docs_2_r_e_a_d_m_e.html',1,'']]],
+  ['requirements_20in_20parallel_20hdf5_20applications_14',['Collective Calling Requirements in Parallel HDF5 Applications',['../collective_calls.html',1,'']]],
+  ['resources_15',['Additional Resources',['../_a_r__u_g.html',1,'']]],
+  ['rfcs_16',['RFCs',['../_r_f_c.html',1,'']]],
+  ['rm_20page_20template_17',['Reference Manual (RM) Page Template',['../_r_m_t.html',1,'']]]
+];

@@ -1,6 +1,9 @@
 <map id="tools/src/h5repack/h5repack.h" name="tools/src/h5repack/h5repack.h">
-<area shape="rect" id="node1" title=" " alt="" coords="89,5,231,47"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,95,104,121"/>
-<area shape="rect" id="node3" title=" " alt="" coords="129,95,191,121"/>
-<area shape="rect" id="node4" title=" " alt="" coords="216,95,291,121"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="89,5,231,45"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,93,104,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="136,48,83,87,80,83,133,43"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="129,93,191,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="163,46,163,79,157,79,157,46"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="216,93,291,119"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="184,44,230,82,227,86,181,48"/>
 </map>

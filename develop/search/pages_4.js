@@ -1,7 +1,4 @@
 var searchData=
 [
-  ['errors_20and_20exceptions_13247',['Errors and Exceptions',['../_e_r_r_o_r_s.html',1,'']]],
-  ['examples_20by_20api_13248',['Examples by API',['../_ex_a_p_i.html',1,'']]],
-  ['examples_20from_20learning_20the_20basics_13249',['Examples from Learning the Basics',['../_l_b_examples.html',1,'']]],
-  ['extendible_20datasets_13250',['Extendible Datasets',['../_l_b_ext_dset.html',1,'LearnBasics']]]
+  ['4_20and_20above_0',['DDL in BNF for HDF5 1.14.4 and above',['../_d_d_l_b_n_f114.html',1,'']]]
 ];
