@@ -11,6 +11,6 @@ var searchData=
   ['examples_20by_20api_8',['Examples by API',['../_ex_a_p_i.html',1,'']]],
   ['examples_20from_20learning_20the_20basics_9',['Examples from Learning the Basics',['../_l_b_examples.html',1,'']]],
   ['exceptions_10',['exceptions',['../_e_r_r_o_r_s.html',1,'Errors and Exceptions'],['../_e_r_r_o_r_s_l_i_b.html',1,'HDF5 Library Errors and Exceptions'],['../_e_r_r_o_r_s_j_a_v_a.html',1,'Java Wrapper Errors and Exceptions']]],
-  ['explained_11',['HDF5 Git Branching Model Explained',['../md_doc_2branches-explained.html',1,'']]],
+  ['explained_11',['HDF5 Git Branching Model Explained',['../_b_r_a_n_c_h_e_x_p_l.html',1,'']]],
   ['extendible_20datasets_12',['Extendible Datasets',['../_l_b_ext_dset.html',1,'LearnBasics']]]
 ];

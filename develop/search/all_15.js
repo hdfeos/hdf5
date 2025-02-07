@@ -32,5 +32,5 @@ var searchData=
   ['jni_29',['Java/JNI',['../_h5_v_l__u_g.html#subsubsec_vol_lang_java',1,'']]],
   ['jni_20exception_20interface_30',['HDF5 Library JNI Exception Interface',['../group___j_e_r_r_l_i_b.html',1,'']]],
   ['jpss_20npp_20file_20with_20hdf5_20tools_31',['Use Case: Examining a JPSS NPP File With HDF5 Tools',['../_view_tools_j_p_s_s.html',1,'']]],
-  ['just_20below_20the_20introductory_20lines_20at_20the_20top_20of_20the_20history_20file_32',['10. Add the contents of the RELEASE.txt file in the release code to the HISTORY-X_Y file in the &lt;strong&gt;support&lt;/strong&gt; branch, just below the introductory lines at the top of the HISTORY file.',['../md_release__docs_2_r_e_l_e_a_s_e___p_r_o_c_e_s_s.html#autotoc_md245',1,'']]]
+  ['just_20below_20the_20introductory_20lines_20at_20the_20top_20of_20the_20history_20file_32',['10. Add the contents of the RELEASE.txt file in the release code to the HISTORY-X_Y file in the &lt;strong&gt;support&lt;/strong&gt; branch, just below the introductory lines at the top of the HISTORY file.',['../md_release__docs_2_r_e_l_e_a_s_e___p_r_o_c_e_s_s.html#autotoc_md197',1,'']]]
 ];

@@ -9,13 +9,14 @@ var searchData=
   ['reference_20manual_6',['HDF5 Reference Manual',['../_r_m.html',1,'']]],
   ['reference_20manual_20rm_20page_20template_7',['Reference Manual (RM) Page Template',['../_r_m_t.html',1,'']]],
   ['references_8',['HDF5 References',['../_h5_r__u_g.html',1,'']]],
-  ['regularly_20spaced_20data_9',['Writing by Regularly Spaced Data',['../_intro_par_regular_spaced.html',1,'IntroParHDF5']]],
-  ['relative_20names_10',['Creating Groups using Absolute and Relative Names',['../_l_b_grp_create_names.html',1,'LearnBasics']]],
-  ['release_20process_11',['Release Process',['../md_release__docs_2_r_e_l_e_a_s_e___p_r_o_c_e_s_s.html',1,'']]],
-  ['release_20version_20numbers_12',['HDF5 Library Release Version Numbers',['../_r_e_l_v_e_r_s_i_o_n.html',1,'']]],
-  ['release_5fdocs_20tt_20directory_13',['The &lt;tt&gt;release_docs&lt;/tt&gt; directory',['../md_release__docs_2_r_e_a_d_m_e.html',1,'']]],
-  ['requirements_20in_20parallel_20hdf5_20applications_14',['Collective Calling Requirements in Parallel HDF5 Applications',['../collective_calls.html',1,'']]],
-  ['resources_15',['Additional Resources',['../_a_r__u_g.html',1,'']]],
-  ['rfcs_16',['RFCs',['../_r_f_c.html',1,'']]],
-  ['rm_20page_20template_17',['Reference Manual (RM) Page Template',['../_r_m_t.html',1,'']]]
+  ['region_20writes_9',['Modified Region Writes',['../mod_region_writes.html',1,'']]],
+  ['regularly_20spaced_20data_10',['Writing by Regularly Spaced Data',['../_intro_par_regular_spaced.html',1,'IntroParHDF5']]],
+  ['relative_20names_11',['Creating Groups using Absolute and Relative Names',['../_l_b_grp_create_names.html',1,'LearnBasics']]],
+  ['release_20process_12',['Release Process',['../md_release__docs_2_r_e_l_e_a_s_e___p_r_o_c_e_s_s.html',1,'']]],
+  ['release_20version_20numbers_13',['HDF5 Library Release Version Numbers',['../_r_e_l_v_e_r_s_i_o_n.html',1,'']]],
+  ['release_5fdocs_20tt_20directory_14',['The &lt;tt&gt;release_docs&lt;/tt&gt; directory',['../md_release__docs_2_r_e_a_d_m_e.html',1,'']]],
+  ['requirements_20in_20parallel_20hdf5_20applications_15',['Collective Calling Requirements in Parallel HDF5 Applications',['../collective_calls.html',1,'']]],
+  ['resources_16',['Additional Resources',['../_a_r__u_g.html',1,'']]],
+  ['rfcs_17',['RFCs',['../_r_f_c.html',1,'']]],
+  ['rm_20page_20template_18',['Reference Manual (RM) Page Template',['../_r_m_t.html',1,'']]]
 ];

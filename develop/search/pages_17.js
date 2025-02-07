@@ -6,7 +6,7 @@ var searchData=
   ['search_3',['Full-Text Search',['../_f_t_s.html',1,'']]],
   ['security_20policy_4',['Security Policy',['../md__s_e_c_u_r_i_t_y.html',1,'']]],
   ['set_5',['HDF5 Event Set',['../_h5_e_s__u_g.html',1,'']]],
-  ['shutdown_6',['HDF5 Library initialization and shutdown',['../md_doc_2library-init-shutdown.html',1,'']]],
+  ['shutdown_6',['HDF5 Library initialization and shutdown',['../_init_shut.html',1,'']]],
   ['single_20writer_20multiple_20reader_20swmr_7',['Introduction to Single-Writer/Multiple-Reader (SWMR)',['../_s_w_m_r_t_n.html',1,'']]],
   ['spaced_20data_8',['Writing by Regularly Spaced Data',['../_intro_par_regular_spaced.html',1,'IntroParHDF5']]],
   ['specification_20version_201_200_9',['specification version 1 0',['../_f_m_t1.html',1,'HDF5 File Format Specification Version 1.0'],['../_t_b_l_s_p_e_c.html',1,'HDF5 Table Specification Version 1.0']]],
