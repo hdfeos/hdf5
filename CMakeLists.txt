@@ -6,6 +6,11 @@ if (POLICY CMP0074)
   cmake_policy (SET CMP0074 NEW)
 endif ()
 
+if (POLICY CMP0144)
+  # <PACKAGENAME> is the upper-cased package name.
+  cmake_policy (SET CMP0144 NEW)
+endif ()
+
 if (POLICY CMP0083)
   # To control generation of Position Independent Executable (PIE) or not,
   # some flags are required at link time.
@@ -1079,7 +1084,7 @@ if (HDF5_BUILD_DOC AND EXISTS "${HDF5_DOXYGEN_DIR}" AND IS_DIRECTORY "${HDF5_DOX
     option (HDF5_ENABLE_DOXY_WARNINGS "Enable fail if doxygen parsing has warnings." OFF)
     mark_as_advanced (HDF5_ENABLE_DOXY_WARNINGS)
     if (HDF5_ENABLE_DOXY_WARNINGS)
-      set (HDF5_DOXY_WARNINGS "FAIL_ON_WARNINGS")
+      set (HDF5_DOXY_WARNINGS "FAIL_ON_WARNINGS_PRINT")
     else ()
       set (HDF5_DOXY_WARNINGS "NO")
     endif ()
