@@ -3393,6 +3393,137 @@ test_h5s_bug3(void)
     CHECK(ret, FAIL, "H5Sclose");
 } /* test_h5s_bug3() */
 
+/****************************************************************
+**
+**  test_h5s_bug5(): Test a bug where calling the function
+**                   H5Sget_select_hyper_blocklist() on a
+**                   dataspace that has an extent with a rank of
+**                   0 would cause an over-read of a stack array
+**                   variable due to indexing by "ndims - 1".
+**
+****************************************************************/
+static void
+test_h5s_bug5(void)
+{
+    hsize_t dims[]  = {10};
+    hsize_t start[] = {0};
+    hsize_t count[] = {1};
+    hsize_t blocks[1];
+    herr_t  ret      = SUCCEED;
+    hid_t   space_id = H5I_INVALID_HID;
+
+    space_id = H5Screate_simple(1, dims, NULL);
+    CHECK(space_id, H5I_INVALID_HID, "H5Screate_simple");
+
+    ret = H5Sselect_hyperslab(space_id, H5S_SELECT_SET, start, NULL, count, NULL);
+    CHECK(ret, FAIL, "H5Sselect_hyperslab");
+
+    ret = H5Sset_extent_none(space_id);
+    CHECK(ret, FAIL, "H5Sset_extent_none");
+
+    /* Hyperslab selections are unsupported for scalar and null extents */
+    H5E_BEGIN_TRY
+    {
+        ret = H5Sget_select_hyper_blocklist(space_id, 0, 1, blocks);
+    }
+    H5E_END_TRY
+    VERIFY(ret, FAIL, "H5Sget_select_hyper_blocklist");
+
+    ret = H5Sclose(space_id);
+    CHECK(ret, FAIL, "H5Sclose");
+} /* test_h5s_bug5() */
+
+/****************************************************************
+**
+**  test_h5s_bug6(): Test calling H5Sselect_hyperslab() on a
+**                   dataspace with a NULL extent such that an
+**                   assertion failure happens when the library
+**                   attempts to create new span information for
+**                   the dataspace.
+**
+****************************************************************/
+static void
+test_h5s_bug6(void)
+{
+    hsize_t start[]  = {0};
+    hsize_t count[]  = {1};
+    herr_t  ret      = SUCCEED;
+    hid_t   space_id = H5I_INVALID_HID;
+
+    space_id = H5Screate(H5S_SIMPLE);
+    CHECK(space_id, H5I_INVALID_HID, "H5Screate");
+
+    ret = H5Sselect_hyperslab(space_id, H5S_SELECT_SET, start, NULL, count, NULL);
+    CHECK(ret, FAIL, "H5Sselect_hyperslab");
+
+    /* OR in another piece */
+    start[0] = 3;
+
+    H5E_BEGIN_TRY
+    {
+        ret = H5Sselect_hyperslab(space_id, H5S_SELECT_OR, start, NULL, count, NULL);
+    }
+    H5E_END_TRY
+    VERIFY(ret, FAIL, "H5Sselect_hyperslab");
+
+    ret = H5Sclose(space_id);
+    CHECK(ret, FAIL, "H5Sclose");
+} /* test_h5s_bug6() */
+
+/****************************************************************
+**
+**  test_h5s_bug7(): Test calling H5Scopy() on a dataspace with
+**                   a NULL extent such that an assertion failure
+**                   happens when the library attempts to create
+**                   new span information for the dataspace.
+**
+****************************************************************/
+static void
+test_h5s_bug7(void)
+{
+    hsize_t dims[]        = {10};
+    hsize_t start[]       = {0};
+    hsize_t count[]       = {1};
+    herr_t  ret           = SUCCEED;
+    hid_t   space_id      = H5I_INVALID_HID;
+    hid_t   space_copy_id = H5I_INVALID_HID;
+
+    space_id = H5Screate_simple(1, dims, NULL);
+    CHECK(space_id, H5I_INVALID_HID, "H5Screate_simple");
+
+    ret = H5Sselect_hyperslab(space_id, H5S_SELECT_SET, start, NULL, count, NULL);
+    CHECK(ret, FAIL, "H5Sselect_hyperslab");
+
+    /* OR in pieces to make irregular hyperslab */
+    start[0] = 3;
+    count[0] = 3;
+
+    ret = H5Sselect_hyperslab(space_id, H5S_SELECT_OR, start, NULL, count, NULL);
+    CHECK(ret, FAIL, "H5Sselect_hyperslab");
+
+    /* Change dataspace extent to NULL extent */
+    ret = H5Sset_extent_none(space_id);
+    CHECK(ret, FAIL, "H5Sset_extent_none");
+
+    /* Copy the dataspace - should fail due to invalid dataspace extent */
+    H5E_BEGIN_TRY
+    {
+        space_copy_id = H5Scopy(space_id);
+    }
+    H5E_END_TRY
+    VERIFY(space_copy_id, H5I_INVALID_HID, "H5Scopy");
+
+    H5E_BEGIN_TRY
+    {
+        ret = H5Sclose(space_copy_id);
+    }
+    H5E_END_TRY
+    VERIFY(ret, FAIL, "H5Sclose");
+
+    ret = H5Sclose(space_id);
+    CHECK(ret, FAIL, "H5Sclose");
+} /* test_h5s_bug7() */
+
 /*-------------------------------------------------------------------------
  * Function:    test_versionbounds
  *
@@ -3577,6 +3708,9 @@ test_h5s(void H5_ATTR_UNUSED *params)
     test_h5s_bug1();         /* Test bug in offset initialization */
     test_h5s_bug2();         /* Test bug found in H5S__hyper_update_diminfo() */
     test_h5s_bug3();         /* Test bug found in H5S__combine_select() */
+    test_h5s_bug5();         /* Test bug found in H5S__get_select_hyper_blocklist() */
+    test_h5s_bug6();         /* Test bug found in H5S__hyper_make_spans() */
+    test_h5s_bug7();         /* Test bug found in H5S__hyper_new_span_info() */
     test_versionbounds();    /* Test version bounds with dataspace */
 } /* test_h5s() */
 

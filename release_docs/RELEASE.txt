@@ -47,6 +47,8 @@ New Features
 
     Configuration:
     -------------
+    - Removed support for autotools build system.
+
     - The documentation in the source folder, doc, has been converted to doxygen files.
 
     - Added configuration option for API concurrency support:
@@ -514,6 +516,29 @@ Bug Fixes since HDF5-2.0.0 release
 ===================================
     Library
     -------
+    - Fixed an assertion failure in H5S__hyper_make_spans()
+
+      Calling H5Sselect_hyperslab() on dataspaces with invalid extents could
+      result in an assertion failure in debug builds of the library if the
+      dataspace has an extent with a rank value of 0. This has been fixed by
+      converting the assertion failure into a normal error check.
+
+    - Fixed an assertion failure in H5S__hyper_new_span_info()
+
+      Calling H5Scopy() on hyperslab selection dataspaces with invalid extents
+      could result in an assertion failure in debug builds of the library if
+      the dataspace has an extent with a rank value of 0. This has been fixed
+      by converting the assertion failure into a normal error check.
+
+    - Fixed a segfault in H5S__get_select_hyper_blocklist()
+
+      When attempting to retrieve the list of hyperslab blocks selected
+      within a dataspace, a segfault or bus error could occur when the
+      dataspace has an extent with a rank value of 0. This would cause
+      indexing into an array variable on the stack using a negative
+      value. An error check was added to return failure from the function
+      for such dataspaces.
+
     - Fixed an error in H5Ddebug
 
       H5Ddebug would fail for any chunked dataset with a chunk index, due to its
@@ -670,6 +695,19 @@ Bug Fixes since HDF5-2.0.0 release
 
     Testing
     -------
+    - Fixed an allocation in the t_bigio parallel test on 32-bit systems
+
+      A test in t_bigio.c attempts to allocate more than 4 GiB of memory,
+      which will overflow (and wrap) the size_t type on 32-bit systems,
+      creating a very small allocation instead of a very large allocation.
+      The test then segfaults when it accesses memory outside of  the small
+      buffer.
+
+      The test has been fixed by limiting the buffer to 2 GiB on 32-bit
+      systems.
+
+      Fixes GitHub #2510
+
     - Added skipping of a few parallel tests for OpenMPI 5.0.5
 
       An issue in OpenMPI 5.0.5 causes a few parallel HDF5 tests
