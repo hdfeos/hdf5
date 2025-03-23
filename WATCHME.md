@@ -49,7 +49,7 @@
 | Test    | Status |
 | --------| ------ |
 | Windows | [![win ninja icx](https://github.com/hdfeos/hdf5/actions/workflows/win-ninja-icx.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/win-ninja-icx.yml)  [![win ninja icx ifx p sf](https://github.com/hdfeos/hdf5/actions/workflows/win-ninja-icx-f-p-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/win-ninja-icx-f-p-sf.yml) |
-| MSYS2 | [![msys2](https://github.com/hdfeos/hdf5/actions/workflows/msys2.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/msys2.yml) [![msys2 auto](https://github.com/hdfeos/hdf5/actions/workflows/msys2-auto.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/msys2-auto.yml) |
+| MSYS2 | [![msys2](https://github.com/hdfeos/hdf5/actions/workflows/msys2.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/msys2.yml) |
 | Cygwin | [![cyg](https://github.com/hdfeos/hdf5/actions/workflows/cyg-ninja.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/cyg-ninja.yml)  [![cyg auto](https://github.com/hdfeos/hdf5/actions/workflows/cyg-auto.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/cyg-auto.yml) |
 
 
