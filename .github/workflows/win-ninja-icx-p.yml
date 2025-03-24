@@ -13,18 +13,18 @@ jobs:
       - name: Install LLVM and Clang
         uses: KyleMayes/install-llvm-action@v2
         with:
-          version: "17"
+          version: "19"
       - name: Install Intel OneAPI
         uses: awvwgk/setup-fortran@main
         with:
           compiler: intel
-          version: '2024.0'
+          version: '2025.0'
       - name: Install Intel MPI
         uses: mpi4py/setup-mpi@v1
         with:
           mpi: intelmpi
       - name: Checkout HDF5
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
       - name: Set oneAPI
         shell: cmd
         run: |

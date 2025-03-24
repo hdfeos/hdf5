@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Build on ubuntu-latest aarch64
     steps:
-      - uses: actions/checkout@v4.1.1
-      - uses: uraimo/run-on-arch-action@v2
+      - uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v3
         name: Run commands
         id: runcmd
         with:

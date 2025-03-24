@@ -9,10 +9,10 @@ jobs:
 
     steps:
       - name: Get Sources
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4
 
       - name: Run
-        uses: uraimo/run-on-arch-action@v2
+        uses: uraimo/run-on-arch-action@v3
         id: runcmd
         with:
           arch: s390x
