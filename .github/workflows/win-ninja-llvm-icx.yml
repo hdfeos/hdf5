@@ -1,4 +1,4 @@
-name: win ninja icx
+name: win ninja llvm icx
 
 on:
   push:
@@ -10,7 +10,11 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: ninja
-        uses: lukka/get-cmake@latest
+        uses: lukka/get-cmake@latest    
+      - name: llvm
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "18"
       - name: icx
         uses: awvwgk/setup-fortran@main
         with:
