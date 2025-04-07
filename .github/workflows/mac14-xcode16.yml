@@ -3,7 +3,7 @@ name: mac14 xcode16 d -sz s3
 on:
   workflow_dispatch:
   push:
-    branches: develop
+    branches: develop-
 
 jobs:
   build:

@@ -3,7 +3,7 @@ name: lin clang s_l
 on:
   workflow_dispatch:
   push:
-    branches: [ develop ]
+    branches: develop-
 jobs:
   build:
     runs-on: ubuntu-latest

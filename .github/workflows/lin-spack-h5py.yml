@@ -2,7 +2,7 @@ name: lin spack h5py
 
 on:
   push:
-    branches: [ develop ]
+    branches: develop-
     paths-ignore:
     - 'doc/**'
     - 'release_docs/**'

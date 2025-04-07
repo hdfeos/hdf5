@@ -3,7 +3,7 @@ name: lin nvhpc d
 on:
   workflow_dispatch:
   push:
-    branches: [ develop ]
+    branches: develop-
     paths-ignore:
       - '.github/CODEOWNERS'
       - '.github/FUNDING.yml'

@@ -2,7 +2,7 @@ name: mac spack h5py
 
 on:
   push:
-    branches: [ develop ]
+    branches: develop-
   workflow_dispatch:
 
 jobs:
@@ -15,7 +15,7 @@ jobs:
       uses: awvwgk/setup-fortran@v1
 
     - name: Checkout Spack
-      uses: actions/checkout@v4.1.1
+      uses: actions/checkout@v4
       with:
         repository: spack/spack
         path: ./spack

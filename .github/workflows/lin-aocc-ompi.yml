@@ -2,8 +2,7 @@ name: lin aocc ompi
 
 on:
   push:
-    branches:
-      - develop
+    branches: develop-
 
 jobs:
   aocc_build_and_test:
