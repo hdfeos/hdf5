@@ -42,14 +42,14 @@ jobs:
           export LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/25.1/compilers/lib:/opt/nvidia/hpc_sdk/Linux_x86_64/25.1/cuda/12.6/lib64
           export PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/25.1/comm_libs/openmpi4/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/25.1/compilers/bin:$PATH
           mkdir build
-          cd build          
+          cd build
           cmake -B build -G Ninja \
             -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
             -DHDF5_ENABLE_PARALLEL:BOOL=ON \
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
             -DCTEST_DROP_SITE_INIT=my.cdash.org \
-	    -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" \
-	    -DSITE="ubu-24" \
-	    -DBUILDNAME="ninja/nvhpc/f/p" ..
+            -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" \
+            -DSITE="ubu-24" \
+            -DBUILDNAME="ninja/nvhpc/f/p" ..
           ctest -D Experimental
-          ctest --test-dir build --output-on-failure
+
