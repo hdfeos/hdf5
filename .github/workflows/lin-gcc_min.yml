@@ -1,6 +1,9 @@
 name: lin gcc_min
 
-on: [push]
+on:
+  workflow_dispatch:
+  push:
+    branches: develop-  
 
 jobs:
   gcc_min:

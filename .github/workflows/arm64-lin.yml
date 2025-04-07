@@ -1,40 +1,38 @@
 name: arm64 lin
 
-on: [push, pull_request]
+on:
+  workflow_dispatch:
+  push:
+    branches: develop
 
 jobs:
-  aarch64_job:
-    # The host should always be Linux
-    runs-on: ubuntu-latest
-    name: Build on ubuntu-latest aarch64
+  arm64:
+    runs-on: ubuntu-24.04-arm
+    name: arm64 lin
     steps:
       - uses: actions/checkout@v4
-      - uses: uraimo/run-on-arch-action@v3
-        name: Run commands
-        id: runcmd
-        with:
-          arch: aarch64
-          distro: ubuntu_latest
-
-          # Not required, but speeds up builds by storing container images in
-          # a GitHub package registry.
-          githubToken: ${{ github.token }}
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y git
-            apt-get install -q -y cmake
-          run: |
-            echo ::set-output name=uname::$(uname -a)
+      - name: install
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bison
+          sudo apt-get install -y build-essential
+          sudo apt-get install -y curl
+          sudo apt-get install -y flex
+          sudo apt-get install -y git
+          sudo apt-get install -y make
+          sudo apt-get install -y pbzip2
+          sudo apt-get install -y texinfo
+          sudo apt-get install -y uuid-runtime
+          sudo apt-get install -y zip
+      - name: test
+        run: |
             mkdir build
             cd build
             cmake \
             -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
             -DH5EX_BUILD_EXAMPLES:BOOL=OFF \
+            -DBUILDNAME:STRING="-ex" \
+            -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
+            -DSITE:STRING="ubu-24.arm64" \
             ..
-            make
-            make test
-
-      - name: Get the output
-        # Echo the `uname` output parameter from the `runcmd` step
-        run: |
-          echo "The uname output was ${{ steps.runcmd.outputs.uname }}"
+            ctest -D Experimental

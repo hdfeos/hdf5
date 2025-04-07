@@ -1,6 +1,9 @@
 name: riscv64 lin -sh
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - develop-
 
 jobs:
   riscv64_job:
