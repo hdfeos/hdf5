@@ -50,7 +50,6 @@ jobs:
           - name: "Windows MSVC"
             os: [windows-2019, windows-2022, windows-2025]
             ostype: windows
-            os: windows-latest
             cpp: ON
             fortran: OFF
             java: ON
