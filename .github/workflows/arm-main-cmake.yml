@@ -58,7 +58,7 @@ jobs:
             localaec: OFF
             zlibfc: ON
             localzlib: OFF
-            parallel: ON
+            parallel: OFF
             mirror_vfd: OFF
             direct_vfd: OFF
             ros3_vfd: OFF
