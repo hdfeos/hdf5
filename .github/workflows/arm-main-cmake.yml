@@ -48,9 +48,8 @@ jobs:
           #
           # No Fortran, parallel, or VFDs that rely on POSIX things
           - name: "Windows MSVC"
-            os: [windows-2019, windows-2022, windows-2025]
             ostype: windows
-            os: windows-latest
+            os: windows-11-arm
             cpp: ON
             fortran: OFF
             java: ON
@@ -59,7 +58,7 @@ jobs:
             localaec: OFF
             zlibfc: ON
             localzlib: OFF
-            parallel: OFF
+            parallel: ON
             mirror_vfd: OFF
             direct_vfd: OFF
             ros3_vfd: OFF
@@ -70,7 +69,7 @@ jobs:
           #
           - name: "Ubuntu gcc"
             ostype: ubuntu
-            os: [ubuntu-22.04, ubuntu-24.04]
+            os: [ubuntu-22.04-arm, ubuntu-24.04-arm]
             cpp: ON
             fortran: ON
             java: ON
@@ -79,7 +78,7 @@ jobs:
             localaec: OFF
             zlibfc: ON
             localzlib: OFF
-            parallel: OFF
+            parallel: ON
             mirror_vfd: ON
             direct_vfd: ON
             ros3_vfd: ON
@@ -90,7 +89,7 @@ jobs:
           #
           - name: "MacOS Clang"
             ostype: macos
-            os: [macos-13, macos-14, macos-15]
+            os: macos-15
             cpp: ON
             fortran: OFF
             java: ON
@@ -99,7 +98,7 @@ jobs:
             localaec: OFF
             zlibfc: ON
             localzlib: OFF
-            parallel: OFF
+            parallel: ON
             mirror_vfd: ON
             direct_vfd: OFF
             ros3_vfd: ON
@@ -268,7 +267,7 @@ jobs:
       - name: Save published binary (Windows)
         uses: actions/upload-artifact@v4
         with:
-              name: zip-vs2022_cl-${{ inputs.build_mode }}-binary
+              name: zip-vs2022_cl-${{ inputs.build_mode }}-arm-binary
               path: ${{ runner.workspace }}/build/HDF5-*-win64.zip
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
         if:  ${{ (matrix.ostype == 'windows') && (inputs.thread_safety != 'TS') && (inputs.concurrent != 'CC') && ( inputs.build_mode != 'Debug') }}
@@ -276,7 +275,7 @@ jobs:
       - name: Save published binary (linux)
         uses: actions/upload-artifact@v4
         with:
-              name: tgz-ubuntu-2404_gcc-${{ inputs.build_mode }}-binary
+              name: tgz-ubuntu-2404_gcc-${{ inputs.build_mode }}-arm-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Linux.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
         if:  ${{ (matrix.ostype == 'ubuntu') && (inputs.thread_safety != 'TS') && (inputs.concurrent != 'CC') && ( inputs.build_mode != 'Debug') }}
@@ -284,7 +283,7 @@ jobs:
       - name: Save published binary (Mac_latest)
         uses: actions/upload-artifact@v4
         with:
-              name: tgz-macos14_clang-${{ inputs.build_mode }}-binary
+              name: tgz-macos14_clang-${{ inputs.build_mode }}-arm-binary
               path: ${{ runner.workspace }}/build/HDF5-*-Darwin.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
         if: ${{ (matrix.ostype == 'macos') && (inputs.thread_safety != 'TS') && (inputs.concurrent != 'CC') && ( inputs.build_mode != 'Debug') }}
