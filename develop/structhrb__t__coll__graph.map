@@ -1,0 +1,8 @@
+<map id="hrb_t" name="hrb_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="56,93,111,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,65,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="36,44,42,68,52,81,64,91,61,95,48,85,37,70,31,45"/>
+<area shape="rect" id="Node000003" href="$structhrb__node__t.html" title=" " alt="" coords="89,5,184,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="124,44,93,94,88,91,120,41"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="199,9,211,18,202,26,185,29,184,23,200,21,205,18,196,14"/>
+</map>

@@ -1,0 +1,17 @@
+<map id="H5VL_native_dataset_optional_args_t" name="H5VL_native_dataset_optional_args_t">
+<area shape="rect" id="Node000001" title=" " alt="" coords="429,197,589,237"/>
+<area shape="rect" id="Node000002" href="$struct_h5_v_l__native__dataset__get__chunk__storage__size__t.html" title=" " alt="" coords="10,5,207,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="221,28,267,34,315,46,363,62,407,84,438,109,464,139,500,195,496,198,460,143,434,113,404,89,360,67,314,51,266,40,220,33"/>
+<area shape="rect" id="Node000003" href="$struct_h5_v_l__native__dataset__get__num__chunks__t.html" title=" " alt="" coords="29,69,189,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="203,98,302,117,355,131,406,150,448,171,483,195,481,199,445,176,404,154,354,136,301,122,202,103"/>
+<area shape="rect" id="Node000004" href="$struct_h5_v_l__native__dataset__get__chunk__info__by__idx__t.html" title=" " alt="" coords="13,133,204,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="218,166,406,195,430,199,429,204,405,200,217,171"/>
+<area shape="rect" id="Node000005" href="$struct_h5_v_l__native__dataset__get__chunk__info__by__coord__t.html" title=" " alt="" coords="5,197,212,237"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="226,215,429,215,429,220,226,220"/>
+<area shape="rect" id="Node000006" href="$struct_h5_v_l__native__dataset__chunk__read__t.html" title=" " alt="" coords="29,261,189,301"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="202,266,405,235,429,230,430,236,406,240,203,271"/>
+<area shape="rect" id="Node000007" href="$struct_h5_v_l__native__dataset__chunk__write__t.html" title=" " alt="" coords="29,325,189,365"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="202,332,301,314,354,300,404,282,446,260,481,235,484,240,449,264,406,286,355,305,302,319,203,338"/>
+<area shape="rect" id="Node000008" href="$struct_h5_v_l__native__dataset__get__vlen__buf__size__t.html" title=" " alt="" coords="29,389,189,429"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="202,404,251,398,303,388,356,371,404,347,435,322,461,293,496,236,500,239,465,296,438,326,407,352,358,376,305,393,252,404,203,410"/>
+</map>
