@@ -2,7 +2,7 @@ name: nbsd f sh
 
 on:
   push:
-    branches: [develop-]
+    branches: [develop]
 
 jobs:
   test:

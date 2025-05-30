@@ -3,7 +3,7 @@ name: lin nvhpc f p
 on:
   workflow_dispatch:
   push:
-    branches: develop-  
+    branches: develop  
 
 jobs:
   build:

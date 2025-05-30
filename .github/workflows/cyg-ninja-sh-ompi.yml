@@ -2,7 +2,7 @@ name: cyg ninja sh ompi
 
 on:
   push:
-    branches: [develop-]
+    branches: [develop]
 
 jobs:
   test:

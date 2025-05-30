@@ -3,7 +3,7 @@ name: lin jl
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 jobs:
   julia:

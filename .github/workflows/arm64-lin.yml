@@ -3,7 +3,7 @@ name: arm64 lin
 on:
   workflow_dispatch:
   push:
-    branches: develop-
+    branches: develop
 
 jobs:
   arm64:

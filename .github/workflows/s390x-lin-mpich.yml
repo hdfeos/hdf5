@@ -3,7 +3,7 @@ name: s390x lin mpich
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 jobs:
   s390x_job:

@@ -3,7 +3,7 @@ name: mac ninja clang j ompi ts
 on:
   push:
     branches:
-      - develop-
+      - develop
     
 jobs:
   build:

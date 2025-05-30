@@ -3,7 +3,7 @@ name: lin nvhpc -wa -we
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 jobs:
   build:

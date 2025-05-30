@@ -3,7 +3,7 @@ name: s390x lin
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 jobs:
   s390x_job:

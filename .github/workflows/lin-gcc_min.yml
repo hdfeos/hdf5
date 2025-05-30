@@ -3,7 +3,7 @@ name: lin gcc_min
 on:
   workflow_dispatch:
   push:
-    branches: develop-  
+    branches: develop  
 
 jobs:
   gcc_min:

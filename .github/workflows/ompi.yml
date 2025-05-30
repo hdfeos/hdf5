@@ -3,7 +3,7 @@ name: ompi
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 jobs:
   test:

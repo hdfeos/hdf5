@@ -3,7 +3,7 @@ name: mac13 ninja clang15 d h f mpich sf
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 jobs:
   build:

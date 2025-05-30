@@ -2,7 +2,7 @@ name: mac13 xcode clang15 d f mpich s3 sf
 
 on:
   push:
-    branches: [ develop- ]
+    branches: [ develop ]
 
 
 jobs:

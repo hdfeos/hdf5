@@ -3,7 +3,7 @@ name: fbsd lf j
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 
 jobs:

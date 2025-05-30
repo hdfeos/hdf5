@@ -3,7 +3,7 @@ name: mac14 ninja h j ompi cd
 on:
   workflow_dispatch:
   push:
-    branches: develop-  
+    branches: develop  
 
 jobs:
   build:

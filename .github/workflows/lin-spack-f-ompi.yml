@@ -3,7 +3,7 @@ name: lin spack ompi f
 on:
   workflow_dispatch:
   push:
-    branches: develop-  
+    branches: develop  
 
 jobs:
   build:

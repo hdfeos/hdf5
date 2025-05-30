@@ -3,7 +3,7 @@ name: armv7 lin
 on:
   push:
     branches:
-      - develop-
+      - develop
 
 jobs:
   armv7:

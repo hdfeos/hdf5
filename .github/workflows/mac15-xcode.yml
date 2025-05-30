@@ -3,7 +3,7 @@ name: mac15 Xcode
 on:
   workflow_dispatch:
   push:
-    branches: develop-
+    branches: develop
     
 jobs:
   build:
