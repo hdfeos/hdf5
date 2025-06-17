@@ -19,7 +19,19 @@
   # --------------------------------------------------------------------
   # Copy all the HDF5 files from the source directory into the test directory
   # --------------------------------------------------------------------
-  set (LIST_REPACK_TEST_FILES
+  set(LIST_REPACK_TEST_FILES
+    h5repack_f32le_ex-0.dat
+    h5repack_int32le_1d_ex-0.dat
+    h5repack_int32le_1d_ex-1.dat
+    h5repack_int32le_2d_ex-0.dat
+    h5repack_int32le_3d_ex-0.dat
+    h5repack_uint8be_ex-0.dat
+    h5repack_uint8be_ex-1.dat
+    h5repack_uint8be_ex-2.dat
+    h5repack_uint8be_ex-3.dat
+  )
+  
+  set (LIST_REPACK_HDF5_TEST_FILES
       bounds_latest_latest.h5
       h5repack_attr.h5
       h5repack_attr_refs.h5
@@ -27,21 +39,16 @@
       h5repack_early.h5
       h5repack_ext.h5
       h5repack_f32le.h5
-      h5repack_f32le_ex-0.dat
       h5repack_f32le_ex.h5
       h5repack_fill.h5
       h5repack_filters.h5
       h5repack_fletcher.h5
       h5repack_hlink.h5
       h5repack_int32le_1d.h5
-      h5repack_int32le_1d_ex-0.dat
-      h5repack_int32le_1d_ex-1.dat
       h5repack_int32le_1d_ex.h5
       h5repack_int32le_2d.h5
-      h5repack_int32le_2d_ex-0.dat
       h5repack_int32le_2d_ex.h5
       h5repack_int32le_3d.h5
-      h5repack_int32le_3d_ex-0.dat
       h5repack_int32le_3d_ex.h5
       h5repack_layout.h5
       h5repack_layouto.h5
@@ -60,10 +67,6 @@
       h5repack_soffset.h5
       h5repack_szip.h5
       h5repack_uint8be.h5
-      h5repack_uint8be_ex-0.dat
-      h5repack_uint8be_ex-1.dat
-      h5repack_uint8be_ex-2.dat
-      h5repack_uint8be_ex-3.dat
       h5repack_uint8be_ex.h5
       # fsm
       h5repack_aggr.h5
@@ -207,24 +210,28 @@
       h5copy_extlinks_src-mergeprune.h5copy_extlinks_src.h5.ddl
   )
 
-  foreach (h5_file ${LIST_REPACK_TEST_FILES})
+  foreach (h5_file ${LIST_REPACK_HDF5_TEST_FILES})
+    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
+  endforeach ()
+
+  foreach(h5_file ${LIST_REPACK_TEST_FILES})
     HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
   endforeach ()
 
   foreach (h5_file ${LIST_COPY_TEST_FILES})
-    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/h5copy/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
+    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
   endforeach ()
 
   foreach (h5_file ${LIST_DIFF_TEST_FILES})
-    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/h5diff/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
+    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
   endforeach ()
 
   foreach (h5_file ${LIST_VDS_TEST_FILES})
-    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/h5dump/testfiles/vds/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
+    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/testfiles/vds/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
   endforeach ()
 
   foreach (h5_file ${LIST_HDF5_TEST_FILES})
-    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/h5dump/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
+    HDFTEST_COPY_FILE("${HDF5_TOOLS_TST_DIR}/testfiles/${h5_file}" "${PROJECT_BINARY_DIR}/testfiles/${h5_file}" "h5repack_files")
   endforeach ()
 
   foreach (h5_file ${LIST_OTHER_TEST_FILES})
@@ -393,9 +400,8 @@
                 -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/testfiles"
                 -D "TEST_OUTPUT=${resultfile}-${testname}.out"
                 -D "TEST_EXPECT=${resultcode}"
-                -D "TEST_MASK:STRING=O?...ing file[^\n]+\n"
-                -D "TEST_FILTER:STRING=GZIP   \\(0\\.[0-9][0-9][0-9]:1\\)"
-                -D "TEST_FILTER_REPLACE:STRING=GZIP   (0.XXX:1)"
+                -D "TEST_FILTER:STRING=GZIP   \\(0\\.[0-9][0-9][0-9]:1\\);O?...ing file[^\n]+\n"
+                -D "TEST_FILTER_REPLACE:STRING=GZIP   (0.XXX:1);"
                 -D "TEST_REFERENCE=${resultfile}-${testname}.tst"
                 -P "${HDF_RESOURCES_DIR}/runTest.cmake"
         )
@@ -1137,7 +1143,7 @@
               -D "TEST_ARGS:STRING=${ARGN};${resultfile};out-${testname}.${resultfile}"
               -D "TEST_FOLDER=${PROJECT_BINARY_DIR}/testfiles"
               -D "TEST_EXPECT=${resultcode}"
-              -D "TEST_MASK:STRING=O?...ing file[^\n]+\n"
+              -D "TEST_FILTER:STRING=O?...ing file[^\n]+\n"
               -D "TEST_OUTPUT=${testname}.${resultfile}.out"
               -D "TEST_REFERENCE=${testname}.${resultfile}.tst"
               -D "TEST_ENV_VAR=HDF5_PLUGIN_PATH"

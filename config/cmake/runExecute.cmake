@@ -11,6 +11,41 @@
 #
 # runExecute.cmake executes a command included by runTest.cmake.
 
+# Apply replacement filters to provided stream
+macro(FILTER_STREAM stream filters filters_replace)
+    # avoid modifying external variables
+    set(filters_int "${filters}")
+    set(filters_replace_int "${filters_replace}")
+
+    # perform the replacement
+    list(LENGTH filters_int num_filters)
+    # use loop index in order to detect potential empty strings in list
+    math(EXPR filter_max_Idx "${num_filters}-1")
+
+    foreach(i RANGE 0 ${filter_max_Idx})
+        list(GET filters_int ${i} filter_i)
+        if (NOT DEFINED filters_replace_int OR "${filters_replace_int}" STREQUAL "")
+            set(filter_replace_i "")
+        else()
+            list(GET filters_replace_int ${i} filter_replace_i)
+        endif()
+
+        string (REGEX REPLACE "${filter_i}" "${filter_replace_i}" ${stream} "${${stream}}")
+    endforeach()
+endmacro()
+
+# Replacement for file(STRINGS) operation for streams
+macro (STREAM_STRINGS stream strings_out)
+  set(${strings_out} ${${stream}})
+  # Escaping must be performed twice due to POP_BACK
+  string(REPLACE ";" "\;" ${strings_out} "${${strings_out}}")
+  string(REPLACE ";" "\;" ${strings_out} "${${strings_out}}")
+  # break the string into lines at newlines
+  string(REPLACE "\n" ";" ${strings_out} "${${strings_out}}")
+  # Remove last entry
+  list(POP_BACK ${strings_out})
+endmacro()
+
 macro (EXECUTE_TEST)
   cmake_parse_arguments (TEST "" "NOERRDISPLAY;EXPECT;JAVA;CLASSPATH;PROGRAM;FOLDER;OUTPUT;LIBRARY_DIRECTORY;INPUT;ENV_VAR;ENV_VALUE;EMULATOR;ARGS" "TEST_" ${ARGN})
 if (NOT TEST_PROGRAM)
@@ -100,16 +135,44 @@ message (STATUS "COMMAND Result: ${TEST_RESULT}")
 message (STATUS "COMMAND Output: ${TEST_OUT}")
 message (STATUS "COMMAND Error: ${TEST_ERROR}")
 
+# Set up filtered output/ref streams, initially equal to files
+set (TEST_OUTPUT_FILTERED_STREAM "")
+set (TEST_REFERENCE_FILTERED_STREAM "")
+set (TEST_ERR_FILTERED_STREAM "")
+set (TEST_ERRREF_FILTERED_STREAM "")
+
+if (DEFINED TEST_OUTPUT AND NOT "${TEST_OUTPUT}" STREQUAL "")
+  if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
+    file (READ "${TEST_FOLDER}/${TEST_OUTPUT}" TEST_OUTPUT_FILTERED_STREAM)
+  endif ()
+endif ()
+
+if (DEFINED TEST_REFERENCE AND NOT "${TEST_REFERENCE}" STREQUAL "")
+  if (EXISTS "${TEST_FOLDER}/${TEST_REFERENCE}")
+    file (READ "${TEST_FOLDER}/${TEST_REFERENCE}" TEST_REFERENCE_FILTERED_STREAM)
+  endif ()
+endif ()
+
+if (DEFINED TEST_OUTPUT AND NOT "${TEST_OUTPUT}" STREQUAL "")
+  if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}.err")
+    file (READ "${TEST_FOLDER}/${TEST_OUTPUT}.err" TEST_ERR_FILTERED_STREAM)
+  endif ()
+endif ()
+
+if (DEFINED TEST_ERRREF AND NOT "${TEST_ERRREF}" STREQUAL "")
+  if (EXISTS "${TEST_FOLDER}/${TEST_ERRREF}")
+    file (READ "${TEST_FOLDER}/${TEST_ERRREF}" TEST_ERRREF_FILTERED_STREAM)
+  endif ()
+endif ()
+
 # if the return value is !=${TEST_EXPECT} bail out
 if (NOT TEST_RESULT EQUAL TEST_EXPECT)
   if (NOT TEST_NOERRDISPLAY)
-    if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-      file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
-      message (STATUS "Output :\n${TEST_STREAM}")
+    if (NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
+      message (STATUS "Output :\n${TEST_OUTPUT_FILTERED_STREAM}")
     endif ()
-    if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}.err")
-      file (READ ${TEST_FOLDER}/${TEST_OUTPUT}.err TEST_STREAM)
-      message (STATUS "Error Output :\n${TEST_STREAM}")
+    if (NOT "${TEST_ERR_FILTERED_STREAM}" STREQUAL "")
+      message (STATUS "Error Output :\n${TEST_ERR_FILTERED_STREAM}")
     endif ()
   endif ()
   message (FATAL_ERROR "Failed: Test program ${TEST_PROGRAM} exited != ${TEST_EXPECT}.\n${TEST_ERROR}")
@@ -123,9 +186,8 @@ macro (FILTER_TEST)
 cmake_parse_arguments (TEST "" "MASK_ERROR;MASK_STORE;ERRREF;FOLDER;OUTPUT;REFERENCE;REGEX;MATCH;MASK;FILTER;REF_FILTER;FILTER_REPLACE;MASK_MOD;ARGS" "TEST_" ${ARGN})
 if (TEST_REGEX)
   # TEST_REGEX and TEST_MATCH should always be checked
-  if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-    file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
-    string (REGEX MATCH "${TEST_REGEX}" REGEX_MATCH ${TEST_STREAM})
+  if (NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
+    string (REGEX MATCH "${TEST_REGEX}" REGEX_MATCH ${TEST_OUTPUT_FILTERED_STREAM})
     string (COMPARE EQUAL "${REGEX_MATCH}" "${TEST_MATCH}" REGEX_RESULT)
     if (NOT REGEX_RESULT)
       message (FATAL_ERROR "Failed: The output did not contain ${TEST_MATCH}")
@@ -136,106 +198,115 @@ if (TEST_REGEX)
 endif ()
 
 # if the .err file exists
-if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}.err")
-  file (READ ${TEST_FOLDER}/${TEST_OUTPUT}.err TEST_STREAM)
-  list (LENGTH TEST_STREAM test_len)
-  if (test_len GREATER 0)
+if (NOT "${TEST_ERR_FILTERED_STREAM}" STREQUAL "")
+  list (LENGTH TEST_ERR_FILTERED_STREAM err_len)
+  if (err_len GREATER 0)
     # remove special output
-    string (REGEX REPLACE "^.*_pmi_alps[^\n]+\n" "" TEST_STREAM "${TEST_STREAM}")
-    string (FIND "${TEST_STREAM}" "no version information available" TEST_FIND_RESULT)
-    if (TEST_FIND_RESULT GREATER -1)
-      string (REGEX REPLACE "^.*no version information available[^\n]+\n" "" TEST_STREAM "${TEST_STREAM}")
-      # write back the changes to the original files
-      file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT}.err "${TEST_STREAM}")
+    FILTER_STREAM(TEST_ERR_FILTERED_STREAM "^.*_pmi_alps[^\n]+\n" "")
+    FILTER_STREAM(TEST_ERR_FILTERED_STREAM "^.*no version information available[^\n]+\n" "")
+    # apply same filtering to the reference file if it exists
+    if (NOT "${TEST_ERRREF_FILTERED_STREAM}" STREQUAL "")
+      FILTER_STREAM(TEST_ERRREF_FILTERED_STREAM "^.*_pmi_alps[^\n]+\n" "")
+      FILTER_STREAM(TEST_ERRREF_FILTERED_STREAM "^.*no version information available[^\n]+\n" "")
     endif ()
-
-      # write back to original .err file
-      file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT}.err ${TEST_STREAM})
   endif ()
 endif ()
 
 # remove special regex text from the output
-if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-  file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
-  string (FIND "${TEST_STREAM}" "_pmi_alps" TEST_FIND_RESULT)
-  if (TEST_FIND_RESULT GREATER -1)
-    string (REGEX REPLACE "^.*_pmi_alps[^\n]+\n" "" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} ${TEST_STREAM})
-  endif ()
-  string (FIND "${TEST_STREAM}" "ulimit -s" TEST_FIND_RESULT)
-  if (TEST_FIND_RESULT GREATER -1)
-    string (REGEX REPLACE "^.*ulimit -s[^\n]+\n" "" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} ${TEST_STREAM})
-  endif ()
-  string (FIND "${TEST_STREAM}" "no version information available" TEST_FIND_RESULT)
-  if (TEST_FIND_RESULT GREATER -1)
-    string (REGEX REPLACE "^.*no version information available[^\n]+\n" "" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} "${TEST_STREAM}")
-  endif ()
-  # if the output file needs Storage text masked out
-  if (TEST_MASK_STORE)
-    string (REGEX REPLACE "Storage:[^\n]+\n" "Storage:   <details removed for portability>\n" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} "${TEST_STREAM}")
-  endif ()
-  # if the output file needs Modified text removed
-  if (TEST_MASK_MOD)
-    string (REGEX REPLACE "Modified:[^\n]+\n" "Modified:  XXXX-XX-XX XX:XX:XX XXX\n" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} "${TEST_STREAM}")
-  endif ()
+if (NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
+  FILTER_STREAM(TEST_OUTPUT_FILTERED_STREAM "^.*_pmi_alps[^\n]+\n" "")
+  FILTER_STREAM(TEST_OUTPUT_FILTERED_STREAM "^.*ulimit -s[^\n]+\n" "")
+  FILTER_STREAM(TEST_OUTPUT_FILTERED_STREAM "^.*no version information available[^\n]+\n" "")
+
+  # mask out storage/modified text since it is not guaranteed to be consistent
+  FILTER_STREAM(TEST_OUTPUT_FILTERED_STREAM "Storage:[^\n]+\n" "Storage:   <details removed for portability>\n")
+  FILTER_STREAM(TEST_OUTPUT_FILTERED_STREAM "Modified:[^\n]+\n" "Modified:  XXXX-XX-XX XX:XX:XX XXX\n")
 endif ()
+
+# remove special regex text from the output reference
+if (NOT "${TEST_REFERENCE_FILTERED_STREAM}" STREQUAL "")
+  FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "^.*_pmi_alps[^\n]+\n" "")
+  FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "^.*ulimit -s[^\n]+\n" "")
+  FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "^.*no version information available[^\n]+\n" "")
+
+  # mask out storage/modified text since it is not guaranteed to be consistent
+  FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "Storage:[^\n]+\n" "Storage:   <details removed for portability>\n")
+  FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "Modified:[^\n]+\n" "Modified:  XXXX-XX-XX XX:XX:XX XXX\n")
+endif ()
+
+set(TEST_MASKS_ERROR "")
+list (APPEND TEST_MASKS_ERROR "Time:[^\n]+\n")
+list (APPEND TEST_MASKS_ERROR "thread [0-9]*:")
+list (APPEND TEST_MASKS_ERROR ": ([^\n]*)[.]c ")
+list (APPEND TEST_MASKS_ERROR " line [0-9]*")
+list (APPEND TEST_MASKS_ERROR "v[1-9]*[.][0-9]*[.]")
+list (APPEND TEST_MASKS_ERROR "HDF5 [1-9]*[.][0-9]*[.][0-9]*[^)]*")
+list (APPEND TEST_MASKS_ERROR "H5Eget_auto[1-2]*")
+list (APPEND TEST_MASKS_ERROR "H5Eset_auto[1-2]*")
+
+set(TEST_MASKS_ERROR_REPLACE "")
+list (APPEND TEST_MASKS_ERROR_REPLACE "Time:  XXXX\n")
+list (APPEND TEST_MASKS_ERROR_REPLACE "thread (IDs):")
+list (APPEND TEST_MASKS_ERROR_REPLACE ": (file name) ")
+list (APPEND TEST_MASKS_ERROR_REPLACE " line (number)")
+list (APPEND TEST_MASKS_ERROR_REPLACE "version (number).")
+list (APPEND TEST_MASKS_ERROR_REPLACE "version (number)")
+list (APPEND TEST_MASKS_ERROR_REPLACE "H5Eget_auto(1 or 2)")
+list (APPEND TEST_MASKS_ERROR_REPLACE "H5Eset_auto(1 or 2)")
 
 # if the output file or the .err file needs to mask out error stack info
 if (TEST_MASK_ERROR)
   if (NOT TEST_ERRREF)
     # the error stack has been appended to the output file
-    if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-      file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
+    if (NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
+      FILTER_STREAM(TEST_OUTPUT_FILTERED_STREAM "${TEST_MASKS_ERROR}" "${TEST_MASKS_ERROR_REPLACE}")
     endif ()
   else ()
     # the error stack remains in the .err file
-    if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}.err")
-      file (READ ${TEST_FOLDER}/${TEST_OUTPUT}.err TEST_STREAM)
+    if (NOT "${TEST_ERR_FILTERED_STREAM}" STREQUAL "")
+      FILTER_STREAM(TEST_ERR_FILTERED_STREAM "${TEST_MASKS_ERROR}" "${TEST_MASKS_ERROR_REPLACE}")
     endif ()
-  endif ()
-  string (REGEX REPLACE "Time:[^\n]+\n" "Time:  XXXX\n" TEST_STREAM "${TEST_STREAM}")
-  string (REGEX REPLACE "thread [0-9]*:" "thread (IDs):" TEST_STREAM "${TEST_STREAM}")
-  string (REGEX REPLACE ": ([^\n]*)[.]c " ": (file name) " TEST_STREAM "${TEST_STREAM}")
-  string (REGEX REPLACE " line [0-9]*" " line (number)" TEST_STREAM "${TEST_STREAM}")
-  string (REGEX REPLACE "v[1-9]*[.][0-9]*[.]" "version (number)." TEST_STREAM "${TEST_STREAM}")
-  string (REGEX REPLACE "HDF5 [1-9]*[.][0-9]*[.][0-9]*[^)]*" "version (number)" TEST_STREAM "${TEST_STREAM}")
-  string (REGEX REPLACE "H5Eget_auto[1-2]*" "H5Eget_auto(1 or 2)" TEST_STREAM "${TEST_STREAM}")
-  string (REGEX REPLACE "H5Eset_auto[1-2]*" "H5Eset_auto(1 or 2)" TEST_STREAM "${TEST_STREAM}")
-  # write back the changes to the original files
-  if (NOT TEST_ERRREF)
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} ${TEST_STREAM})
-  else ()
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT}.err ${TEST_STREAM})
   endif ()
 endif ()
 
-# remove text from the output file
-if (TEST_MASK)
-  if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-    file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
-    string (REGEX REPLACE "${TEST_MASK}" "" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} "${TEST_STREAM}")
+# if the output reference file or the .err ref file needs to mask out error stack info
+if (TEST_MASK_ERROR)
+  if (NOT TEST_ERRREF)
+    # the error stack has been appended to the output file
+    if (NOT "${TEST_REFERENCE_FILTERED_STREAM}" STREQUAL "")
+      FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "${TEST_MASKS_ERROR}" "${TEST_MASKS_ERROR_REPLACE}")
+    endif ()
+  else ()
+    # the error stack remains in the .err file
+    if (NOT "${TEST_ERRREF_FILTERED_STREAM}" STREQUAL "")
+      FILTER_STREAM(TEST_ERRREF_FILTERED_STREAM "${TEST_MASKS_ERROR}" "${TEST_MASKS_ERROR_REPLACE}")
+    endif ()
   endif ()
 endif ()
 
 # replace text from the output file
 if (TEST_FILTER)
-  if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-    file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
-    string (REGEX REPLACE "${TEST_FILTER}" "${TEST_FILTER_REPLACE}" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_OUTPUT} "${TEST_STREAM}")
+  # re-escape any backslashes to deal with being passed to macro
+  string(REGEX REPLACE "([\\])" "\\\\\\1" TEST_FILTER "${TEST_FILTER}")
+  string(REGEX REPLACE "([\\])" "\\\\\\1" TEST_FILTER_REPLACE "${TEST_FILTER_REPLACE}")
+
+  if (NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
+    FILTER_STREAM(TEST_OUTPUT_FILTERED_STREAM "${TEST_FILTER}" "${TEST_FILTER_REPLACE}")
+  endif ()
+
+  # replace text from the output reference file
+  if (NOT "${TEST_REFERENCE_FILTERED_STREAM}" STREQUAL "")
+    FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "${TEST_FILTER}" "${TEST_FILTER_REPLACE}")
   endif ()
 endif ()
 
 if (TEST_REF_FILTER)
-  if (EXISTS "${TEST_FOLDER}/${TEST_REFERENCE}")
-    file (READ ${TEST_FOLDER}/${TEST_REFERENCE} TEST_STREAM)
-    string (REGEX REPLACE "${TEST_REF_APPEND}" "${TEST_REF_FILTER}" TEST_STREAM "${TEST_STREAM}")
-    file (WRITE ${TEST_FOLDER}/${TEST_REFERENCE} "${TEST_STREAM}")
+  if (NOT "${TEST_REFERENCE_FILTERED_STREAM}" STREQUAL "")
+    # re-escape any backslashes
+    string(REGEX REPLACE "([\\])" "\\\\\\1" TEST_REF_APPEND "${TEST_REF_APPEND}")
+    string(REGEX REPLACE "([\\])" "\\\\\\1" TEST_REF_FILTER "${TEST_REF_FILTER}")
+    # append text to the output reference file
+    FILTER_STREAM(TEST_REFERENCE_FILTERED_STREAM "${TEST_REF_APPEND}" "${TEST_REF_FILTER}")
   endif ()
 endif ()
 endmacro ()
@@ -248,21 +319,21 @@ cmake_parse_arguments (TEST "" "GREP_COMPARE;NO_DISPLAY;EXPECT;FOLDER;OUTPUT;REF
 # compare output files to references unless this must be skipped
 set (TEST_COMPARE_RESULT 0) # grep result variable; 0 is success
 if (NOT TEST_SKIP_COMPARE)
-  if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-    if (EXISTS "${TEST_FOLDER}/${TEST_REFERENCE}")
-      file (READ ${TEST_FOLDER}/${TEST_REFERENCE} TEST_STREAM)
-      list (LENGTH TEST_STREAM test_len)
+  if (NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
+    if (NOT "${TEST_REFERENCE_FILTERED_STREAM}" STREQUAL "")
+      list (LENGTH TEST_REFERENCE_FILTERED_STREAM ref_len)
       # verify there is text output in the reference file
-      if (test_len GREATER 0)
+      if (ref_len GREATER 0)
         if (NOT TEST_SORT_COMPARE)
           # now compare the output with the reference
-          execute_process (
-              COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol ${TEST_FOLDER}/${TEST_OUTPUT} ${TEST_FOLDER}/${TEST_REFERENCE}
-              RESULT_VARIABLE TEST_COMPARE_RESULT
-          )
+          if (TEST_OUTPUT_FILTERED_STREAM STREQUAL TEST_REFERENCE_FILTERED_STREAM)
+            set (TEST_COMPARE_RESULT 0)
+          else ()
+            set (TEST_COMPARE_RESULT 1)
+          endif ()
         else () # sort the output files first before comparing
-          file (STRINGS ${TEST_FOLDER}/${TEST_OUTPUT} v1)
-          file (STRINGS ${TEST_FOLDER}/${TEST_REFERENCE} v2)
+          STREAM_STRINGS(TEST_OUTPUT_FILTERED_STREAM v1)
+          STREAM_STRINGS(TEST_REFERENCE_FILTERED_STREAM v2)
           list (SORT v1)
           list (SORT v2)
           if (NOT v1 STREQUAL v2)
@@ -273,9 +344,9 @@ if (NOT TEST_SKIP_COMPARE)
         # only compare files if previous operations were successful
         if (TEST_COMPARE_RESULT)
           set (TEST_COMPARE_RESULT 0)
-          file (STRINGS ${TEST_FOLDER}/${TEST_OUTPUT} test_act)
+          STREAM_STRINGS(TEST_OUTPUT_FILTERED_STREAM test_act)
           list (LENGTH test_act len_act)
-          file (STRINGS ${TEST_FOLDER}/${TEST_REFERENCE} test_ref)
+          STREAM_STRINGS(TEST_REFERENCE_FILTERED_STREAM test_ref)
           list (LENGTH test_ref len_ref)
           if (NOT len_act EQUAL len_ref)
             set (TEST_COMPARE_RESULT 1)
@@ -288,11 +359,11 @@ if (NOT TEST_SKIP_COMPARE)
             math (EXPR _FP_LEN "${len_ref} - 1")
             foreach (line RANGE 0 ${_FP_LEN})
               if (line GREATER_EQUAL len_act)
-                message (STATUS "COMPARE FAILED: ran out of lines in ${TEST_FOLDER}/${TEST_OUTPUT}")
+                message (STATUS "COMPARE FAILED: ran out of lines in ${TEST_FOLDER}/${TEST_OUTPUT_FILTERED_STREAM}")
                 set (TEST_COMPARE_RESULT 1)
                 break ()
               elseif (line GREATER_EQUAL len_ref)
-                message (STATUS "COMPARE FAILED: ran out of lines in ${TEST_FOLDER}/${TEST_REFERENCE}")
+                message (STATUS "COMPARE FAILED: ran out of lines in ${TEST_FOLDER}/${TEST_REFERENCE_FILTERED_STREAM}")
                 set (TEST_COMPARE_RESULT 1)
                 break ()
               else ()
@@ -308,43 +379,44 @@ if (NOT TEST_SKIP_COMPARE)
             endforeach ()
           else () # len_act GREATER 0 AND len_ref GREATER 0
             if (len_act EQUAL 0)
-              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_OUTPUT} is empty")
+              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_OUTPUT_FILTERED_STREAM} is empty")
             endif ()
             if (len_ref EQUAL 0)
-              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_REFERENCE} is empty")
+              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_REFERENCE_FILTERED_STREAM} is empty")
             endif ()
           endif ()
         endif () # TEST_COMPARE_RESULT
-      endif () # test_len GREATER 0
-    endif () # EXISTS "${TEST_FOLDER}/${TEST_REFERENCE}
+      endif () # ref_len GREATER 0
+    endif () # EXISTS "${TEST_FOLDER}/${TEST_REFERENCE_FILTERED_STREAM}
 
     message (STATUS "COMPARE Result: ${TEST_COMPARE_RESULT}")
 
     # again, if return value is !=0 scream and shout
     if (TEST_COMPARE_RESULT)
-      message (FATAL_ERROR "Failed: The output of ${TEST_OUTPUT} did not match ${TEST_REFERENCE}")
+      message (FATAL_ERROR "Failed: The output of ${TEST_OUTPUT_FILTERED_STREAM} did not match ${TEST_REFERENCE_FILTERED_STREAM}")
     endif ()
   else ()
-    message (TRACE "Test output file ${TEST_FOLDER}/${TEST_OUTPUT} does not exist")
+    message (TRACE "Test output file ${TEST_FOLDER}/${TEST_OUTPUT_FILTERED_STREAM} does not exist")
   endif ()
 
   # now compare the .err file with the error reference, if supplied
-  if (EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}.err")
+  if ("${TEST_ERR_FILTERED_STREAM}" STREQUAL "")
     set (TEST_ERRREF_RESULT 0)
-    if (TEST_ERRREF AND EXISTS "${TEST_FOLDER}/${TEST_ERRREF}")
-      file (READ ${TEST_FOLDER}/${TEST_ERRREF} TEST_STREAM)
-      list (LENGTH TEST_STREAM test_len)
-      if (test_len GREATER 0)
+    if (TEST_ERRREF AND NOT "${TEST_ERRREF_FILTERED_STREAM}" STREQUAL "")
+      list (LENGTH TEST_ERRREF_FILTERED_STREAM errref_len)
+      if (errref_len GREATER 0)
         # now compare the error output with the error reference
-        execute_process (
-            COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol ${TEST_FOLDER}/${TEST_OUTPUT}.err ${TEST_FOLDER}/${TEST_ERRREF}
-            RESULT_VARIABLE TEST_ERRREF_RESULT
-        )
+        if (TEST_ERR_FILTERED_STREAM STREQUAL TEST_ERRREF_FILTERED_STREAM)
+          set(TEST_ERRREF_RESULT 0)
+        else ()
+          set (TEST_ERRREF_RESULT 1)
+        endif ()
+
         if (TEST_ERRREF_RESULT)
           set (TEST_ERRREF_RESULT 0)
-          file (STRINGS ${TEST_FOLDER}/${TEST_OUTPUT}.err test_act)
+          STREAM_STRINGS(TEST_ERR_FILTERED_STREAM test_act)
           list (LENGTH test_act len_act)
-          file (STRINGS ${TEST_FOLDER}/${TEST_ERRREF} test_ref)
+          STREAM_STRINGS(TEST_ERRREF_FILTERED_STREAM test_ref)
           list (LENGTH test_ref len_ref)
           math (EXPR _FP_LEN "${len_ref} - 1")
           if (len_act GREATER 0 AND len_ref GREATER 0)
@@ -361,38 +433,40 @@ if (NOT TEST_SKIP_COMPARE)
             endforeach ()
           else () # len_act GREATER 0 AND len_ref GREATER 0
             if (len_act EQUAL 0)
-              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_OUTPUT}.err is empty")
+              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_ERR_FILTERED_STREAM} is empty")
             endif ()
             if (len_ref EQUAL 0)
-              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_ERRREF} is empty")
+              message (STATUS "COMPARE Failed: ${TEST_FOLDER}/${TEST_ERRREF_FILTERED_STREAM} is empty")
             endif ()
           endif ()
           if (NOT len_act EQUAL len_ref)
             set (TEST_ERRREF_RESULT 1)
           endif ()
         endif () # TEST_ERRREF_RESULT
-      endif () # test_len GREATER 0
+      endif () # errref_len GREATER 0
 
       message (STATUS "COMPARE Result: ${TEST_ERRREF_RESULT}")
 
       # again, if return value is !=0 scream and shout
       if (TEST_ERRREF_RESULT)
-        message (FATAL_ERROR "Failed: The error output of ${TEST_OUTPUT}.err did not match ${TEST_ERRREF}")
+        message (FATAL_ERROR "Failed: The error output of ${TEST_FOLDER}/${TEST_ERR_FILTERED_STREAM} did not match ${TEST_FOLDER}/${TEST_ERRREF_FILTERED_STREAM}")
       endif ()
-    endif () # TEST_ERRREF AND EXISTS "${TEST_FOLDER}/${TEST_ERRREF}
+    endif () # TEST_ERRREF AND EXISTS "${TEST_FOLDER}/${TEST_ERRREF_FILTERED_STREAM}
   else ()
-    message (TRACE "Test output file ${TEST_FOLDER}/${TEST_OUTPUT}.err does not exist")
+    message (TRACE "Test output file ${TEST_FOLDER}/${TEST_ERR_FILTERED_STREAM} does not exist")
   endif ()
 endif () # TEST_SKIP_COMPARE
 
 set (TEST_GREP_RESULT 0)
-if (TEST_GREP_COMPARE AND TEST_SKIP_COMPARE AND EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
+if (TEST_GREP_COMPARE AND TEST_SKIP_COMPARE AND NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
   # now grep the output with the reference
-  file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
-  list (LENGTH TEST_STREAM test_len)
-  if (test_len GREATER 0)
+  # TBD: This section uses TEST_REFERENCE as a string to match, while other places
+  # use it as a reference filename. For consistency, this case should eventually
+  # be moved to a distinct argument.
+  list (LENGTH TEST_OUTPUT_FILTERED_STREAM output_len)
+  if (output_len GREATER 0)
     # TEST_REFERENCE should always be matched
-    string (REGEX MATCH "${TEST_REFERENCE}" REGEX_MATCH ${TEST_STREAM})
+    string (REGEX MATCH "${TEST_REFERENCE}" REGEX_MATCH ${TEST_OUTPUT_FILTERED_STREAM})
     string (COMPARE EQUAL "${TEST_REFERENCE}" "${REGEX_MATCH}" TEST_GREP_RESULT)
     if (NOT TEST_GREP_RESULT)
       message (FATAL_ERROR "Failed: The output did not contain ${TEST_REFERENCE}")
@@ -401,9 +475,8 @@ if (TEST_GREP_COMPARE AND TEST_SKIP_COMPARE AND EXISTS "${TEST_FOLDER}/${TEST_OU
 endif ()
 
 # Check that TEST_GREP_FILTER text is not in the output when TEST_EXPECT is set to 1
-if (TEST_GREP_FILTER AND EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-  file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
-  string (REGEX MATCH "${TEST_GREP_FILTER}" REGEX_MATCH ${TEST_STREAM})
+if (TEST_GREP_FILTER AND NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
+  string (REGEX MATCH "${TEST_GREP_FILTER}" REGEX_MATCH ${TEST_OUTPUT_FILTERED_STREAM})
   # TEST_EXPECT (1) interprets TEST_GREP_FILTER as; NOT to match
   if (TEST_EXPECT)
     string (LENGTH "${REGEX_MATCH}" TEST_GREP_RESULT)
@@ -414,10 +487,9 @@ if (TEST_GREP_FILTER AND EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
 endif ()
 
 # dump the output unless nodisplay option is set
-if (TEST_SKIP_COMPARE AND NOT TEST_NO_DISPLAY AND EXISTS "${TEST_FOLDER}/${TEST_OUTPUT}")
-  file (READ ${TEST_FOLDER}/${TEST_OUTPUT} TEST_STREAM)
+if (TEST_SKIP_COMPARE AND NOT TEST_NO_DISPLAY AND NOT "${TEST_OUTPUT_FILTERED_STREAM}" STREQUAL "")
   execute_process (
-      COMMAND ${CMAKE_COMMAND} -E echo ${TEST_STREAM}
+      COMMAND ${CMAKE_COMMAND} -E echo ${TEST_OUTPUT_FILTERED_STREAM}
       RESULT_VARIABLE TEST_RESULT
   )
 endif ()
