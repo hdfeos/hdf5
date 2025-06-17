@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Install Dependencies
-        run: brew install curl openssl libaec mpich bash
+        run: brew install curl openssl libaec mpich bash aws-c-s3
 
       - name: Set Bash
         run: echo "/usr/local/bin/bash" >> ~/.bashrc

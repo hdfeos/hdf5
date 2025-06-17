@@ -89,12 +89,8 @@ jobs:
           #
           - name: "MacOS Clang"
             ostype: macos
-<<<<<<< HEAD
-            os: macos-13
-=======
             os: macos-latest
             shared: ON
->>>>>>> upstream/develop
             cpp: ON
             fortran: OFF
             java: ON
