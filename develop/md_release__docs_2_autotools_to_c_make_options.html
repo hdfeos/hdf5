@@ -41,7 +41,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-05-30</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-06-17</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -161,7 +161,7 @@ endif () |</p>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">libhdfs[Provide libhdfs library to enable HDFS virtual file driver (VFD) [default=no]]   </td><td class="markdownTableBodyNone">HDF5_ENABLE_HDFS "Enable HDFS" [OFF]   </td><td class="markdownTableBodyNone"></td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">threads[Enable threads capability. A prerequisite for enabling threadsafe API calls. [default=yes]   </td><td class="markdownTableBodyNone">HDF5_ENABLE_THREADS "Enable thread support" [ON]   </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone">threads[Enable threads capability. A prerequisite for enabling threadsafe API calls. [default=yes]   </td><td class="markdownTableBodyNone">HDF5_THREADS_ENABLED "Enable thread support" [ON]   </td><td class="markdownTableBodyNone"></td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">threadsafe[Enable thread-safe capability. Not compatible with the high-level library, Fortran, or C++ wrappers. [default=no]]   </td><td class="markdownTableBodyNone">HDF5_ENABLE_THREADSAFE "Enable Threadsafety" [OFF]   </td><td class="markdownTableBodyNone"></td></tr>
 <tr class="markdownTableRowEven">
@@ -246,7 +246,7 @@ endif () |</p>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">libmfu[&ndash;with-libmfu=DIR], [Use the libmfu library [default=no]]   </td><td class="markdownTableBodyNone"></td><td class="markdownTableBodyNone"></td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">pthread[&ndash;with-pthread=DIR][Specify alternative path to Pthreads library]   </td><td class="markdownTableBodyNone">Handled by HDF5_ENABLE_THREADS   </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone">pthread[&ndash;with-pthread=DIR][Specify alternative path to Pthreads library]   </td><td class="markdownTableBodyNone">Handled by HDF5_THREADS_ENABLED   </td><td class="markdownTableBodyNone"></td></tr>
 </table>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
