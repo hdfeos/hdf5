@@ -20,7 +20,7 @@ if (WIN32)
       if (NOT H5_FORTRAN_C_LONG_DOUBLE_IS_UNIQUE)
         set (H5_DBL_NOT_UNIQUE_EXP ";")
       endif ()
-      if (NOT H5_NO_DEPRECATED_SYMBOLS)
+      if (H5_NO_DEPRECATED_SYMBOLS)
         set (DLL_NO_DEPRECATED_SYMBOLS ";")
       endif ()
       configure_file (${HDF5_F90_SRC_SOURCE_DIR}/hdf5_fortrandll.def.in ${HDF5_F90_SRC_BINARY_DIR}/hdf5_fortrandll.def @ONLY)
@@ -107,7 +107,7 @@ target_include_directories (H5_buildiface PRIVATE "${HDF5_SRC_BINARY_DIR};${HDF5
 if(MSVC)
   set_property(TARGET H5_buildiface PROPERTY COMPILE_FLAGS "/MT")
 endif()
-#set_property(TARGET H5_buildiface APPEND PROPERTY LINK_FLAGS "$<$<STREQUAL:x${CMAKE_Fortran_SIMULATE_ID},xMSVC>:-SUBSYSTEM:CONSOLE>")
+#set_property(TARGET H5_buildiface APPEND PROPERTY LINK_FLAGS "$<$<STREQUAL:x${CMAKE_Fortran_SIMULATE_ID},xMSVC>:/SUBSYSTEM:CONSOLE>")
 if(MSVC)
   set_property(TARGET H5_buildiface PROPERTY LINK_FLAGS "/SUBSYSTEM:CONSOLE")
 endif()
@@ -390,7 +390,7 @@ if (BUILD_STATIC_LIBS)
           "$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_Fortran_LIBRARIES}>"
   )
   if(MSVC)
-    set_property(TARGET ${HDF5_F90_LIB_TARGET} PROPERTY LINK_FLAGS "/SUBSYSTEM:CONSOLE ${WIN_LINK_FLAGS}")
+    set_property(TARGET ${HDF5_F90_LIB_TARGET} PROPERTY LINK_FLAGS "${WIN_LINK_FLAGS}")
   endif()
   set_target_properties (${HDF5_F90_LIB_TARGET} PROPERTIES
       FOLDER libraries/fortran
@@ -426,7 +426,7 @@ if (BUILD_SHARED_LIBS)
       PRIVATE ${LINK_Fortran_LIBS} "$<$<BOOL:${HDF5_ENABLE_PARALLEL}>:${MPI_Fortran_LIBRARIES}>"
   )
   if(MSVC)
-    set_property(TARGET ${HDF5_F90_LIBSH_TARGET} PROPERTY LINK_FLAGS "/SUBSYSTEM:CONSOLE ${WIN_LINK_FLAGS}")
+    target_link_options (${HDF5_F90_LIBSH_TARGET} PRIVATE "${WIN_LINK_FLAGS}")
   endif()
   set_target_properties (${HDF5_F90_LIBSH_TARGET} PROPERTIES
       FOLDER libraries/fortran
