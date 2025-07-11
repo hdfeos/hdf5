@@ -41,7 +41,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-06-17</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-07-11</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -230,15 +230,18 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:gad289baf1049a69e214d0894ad9edadf8" id="r_gad289baf1049a69e214d0894ad9edadf8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_h5_d.html#gad289baf1049a69e214d0894ad9edadf8">h5dfill_f</a> (<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fill_value</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fill_type_id</a>, buf, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">buf_type_id</a>, space_id, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">hdferr</a>)</td></tr>
 <tr class="memdesc:gad289baf1049a69e214d0894ad9edadf8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills dataspace elements with a fill value in a memory buffer.  <br /></td></tr>
 <tr class="separator:gad289baf1049a69e214d0894ad9edadf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3c31f087614158c8299a30dff9c9760b" id="r_ga3c31f087614158c8299a30dff9c9760b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_h5_d.html#ga3c31f087614158c8299a30dff9c9760b">h5dread_chunk_f</a> (dset_id, offset, filters, buf, buf_size, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">hdferr</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dxpl_id</a>)</td></tr>
+<tr class="memdesc:ga3c31f087614158c8299a30dff9c9760b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads a raw data chunk directly from a dataset in a file into a buffer.  <br /></td></tr>
+<tr class="separator:ga3c31f087614158c8299a30dff9c9760b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga65717cab74e512b25906af44091f4fd5" id="r_ga65717cab74e512b25906af44091f4fd5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_h5_d.html#ga65717cab74e512b25906af44091f4fd5">h5dread_chunk_f</a> (dset_id, offset, filters, buf, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">hdferr</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dxpl_id</a>)</td></tr>
+<tr class="memdesc:ga65717cab74e512b25906af44091f4fd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">\important If HDF5 was built without deprecated symbols, the API <code>h5dread_chunk_f</code> will return an error since there is no equivalent C API to call.  <br /></td></tr>
+<tr class="separator:ga65717cab74e512b25906af44091f4fd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga51d57ccdb9bb3982264b923d9224cedd" id="r_ga51d57ccdb9bb3982264b923d9224cedd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_h5_d.html#ga51d57ccdb9bb3982264b923d9224cedd">h5dread_multi_f</a> (count, dset_id, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">mem_type_id</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">mem_space_id</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">file_space_id</a>, buf, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">hdferr</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">xfer_prp</a>)</td></tr>
 <tr class="memdesc:ga51d57ccdb9bb3982264b923d9224cedd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads data from a file to memory buffers for multiple datasets.  <br /></td></tr>
 <tr class="separator:ga51d57ccdb9bb3982264b923d9224cedd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga68367271acc5bba4fb3d5c70e4eb7277" id="r_ga68367271acc5bba4fb3d5c70e4eb7277"><td class="memItemLeft" align="right" valign="top"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_h5_d.html#ga68367271acc5bba4fb3d5c70e4eb7277">h5dwrite_multi_f</a> (count, dset_id, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">mem_type_id</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">mem_space_id</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">file_space_id</a>, buf, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">hdferr</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">xfer_prp</a>)</td></tr>
 <tr class="memdesc:ga68367271acc5bba4fb3d5c70e4eb7277"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes data in memory to a file for multiple datasets.  <br /></td></tr>
 <tr class="separator:ga68367271acc5bba4fb3d5c70e4eb7277"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga65717cab74e512b25906af44091f4fd5" id="r_ga65717cab74e512b25906af44091f4fd5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_h5_d.html#ga65717cab74e512b25906af44091f4fd5">h5dread_chunk_f</a> (dset_id, offset, filters, buf, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">hdferr</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dxpl_id</a>)</td></tr>
-<tr class="memdesc:ga65717cab74e512b25906af44091f4fd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reads a raw data chunk directly from a dataset in a file into a buffer.  <br /></td></tr>
-<tr class="separator:ga65717cab74e512b25906af44091f4fd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2fd1e4afdf4b99f2f7e442dc62abed2d" id="r_ga2fd1e4afdf4b99f2f7e442dc62abed2d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_h5_d.html#ga2fd1e4afdf4b99f2f7e442dc62abed2d">h5dwrite_chunk_f</a> (dset_id, filters, offset, data_size, buf, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">hdferr</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dxpl_id</a>)</td></tr>
 <tr class="memdesc:ga2fd1e4afdf4b99f2f7e442dc62abed2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Writes a raw data chunk from a buffer directly to a dataset in a file.  <br /></td></tr>
 <tr class="separator:ga2fd1e4afdf4b99f2f7e442dc62abed2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1573,8 +1576,81 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="ga3c31f087614158c8299a30dff9c9760b" name="ga3c31f087614158c8299a30dff9c9760b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3c31f087614158c8299a30dff9c9760b">&#9670;&#160;</a></span>h5dread_chunk_f() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">subroutine</a> h5dread_chunk_f </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">integer</a>(<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a>), <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">intent</a>(in)&#160;</td>
+          <td class="paramname"><em>dset_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">integer</a>(<a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a>), <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dimension</a>(:), <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">intent</a>(in)&#160;</td>
+          <td class="paramname"><em>offset</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">integer</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">intent</a>(<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">inout</a>)&#160;</td>
+          <td class="paramname"><em>filters</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">type(<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">c_ptr</a>)&#160;</td>
+          <td class="paramname"><em>buf</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">integer</a>(size_t), <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">intent</a>(<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">inout</a>)&#160;</td>
+          <td class="paramname"><em>buf_size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">integer</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">intent</a>(<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">out</a>)&#160;</td>
+          <td class="paramname"><em>hdferr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">integer</a>(<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a>), <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">intent</a>(in), optional&#160;</td>
+          <td class="paramname"><em>dxpl_id</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Reads a raw data chunk directly from a dataset in a file into a buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">dset_id</td><td>Identifier of the dataset to read from </td></tr>
+    <tr><td class="paramname">offset</td><td>Logical position of the chunk's first element in the dataspace, <b>0-based indices</b> </td></tr>
+    <tr><td class="paramname">filters</td><td>Mask for identifying the filters in use </td></tr>
+    <tr><td class="paramname">buf</td><td>Buffer containing data to be read from the chunk, if passed <code>C_NULL_PTR</code> then returns the needed size of <code>buf</code> in <code>buf_size</code> </td></tr>
+    <tr><td class="paramname">buf_size</td><td>Size of <code>buf</code> in bytes </td></tr>
+    <tr><td class="paramname">hdferr</td><td>Returns 0 if successful and -1 if it fails. </td></tr>
+    <tr><td class="paramname">dxpl_id</td><td>Dataset transfer property list identifier</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>See C API: <a class="el" href="group___h5_d.html#ga217c9d411dfd4c0732213c7cbd98164c">H5Dread_chunk2()</a> </p>
+
+</div>
+</div>
 <a id="ga65717cab74e512b25906af44091f4fd5" name="ga65717cab74e512b25906af44091f4fd5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga65717cab74e512b25906af44091f4fd5">&#9670;&#160;</a></span>h5dread_chunk_f()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ga65717cab74e512b25906af44091f4fd5">&#9670;&#160;</a></span>h5dread_chunk_f() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1623,7 +1699,8 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Reads a raw data chunk directly from a dataset in a file into a buffer. </p>
+<p>\important If HDF5 was built without deprecated symbols, the API <code>h5dread_chunk_f</code> will return an error since there is no equivalent C API to call. </p>
+<p>Reads a raw data chunk directly from a dataset in a file into a buffer.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">dset_id</td><td>Identifier of the dataset to read from </td></tr>
@@ -1635,7 +1712,7 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>See C API: <a class="el" href="group___h5_d.html#gac1092a63b718ec949d6539590a914b60">H5Dread_chunk()</a> </p>
+<p>See C API: Deprecated <a class="el" href="group___h5_d.html#gad3b9b3024ca4ab7eb7fe6872088398f3">H5Dread_chunk1()</a> </p>
 
 </div>
 </div>

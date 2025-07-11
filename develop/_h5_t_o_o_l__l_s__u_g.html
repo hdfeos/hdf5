@@ -41,7 +41,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-06-17</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-07-11</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -166,6 +166,7 @@ Options</h2>
 <li><b>&ndash;page-buffer-size=N</b> Set the page buffer cache size, N=non-negative integers </li>
 <li><b>&ndash;vfd=DRIVER</b> Use the specified virtual file driver </li>
 <li><b>&ndash;hexdump</b> Show raw data in hexadecimal format </li>
+<li><b>&ndash;endpoint-url=P</b> Supply S3 endpoint url information to "ros3" vfd. P is the AWS service endpoint. Has no effect if vfd flag not set to "ros3". </li>
 <li><b>&ndash;s3-cred=C</b> Supply S3 authentication information to "ros3" vfd. Accepts tuple of <div class="fragment"><div class="line">(&lt;<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">aws</a>-<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">region</a>&gt;,&lt;<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">access</a>-<span class="keywordtype">id</span>&gt;,&lt;<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">access</a>-key&gt;) </div>
 <div class="ttc" id="ah5repack_8h_html_a314b5651a0aa5175d64605dbc83e094e"><div class="ttname"><a href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5repack</a></div><div class="ttdeci">int h5repack(const char *infile, const char *outfile, pack_opt_t *options)</div></div>
 </div><!-- fragment --> or <div class="fragment"><div class="line">(&lt;<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">aws</a>-<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">region</a>&gt;,&lt;<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">access</a>-<span class="keywordtype">id</span>&gt;,&lt;<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">access</a>-key&gt;,&lt;<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">session</a>-token&gt;) </div>
