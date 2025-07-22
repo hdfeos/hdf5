@@ -25,7 +25,7 @@ jobs:
           environment_variables: FOO BAR
           operating_system: openbsd
           architecture: x86-64
-          version: '7.6'
+          version: '7.7'
           shell: bash
           run: |
             sudo pkg_add cmake
