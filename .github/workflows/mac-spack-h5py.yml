@@ -24,7 +24,7 @@ jobs:
       run: |
         . ./spack/share/spack/setup-env.sh
         ./spack/bin/spack spec py-h5py@master+mpi
-         sed -i 's/hdf5@1.10.6:1.14/hdf5@1.10.6:/g' \
+         sed -i '' 's/hdf5@1.10.6:1.14/hdf5@1.10.6:/g' \
         ~/.spack/package_repos/*/repos/spack_repo/builtin/packages/py_h5py/package.py        
         ./spack/bin/spack compiler find
         ./spack/bin/spack external find perl

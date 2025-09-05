@@ -46,7 +46,7 @@ jobs:
             mkdir build
             cd build
             cmake \
-            -DBUILDNAME:STRING=f.j \
+            -DBUILDNAME:STRING=f.jdk-21 \
             -D HDF5_BUILD_FORTRAN:BOOL=ON \
             -D HDF5_BUILD_JAVA:BOOL=ON \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \

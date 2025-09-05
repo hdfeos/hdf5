@@ -55,4 +55,5 @@ jobs:
             -DHDF5_BUILD_JAVA:BOOL=ON \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -DSITE:STRING=fbsd ..
-            ctest -D Experimental
+            ctest -T Build
+#            ctest -D Experimental

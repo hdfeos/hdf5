@@ -42,9 +42,9 @@ jobs:
           source /opt/intel/oneapi/setvars.sh
           cmake -S . -B build \
           -DCMAKE_BUILD_TYPE="Debug" \
-          -DCMAKE_C_COMPILER=icx \
-          -DCMAKE_CXX_COMPILER=dpcpp \
-          -DCMAKE_Fortran_COMPILER=ifx \
+          -DCMAKE_C_COMPILER=mpiicx \
+          -DCMAKE_CXX_COMPILER=mpiicpx \
+          -DCMAKE_Fortran_COMPILER=mpiifx \
           -DCMAKE_INSTALL_PREFIX=install \
           -DHDF5_BUILD_FORTRAN=ON \
           -DHDF5_ENABLE_PARALLEL=ON \
