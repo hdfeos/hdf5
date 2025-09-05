@@ -1,4 +1,33 @@
-cmake_minimum_required (VERSION 3.18)
+# -----------------------------------------------------------------------------
+# HDF5 CMake Top-Level Build Configuration
+# -----------------------------------------------------------------------------
+# This is the main CMakeLists.txt file for configuring, building, and installing
+# the HDF5 library and its components. It supports building HDF5 as a standalone
+# project or as a subproject within a larger CMake build. Key features include:
+#
+# - Enforces out-of-source builds for safety and cleanliness.
+# - Supports configuration as a subproject (HDF5_EXTERNALLY_CONFIGURED).
+# - Provides options for building shared/static libraries, tools, examples, and bindings (C++, Fortran, Java).
+# - Handles versioning, installation paths, and library naming customization.
+# - Integrates with external dependencies (zlib, szip, MPI, HDFS, etc.).
+# - Supports advanced features: thread-safety, concurrency, plugins, code coverage, and more.
+# - Includes options for documentation and testing.
+#
+# Usage examples:
+#   1. Presets:
+#      cd <path-to-hdf5-source>
+#      cmake --workflow --preset <preset-name>
+#
+#   2. Command line:
+#      mkdir build && cd build
+#      cmake [options] <path-to-hdf5-source>
+#      cmake --build .
+#      cmake --install .
+#
+# See comments throughout this file for details on configuration variables and options.
+# -----------------------------------------------------------------------------
+
+cmake_minimum_required (VERSION 3.26)
 project (HDF5 C)
 
 if (POLICY CMP0074)
@@ -482,6 +511,14 @@ set (H5_LIBVER_DIR       ${H5_VERS_MAJOR}${H5_VERS_MINOR})
 #-----------------------------------------------------------------------------
 # Include some macros for reusable code
 #-----------------------------------------------------------------------------
+
+get_property(IS_MULTI GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT IS_MULTI)
+    message(STATUS "No CMAKE_BUILD_TYPE set -- using Release")
+    set(CMAKE_BUILD_TYPE Release)
+endif()
+
 include (${HDF_CONFIG_DIR}/HDFMacros.cmake)
 
 HDF_DIR_PATHS(${HDF5_PACKAGE_NAME})
@@ -899,6 +936,7 @@ endif ()
 # Include user macros
 #-----------------------------------------------------------------------------
 include (UserMacros.cmake)
+include (config/CacheURLs.cmake)
 
 #-----------------------------------------------------------------------------
 # Include filter (zlib, szip, etc.) macros
@@ -979,29 +1017,29 @@ if (HDF5_ENABLE_CONCURRENCY)
     endif ()
   endif ()
   if (HDF_ENABLE_PARALLEL)
-    if (NOT ALLOW_UNSUPPORTED)
-      message (FATAL_ERROR " **** Parallel and multi-threaded concurrency options are not supported, override with ALLOW_UNSUPPORTED option **** ")
+    if (NOT HDF5_ALLOW_UNSUPPORTED)
+      message (FATAL_ERROR " **** Parallel and multi-threaded concurrency options are not supported, override with HDF5_ALLOW_UNSUPPORTED option **** ")
     else ()
       message (VERBOSE " **** Allowing unsupported parallel and multi-threaded concurrency options **** ")
     endif ()
   endif ()
   if (HDF5_BUILD_FORTRAN)
-    if (NOT ALLOW_UNSUPPORTED)
-      message (FATAL_ERROR " **** Fortran and multi-threaded concurrency options are not supported, override with ALLOW_UNSUPPORTED option **** ")
+    if (NOT HDF5_ALLOW_UNSUPPORTED)
+      message (FATAL_ERROR " **** Fortran and multi-threaded concurrency options are not supported, override with HDF5_ALLOW_UNSUPPORTED option **** ")
     else ()
       message (VERBOSE " **** Allowing unsupported Fortran and multi-threaded concurrency options **** ")
     endif ()
   endif ()
   if (HDF5_BUILD_CPP_LIB)
-    if (NOT ALLOW_UNSUPPORTED)
-      message (FATAL_ERROR " **** C++ and multi-threaded concurrency options are not supported, override with ALLOW_UNSUPPORTED option **** ")
+    if (NOT HDF5_ALLOW_UNSUPPORTED)
+      message (FATAL_ERROR " **** C++ and multi-threaded concurrency options are not supported, override with HDF5_ALLOW_UNSUPPORTED option **** ")
     else ()
       message (VERBOSE " **** Allowing unsupported C++ and multi-threaded concurrency options **** ")
     endif ()
   endif ()
   if (HDF5_BUILD_HL_LIB)
-    if (NOT ALLOW_UNSUPPORTED)
-      message (FATAL_ERROR " **** HL and multi-threaded concurrency options are not supported, override with ALLOW_UNSUPPORTED option **** ")
+    if (NOT HDF5_ALLOW_UNSUPPORTED)
+      message (FATAL_ERROR " **** HL and multi-threaded concurrency options are not supported, override with HDF5_ALLOW_UNSUPPORTED option **** ")
     else ()
       message (VERBOSE " **** Allowing unsupported HL and multi-threaded concurrency options **** ")
     endif ()
