@@ -15,13 +15,13 @@ jobs:
         os:
           - name: netbsd
             architecture: x86-64
-            version: '9.3'
+            version: '10.1'
             host: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: ${{ matrix.os.name }}
-        uses: cross-platform-actions/action@v0.23.0
+        uses: cross-platform-actions/action@v0.29.0
         env:
           FOO: A
           BAR: B
