@@ -27,7 +27,7 @@ jobs:
             mkdir build
             cd build
             cmake \
-            -DBUILDNAME:STRING=f \
+            -DBUILDNAME:STRING="r/f" \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
             -DSITE:STRING=s390x \

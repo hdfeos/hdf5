@@ -34,34 +34,34 @@ jobs:
           which flang
           clang -v
 
-      - name: Cache OpenMPI 4.1.6 installation
-        id: cache-openmpi-4_1_6
+      - name: Cache OpenMPI 5.0.8 installation
+        id: cache-openmpi-5_0_8
         uses: actions/cache@v4
         with:
-          path: /home/runner/work/hdf5/hdf5/openmpi-4.1.6-install
-          key: ${{ runner.os }}-${{ runner.arch }}-openmpi-4_1_6-cache
+          path: /home/runner/work/hdf5/hdf5/openmpi-5.0.8-install
+          key: ${{ runner.os }}-${{ runner.arch }}-openmpi-5_0_8-cache
 
-      - name: Install OpenMPI 4.1.6
-        if: ${{ steps.cache-openmpi-4_1_6.outputs.cache-hit != 'true' }}
+      - name: Install OpenMPI 5.0.8
+        if: ${{ steps.cache-openmpi-5_0_8.outputs.cache-hit != 'true' }}
         run: |
           export LD_LIBRARY_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/usr/local/lib
-          wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.6.tar.gz
-          tar zxvf openmpi-4.1.6.tar.gz
-          cd openmpi-4.1.6
-          ./configure CC=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/bin/clang FC=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/bin/flang --prefix=/home/runner/work/hdf5/hdf5/openmpi-4.1.6-install
+          wget https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-5.0.8.tar.gz
+          tar zxvf openmpi-5.0.8.tar.gz
+          cd openmpi-5.0.8
+          ./configure CC=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/bin/clang FC=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/bin/flang --prefix=/home/runner/work/hdf5/hdf5/openmpi-5.0.8-install
           make
           make install
 
       - name: CMake Configure
         shell: bash
         run: |
-          export LD_LIBRARY_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/home/runner/work/hdf5/hdf5/openmpi-4.1.6-install/lib:/usr/local/lib
-          export LD_RUN_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/home/runner/work/hdf5/hdf5/openmpi-4.1.6-install/lib:/usr/local/lib
-          export PATH=/home/runner/work/hdf5/hdf5/openmpi-4.1.6-install/bin:/usr/local/bin:$PATH
+          export LD_LIBRARY_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/home/runner/work/hdf5/hdf5/openmpi-5.0.8-install/lib:/usr/local/lib
+          export LD_RUN_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/home/runner/work/hdf5/hdf5/openmpi-5.0.8-install/lib:/usr/local/lib
+          export PATH=/home/runner/work/hdf5/hdf5/openmpi-5.0.8-install/bin:/usr/local/bin:$PATH
           mkdir build
           cd build
           CC=mpicc cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake -G Ninja \
-          -DBUILDNAME:STRING="ninja+r/aocc-5.0.0/ompi-4.1.6+np=4+sf" \
+          -DBUILDNAME:STRING="ninja/r/aocc-5.0.0/ompi-5.0.8/sf" \
           -DCMAKE_BUILD_TYPE=Release \
           -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
           -DHDF5_BUILD_FORTRAN:BOOL=OFF \
@@ -71,7 +71,6 @@ jobs:
           -DHDF5_ENABLE_SUBFILING_VFD:BOOL=ON \
           -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
           -DLIBAEC_USE_LOCALCONTENT=OFF \
-          -DMPIEXEC_MAX_NUMPROCS:STRING="4" \
           -DZLIB_USE_LOCALCONTENT=OFF \
           -DSITE:STRING=ubu \
           ..

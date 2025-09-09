@@ -30,5 +30,6 @@ jobs:
             cmake \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -D SITE:STRING=s390x \
+            -DBUILDNAME:STRING="r" \
             ..
             ctest -D Experimental

@@ -36,7 +36,7 @@ jobs:
             sudo pkg install -y git
             sudo pkg install -y cmake
             sudo pkg install -y jpeg-turbo
-            sudo pkg install -y openjdk21
+            sudo pkg install -y openjdk24
             sudo pkg install -y gcc13
             pkg info -l openjdk24
             export JAVA_HOME=/usr/local/openjdk24
