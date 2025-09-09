@@ -41,4 +41,5 @@ jobs:
             -DCTEST_DROP_LOCATION_INIT:STRING="/submit.php?project=HDF5" \
             -DHDF5_ENABLE_PARALLEL:BOOL=ON \
             ..
-            ctest -D Experimental -C Release
+            ctest -T Build
+            ctest -C Release -T Test

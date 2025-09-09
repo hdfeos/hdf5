@@ -51,4 +51,5 @@ jobs:
             -DHDF5_BUILD_JAVA:BOOL=ON \
             -DJAVA_INCLUDE_PATH2="/usr/pkg/java/openjdk21/include/netbsd" \
             -DSITE:STRING=nbsd ..
-            ctest -D Experimental
+            ctest -T Build
+            ctest -C Release -T Build

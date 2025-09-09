@@ -30,8 +30,9 @@ jobs:
 
     steps:
     - name: Install Dependencies (macOS)
-      run: brew install ninja mpich libaec
-      if: matrix.os == 'macos-latest'
+      run: |
+        brew install ninja libaec
+        sudo port install mpich-clang
 
     - name: Install gfortran
       uses: awvwgk/setup-fortran@v1

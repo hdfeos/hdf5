@@ -41,7 +41,9 @@ jobs:
 
     steps:
     - name: Install Dependencies (macOS)
-      run: brew install ninja mpich
+      run: |
+        brew install ninja
+        sudo port install mpich-clang15
 
     - name: Install gfortran
       uses: awvwgk/setup-fortran@v1

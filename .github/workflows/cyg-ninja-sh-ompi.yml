@@ -31,5 +31,6 @@ jobs:
            -DBUILD_SHARED_LIBS:BOOL=OFF \
            -DHDF5_ENABLE_PARALLEL:BOOL=ON \
            ..
-          ctest -D Experimental
+          ctest -T Build
+          ctest -C Release -T Test
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'

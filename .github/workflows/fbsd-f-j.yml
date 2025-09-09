@@ -38,17 +38,18 @@ jobs:
             sudo pkg install -y jpeg-turbo
             sudo pkg install -y openjdk21
             sudo pkg install -y gcc13
-            pkg info -l openjdk21
-            export JAVA_HOME=/usr/local/openjdk21
+            pkg info -l openjdk24
+            export JAVA_HOME=/usr/local/openjdk24
             export FC=gfortran13
             sudo mount -t fdescfs fdesc /dev/fd
             sudo mount -t procfs proc /proc
             mkdir build
             cd build
             cmake \
-            -DBUILDNAME:STRING=f.jdk-21 \
+            -DBUILDNAME:STRING=f.jdk-24 \
             -D HDF5_BUILD_FORTRAN:BOOL=ON \
             -D HDF5_BUILD_JAVA:BOOL=ON \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -D SITE:STRING=fbsd ..
-            ctest -D Experimental
+            ctest -T Build
+            ctest -C Release -T Test
