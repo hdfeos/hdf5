@@ -34,7 +34,7 @@ jobs:
             mkdir build
             cd build
             cmake \
-            -DSITE:STRING=fbsd-14.1 \
+            -DSITE:STRING=fbsd-14.3 \
             -DCMAKE_C_COMPILER=/usr/local/mpi/openmpi/bin/mpicc \
             -DBUILDNAME:STRING="r/ompi" \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
