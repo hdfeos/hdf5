@@ -17,7 +17,8 @@ jobs:
         run: |
           curl -O -L  https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-13-Ventura.pkg
       - name: install
-        run: brew install flang ninja
+        run: |
+          brew install flang ninja
           sudo installer -pkg MacPorts-2.11.5-13-Ventura.pkg -target /
       - name: update
         run: |

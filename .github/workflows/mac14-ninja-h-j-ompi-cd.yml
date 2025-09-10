@@ -10,13 +10,13 @@ jobs:
     name: "mac14 ninja h j ompi cd"
     runs-on: macos-14
     steps:
-    - name: Install Dependencies
+    - name: install
       run: brew install ninja openmpi libaec
 
-    - name: Get Sources
+    - name: checkout
       uses: actions/checkout@v4
 
-    - name: Test
+    - name: test
       run: |
         mkdir build
         cd build
@@ -29,7 +29,7 @@ jobs:
         -D HDF5_ENABLE_PARALLEL:BOOL=ON \
         -D HDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
         -D MPIEXEC_MAX_NUMPROCS:STRING=2 \
-        -D SITE:STRING=mac14 \
+        -D SITE:STRING="mac-14" \
         ..
         ctest -T Build  -j
         ctest -T Test  -j

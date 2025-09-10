@@ -30,6 +30,7 @@ jobs:
            -DCMAKE_CXX_COMPILER=/usr/bin/mpicxx \
            -DBUILD_SHARED_LIBS:BOOL=OFF \
            -DHDF5_ENABLE_PARALLEL:BOOL=ON \
+           -DCMAKE_BUILD_WITH_INSTALL_RPATH=TRUE \
            ..
           ctest -T Build
           ctest -C Release -T Test
