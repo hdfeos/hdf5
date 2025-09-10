@@ -1,20 +1,17 @@
 name: lin aocc ompi sf
-
 on:
   push:
     branches:
       - develop
-
 jobs:
   aocc_build_and_test:
     name: "aocc 5.0.0"
     runs-on: ubuntu-latest
     steps:
-      - name: Get Sources
+      - name: checkout
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        shell: bash
+      - name: install
         run: |
           sudo apt update
           sudo apt install -y libaec-dev ninja-build
@@ -22,7 +19,7 @@ jobs:
           sudo apt install -y zlib1g-dev libcurl4-openssl-dev libjpeg-dev wget curl bzip2
           sudo apt install -y m4 flex bison cmake libzip-dev openssl build-essential
 
-      - name: Install AOCC 5.0.0
+      - name: aocc
         shell: bash
         run: |
           wget https://download.amd.com/developer/eula/aocc/aocc-5-0/aocc-compiler-5.0.0.tar
@@ -34,14 +31,14 @@ jobs:
           which flang
           clang -v
 
-      - name: Cache OpenMPI 5.0.8 installation
+      - name: cache
         id: cache-openmpi-5_0_8
         uses: actions/cache@v4
         with:
           path: /home/runner/work/hdf5/hdf5/openmpi-5.0.8-install
           key: ${{ runner.os }}-${{ runner.arch }}-openmpi-5_0_8-cache
 
-      - name: Install OpenMPI 5.0.8
+      - name: ompi
         if: ${{ steps.cache-openmpi-5_0_8.outputs.cache-hit != 'true' }}
         run: |
           export LD_LIBRARY_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/usr/local/lib
@@ -52,16 +49,16 @@ jobs:
           make
           make install
 
-      - name: CMake Configure
-        shell: bash
+      - name: test
         run: |
           export LD_LIBRARY_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/home/runner/work/hdf5/hdf5/openmpi-5.0.8-install/lib:/usr/local/lib
           export LD_RUN_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/home/runner/work/hdf5/hdf5/openmpi-5.0.8-install/lib:/usr/local/lib
           export PATH=/home/runner/work/hdf5/hdf5/openmpi-5.0.8-install/bin:/usr/local/bin:$PATH
           mkdir build
           cd build
-          CC=mpicc cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake -G Ninja \
-          -DBUILDNAME:STRING="ninja/r/aocc-5.0.0/ompi-5.0.8/sf" \
+          CC=mpicc \
+          cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake -G Ninja \
+          -DBUILDNAME:STRING="ninja/r/ompi-5.0.8/aocc-5.0.0/sf" \
           -DCMAKE_BUILD_TYPE=Release \
           -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
           -DHDF5_BUILD_FORTRAN:BOOL=OFF \
@@ -72,6 +69,7 @@ jobs:
           -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
           -DLIBAEC_USE_LOCALCONTENT=OFF \
           -DZLIB_USE_LOCALCONTENT=OFF \
+          -DMPIEXEC_MAX_NUMPROCS:STRING="2" \          
           -DSITE:STRING=ubu \
           ..
           ctest -D Experimental

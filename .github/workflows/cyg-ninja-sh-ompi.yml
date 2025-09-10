@@ -1,4 +1,4 @@
-name: cyg ninja sh ompi
+name: cyg ninja ompi -sh 
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
           cd build
           cmake -G Ninja \
            -DSITE:STRING=cwin \
-           -DBUILDNAME:STRING="ninja.-sh.ompi" \
+           -DBUILDNAME:STRING="ninja/ompi/-sh" \
            -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
            -DCMAKE_SYSTEM_NAME="Linux" \
            -DCMAKE_C_COMPILER=/usr/bin/mpicc \

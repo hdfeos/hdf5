@@ -32,10 +32,12 @@ jobs:
           export OMPI_CC=/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/compilers/bin/nvc
           export OMPI_FC=/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/compilers/bin/nvfortran
           export LD_LIBRARY_PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/cuda/12.9/lib64:/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/compilers/lib
-          export PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/comm_libs/openmpi4/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/compilers/bin:$PATH        
+          export PATH=/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/comm_libs/openmpi4/bin:/opt/nvidia/hpc_sdk/Linux_x86_64/25.7/compilers/bin:$PATH
+          mkdir build
+          cd build
           cmake \
-          -D BUILD_SHARED_LIBS:BOOL=OFF \
-          -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
-          -D SITE:STRING=ubu ..
-           ctest -T Build  -j
-           ctest -T Test  -j	  
+            -D BUILD_SHARED_LIBS:BOOL=OFF \
+            -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
+            -D SITE:STRING=ubu ..
+          ctest -T Build
+          ctest -T Test
