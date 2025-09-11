@@ -7,19 +7,8 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-            build_type: "Release"
-            cpp: OFF
-            fortran: ON
-            java: ON
-            hl: ON
-            parallel: ON
-            generator: 
-
     name: mac ninja clang h f j mpich
     runs-on: macos-15
-    if: "!contains(github.event.head_commit.message, 'skip-ci')"
 
     steps:
       uses: actions/checkout@v4      
@@ -43,8 +32,8 @@ jobs:
         brew install libaec
     - name: configure
       run: |
-        mkdir "${{ runner.workspace }}/build"
-        cd "${{ runner.workspace }}/build"
+        mkdir build
+        cd build
         cmake -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_TOOLCHAIN_FILE=config/toolchain/clang.cmake \
