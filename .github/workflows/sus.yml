@@ -16,7 +16,7 @@ jobs:
           zypper up -y
           zypper in -y \
               file gcc-c++ gcc-fortran git \
-              make patch unzip which tree \
+              make patch unzip which tar tree \
               cmake bison zlib-devel
       - name: test
         run: |
