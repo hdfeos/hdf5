@@ -9,59 +9,55 @@ jobs:
   build:
     strategy:
       matrix:
-        name: ["macOS Latest Clang"]
-        include:
-          - name: "macOS Latest Clang"
-            artifact: "macOS.tar.xz"
-            os: macos-latest
             build_type: "Release"
             cpp: OFF
             fortran: ON
             java: ON
-            ts: OFF
             hl: ON
             parallel: ON
-            toolchain: "config/toolchain/clang.cmake"
-            generator: "-G Ninja"
+            generator: 
 
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
+    name: mac ninja clang h f j mpich
+    runs-on: macos-15
     if: "!contains(github.event.head_commit.message, 'skip-ci')"
 
     steps:
-    - name: Install Dependencies (macOS)
+      uses: actions/checkout@v4      
+    - name: get
       run: |
-        brew install ninja libaec
+        curl -O -L   https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-15-Sequoia.pkg
+    - name: port
+      run: |
+        ls -l
+        sudo installer -pkg MacPorts-2.11.5-15-Sequoia.pkg -target /
+    - name: update
+      run: |
+        export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+        ls -l /opt/local/bin
+        ls -l /opt/local/sbin
+        sudo port selfupdate
         sudo port install mpich-clang
-
-    - name: Install gfortran
-      uses: awvwgk/setup-fortran@v1
-
-    - name: Get Sources
-      uses: actions/checkout@v4.1.1
-
-    - name: Configure
+        sudo port select --set mpi mpich-clang-fortran        
+    - name: brew 
       run: |
-        which gfortran
-        export FC="$(which gfortran)"
+        brew install libaec
+    - name: configure
+      run: |
         mkdir "${{ runner.workspace }}/build"
         cd "${{ runner.workspace }}/build"
-        cmake ${{ matrix.generator }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }} -DBUILD_SHARED_LIBS=ON -DHDF5_ENABLE_ALL_WARNINGS=ON -DHDF5_ENABLE_THREADSAFE:BOOL=${{ matrix.ts }} -DHDF5_BUILD_HL_LIB:BOOL=${{ matrix.hl }} -DHDF5_ENABLE_PARALLEL:BOOL=${{ matrix.parallel }} -DHDF5_BUILD_CPP_LIB:BOOL=${{ matrix.cpp }} -DHDF5_BUILD_FORTRAN=${{ matrix.fortran }} -DHDF5_BUILD_JAVA=${{ matrix.java }} -DMPIEXEC_MAX_NUMPROCS:STRING=3 -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF $GITHUB_WORKSPACE
-      shell: bash
-
-    - name: Build
-      if: matrix.generator != 'autogen'
-      run: cmake --build . --config ${{ matrix.build_type }}
-      working-directory: ${{ runner.workspace }}/build
-
-    - name: Test
-      if: matrix.generator != 'autogen'
-      run: ctest --test-dir . -C ${{ matrix.build_type }} -V -E MPI_TEST_H5DIFF-h5diff
-      working-directory: ${{ runner.workspace }}/build
-
-    - name: Upload
-      if: matrix.generator != 'autogen'
-      uses: actions/upload-artifact@v4
-      with:
-        name: my-artifact
-        path: ${{ runner.workspace }}/build/Testing/Temporary/CTestCostData.txt
+        cmake -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_TOOLCHAIN_FILE=config/toolchain/clang.cmake \
+        -DBUILD_SHARED_LIBS=ON \
+        -DHDF5_ENABLE_ALL_WARNINGS=ON \
+        -DHDF5_ENABLE_THREADSAFE:BOOL=OFF \
+        -DHDF5_BUILD_HL_LIB:BOOL=ON \
+        -DHDF5_ENABLE_PARALLEL:BOOL=ON \
+        -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
+        -DHDF5_BUILD_FORTRAN=ON \
+        -DHDF5_BUILD_JAVA=ON \
+        -DMPIEXEC_MAX_NUMPROCS:STRING=3 \
+        -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
+        $GITHUB_WORKSPACE
+        ctest -T Build
+        ctest -C Release -T Build

@@ -25,7 +25,7 @@ jobs:
           mkdir build
           cd build
           cmake -G Ninja \
-           -D SITE:STRING=cwin \
+           -D SITE:STRING=cyg \
            -DBUILDNAME:STRING="ninja" \
            -D BUILD_SHARED_LIBS:BOOL=OFF \
            -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \

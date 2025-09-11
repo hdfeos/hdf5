@@ -36,6 +36,7 @@
 
 | Test    | Status |
 | --------| ------ |
+| Suse    | [![sus cpp f hl](https://github.com/hdfeos/hdf5/actions/workflows/sus.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/sus.yml) [![sus-t cpp f hl](https://github.com/hdfeos/hdf5/actions/workflows/sus_t.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/sus_t.yml)|
 | Ubuntu  | [![arm64 lin](https://github.com/hdfeos/hdf5/actions/workflows/arm64-lin.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/arm64-lin.yml) |
 
 ### Solaris

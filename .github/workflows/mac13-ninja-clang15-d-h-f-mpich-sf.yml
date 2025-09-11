@@ -1,80 +1,52 @@
-name: mac13 ninja clang15 d h f mpich sf
+name: mac-13 ninja d mpich cl f h sf
 
 on:
   push:
     branches:
       - develop
-
 jobs:
   build:
-    strategy:
-      matrix:
-        name: ["macOS Latest Clang"]
-        include:
-          - name: "macOS Latest Clang"
-            artifact: "macOS.tar.xz"
-            os: macos-13
-            build_type: "Debug"
-            cpp: OFF
-            fortran: ON
-            java: ON
-            ts: OFF
-            hl: ON
-            parallel: ON
-            toolchain: "config/toolchain/clang.cmake"
-            generator: "-G Ninja"
-
-    name: ${{ matrix.name }}
-    # The type of runner that the job will run on
-    runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.head_commit.message, 'skip-ci')"
+    name: mac-13 ninja d mpich cl f h sf
+    runs-on: macos-13
 
     steps:
-    - name: Install Dependencies (macOS)
-      run: |
-        brew install ninja bash
-        sudo port install mpich-clang15
-
-    - name: Set Bash as the default shell
-      run: echo "/usr/local/bin/bash" >> ~/.bashrc
-
-    - name: Install gfortran
-      uses: awvwgk/setup-fortran@v1
-
-    - name: Get Sources
+    - name: checkout
       uses: actions/checkout@v4
-
-    - name: Configure
-      if: matrix.generator != 'autogen'
+    - name: get
       run: |
-        export CC=$(brew --prefix llvm@15)/bin/clang
-        echo $CC
-        mkdir "${{ runner.workspace }}/build"
-        cd "${{ runner.workspace }}/build"
-        cmake ${{ matrix.generator }} \
-        -DBUILD_SHARED_LIBS=ON \
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -DCMAKE_TOOLCHAIN_FILE=${{ matrix.toolchain }} \
-        -DHDF5_BUILD_CPP_LIB:BOOL=${{ matrix.cpp }} \
-        -DHDF5_BUILD_JAVA=${{ matrix.java }} \
+        curl -O -L  https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-13-Ventura.pkg
+    - name: install
+      run: |
+        sudo installer -pkg MacPorts-2.11.5-14-Sonoma.pkg -target /
+    - name: update
+      run: |
+        export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+        ls -l /opt/local/bin
+        ls -l /opt/local/sbin
+        sudo port selfupdate
+    - name: mpich
+      run: |
+        export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+        port version
+        sudo port install mpich-clang
+        sudo port select --set mpi mpich-clang-fortran
+    - name: test
+      run: |
+        mkdir build
+        cd build
+        cmake -G Ninja \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DCMAKE_C_COMPILER=mpicc -DCMAKE_Fortran_COMPILER=mpifort \
+        -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
+        -DHDF5_BUILD_JAVA:BOOL= ON \
         -DHDF5_BUILD_FORTRAN:BOOL=ON \
-        -DHDF5_BUILD_HL_LIB:BOOL=${{ matrix.hl }} \
+        -DHDF5_BUILD_HL_LIB:BOOL=ON \
         -DHDF5_ENABLE_ALL_WARNINGS=ON \
-        -DHDF5_ENABLE_PARALLEL:BOOL=${{ matrix.parallel }} \
-        -DHDF5_ENABLE_THREADSAFE:BOOL=${{ matrix.ts }} \
+        -DHDF5_ENABLE_PARALLEL:BOOL=ON \
+        -DHDF5_ENABLE_THREADSAFE:BOOL=OFF \
         -DHDF5_ENABLE_SUBFILING_VFD:BOOL=ON \
         -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
         -DMPIEXEC_MAX_NUMPROCS:STRING=3 \
-        $GITHUB_WORKSPACE
-      shell: bash
-
-    - name: Build
-      run: cmake --build . --config ${{ matrix.build_type }}
-      working-directory: ${{ runner.workspace }}/build
-
-    - name: Test
-      run: |
-        ctest --test-dir . -C ${{ matrix.build_type }} \
-        -E MPI_TEST_H5DIFF-h5diff -VV
-      working-directory: ${{ runner.workspace }}/build
-      shell: bash
+        ..
+        ctest -T Build
+        ctest -C Debug -T Build
