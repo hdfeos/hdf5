@@ -30,7 +30,7 @@ jobs:
           export PATH=/opt/local/bin:/opt/local/sbin:$PATH          
           port version
           sudo port install mpich-clang15
-          sudo port select --set mpi mpich-clang-fortran
+          sudo port select --set mpi mpich-clang15-fortran
       - name: test
         run: |
           mkdir build

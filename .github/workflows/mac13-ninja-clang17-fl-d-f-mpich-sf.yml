@@ -1,4 +1,4 @@
-name: mac13 ninja clang17 fl d f mpich sf
+name: mac-13 ninja d mpich cl fl sf
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: mac13 ninja clang17 fl d f mpich sf
+    name: mac-13 ninja d mpich cl fl sf
     runs-on: macos-13
 
     steps:
@@ -18,7 +18,7 @@ jobs:
           curl -O -L  https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-13-Ventura.pkg
       - name: install
         run: |
-          brew install flang ninja
+          brew install flang
           sudo installer -pkg MacPorts-2.11.5-13-Ventura.pkg -target /
       - name: update
         run: |
@@ -28,7 +28,7 @@ jobs:
           sudo port selfupdate
       - name: mpich
         run: |
-          export PATH=/opt/local/bin:/opt/local/sbin:$PATH          
+          export PATH=/opt/local/bin:/opt/local/sbin:$PATH
           port version
           sudo port install mpich-clang
           sudo port select --set mpi mpich-clang-fortran
@@ -37,7 +37,7 @@ jobs:
           mkdir build
           cd build
           cmake -G Ninja \
-            -DCMAKE_C_COMPILER=mpicc -DCMAKE_Fortran_COMPILER=mpifort \ 
+            -DCMAKE_C_COMPILER=mpicc -DCMAKE_Fortran_COMPILER=mpifort \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_SHARED_LIBS=ON \
             -DBUILD_STATIC_EXECS:BOOL=OFF \
