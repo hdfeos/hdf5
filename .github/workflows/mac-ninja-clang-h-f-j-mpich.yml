@@ -9,44 +9,44 @@ jobs:
   build:
     name: mac ninja clang h f j mpich
     runs-on: macos-15
-
     steps:
-      uses: actions/checkout@v4      
-    - name: get
-      run: |
-        curl -O -L   https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-15-Sequoia.pkg
-    - name: port
-      run: |
-        ls -l
-        sudo installer -pkg MacPorts-2.11.5-15-Sequoia.pkg -target /
-    - name: update
-      run: |
-        export PATH=/opt/local/bin:/opt/local/sbin:$PATH
-        ls -l /opt/local/bin
-        ls -l /opt/local/sbin
-        sudo port selfupdate
-        sudo port install mpich-clang
-        sudo port select --set mpi mpich-clang-fortran        
-    - name: brew 
-      run: |
-        brew install libaec
-    - name: configure
-      run: |
-        mkdir build
-        cd build
-        cmake -G Ninja \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_TOOLCHAIN_FILE=config/toolchain/clang.cmake \
-        -DBUILD_SHARED_LIBS=ON \
-        -DHDF5_ENABLE_ALL_WARNINGS=ON \
-        -DHDF5_ENABLE_THREADSAFE:BOOL=OFF \
-        -DHDF5_BUILD_HL_LIB:BOOL=ON \
-        -DHDF5_ENABLE_PARALLEL:BOOL=ON \
-        -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
-        -DHDF5_BUILD_FORTRAN=ON \
-        -DHDF5_BUILD_JAVA=ON \
-        -DMPIEXEC_MAX_NUMPROCS:STRING=3 \
-        -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
-        $GITHUB_WORKSPACE
-        ctest -T Build
-        ctest -C Release -T Build
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: get
+          run: |
+          curl -O -L   https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-15-Sequoia.pkg
+      - name: port
+        run: |
+          ls -l
+          sudo installer -pkg MacPorts-2.11.5-15-Sequoia.pkg -target /
+      - name: update
+        run: |
+          export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+          ls -l /opt/local/bin
+          ls -l /opt/local/sbin
+          sudo port selfupdate
+          sudo port install mpich-clang
+          sudo port select --set mpi mpich-clang-fortran
+      - name: brew
+        run: |
+          brew install libaec
+      - name: configure
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_TOOLCHAIN_FILE=config/toolchain/clang.cmake \
+          -DBUILD_SHARED_LIBS=ON \
+          -DHDF5_ENABLE_ALL_WARNINGS=ON \
+          -DHDF5_ENABLE_THREADSAFE:BOOL=OFF \
+          -DHDF5_BUILD_HL_LIB:BOOL=ON \
+          -DHDF5_ENABLE_PARALLEL:BOOL=ON \
+          -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
+          -DHDF5_BUILD_FORTRAN=ON \
+          -DHDF5_BUILD_JAVA=ON \
+          -DMPIEXEC_MAX_NUMPROCS:STRING=3 \
+          -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
+          ..
+          ctest -T Build
+          ctest -C Release -T Build
