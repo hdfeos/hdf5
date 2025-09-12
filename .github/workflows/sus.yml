@@ -9,8 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     container: "opensuse/leap"
     steps:
-      - name: checkout
-        uses: actions/checkout@v4
       - name: install
         run: |
           zypper up -y
@@ -20,11 +18,15 @@ jobs:
               cmake bison zlib-devel
       - name: test
         run: |
-          mkdir build && cd build && \
-          cmake -DSITE:STRING="sus" -DBUILDNAME:STRING="cpp/f/hl" \
+          git clone https://github.com/hdfeos/hdf5
+          cd hdf5
+          mkdir build
+          cd build
+          cmake -DSITE:STRING="sus" -DBUILDNAME:STRING="cpp/f/h" \
           -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
           -DCTEST_DROP_LOCATION_INIT:STRING="/submit.php?project=HDF5" \
           -DHDF5_BUILD_FORTRAN=ON \
           -DHDF5_BUILD_HL_LIB=ON \
           -DHDF5_BUILD_CPP_LIB:BOOL=True \
-          .. && ctest -D Experimental -C Release
+          ..
+          ctest -D Experimental -C Release
