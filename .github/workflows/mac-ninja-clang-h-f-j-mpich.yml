@@ -1,4 +1,4 @@
-name: mac ninja clang h f j mpich
+name: mac ninja mpich cl f h j 
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
 
 jobs:
   build:
-    name: mac ninja clang h f j mpich
+    name: mac ninja mpich cl f h j 
     runs-on: macos-15
     steps:
       - name: checkout
         uses: actions/checkout@v4
       - name: get
-          run: |
+        run: |
           curl -O -L   https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-15-Sequoia.pkg
       - name: port
         run: |
