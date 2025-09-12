@@ -35,10 +35,10 @@ jobs:
             sudo pkg install -y git
             sudo pkg install -y cmake
             sudo pkg install -y jpeg-turbo
-            sudo pkg install -y openjdk23
+            sudo pkg install -y openjdk22
             sudo pkg install -y gcc13
-            pkg info -l openjdk23
-            export JAVA_HOME=/usr/local/openjdk23
+            pkg info -l openjdk22
+            export JAVA_HOME=/usr/local/openjdk22
             export FC=gfortran13
             sudo mount -t fdescfs fdesc /dev/fd
             sudo mount -t procfs proc /proc

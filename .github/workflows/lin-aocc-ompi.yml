@@ -69,8 +69,8 @@ jobs:
           -DHDF5_ENABLE_SUBFILING_VFD:BOOL=OFF \
           -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
           -DLIBAEC_USE_LOCALCONTENT=OFF \
-          -DMPIEXEC_MAX_NUMPROCS:STRING="3" \
           -DZLIB_USE_LOCALCONTENT=OFF \
           -DSITE:STRING=ubu \
           ..
           ctest -D Experimental
+#           -DMPIEXEC_MAX_NUMPROCS:STRING="3" \
