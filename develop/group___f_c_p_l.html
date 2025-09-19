@@ -49,7 +49,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-09-12</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-09-19</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -152,7 +152,7 @@ $(document).ready(function(){initNavTree('group___f_c_p_l.html',''); initResizab
 <tr>
 <td><a class="el" href="group___f_c_p_l.html#gad012d7f3c2f1e1999eb1770aae3a4963" title="Sets the file space page size for a file creation property list.">H5Pset_file_space_page_size</a>/<a class="el" href="group___f_c_p_l.html#gaab5e8c08e4f588e0af1d937fcebfc885" title="Retrieves the file space page size for a file creation property list.">H5Pget_file_space_page_size</a> </td><td>Sets or retrieves the file space page size used in paged aggregation and paged buffering.  </td></tr>
 <tr>
-<td><a class="el" href="group___f_c_p_l.html#ga167ff65f392ca3b7f1933b1cee1b9f70" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy</a>/<a class="el" href="group___f_c_p_l.html#ga54cf6ca4f897ba9ee3695a15fe8e6029" title="Retrieves the file space handling strategy, persisting free-space condition and threshold value for a...">H5Pget_file_space_strategy</a> </td><td>Sets or retrieves the file space handling strategy, the persisting free-space and the free-space section size.  </td></tr>
+<td><a class="el" href="group___f_c_p_l.html#gae9ed9b56f290d6d24421242f1c04914e" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy</a>/<a class="el" href="group___f_c_p_l.html#gae43e976d78a41b3b181fa10f8c77f522" title="Retrieves the file space handling strategy, persisting free-space condition and threshold value for a...">H5Pget_file_space_strategy</a> </td><td>Sets or retrieves the file space handling strategy, the persisting free-space and the free-space section size.  </td></tr>
 <tr>
 <td><a class="el" href="group___f_c_p_l.html#ga5e5020b1e2579da4617ea115e3cc50f1" title="Sets number of shared object header message indexes.">H5Pset_shared_mesg_nindexes</a>/<a class="el" href="group___f_c_p_l.html#ga30980db1814a251e7b40362af1006652" title="Retrieves the number of shared object header message indexes in file creation property list.">H5Pget_shared_mesg_nindexes</a> </td><td>Sets or retrieves number of shared object header message indexes in file creation property list.  </td></tr>
 <tr>
@@ -184,9 +184,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gaab5e8c08e4f588e0af1d937fcebfc885" id="r_gaab5e8c08e4f588e0af1d937fcebfc885"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#gaab5e8c08e4f588e0af1d937fcebfc885">H5Pget_file_space_page_size</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> *<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fsp_size</a>)</td></tr>
 <tr class="memdesc:gaab5e8c08e4f588e0af1d937fcebfc885"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the file space page size for a file creation property list.  <br /></td></tr>
 <tr class="separator:gaab5e8c08e4f588e0af1d937fcebfc885"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga54cf6ca4f897ba9ee3695a15fe8e6029" id="r_ga54cf6ca4f897ba9ee3695a15fe8e6029"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#ga54cf6ca4f897ba9ee3695a15fe8e6029">H5Pget_file_space_strategy</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcc">H5F_fspace_strategy_t</a> *<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">strategy</a>, <a class="el" href="_h5public_8h.html#ad470b00eccd2115c707c02de5fa1120d">hbool_t</a> *<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">persist</a>, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> *threshold)</td></tr>
-<tr class="memdesc:ga54cf6ca4f897ba9ee3695a15fe8e6029"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the file space handling strategy, persisting free-space condition and threshold value for a file creation property list.  <br /></td></tr>
-<tr class="separator:ga54cf6ca4f897ba9ee3695a15fe8e6029"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae43e976d78a41b3b181fa10f8c77f522" id="r_gae43e976d78a41b3b181fa10f8c77f522"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#gae43e976d78a41b3b181fa10f8c77f522">H5Pget_file_space_strategy</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcc">H5F_fspace_strategy_t</a> *<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">strategy</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">bool</a> *<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">persist</a>, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> *threshold)</td></tr>
+<tr class="memdesc:gae43e976d78a41b3b181fa10f8c77f522"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the file space handling strategy, persisting free-space condition and threshold value for a file creation property list.  <br /></td></tr>
+<tr class="separator:gae43e976d78a41b3b181fa10f8c77f522"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2179b032be5d2efbca63d8f82a292ec1" id="r_ga2179b032be5d2efbca63d8f82a292ec1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#ga2179b032be5d2efbca63d8f82a292ec1">H5Pget_istore_k</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">unsigned</a> *<a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ik</a>)</td></tr>
 <tr class="memdesc:ga2179b032be5d2efbca63d8f82a292ec1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Queries the 1/2 rank of an indexed storage B-tree.  <br /></td></tr>
 <tr class="separator:ga2179b032be5d2efbca63d8f82a292ec1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -217,9 +217,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gad012d7f3c2f1e1999eb1770aae3a4963" id="r_gad012d7f3c2f1e1999eb1770aae3a4963"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#gad012d7f3c2f1e1999eb1770aae3a4963">H5Pset_file_space_page_size</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fsp_size</a>)</td></tr>
 <tr class="memdesc:gad012d7f3c2f1e1999eb1770aae3a4963"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the file space page size for a file creation property list.  <br /></td></tr>
 <tr class="separator:gad012d7f3c2f1e1999eb1770aae3a4963"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga167ff65f392ca3b7f1933b1cee1b9f70" id="r_ga167ff65f392ca3b7f1933b1cee1b9f70"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#ga167ff65f392ca3b7f1933b1cee1b9f70">H5Pset_file_space_strategy</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcc">H5F_fspace_strategy_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">strategy</a>, <a class="el" href="_h5public_8h.html#ad470b00eccd2115c707c02de5fa1120d">hbool_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">persist</a>, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> threshold)</td></tr>
-<tr class="memdesc:ga167ff65f392ca3b7f1933b1cee1b9f70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the file space handling strategy and persisting free-space values for a file creation property list.  <br /></td></tr>
-<tr class="separator:ga167ff65f392ca3b7f1933b1cee1b9f70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae9ed9b56f290d6d24421242f1c04914e" id="r_gae9ed9b56f290d6d24421242f1c04914e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#gae9ed9b56f290d6d24421242f1c04914e">H5Pset_file_space_strategy</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcc">H5F_fspace_strategy_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">strategy</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">bool</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">persist</a>, <a class="el" href="_h5public_8h.html#a7f81cce70fb546af88da24d9285d3c1c">hsize_t</a> threshold)</td></tr>
+<tr class="memdesc:gae9ed9b56f290d6d24421242f1c04914e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the file space handling strategy and persisting free-space values for a file creation property list.  <br /></td></tr>
+<tr class="separator:gae9ed9b56f290d6d24421242f1c04914e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga84a72f59d17841c37ab34674bf22a10c" id="r_ga84a72f59d17841c37ab34674bf22a10c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_h5public_8h.html#a3b079ecf932a5c599499cf7e298af160">herr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group___f_c_p_l.html#ga84a72f59d17841c37ab34674bf22a10c">H5Pset_istore_k</a> (<a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">plist_id</a>, <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">unsigned</a> <a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ik</a>)</td></tr>
 <tr class="memdesc:ga84a72f59d17841c37ab34674bf22a10c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the size of the parameter used to control the B-trees for indexing chunked datasets.  <br /></td></tr>
 <tr class="separator:ga84a72f59d17841c37ab34674bf22a10c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -285,7 +285,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns a non-negative value if successful; otherwise, returns a negative value.</dd></dl>
 <dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000080">Deprecated:</a></b></dt><dd>When was this function deprecated?</dd></dl>
-<p>Maps to the function <a class="el" href="group___f_c_p_l.html#ga54cf6ca4f897ba9ee3695a15fe8e6029" title="Retrieves the file space handling strategy, persisting free-space condition and threshold value for a...">H5Pget_file_space_strategy()</a></p>
+<p>Maps to the function <a class="el" href="group___f_c_p_l.html#gae43e976d78a41b3b181fa10f8c77f522" title="Retrieves the file space handling strategy, persisting free-space condition and threshold value for a...">H5Pget_file_space_strategy()</a></p>
 <dl class="section since"><dt>Since</dt><dd>1.10.0 </dd></dl>
 
 </div>
@@ -331,8 +331,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ga54cf6ca4f897ba9ee3695a15fe8e6029" name="ga54cf6ca4f897ba9ee3695a15fe8e6029"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga54cf6ca4f897ba9ee3695a15fe8e6029">&#9670;&#160;</a></span>H5Pget_file_space_strategy()</h2>
+<a id="gae43e976d78a41b3b181fa10f8c77f522" name="gae43e976d78a41b3b181fa10f8c77f522"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae43e976d78a41b3b181fa10f8c77f522">&#9670;&#160;</a></span>H5Pget_file_space_strategy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -352,7 +352,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="_h5public_8h.html#ad470b00eccd2115c707c02de5fa1120d">hbool_t</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">bool</a> *&#160;</td>
           <td class="paramname"><em>persist</em>, </td>
         </tr>
         <tr>
@@ -380,8 +380,8 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns a non-negative value if successful; otherwise, returns a negative value.</dd></dl>
-<p><a class="el" href="group___f_c_p_l.html#ga54cf6ca4f897ba9ee3695a15fe8e6029" title="Retrieves the file space handling strategy, persisting free-space condition and threshold value for a...">H5Pget_file_space_strategy()</a> retrieves the file space handling strategy, the persisting free-space condition and the threshold value in the parameters <code>strategy</code>, <code>persist</code> and <code>threshold</code> respectively.</p>
-<p>The library default values returned when <a class="el" href="group___f_c_p_l.html#ga167ff65f392ca3b7f1933b1cee1b9f70" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy()</a> has not been called are:</p>
+<p><a class="el" href="group___f_c_p_l.html#gae43e976d78a41b3b181fa10f8c77f522" title="Retrieves the file space handling strategy, persisting free-space condition and threshold value for a...">H5Pget_file_space_strategy()</a> retrieves the file space handling strategy, the persisting free-space condition and the threshold value in the parameters <code>strategy</code>, <code>persist</code> and <code>threshold</code> respectively.</p>
+<p>The library default values returned when <a class="el" href="group___f_c_p_l.html#gae9ed9b56f290d6d24421242f1c04914e" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy()</a> has not been called are:</p>
 <ul>
 <li><code>strategy</code> - <a class="el" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcca4eb2323fa7feed13452676d57cc27a87">H5F_FSPACE_STRATEGY_FSM_AGGR</a> </li>
 <li><code>persist</code> - 0 </li>
@@ -828,7 +828,7 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns a non-negative value if successful; otherwise, returns a negative value.</dd></dl>
 <dl class="deprecated"><dt><b><a class="el" href="deprecated.html#_deprecated000079">Deprecated:</a></b></dt><dd>When was this function deprecated?</dd></dl>
-<p>Maps to the function <a class="el" href="group___f_c_p_l.html#ga167ff65f392ca3b7f1933b1cee1b9f70" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy()</a>.</p>
+<p>Maps to the function <a class="el" href="group___f_c_p_l.html#gae9ed9b56f290d6d24421242f1c04914e" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy()</a>.</p>
 <dl class="section since"><dt>Since</dt><dd>1.10.0 </dd></dl>
 
 </div>
@@ -875,8 +875,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ga167ff65f392ca3b7f1933b1cee1b9f70" name="ga167ff65f392ca3b7f1933b1cee1b9f70"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga167ff65f392ca3b7f1933b1cee1b9f70">&#9670;&#160;</a></span>H5Pset_file_space_strategy()</h2>
+<a id="gae9ed9b56f290d6d24421242f1c04914e" name="gae9ed9b56f290d6d24421242f1c04914e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae9ed9b56f290d6d24421242f1c04914e">&#9670;&#160;</a></span>H5Pset_file_space_strategy()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -896,7 +896,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="_h5public_8h.html#ad470b00eccd2115c707c02de5fa1120d">hbool_t</a>&#160;</td>
+          <td class="paramtype"><a class="el" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">bool</a>&#160;</td>
           <td class="paramname"><em>persist</em>, </td>
         </tr>
         <tr>
@@ -924,7 +924,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns a non-negative value if successful; otherwise, returns a negative value.</dd></dl>
-<p><a class="el" href="group___f_c_p_l.html#ga167ff65f392ca3b7f1933b1cee1b9f70" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy()</a> sets the file space handling <code>strategy</code>, specifies persisting free-space or not (<code>persist</code>), and sets the free-space section size <code>threshold</code> in the file creation property list <code>plist_id</code>.</p>
+<p><a class="el" href="group___f_c_p_l.html#gae9ed9b56f290d6d24421242f1c04914e" title="Sets the file space handling strategy and persisting free-space values for a file creation property l...">H5Pset_file_space_strategy()</a> sets the file space handling <code>strategy</code>, specifies persisting free-space or not (<code>persist</code>), and sets the free-space section size <code>threshold</code> in the file creation property list <code>plist_id</code>.</p>
 <p><a class="el" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcc">H5F_fspace_strategy_t</a> is a struct defined in <a class="el" href="_h5_fpublic_8h.html">H5Fpublic.h</a> as follows:</p>
 <div class="fragment"><div class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> <a class="code hl_enumeration" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcc">H5F_fspace_strategy_t</a> {</div>
 <div class="line">    <a class="code hl_enumvalue" href="_h5_fpublic_8h.html#a9cc492c4b5c936e48716a8dab3691bcca4eb2323fa7feed13452676d57cc27a87">H5F_FSPACE_STRATEGY_FSM_AGGR</a> = 0, </div>
