@@ -60,7 +60,7 @@ jobs:
           mkdir build
           cd build
           CC=mpicc cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake -G Ninja \
-          -DBUILDNAME:STRING="ninja/ompi-5.0.8/aocc-5.0.0" \
+          -DBUILDNAME:STRING="ninja/ompi-5.0.8/aocc-5.0.0/np=2" \
           -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
           -DHDF5_BUILD_FORTRAN:BOOL=OFF \
           -DHDF5_BUILD_JAVA:BOOL=OFF \
@@ -69,8 +69,9 @@ jobs:
           -DHDF5_ENABLE_SUBFILING_VFD:BOOL=OFF \
           -DHDF5_BUILD_CPP_LIB:BOOL=OFF \
           -DLIBAEC_USE_LOCALCONTENT=OFF \
+          -DMPIEXEC_MAX_NUMPROCS:STRING="2" \
+          -DSITE:STRING=ubu \          
           -DZLIB_USE_LOCALCONTENT=OFF \
-          -DSITE:STRING=ubu \
           ..
-          ctest -D Experimental
-#           -DMPIEXEC_MAX_NUMPROCS:STRING="3" \
+          ctest -C Release -D Experimental
+
