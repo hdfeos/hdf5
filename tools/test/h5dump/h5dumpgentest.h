@@ -22,7 +22,7 @@ void gent_dataset(void);
 void gent_dataset2(void);
 void gent_attribute(void);
 void gent_softlink(void);
-int  gent_softlink2(void);
+int  gent_softlink2(bool big_endian_committed);
 void gent_hardlink(void);
 void gent_extlink(void);
 void gent_udlink(void);
@@ -37,7 +37,7 @@ void gent_str(void);
 void gent_str2(void);
 void gent_enum(void);
 void gent_objref(void);
-void gent_datareg(void);
+void gent_datareg(bool undefined_fill_value);
 void gent_attrreg(void);
 void gent_nestcomp(void);
 void gent_opaque(void);
@@ -124,6 +124,9 @@ void gent_float16_be(void);
 
 void gent_complex(void);
 void gent_complex_be(void);
+
+void gent_bfloat16(void);
+void gent_bfloat16_be(void);
 
 void gent_trefer_attr(void);
 void gent_tattr4_be(void);
