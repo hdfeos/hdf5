@@ -32,4 +32,4 @@ jobs:
 
       - name: Build
         working-directory: build
-        run: ctest -T Build
+        run: ctest -D Experimental
