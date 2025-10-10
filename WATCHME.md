@@ -26,7 +26,6 @@
 
 | Test    | Status |
 | --------| ------ |
-| mac12 |  [![mac Xcode](https://github.com/hdfeos/hdf5/actions/workflows/mac-xcode.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-xcode.yml) |
 | mac26 | [![mac26 off](https://github.com/hdfeos/hdf5/actions/workflows/mac26-off.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-off.yml) |
 | mac14 | [![mac14 ninja h j ompi cd](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-h-j-ompi-cd.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-h-j-ompi-cd.yml) |
 | mac15 | [![mac15](https://github.com/hdfeos/hdf5/actions/workflows/mac15.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac15.yml) [![mac15 Xcode](https://github.com/hdfeos/hdf5/actions/workflows/mac15-xcode.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac15-xcode.yml) |
