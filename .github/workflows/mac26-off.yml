@@ -1,4 +1,4 @@
-name: mac13 off
+name: mac26 off
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: mac13 off
+    name: mac26 off
     runs-on: macos-26
     steps:
     - name: Install Dependencies (macOS)

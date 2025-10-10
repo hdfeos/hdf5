@@ -1,4 +1,4 @@
-name: mac13 sh s3
+name: mac26 sh s3
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: mac13 sh s3
+    name: mac26 sh s3
     runs-on: macos-26
     steps:
     - name: Install Dependencies

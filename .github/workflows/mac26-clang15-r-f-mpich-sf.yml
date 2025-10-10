@@ -1,4 +1,4 @@
-name: mac13 clang15 r f mpich sf
+name: mac26 clang15 r f mpich sf
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches: develop
 jobs:
   build:
-    name: mac13 clang15 r f mpich sf
+    name: mac26 clang15 r f mpich sf
     runs-on: macos-26
 
     steps:

@@ -1,4 +1,4 @@
-name: mac-13 ninja d mpich cl fl sf
+name: mac-26 ninja d mpich cl fl sf
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: mac-13 ninja d mpich cl fl sf
+    name: mac-26 ninja d mpich cl fl sf
     runs-on: macos-26
 
     steps:

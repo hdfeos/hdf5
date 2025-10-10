@@ -1,4 +1,4 @@
-name: mac13 xcode clang15 d f mpich s3 sf
+name: mac26 xcode clang15 d f mpich s3 sf
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: mac13 xcode clang15 d mpich sf
+    name: mac26 xcode clang15 d mpich sf
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
