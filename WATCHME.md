@@ -27,10 +27,10 @@
 | Test    | Status |
 | --------| ------ |
 | mac12 |  [![mac Xcode](https://github.com/hdfeos/hdf5/actions/workflows/mac-xcode.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-xcode.yml) |
-| mac13 | [![mac13 off](https://github.com/hdfeos/hdf5/actions/workflows/mac13-off.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac13-off.yml) |
+| mac26 | [![mac26 off](https://github.com/hdfeos/hdf5/actions/workflows/mac26-off.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-off.yml) |
 | mac14 | [![mac14 ninja h j ompi cd](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-h-j-ompi-cd.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-h-j-ompi-cd.yml) |
 | mac15 | [![mac15](https://github.com/hdfeos/hdf5/actions/workflows/mac15.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac15.yml) [![mac15 Xcode](https://github.com/hdfeos/hdf5/actions/workflows/mac15-xcode.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac15-xcode.yml) |
-| iOS |  [![mac13 ios](https://github.com/hdfeos/hdf5/actions/workflows/ios.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/ios.yml) |
+| iOS |  [![mac26 ios](https://github.com/hdfeos/hdf5/actions/workflows/ios.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/ios.yml) |
 
 ### Linux
 
@@ -66,7 +66,7 @@
 
 | Test | Status |
 | -----| ------ |
-| clang |  [![mac13 ninja clang15 d h f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac13-ninja-clang15-d-h-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac13-ninja-clang15-d-h-f-mpich-sf.yml) [![mac13 clang15 r f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac13-clang15-r-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac13-clang15-r-f-mpich-sf.yml) [![mac13 xcode clang15 d mpich s3 sf](https://github.com/hdfeos/hdf5/actions/workflows/mac13-xcode-clang15-d-mpich-s3-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac13-xcode-clang15-d-mpich-s3-sf.yml)  [![mac ninja clang j ompi](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml)  |
+| clang |  [![mac26 ninja clang15 d h f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac26-ninja-clang15-d-h-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-ninja-clang15-d-h-f-mpich-sf.yml) [![mac26 clang15 r f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac26-clang15-r-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-clang15-r-f-mpich-sf.yml) [![mac26 xcode clang15 d mpich s3 sf](https://github.com/hdfeos/hdf5/actions/workflows/mac26-xcode-clang15-d-mpich-s3-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-xcode-clang15-d-mpich-s3-sf.yml)  [![mac ninja clang j ompi](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml)  |
 | flang |  [![mac14 ninja clang19 fl d f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-clang19-fl-d-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-clang19-fl-d-f-mpich-sf.yml) |
 | gcc_arm | [![lin gcc_arm64](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64.yml) [![lin gcc_arm64 cpp](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64-cpp.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64-cpp.yml) |
 | gcc_min | [![lin gcc_min](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_min.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_min.yml) |
@@ -83,7 +83,7 @@
 | Test  | Status |
 | ------| ------ |
 | Debug | [![d](https://github.com/hdfeos/hdf5/actions/workflows/d.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/d.yml) |
-| Off   | [![mac13 off](https://github.com/hdfeos/hdf5/actions/workflows/mac13-off.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac13-off.yml) |
+| Off   | [![mac26 off](https://github.com/hdfeos/hdf5/actions/workflows/mac26-off.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-off.yml) |
 | Shared | [![nbsd f -sh](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f-sh.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-f-sh.yml) |
 | Leak | [![lin clang s_l](https://github.com/hdfeos/hdf5/actions/workflows/lin-clang-s_l.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-clang-s_l.yml) |
 
@@ -115,7 +115,7 @@
 
 | Test | Status |
 | -----| ------ |
-| S3   | [![mac13 sh s3](https://github.com/hdfeos/hdf5/actions/workflows/mac13-sh-s3.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac13-sh-s3.yml) |
+| S3   | [![mac26 sh s3](https://github.com/hdfeos/hdf5/actions/workflows/mac26-sh-s3.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-sh-s3.yml) |
 | Subfiling | [![lin icx d f p sf](https://github.com/hdfeos/hdf5/actions/workflows/lin-icx-d-f-p-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-icx-d-f-p-sf.yml) [![lin nvhpc f p sf](https://github.com/hdfeos/hdf5/actions/workflows/lin-nvhpc-f-p-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-nvhpc-f-p-sf.yml) |
 
 ## Extra

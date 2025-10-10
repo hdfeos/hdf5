@@ -1,4 +1,4 @@
-name: mac13 sh s3
+name: mac13 off
 
 on:
   workflow_dispatch:
@@ -7,16 +7,15 @@ on:
 
 jobs:
   build:
-    name: mac13 sh s3
-    runs-on: macos-13
+    name: mac13 off
+    runs-on: macos-26
     steps:
-    - name: Install Dependencies
-      run: brew install curl openssl aws-c-s3
+    - name: Install Dependencies (macOS)
+      run: brew install ninja
     - name: Get Sources
       uses: actions/checkout@v4.1.1
     - name: Configure
       run: |
-        export OPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@3/3.1.1
         mkdir "${{ runner.workspace }}/build"
         cd "${{ runner.workspace }}/build"
         cmake \
@@ -24,7 +23,7 @@ jobs:
         -DBUILD_STATIC_EXECS:BOOL=OFF \
         -DBUILD_STATIC_LIBS:BOOL=OFF \
         -DBUILD_SZIP_WITH_FETCHCONTENT:BOOL=OFF \
-        -DBUILD_TESTING:BOOL=ON \
+        -DBUILD_TESTING:BOOL=OFF \
         -DBUILD_USER_DEFINED_LIBS:BOOL=OFF \
         -DBUILD_ZLIB_WITH_FETCHCONTENT:BOOL=OFF \
         -DHDF5_BATCH_H5DETECT:BOOL=OFF \
@@ -55,7 +54,7 @@ jobs:
         -DHDF5_ENABLE_MIRROR_VFD=OFF \
         -DHDF5_ENABLE_PARALLEL:BOOL=OFF \
         -DHDF5_ENABLE_PLUGIN_SUPPORT:BOOL=OFF \
-        -DHDF5_ENABLE_ROS3_VFD:BOOL=ON \
+        -DHDF5_ENABLE_ROS3_VFD:BOOL=OFF \
         -DHDF5_ENABLE_SUBFILING_VFD:BOOL=OFF \
         -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
         -DHDF5_ENABLE_THREADSAFE:BOOL=OFF \
@@ -70,7 +69,7 @@ jobs:
         -DHDF5_PACK_EXAMPLES:BOOL=OFF \
         -DHDF5_PACK_MACOSX_FRAMEWORK:BOOL=OFF \
         -DHDF5_USE_FILE_LOCKING:BOOL=OFF \
-        -DDF5_USE_GNU_DIRS:BOOL=OFF \
+        -DHDF5_USE_GNU_DIRS:BOOL=OFF \
         -DHDF5_USE_PREGEN:BOOL=OFF \
         -DSZIP_USE_EXTERNAL:BOOL=OFF \
         -DTEST_SHELL_SCRIPTS:BOOL=OFF \

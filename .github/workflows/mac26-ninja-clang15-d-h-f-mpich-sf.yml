@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: mac-13 ninja d mpich cl f h sf
-    runs-on: macos-13
+    runs-on: macos-26
 
     steps:
     - name: checkout

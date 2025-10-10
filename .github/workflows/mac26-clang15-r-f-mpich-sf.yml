@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: mac13 clang15 r f mpich sf
-    runs-on: macos-13
+    runs-on: macos-26
 
     steps:
       - name: checkout
