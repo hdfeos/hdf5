@@ -1,4 +1,4 @@
-name: mac26 clang15 r f mpich sf
+name: mac-26 mpich clang-15 r f sf
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches: develop
 jobs:
   build:
-    name: mac26 clang15 r f mpich sf
+    name: mac-26 mpich clang-15 r f sf
     runs-on: macos-26
 
     steps:
@@ -18,7 +18,7 @@ jobs:
       - name: install
         run: |
           brew install flang ninja
-          sudo installer -pkg MacPorts-2.11.5-13-Ventura.pkg -target /
+          sudo installer -pkg MacPorts-2.11.5-26-Tahoe.pkg -target /
       - name: update
         run: |
           export PATH=/opt/local/bin:/opt/local/sbin:$PATH
@@ -29,8 +29,8 @@ jobs:
         run: |
           export PATH=/opt/local/bin:/opt/local/sbin:$PATH          
           port version
-          sudo port install mpich-clang15
-          sudo port select --set mpi mpich-clang15-fortran
+          sudo port install mpich-clang17
+          sudo port select --set mpi mpich-clang17-fortran
       - name: test
         run: |
           mkdir build
