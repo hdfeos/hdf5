@@ -49,7 +49,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-10-11</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-10-14</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -562,7 +562,7 @@ Functions</h2></td></tr>
 <div class="line">            }</div>
 <div class="line">            <span class="comment">// calculate the nominal chunk size</span></div>
 <div class="line">            size = 1;</div>
-<div class="line">            <span class="keywordflow">for</span> (<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">i</a> = 0; <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">i</a> &lt; (size_t)rank; ++<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">i</a>)</div>
+<div class="line">            <span class="keywordflow">for</span> (<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">i</a> = 0; <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">i</a> &lt; (<a class="code hl_variable" href="namespaceh5fortran__types.html#a3be2e7678b801f965eed1fffb85947bd">size_t</a>)rank; ++<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">i</a>)</div>
 <div class="line">                size *= <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">cdims</a>[<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">i</a>];</div>
 <div class="line">            <span class="comment">// print dataset info</span></div>
 <div class="line">            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">printf</a>(<span class="stringliteral">&quot;%s%s : nominal chunk size %lu [B] \n&quot;</span>, <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">base_path</a>, name, size);</div>
@@ -600,6 +600,7 @@ Functions</h2></td></tr>
 <div class="ttc" id="agroup___h5_s_html_gae5282a81692b80b5b19dd12d05b9b28e"><div class="ttname"><a href="group___h5_s.html#gae5282a81692b80b5b19dd12d05b9b28e">H5Sget_simple_extent_ndims</a></div><div class="ttdeci">int H5Sget_simple_extent_ndims(hid_t space_id)</div><div class="ttdoc">Determines the dimensionality of a dataspace.</div></div>
 <div class="ttc" id="agroup___h5_t_html_ga1b971589cd7a86f3e84affdee455564e"><div class="ttname"><a href="group___h5_t.html#ga1b971589cd7a86f3e84affdee455564e">H5Tget_size</a></div><div class="ttdeci">size_t H5Tget_size(hid_t type_id)</div><div class="ttdoc">Returns the size of a datatype.</div></div>
 <div class="ttc" id="agroup___h5_t_html_gafcba4db244f6a4d71e99c6e72b8678f0"><div class="ttname"><a href="group___h5_t.html#gafcba4db244f6a4d71e99c6e72b8678f0">H5Tclose</a></div><div class="ttdeci">herr_t H5Tclose(hid_t type_id)</div><div class="ttdoc">Releases a datatype.</div></div>
+<div class="ttc" id="anamespaceh5fortran__types_html_a3be2e7678b801f965eed1fffb85947bd"><div class="ttname"><a href="namespaceh5fortran__types.html#a3be2e7678b801f965eed1fffb85947bd">h5fortran_types::size_t</a></div><div class="ttdeci">integer, parameter size_t</div><div class="ttdef"><b>Definition</b> H5fortran_types.F90:26</div></div>
 <div class="ttc" id="astruct_h5_o__info2__t_html"><div class="ttname"><a href="struct_h5_o__info2__t.html">H5O_info2_t</a></div><div class="ttdef"><b>Definition</b> H5Opublic.h:145</div></div>
 <div class="ttc" id="astruct_h5_o__info2__t_html_a6e12ef8203e400ee995a41a24e981539"><div class="ttname"><a href="struct_h5_o__info2__t.html#a6e12ef8203e400ee995a41a24e981539">H5O_info2_t::type</a></div><div class="ttdeci">H5O_type_t type</div><div class="ttdef"><b>Definition</b> H5Opublic.h:149</div></div>
 </div><!-- fragment --></dd></dl>
