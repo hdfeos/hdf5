@@ -15,11 +15,11 @@ jobs:
         uses: actions/checkout@v4
       - name: get
         run: |
-          curl -O -L  https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-13-Ventura.pkg
+          curl -O -L  https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-26-Tahoe.pkg
       - name: install
         run: |
-          brew install flang
-          sudo installer -pkg MacPorts-2.11.5-13-Ventura.pkg -target /
+          brew install flang --build-from-source
+          sudo installer -pkg MacPorts-2.11.5-26-Tahoe.pkg -target /        
       - name: update
         run: |
           export PATH=/opt/local/bin:/opt/local/sbin:$PATH
