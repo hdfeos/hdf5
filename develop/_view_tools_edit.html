@@ -49,7 +49,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-11-04</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2025-11-05</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -173,8 +173,8 @@ Change a Dataset's Storage Layout</h1>
 <p>If you type <code style="background-color:whitesmoke;">h5repack -h</code> on the command line, you will see a detailed usage statement with examples of modifying the layout.</p>
 <p>In the following example, the dataset <code style="background-color:whitesmoke;">/dset</code> in the file dset.h5 is contiguous, as shown by the <code style="background-color:whitesmoke;"><a class="el" href="_h5_t_o_o_l__d_p__u_g.html#sec_cltools_h5dump">h5dump</a> -pH</code> command. The <code style="background-color:whitesmoke;"><a class="el" href="_h5_t_o_o_l__r_p__u_g.html#sec_cltools_h5repack">h5repack</a></code> utility writes dset.h5 to a new file, dsetrpk.h5, where the dataset <code style="background-color:whitesmoke;">dset</code> is chunked. This can be seen by examining the resulting dsetrpk.h5 file with <code style="background-color:whitesmoke;"><a class="el" href="_h5_t_o_o_l__d_p__u_g.html#sec_cltools_h5dump">h5dump</a></code>, as shown: </p><div class="fragment"><div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">$</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5dump</a> -<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">pH</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dset</a>.h5</div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">HDF5</a> <span class="stringliteral">&quot;dset.h5&quot;</span> {</div>
-<div class="line">GROUP <span class="stringliteral">&quot;/&quot;</span> {</div>
-<div class="line">   DATASET <span class="stringliteral">&quot;dset&quot;</span> {</div>
+<div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;/&quot;</span> {</div>
+<div class="line">   <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset&quot;</span> {</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 4, 6 ) / ( 4, 6 ) }</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">STORAGE_LAYOUT</a> {</div>
@@ -200,8 +200,8 @@ Change a Dataset's Storage Layout</h1>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">$</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5dump</a> -<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">pH</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dsetrpk</a>.h5</div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">HDF5</a> <span class="stringliteral">&quot;dsetrpk.h5&quot;</span> {</div>
-<div class="line">GROUP <span class="stringliteral">&quot;/&quot;</span> {</div>
-<div class="line">   DATASET <span class="stringliteral">&quot;dset&quot;</span> {</div>
+<div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;/&quot;</span> {</div>
+<div class="line">   <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset&quot;</span> {</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 4, 6 ) / ( 4, 6 ) }</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">STORAGE_LAYOUT</a> {</div>
@@ -224,7 +224,7 @@ Change a Dataset's Storage Layout</h1>
 <div class="ttc" id="a_h5_dpublic_8h_html_aa39293626c4e68dd28b06c0dc84bde4aa85b225308b0a277c4dd6fed7ee465a72"><div class="ttname"><a href="_h5_dpublic_8h.html#aa39293626c4e68dd28b06c0dc84bde4aa85b225308b0a277c4dd6fed7ee465a72">H5D_FILL_TIME_IFSET</a></div><div class="ttdeci">@ H5D_FILL_TIME_IFSET</div><div class="ttdef"><b>Definition</b> H5Dpublic.h:102</div></div>
 <div class="ttc" id="a_h5_dpublic_8h_html_aab70b464cf3c5fc931dce0c4fe98b3d2a7c5fcb6f9c8adecf455939c3d625b7e8"><div class="ttname"><a href="_h5_dpublic_8h.html#aab70b464cf3c5fc931dce0c4fe98b3d2a7c5fcb6f9c8adecf455939c3d625b7e8">H5D_ALLOC_TIME_LATE</a></div><div class="ttdeci">@ H5D_ALLOC_TIME_LATE</div><div class="ttdef"><b>Definition</b> H5Dpublic.h:76</div></div>
 <div class="ttc" id="a_h5_dpublic_8h_html_aab70b464cf3c5fc931dce0c4fe98b3d2ac898a96931fd3402d9e5646690c77636"><div class="ttname"><a href="_h5_dpublic_8h.html#aab70b464cf3c5fc931dce0c4fe98b3d2ac898a96931fd3402d9e5646690c77636">H5D_ALLOC_TIME_INCR</a></div><div class="ttdeci">@ H5D_ALLOC_TIME_INCR</div><div class="ttdef"><b>Definition</b> H5Dpublic.h:77</div></div>
-<div class="ttc" id="agroup___p_d_t_s_t_d_html_ga37e8a6be7ee64587c2a282b965019bb8"><div class="ttname"><a href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div><div class="ttdeci">#define H5T_STD_I32BE</div><div class="ttdef"><b>Definition</b> H5Tpublic.h:367</div></div>
+<div class="ttc" id="agroup___p_d_t_s_t_d_html_ga37e8a6be7ee64587c2a282b965019bb8"><div class="ttname"><a href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div><div class="ttdeci">#define H5T_STD_I32BE</div><div class="ttdef"><b>Definition</b> H5Tpublic.h:401</div></div>
 <div class="ttc" id="ah5import_8h_html_a25022864dfc8ec428e7128282e57b136"><div class="ttname"><a href="h5import_8h.html#a25022864dfc8ec428e7128282e57b136">CHUNK</a></div><div class="ttdeci">#define CHUNK</div><div class="ttdef"><b>Definition</b> h5import.h:349</div></div>
 </div><!-- fragment --><p>There can be many reasons that the storage layout needs to be changed for a dataset. For example, there may be a performance issue with a dataset due to a small chunk size.</p>
 <h1><a class="anchor" id="secViewToolsEditApply"></a>
@@ -260,8 +260,8 @@ Apply Compression Filter to a Dataset</h1>
 </ul>
 <p><em>Example</em> </p><div class="fragment"><div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">$</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5dump</a> -<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">pH</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dset</a>.h5</div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">HDF5</a> <span class="stringliteral">&quot;dset.h5&quot;</span> {</div>
-<div class="line">GROUP <span class="stringliteral">&quot;/&quot;</span> {</div>
-<div class="line">   DATASET <span class="stringliteral">&quot;dset&quot;</span> {</div>
+<div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;/&quot;</span> {</div>
+<div class="line">   <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset&quot;</span> {</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 12, 18 ) / ( 12, 18 ) }</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">STORAGE_LAYOUT</a> {</div>
@@ -287,8 +287,8 @@ Apply Compression Filter to a Dataset</h1>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">$</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5dump</a> -<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">pH</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dsetrpk</a>.h5</div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">HDF5</a> <span class="stringliteral">&quot;dsetrpk.h5&quot;</span> {</div>
-<div class="line">GROUP <span class="stringliteral">&quot;/&quot;</span> {</div>
-<div class="line">   DATASET <span class="stringliteral">&quot;dset&quot;</span> {</div>
+<div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;/&quot;</span> {</div>
+<div class="line">   <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset&quot;</span> {</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 12, 18 ) / ( 12, 18 ) }</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">STORAGE_LAYOUT</a> {</div>
@@ -333,17 +333,17 @@ Copy Objects to Another File</h1>
 <div class="ttc" id="ah5import_8h_html_a254c266e4e95df99708a4e96db2c0e9e"><div class="ttname"><a href="h5import_8h.html#a254c266e4e95df99708a4e96db2c0e9e">help</a></div><div class="ttdeci">void help(char *)</div></div>
 </div><!-- fragment --><p>In the example below, the dataset <code style="background-color:whitesmoke;">/MyGroup/Group_A/dset2</code> in <code style="background-color:whitesmoke;">groups.h5</code> gets copied to the root ("&lt;code style="background-color:whitesmoke;"&gt;/&lt;/code&gt;") group of a new file, <code style="background-color:whitesmoke;">newgroup.h5</code>, with the name <code style="background-color:whitesmoke;">dset3</code>: </p><div class="fragment"><div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">$h5dump</a> -<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">H</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">groups</a>.h5</div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">HDF5</a> <span class="stringliteral">&quot;groups.h5&quot;</span> {</div>
-<div class="line">GROUP <span class="stringliteral">&quot;/&quot;</span> {</div>
-<div class="line">   GROUP <span class="stringliteral">&quot;MyGroup&quot;</span> {</div>
-<div class="line">      GROUP <span class="stringliteral">&quot;Group_A&quot;</span> {</div>
-<div class="line">         DATASET <span class="stringliteral">&quot;dset2&quot;</span> {</div>
+<div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;/&quot;</span> {</div>
+<div class="line">   <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;MyGroup&quot;</span> {</div>
+<div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;Group_A&quot;</span> {</div>
+<div class="line">         <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset2&quot;</span> {</div>
 <div class="line">            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 2, 10 ) / ( 2, 10 ) }</div>
 <div class="line">         }</div>
 <div class="line">      }</div>
-<div class="line">      GROUP <span class="stringliteral">&quot;Group_B&quot;</span> {</div>
+<div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;Group_B&quot;</span> {</div>
 <div class="line">      }</div>
-<div class="line">      DATASET <span class="stringliteral">&quot;dset1&quot;</span> {</div>
+<div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset1&quot;</span> {</div>
 <div class="line">         <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">         <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 3, 3 ) / ( 3, 3 ) }</div>
 <div class="line">      }</div>
@@ -355,8 +355,8 @@ Copy Objects to Another File</h1>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">$</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5dump</a> -<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">H</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">newgroup</a>.h5</div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">HDF5</a> <span class="stringliteral">&quot;newgroup.h5&quot;</span> {</div>
-<div class="line">GROUP <span class="stringliteral">&quot;/&quot;</span> {</div>
-<div class="line">   DATASET <span class="stringliteral">&quot;dset3&quot;</span> {</div>
+<div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;/&quot;</span> {</div>
+<div class="line">   <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset3&quot;</span> {</div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 2, 10 ) / ( 2, 10 ) }</div>
 <div class="line">   }</div>
@@ -368,13 +368,13 @@ Copy Objects to Another File</h1>
 <div class="line"> </div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">$</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5dump</a> -<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">H</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">mygrouponly</a>.h5</div>
 <div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">HDF5</a> <span class="stringliteral">&quot;mygrouponly.h5&quot;</span> {</div>
-<div class="line">GROUP <span class="stringliteral">&quot;/&quot;</span> {</div>
-<div class="line">   GROUP <span class="stringliteral">&quot;MyGroup&quot;</span> {</div>
-<div class="line">      GROUP <span class="stringliteral">&quot;Group_A&quot;</span> {</div>
+<div class="line"><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;/&quot;</span> {</div>
+<div class="line">   <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;MyGroup&quot;</span> {</div>
+<div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;Group_A&quot;</span> {</div>
 <div class="line">      }</div>
-<div class="line">      GROUP <span class="stringliteral">&quot;Group_B&quot;</span> {</div>
+<div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">GROUP</a> <span class="stringliteral">&quot;Group_B&quot;</span> {</div>
 <div class="line">      }</div>
-<div class="line">      DATASET <span class="stringliteral">&quot;dset1&quot;</span> {</div>
+<div class="line">      <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASET</a> <span class="stringliteral">&quot;dset1&quot;</span> {</div>
 <div class="line">         <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATATYPE</a>  <a class="code hl_define" href="group___p_d_t_s_t_d.html#ga37e8a6be7ee64587c2a282b965019bb8">H5T_STD_I32BE</a></div>
 <div class="line">         <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">DATASPACE</a>  <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">SIMPLE</a> { ( 3, 3 ) / ( 3, 3 ) }</div>
 <div class="line">      }</div>

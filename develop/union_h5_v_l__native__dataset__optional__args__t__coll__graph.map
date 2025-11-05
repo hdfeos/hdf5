@@ -10,10 +10,11 @@
 <area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="393,215,596,215,596,220,393,220"/>
 <area shape="rect" id="Node000006" href="$struct_h5_v_l__native__dataset__chunk__read__t.html" title=" " alt="" coords="195,261,355,301"/>
 <area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="369,266,572,235,595,230,596,236,572,240,369,271"/>
-<area shape="rect" id="Node000007" title=" " alt="" coords="5,269,65,294"/>
-<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="79,279,195,279,195,284,79,284"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="5,301,65,326"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="79,305,195,289,196,295,79,310"/>
 <area shape="rect" id="Node000008" href="$struct_h5_v_l__native__dataset__chunk__write__t.html" title=" " alt="" coords="195,325,355,365"/>
+<area shape="poly" id="edge8_Node000008_Node000007" title=" " alt="" coords="79,322,90,324,195,337,195,343,89,329,78,327"/>
 <area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="369,332,468,314,520,300,571,282,613,260,648,235,651,240,615,264,573,286,522,305,469,319,370,338"/>
 <area shape="rect" id="Node000009" href="$struct_h5_v_l__native__dataset__get__vlen__buf__size__t.html" title=" " alt="" coords="195,389,355,429"/>
-<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="369,404,418,398,470,387,522,370,571,346,601,321,627,292,662,236,667,239,631,295,605,325,573,350,524,375,471,392,419,403,369,409"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="369,404,418,398,470,388,522,371,571,347,601,322,627,293,663,236,667,239,632,296,605,326,573,352,524,376,471,393,419,404,369,410"/>
 </map>
