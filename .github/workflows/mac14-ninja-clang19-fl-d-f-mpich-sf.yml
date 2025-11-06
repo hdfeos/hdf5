@@ -40,7 +40,6 @@ jobs:
             -DBUILD_SHARED_LIBS=ON \
             -DBUILD_STATIC_EXECS:BOOL=OFF \
             -DBUILD_STATIC_LIBS:BOOL=OFF \
-            -DCMAKE_TOOLCHAIN_FILE=config/toolchain/clang.cmake \
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
             -DHDF5_ENABLE_ALL_WARNINGS=ON \
             -DHDF5_ENABLE_PARALLEL:BOOL=ON \
