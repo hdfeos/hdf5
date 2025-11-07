@@ -39,6 +39,8 @@ jobs:
           cmake -G Ninja \
             -DBUILDNAME="ninja/mpich-4.3/clang-17/f/j/hl/aw/-ts/sf/np=3" \
             -DCTEST_DROP_SITE_INIT=my.cdash.org \
+            -DCMAKE_C_COMPILER=mpicc-mpich-clang \
+            -DCMAKE_Fortran_COMPILER=mpifort-mpich-clang \
             -DHDF5_BUILD_JAVA:BOOL=ON \
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
             -DHDF5_BUILD_HL_LIB:BOOL=ON \

@@ -1,4 +1,4 @@
-name: mac14 ninja clang19 fl d f mpich sf
+name: mac-14 ninja mpich clang-19 fl d f sf
 
 on:
   push:
@@ -29,13 +29,14 @@ jobs:
           export PATH=/opt/local/bin:/opt/local/sbin:$PATH          
           port version
           sudo port install mpich-clang
-          sudo port select --set mpi mpich-clang-fortran        
+          sudo port select --set mpi mpich-clang-fortran
       - name: test
         run: |
           mkdir build
           cd build
           cmake -G Ninja \
-            -DCMAKE_C_COMPILER=mpicc -DCMAKE_Fortran_COMPILER=mpifort \
+            -DCMAKE_C_COMPILER=mpicc-mpich-clang \
+            -DCMAKE_Fortran_COMPILER=mpifort-mpich-clang \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_SHARED_LIBS=ON \
             -DBUILD_STATIC_EXECS:BOOL=OFF \
