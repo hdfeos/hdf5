@@ -50,6 +50,6 @@ jobs:
           -DCTEST_DROP_SITE_INIT=my.cdash.org \
           -DHDF5_WANT_DATA_ACCURACY=OFF \
           -DHDF5_WANT_DCONV_EXCEPTION=OFF \
-          -DSITE:STRING=ubu-24 \
+          -DSITE:STRING="ubu-24" \
           ..
-          cmake -D Experimental
+          ctest -D Experimental
