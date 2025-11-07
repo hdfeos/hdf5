@@ -46,10 +46,9 @@ jobs:
             mkdir build
             cd build
             cmake \
-            -DBUILDNAME:STRING=f.jdk-24 \
+            -DBUILDNAME:STRING="clang-19/gfortran-13/jdk-24" \
             -D HDF5_BUILD_FORTRAN:BOOL=ON \
             -D HDF5_BUILD_JAVA:BOOL=ON \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
-            -D SITE:STRING=fbsd ..
-            ctest -T Build
-            ctest -C Release -T Test
+            -D SITE:STRING="fbsd-14.3" ..
+            ctest -D Experimental

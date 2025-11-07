@@ -20,7 +20,12 @@
 | Test    | Status |
 | --------| ------ |
 | FreeBSD |  [![fbsd](https://github.com/hdfeos/hdf5/actions/workflows/fbsd.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/fbsd.yml) |
-| NetBSD |  [![nbsd](https://github.com/hdfeos/hdf5/actions/workflows/nbsd.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd.yml)|
+| NetBSD |  [![nbsd](https://github.com/hdfeos/hdf5/actions/workflows/nbsd.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd.yml)  [![arm64 nbsd](https://github.com/hdfeos/hdf5/actions/workflows/arm64_nbsd.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/arm64_nbsd.yml)  [![nbsd-9.3](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-9.3.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/nbsd-9.3.yml) |
+
+### Haiku
+| Test    | Status |
+| --------| ------ |
+| Haiku |  [![haiku](https://github.com/hdfeos/hdf5/actions/workflows/haiku.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/haiku.yml) |
 
 ### Mac
 
@@ -66,7 +71,7 @@
 | Test | Status |
 | -----| ------ |
 | clang |  [![mac26 ninja clang15 d h f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac26-ninja-clang15-d-h-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac26-ninja-clang15-d-h-f-mpich-sf.yml) [![mac26 mpich clang17 r f sf](https://github.com/hdfeos/hdf5/actions/workflows/mac-26_mpich_clang-17_r_f_sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-26_mpich_clang-17_r_f_sf.yml) [![mac26 xcode clang15 d mpich s3 sf](https://github.com/hdfeos/hdf5/actions/workflows/mac-26_xcode_mpich_clang-20_d_s3_sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-26_xcode_mpich_clang-20_d_s3_sf.yml)  [![mac ninja clang j ompi](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac-ninja-clang-j-ompi.yml)  |
-| flang |  [![mac14 ninja clang19 fl d f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-clang19-fl-d-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-clang19-fl-d-f-mpich-sf.yml) |
+| flang |  [![mac15 flang21](https://github.com/hdfeos/hdf5/actions/workflows/mac15-fl.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac15-fl.yml)  [![mac14 ninja clang19 fl d f mpich sf](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-clang19-fl-d-f-mpich-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/mac14-ninja-clang19-fl-d-f-mpich-sf.yml) |
 | gcc_arm | [![lin gcc_arm64](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64.yml) [![lin gcc_arm64 cpp](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64-cpp.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_arm64-cpp.yml) |
 | gcc_min | [![lin gcc_min](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_min.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-gcc_min.yml) |
 | icx | [![lin icx](https://github.com/hdfeos/hdf5/actions/workflows/lin-icx.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-icx.yml) [![lin icx f p sf](https://github.com/hdfeos/hdf5/actions/workflows/lin-icx-f-p-sf.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/lin-icx-f-p-sf.yml) [![win ninja icx](https://github.com/hdfeos/hdf5/actions/workflows/win-ninja-icx.yml/badge.svg)](https://github.com/hdfeos/hdf5/actions/workflows/win-ninja-icx.yml)|
