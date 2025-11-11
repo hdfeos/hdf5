@@ -24,11 +24,13 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DSITE:STRING=alp.i386 \
+          cmake \
             -DBUILDNAME:STRING="d/f" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DHDF5_BUILD_FORTRAN=ON \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" \
-            -DHDF5_BUILD_FORTRAN=ON \
+            -DSITE:STRING=alp.i386 \
              ..
           ctest -D Experimental
         shell: alpine.sh --root {0}
