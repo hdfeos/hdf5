@@ -32,5 +32,6 @@ jobs:
            -DMPIEXEC_MAX_NUMPROCS:STRING="2" \
            -DSITE:STRING=cyg \
            ..
-          ctest -D Experimental
+          ctest -C Release -T Build
+          ctest -C Release -T Test
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'

@@ -35,8 +35,8 @@ jobs:
           mkdir build
           cd build
           cmake -G Ninja \
-            -DCMAKE_C_COMPILER=mpicc-mpich-clang \
-            -DCMAKE_Fortran_COMPILER=mpifort-mpich-clang \
+            -DCMAKE_C_COMPILER=/opt/local/bin/mpicc-mpich-clang \
+            -DCMAKE_Fortran_COMPILER=/opt/local/bin/mpifort-mpich-clang \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_SHARED_LIBS=ON \
             -DBUILD_STATIC_EXECS:BOOL=OFF \
