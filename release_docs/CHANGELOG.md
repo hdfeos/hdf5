@@ -86,7 +86,7 @@ We would like to thank the many HDF5 community members who contributed to HDF5 2
 ### Improved the cross-compile support in the build system
 
    The CMake build system has been improved to better support cross-compiling. This includes the following changes:
-   - The CMake option, `CMAKE_CROSS_COMPILING`, indicates that the library is being cross-compiled. This option, usually in a toolchain file, can be set to ON when cross-compiling.
+   - The CMake option, `CMAKE_CROSSCOMPILING`, indicates that the library is being cross-compiled. This option, usually in a toolchain file, can be set to ON when cross-compiling.
    - Removed the `CMAKE_CROSSCOMPILING_EMULATOR` when cross-compiling, CMake will automatically insert it in the command.
    - Added an option `HDF5_USE_PREGEN` to supply pre-generated files located in `HDF5_USE_PREGEN_DIR` directory, to bypass running feature detection programs when cross-compiling.
    - Added a variable `CROSSCOMPILING_PATH` to specify a path to search for programs when cross-compiling. This is useful when the build system needs to run programs that were built for the host system.
@@ -95,7 +95,7 @@ We would like to thank the many HDF5 community members who contributed to HDF5 2
 
    The variables used in hdf5-config.cmake to indicate what options were used to build the installed library have been renamed. All `HDF5_BUILD/ENABLE_{feature}` variables are now `HDF5_PROVIDES_{feature}`. This more clearly indicates that these variables reflect whether the feature is supported by the installed library, instead of whether the feature is an option that can be changed when building an application with the library.
 
-   Created macro `EXTERNAL_HDF5_STATUS` to convert between the old and new names. The macro is in the config/examples/HDF5SubdirMacros.cmake file and can be copied into a project's CMakeLists.txt file to provide backward compatibility.
+   Created macro `EXTERNAL_HDF5_STATUS` to convert between the old and new names. The macro is in the config/examples/HDF5AsSubdirMacros.cmake file and can be copied into a project's CMakeLists.txt file to provide backward compatibility.
 
 ### CMake minimum version is now 3.26
 
@@ -836,6 +836,14 @@ Added Fortran wrapper `h5fdsubfiling_get_file_mapping_f()` for the subfiling fil
 
    Added missing parameters H5F_ACC_SWMR_READ_F and H5F_ACC_SWMR_WRITE_F
    Fixed GitHub issue [#5959](https://github.com/HDFGroup/hdf5/issues/5959)
+
+### Added Fortran wrappers for SWMR functionality
+
+   Added four new Fortran wrappers that provide direct access to SWMR (Single Writer Multiple Reader) C APIs:
+   - `h5fstart_swmr_write_f` - Enables SWMR writing mode for a file
+   - `h5dflush_f`            - Flushes dataset buffers to disk
+   - `h5pset_append_flush_f` - Sets append flush property values including optional callback function
+   - `h5pget_append_flush_f` - Retrieves append flush property values including callback function
 
 ## High-Level Library
 
