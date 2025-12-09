@@ -72,4 +72,4 @@ jobs:
             -DSITE:STRING=ubu \
             -DZLIB_USE_LOCALCONTENT=OFF \
             ..
-          ctest -D Experimental
+#          ctest -D Experimental

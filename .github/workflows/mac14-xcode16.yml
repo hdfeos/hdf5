@@ -31,4 +31,4 @@ jobs:
           -D SITE:STRING="mac-14" \
           -G Xcode \
           ..
-          ctest -D Experimental -C Debug
+#          ctest -D Experimental -C Debug

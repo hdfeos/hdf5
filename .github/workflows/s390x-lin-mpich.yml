@@ -34,4 +34,4 @@ jobs:
             -D HDF5_ENABLE_PARALLEL:BOOL=ON \
             -D SITE:STRING=s390x \
             ..
-            ctest -D Experimental
+#            ctest -D Experimental

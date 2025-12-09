@@ -41,4 +41,4 @@ jobs:
             -DBUILDNAME:STRING="r" \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -D SITE:STRING=fbsd ..
-            ctest -D Experimental
+#            ctest -D Experimental

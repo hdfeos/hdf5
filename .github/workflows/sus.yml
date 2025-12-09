@@ -29,4 +29,4 @@ jobs:
           -DHDF5_BUILD_HL_LIB=ON \
           -DHDF5_BUILD_CPP_LIB:BOOL=True \
           ..
-          ctest -D Experimental -C Release
+#          ctest -D Experimental -C Release

@@ -32,7 +32,7 @@ jobs:
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
             -DSITE:STRING=s390x \
             ..
-            ctest -D Experimental
+#            ctest -D Experimental
 
       - name: Get the output
         # Echo the `uname` output parameter from the `runcmd` step

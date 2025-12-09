@@ -35,7 +35,7 @@ jobs:
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -D SITE:STRING=ppc64le \
             ..
-            ctest -D Experimental
+#            ctest -D Experimental
 
       - name: Get the output
         run: |

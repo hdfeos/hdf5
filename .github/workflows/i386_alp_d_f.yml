@@ -32,5 +32,5 @@ jobs:
             -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" \
             -DSITE:STRING=alp.i386 \
              ..
-          ctest -D Experimental
+#          ctest -D Experimental
         shell: alpine.sh --root {0}

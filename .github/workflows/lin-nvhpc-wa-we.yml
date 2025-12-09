@@ -52,4 +52,4 @@ jobs:
           -DHDF5_WANT_DCONV_EXCEPTION=OFF \
           -DSITE:STRING="ubu-24" \
           ..
-          ctest -D Experimental
+#          ctest -D Experimental

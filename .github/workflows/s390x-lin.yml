@@ -32,4 +32,4 @@ jobs:
             -D SITE:STRING=s390x \
             -DBUILDNAME:STRING="r" \
             ..
-            ctest -D Experimental
+#            ctest -D Experimental

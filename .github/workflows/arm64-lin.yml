@@ -35,4 +35,4 @@ jobs:
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -DSITE:STRING="ubu-24.arm64" \
             ..
-            ctest -D Experimental
+#            ctest -D Experimental

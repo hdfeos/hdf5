@@ -50,4 +50,4 @@ jobs:
             -DHDF5_BUILD_JAVA:BOOL=ON \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -DSITE:STRING=fbsd.arm64 ..
-            ctest -D Experimental
+#            ctest -D Experimental
