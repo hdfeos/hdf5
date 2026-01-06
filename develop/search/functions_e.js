@@ -13,5 +13,5 @@ var searchData=
   ['removefilter_10',['removeFilter',['../class_h5_1_1_d_set_creat_prop_list.html#a5cd9c3f5587dcee8322441e5dfdac857',1,'H5::DSetCreatPropList']]],
   ['removeprop_11',['removeprop',['../class_h5_1_1_prop_list.html#a9e42ec3f5bea2481f8ca077533b69f13',1,'H5::PropList::removeProp(const char *name) const'],['../class_h5_1_1_prop_list.html#a7a4da28534ffb98a03385e8ab2fc4356',1,'H5::PropList::removeProp(const std::string &amp;name) const']]],
   ['renameattr_12',['renameattr',['../class_h5_1_1_h5_object.html#a466ba22ebe37cb75c4b24af16c16c065',1,'H5::H5Object::renameAttr(const char *oldname, const char *newname) const'],['../class_h5_1_1_h5_object.html#ae8401e10c58a44cc793ff43e14311818',1,'H5::H5Object::renameAttr(const std::string &amp;oldname, const std::string &amp;newname) const']]],
-  ['reopen_13',['reopen',['../class_h5_1_1_h5_file.html#a5da0cb2509adb3f43c3a25d1ab815b93',1,'H5::H5File::reopen()'],['../class_h5_1_1_h5_file.html#a91e549d54366fa55f39aa5bee35b2c07',1,'H5::H5File::reOpen()']]]
+  ['reopen_13',['reopen',['../class_h5_1_1_h5_file.html#a91e549d54366fa55f39aa5bee35b2c07',1,'H5::H5File::reOpen()'],['../class_h5_1_1_h5_file.html#a5da0cb2509adb3f43c3a25d1ab815b93',1,'H5::H5File::reopen()']]]
 ];
