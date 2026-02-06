@@ -22,6 +22,5 @@ var searchData=
   ['properties_20and_20property_20lists_20in_20hdf5_19',['Properties and Property Lists in HDF5',['../_h5_p__u_g.html',1,'']]],
   ['property_20list_20parameter_20that_20may_20generate_20metadata_20reads_20',['Functions with No Access Property List Parameter that May Generate Metadata Reads',['../maybe_metadata_reads.html',1,'']]],
   ['property_20lists_20basics_21',['Property Lists Basics',['../_l_b_props_list.html',1,'LearnBasics']]],
-  ['property_20lists_20in_20hdf5_22',['Properties and Property Lists in HDF5',['../_h5_p__u_g.html',1,'']]],
-  ['purpose_23',['Scripts in &lt;tt&gt;bin&lt;/tt&gt; and their purpose',['../md_bin_2_r_e_a_d_m_e.html',1,'']]]
+  ['property_20lists_20in_20hdf5_22',['Properties and Property Lists in HDF5',['../_h5_p__u_g.html',1,'']]]
 ];

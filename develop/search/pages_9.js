@@ -20,8 +20,7 @@ var searchData=
   ['debugging_20hdf5_20applications_17',['Debugging HDF5 Applications',['../_a_p_p_d_b_g.html',1,'']]],
   ['deprecated_20list_18',['Deprecated List',['../deprecated.html',1,'']]],
   ['dimension_20scales_19',['HDF5 High Level Dimension Scales',['../_h5_d_s__u_g.html',1,'']]],
-  ['directory_20',['directory',['../md_config_2_r_e_a_d_m_e.html',1,'The &lt;tt&gt;config&lt;/tt&gt; directory'],['../md_release__docs_2_r_e_a_d_m_e.html',1,'The &lt;tt&gt;release_docs&lt;/tt&gt; directory']]],
-  ['discovering_20the_20contents_20of_20an_20hdf5_20file_21',['Discovering the Contents of an HDF5 File',['../_l_b_contents.html',1,'LearnBasics']]],
-  ['discussion_22',['HDF5 File Format Discussion',['../_f_m_t_d_i_s_c.html',1,'']]],
-  ['drivers_23',['HDF5 Virtual File Drivers',['../_h5_f_d__u_g.html',1,'']]]
+  ['discovering_20the_20contents_20of_20an_20hdf5_20file_20',['Discovering the Contents of an HDF5 File',['../_l_b_contents.html',1,'LearnBasics']]],
+  ['discussion_21',['HDF5 File Format Discussion',['../_f_m_t_d_i_s_c.html',1,'']]],
+  ['drivers_22',['HDF5 Virtual File Drivers',['../_h5_f_d__u_g.html',1,'']]]
 ];
