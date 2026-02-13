@@ -49,7 +49,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-02-06</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-02-13</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -302,26 +302,26 @@ The function H5Sencode was renamed to <a class="el" href="group___h5_s.html#ga82
 </ul>
 <p><b>In the Fortran Interface (main library)</b><br  />
  Following are the new or changed APIs introduced in HDF5-1.12.0. Those introduced with a new feature list the specific new feature that they were added for. </p><ul>
-<li><a class="el" href="group___f_h5_f.html#ga35a9c9175f686cf27be586c638de35b8" title="Retrieves the file number of the HDF5 file.">h5f.h5fget_fileno_f</a> - Retrieves a file's file number that uniquely identifies the open file </li>
-<li><a class="el" href="group___f_h5_f.html#ga0c26a936ec294197ef7b1f8f553f3fe6" title="Determines whether a file can be accessed as HDF5.">h5f.h5fis_accessible_f</a> - Determines if a file can be opened with a given fapl </li>
-<li><a class="el" href="group___f_h5_l.html#gaeac9913b7460534637eb563bb24eeb3e" title="Returns information about a link.">h5l.h5lget_info_f</a> - The function h5lget_info_f is mapped to <a class="el" href="group___h5_l.html#ga65e63c6e880fd0183c40486d6748e400" title="Returns information about a link.">H5Lget_info2</a>. </li>
-<li><a class="el" href="group___f_h5_l.html#gaf01b68f47bbe14f84531b70b479b9ed3" title="Retrieves metadata for a link in a group, according to the order within a field or index.">h5l.h5lget_info_by_idx_f</a> - The function h5lget_info_by_idx_f is mapped to <a class="el" href="group___h5_l.html#gaecfb3ef8520e9224b24a151ff8459ba9" title="Retrieves metadata for a link in a group, according to the order within a field or index.">H5Lget_info_by_idx2</a>. </li>
-<li><a class="el" href="group___f_h5_l.html#gad003be2bb372d942d6da17786d6f3780" title="$ SUBROUTINE h5lget_val_by_idx_f(loc_id, group_name, index_field, order, n, &amp; $ f_corder_valid,...">h5l.h5literate_f</a> - The function h5literate_f is mapped to <a class="el" href="group___t_r_a_v.html#gad7ca4206f06b5ada85b6ec5867ec6c73" title="Iterates over links in a group, with user callback routine, according to the order within an index.">H5Literate2</a>. </li>
-<li><a class="el" href="group___f_h5_l.html#gaefb80ce5f9684adc388db149145a56a9" title="Iterates through links in a group.">h5l.h5literate_by_name_f</a> - The function h5literate_by_name_f is mapped to <a class="el" href="group___t_r_a_v.html#ga745a65eb516ce40a3be43490aaeb5c5e" title="Iterates through links in a group.">H5Literate_by_name2</a>. </li>
-<li><a class="el" href="group___f_h5_o.html#ga5ce7a8d47ba39d5f2e694a67aec1b977" title="Opens an object using its token within an HDF5 file.">h5o.h5oopen_by_token_f</a> - Opens an object in an HDF5 file using its VOL independent token </li>
-<li><a class="el" href="group___f_h5_o.html#ga328c8eb3fec6785ae0ca058262021d72" title="Compare two tokens, which must be from the same file / containers.">h5o.h5otoken_cmp_f</a> - Compares two VOL connector object tokens </li>
-<li><a class="el" href="group___f_h5_p.html#gab14928abc2895630c1723dfc1672f64d" title="Get the file VOL connector (VOL_ID) for a file access property list (PLIST_ID)">h5p.h5pget_vol_id_f</a> - Returns the identifier of the current VOL connector </li>
-<li><a class="el" href="group___f_h5_p.html#gabb31b43a8dea521d3b5306b04972f7b4" title="Set the file VOL connector (VOL_ID) for a file access property list (PLIST_ID)">h5p.h5pset_vol_f</a> - Set the file VOL connector for a file access property list </li>
-<li><a class="el" href="group___f_h5_v_l.html#ga8a437cde7583cdcc32b894ee602d4002" title="Closes a VOL connector ID.">h5vl.h5vlclose_f</a> - Closes a VOL connector identifier </li>
-<li><a class="el" href="group___f_h5_v_l.html#ga39618f7f555e75cc7174931085b0dcd1" title="Retrieves the ID for a registered VOL connector.">h5vl.h5vlget_connector_id_f</a> - Retrieves the VOL connector identifier for a given object identifier </li>
-<li><a class="el" href="group___f_h5_v_l.html#ga89c080746f422a3a046ea3f196cce6fa" title="Retrieves the ID for a registered VOL connector.">h5vl.h5vlget_connector_id_by_name_f</a> - Retrieves the identifier for a registered VOL connector name </li>
-<li><a class="el" href="group___f_h5_v_l.html#gac95c5ad4ff2fd0dbc8b2459fd370f6e6" title="Retrieves the ID for a registered VOL connector.">h5vl.h5vlget_connector_id_by_value_f</a> - Retrieves the identifier for a registered VOL connector value </li>
-<li><a class="el" href="group___f_h5_v_l.html#ga6ff828c4094ce6aea90add840102c433" title="Retrieves a connector name for a VOL.">h5vl.h5vlget_connector_name_f</a> - Retrieves the connector name for the VOL associated with the object or file identifier </li>
-<li><a class="el" href="group___f_h5_v_l.html#ga76f9920f5babdf76cfa931832667b212" title="Determines whether a VOL class has been registered or not ccording to a specified connector name.">h5vl.h5vlis_connector_registered_by_name_f</a> - Tests whether a VOL class has been registered or not for a connector name </li>
-<li><a class="el" href="group___f_h5_v_l.html#gaa1e4806b94ca9f5e6d4f714b83c9dda9" title="Determines whether a VOL class has been registered or not according to a specified connector value (I...">h5vl.h5vlis_connector_registered_by_value_f</a> - Tests whether a VOL class has been registered or not for a connector value </li>
-<li><a class="el" href="group___f_h5_v_l.html#gae1026e9f61464afaa7b9e70c0ee8aff1" title="Registers a new VOL connector as a member of the virtual object layer class by name.">h5vl.h5vlregister_connector_by_name_f</a> - Registers a new VOL connector by name </li>
-<li><a class="el" href="group___f_h5_v_l.html#ga1e816fd8b5abd125fd35c43bb328b922" title="Registers a new VOL connector by value.">h5vl.h5vlregister_connector_by_value_f</a> - Registers a new VOL connector by connector value </li>
-<li><a class="el" href="group___f_h5_v_l.html#gae8b51f85b767e562299e590032b4f07b" title="Removes a VOL connector ID from the library.">h5vl.h5vlunregister_connector_f</a> - Removes a VOL connector identifier from the library</li>
+<li><a class="el" href="group___f_h5_f.html#ga35a9c9175f686cf27be586c638de35b8">h5f::h5fget_fileno_f</a> - Retrieves a file's file number that uniquely identifies the open file </li>
+<li><a class="el" href="group___f_h5_f.html#ga0c26a936ec294197ef7b1f8f553f3fe6">h5f::h5fis_accessible_f</a> - Determines if a file can be opened with a given fapl </li>
+<li><code>h5lget_info_f</code> - The function h5lget_info_f is mapped to <a class="el" href="group___h5_l.html#ga65e63c6e880fd0183c40486d6748e400" title="Returns information about a link.">H5Lget_info2</a>. </li>
+<li><code>h5lget_info_by_idx_f</code> - The function h5lget_info_by_idx_f is mapped to <a class="el" href="group___h5_l.html#gaecfb3ef8520e9224b24a151ff8459ba9" title="Retrieves metadata for a link in a group, according to the order within a field or index.">H5Lget_info_by_idx2</a>. </li>
+<li><a class="el" href="group___f_h5_l.html#gad003be2bb372d942d6da17786d6f3780">h5l::h5literate_f</a> - The function h5literate_f is mapped to <a class="el" href="group___t_r_a_v.html#gad7ca4206f06b5ada85b6ec5867ec6c73" title="Iterates over links in a group, with user callback routine, according to the order within an index.">H5Literate2</a>. </li>
+<li><a class="el" href="group___f_h5_l.html#gaefb80ce5f9684adc388db149145a56a9">h5l::h5literate_by_name_f</a> - The function h5literate_by_name_f is mapped to <a class="el" href="group___t_r_a_v.html#ga745a65eb516ce40a3be43490aaeb5c5e" title="Iterates through links in a group.">H5Literate_by_name2</a>. </li>
+<li><code>h5oopen_by_token_f</code> - Opens an object in an HDF5 file using its VOL independent token </li>
+<li><code>h5otoken_cmp_f</code> - Compares two VOL connector object tokens </li>
+<li><a class="el" href="group___f_h5_p.html#gab14928abc2895630c1723dfc1672f64d">h5p::h5pget_vol_id_f</a> - Returns the identifier of the current VOL connector </li>
+<li><a class="el" href="group___f_h5_p.html#gabb31b43a8dea521d3b5306b04972f7b4">h5p::h5pset_vol_f</a> - Set the file VOL connector for a file access property list </li>
+<li><a class="el" href="group___f_h5_v_l.html#ga8a437cde7583cdcc32b894ee602d4002">h5vl::h5vlclose_f</a> - Closes a VOL connector identifier </li>
+<li><a class="el" href="group___f_h5_v_l.html#ga39618f7f555e75cc7174931085b0dcd1">h5vl::h5vlget_connector_id_f</a> - Retrieves the VOL connector identifier for a given object identifier </li>
+<li><a class="el" href="group___f_h5_v_l.html#ga89c080746f422a3a046ea3f196cce6fa">h5vl::h5vlget_connector_id_by_name_f</a> - Retrieves the identifier for a registered VOL connector name </li>
+<li><a class="el" href="group___f_h5_v_l.html#gac95c5ad4ff2fd0dbc8b2459fd370f6e6">h5vl::h5vlget_connector_id_by_value_f</a> - Retrieves the identifier for a registered VOL connector value </li>
+<li><a class="el" href="group___f_h5_v_l.html#ga6ff828c4094ce6aea90add840102c433">h5vl::h5vlget_connector_name_f</a> - Retrieves the connector name for the VOL associated with the object or file identifier </li>
+<li><a class="el" href="group___f_h5_v_l.html#ga76f9920f5babdf76cfa931832667b212">h5vl::h5vlis_connector_registered_by_name_f</a> - Tests whether a VOL class has been registered or not for a connector name </li>
+<li><a class="el" href="group___f_h5_v_l.html#gaa1e4806b94ca9f5e6d4f714b83c9dda9">h5vl::h5vlis_connector_registered_by_value_f</a> - Tests whether a VOL class has been registered or not for a connector value </li>
+<li><a class="el" href="group___f_h5_v_l.html#gae1026e9f61464afaa7b9e70c0ee8aff1">h5vl::h5vlregister_connector_by_name_f</a> - Registers a new VOL connector by name </li>
+<li><a class="el" href="group___f_h5_v_l.html#ga1e816fd8b5abd125fd35c43bb328b922">h5vl::h5vlregister_connector_by_value_f</a> - Registers a new VOL connector by connector value </li>
+<li><a class="el" href="group___f_h5_v_l.html#gae8b51f85b767e562299e590032b4f07b">h5vl::h5vlunregister_connector_f</a> - Removes a VOL connector identifier from the library</li>
 </ul>
 <h4>In the C++ Wrapper</h4>
 <ul>

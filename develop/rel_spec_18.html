@@ -49,7 +49,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-02-06</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-02-13</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -474,7 +474,7 @@ New and Changed Functions, Classes, Subroutines, Wrappers, and Macros</h3>
 <p>The copy constructors have been no-ops and are removed in this HDF5 Release 1.8.15. The other constructors will be removed in HDF5 Release 1.10 and are expected to be removed from HDF5 Release 1.8.17 if their removal causes no problems.</p>
 <h4>In the Fortran Interface</h4>
 <p>The following Fortran 2003 API has been added: </p><ul>
-<li><a class="el" href="group___f_h5_t.html#gad8faaab2e4d701bd3da8d8b57f7790d8" title="Inserts a new enumeration datatype member.">h5t.h5tenum_insert_f</a></li>
+<li><a class="el" href="group___f_h5_t.html#gad8faaab2e4d701bd3da8d8b57f7790d8">h5t::h5tenum_insert_f</a></li>
 </ul>
 <p>Operation of the new Fortran 2003 version of this API is more consistent with the operation of the C API than was the Fortran 90 version.</p>
 <p>Users are strongly encouraged to use the Fortran 2003 API.</p>
@@ -612,12 +612,12 @@ New and Changed Functions, Classes, Subroutines, Wrappers, and Macros</h3>
 <h4>In the Fortran Interface</h4>
 <p>The following new Fortran subroutines have been added:</p>
 <p>Fortran2003 subroutines: </p><ul>
-<li><a class="el" href="group___f_h5_p.html#ga21153b9ab3b18807cd3bb69f97de5928" title="Sets an initial file image in a memory buffer.">h5p.h5pset_file_image_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga5169ab36349c85105bced2a378c36355" title="Retrieves a copy of the file image designated as the initial content and structure of a file.">h5p.h5pget_file_image_f</a> </li>
-<li><a class="el" href="group___f_h5_f.html#gaadcc5da2bf8778217f32c8afc39c811e" title="Retrieves a copy of the image of an existing, open file.">h5f.h5fget_file_image_f</a> (Added in Release 1.8.11, but not documented at that time.)</li>
+<li><a class="el" href="group___f_h5_p.html#ga21153b9ab3b18807cd3bb69f97de5928">h5p::h5pset_file_image_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga5169ab36349c85105bced2a378c36355">h5p::h5pget_file_image_f</a> </li>
+<li><a class="el" href="group___f_h5_f.html#gaadcc5da2bf8778217f32c8afc39c811e">h5f::h5fget_file_image_f</a> (Added in Release 1.8.11, but not documented at that time.)</li>
 </ul>
 <p>The following Fortran subroutine has been changed: </p><ul>
-<li><a class="el" href="group___f_h5_p.html#gaeb686e07c8239a6dc5dbc4722f563a85" title="Set the number of objects in the meta data cache and the maximum number of chunks and bytes in the ra...">h5p.h5pset_chunk_cache_f</a> - The values of the constants H5D_CHUNK_CACHE_NSLOTS_DFLT_F and H5D_CHUNK_CACHE_NBYTES_DFLT_F have been changed to INTEGER(KIND=size_t).</li>
+<li><a class="el" href="group___f_h5_p.html#gaeb686e07c8239a6dc5dbc4722f563a85">h5p::h5pset_chunk_cache_f</a> - The values of the constants H5D_CHUNK_CACHE_NSLOTS_DFLT_F and H5D_CHUNK_CACHE_NBYTES_DFLT_F have been changed to INTEGER(KIND=size_t).</li>
 </ul>
 <h4>Other New Features</h4>
 <p>Parallel I/O support: </p><ul>
@@ -770,20 +770,20 @@ New and Changed Functions and Subroutines</h3>
 </ul>
 <h4>The following new Fortran subroutines have been added</h4>
 <p><b>Fortran90 subroutines</b>: </p><ul>
-<li><a class="el" href="group___f_h5_o.html#ga19ac557c685ef7a2ed3fb0fba4c54074" title="Decrements an object reference count.">h5o.h5odecr_refcount_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga75a45f3cf17086fb2e6a339f7914fda7" title="Determines whether a link resolves to an actual object.">h5o.h5oexists_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga59fc5980136553b57e47e4cacd7999eb" title="Retrieves comment for specified object.">h5o.h5oget_comment_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#gac237ff94bcc03f6e8e311a866b20310b" title="Retrieves comment for specified object.">h5o.h5oget_comment_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#gae82a5a69f8bfbe50ced183032e93c8e8" title="Increments an object reference count.">h5o.h5oincr_refcount_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga0c59c0717072db4444fe6164cc970957" title="Open the nth object in a group.">h5o.h5oopen_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga3fbcbefb1e2dc1436852114bd81cb33d" title="Sets comment for specified object.">h5o.h5oset_comment_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#gaada5df77b659e32eae1c9ed5cf864c1f" title="Sets comment for specified object.">h5o.h5oset_comment_by_name_f</a></li>
+<li><a class="el" href="group___f_h5_o.html#ga19ac557c685ef7a2ed3fb0fba4c54074">h5o::h5odecr_refcount_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga75a45f3cf17086fb2e6a339f7914fda7">h5o::h5oexists_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga59fc5980136553b57e47e4cacd7999eb">h5o::h5oget_comment_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#gac237ff94bcc03f6e8e311a866b20310b">h5o::h5oget_comment_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#gae82a5a69f8bfbe50ced183032e93c8e8">h5o::h5oincr_refcount_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga0c59c0717072db4444fe6164cc970957">h5o::h5oopen_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga3fbcbefb1e2dc1436852114bd81cb33d">h5o::h5oset_comment_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#gaada5df77b659e32eae1c9ed5cf864c1f">h5o::h5oset_comment_by_name_f</a></li>
 </ul>
 <p>h5oclose_f was introduced in HDF5 Release 1.8.8 but remained undocumented until this release.</p>
 <p>Fortran2003 subroutines: </p><ul>
-<li><a class="el" href="group___f_h5_o.html#gabdbe70d333edbc46cffd791495e3edea" title="Retrieves the metadata for an object specified by an identifier.">h5o.h5oget_info_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga6666adcfef409c0828390b75730f9987" title="Retrieves the metadata for an object, identifying the object by an index position.">h5o.h5oget_info_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#gaed6f1ee04db6973cbffca2cf0c33348f" title="Recursively visits all objects starting from a specified object.">h5o.h5ovisit_by_name_f</a></li>
+<li><a class="el" href="group___f_h5_o.html#gabdbe70d333edbc46cffd791495e3edea">h5o::h5oget_info_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga6666adcfef409c0828390b75730f9987">h5o::h5oget_info_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#gaed6f1ee04db6973cbffca2cf0c33348f">h5o::h5ovisit_by_name_f</a></li>
 </ul>
 <h4>New Feature: Dynamically Loaded Filters</h4>
 <p>HDF5 now detects and dynamically loads external filters, reducing the need for an application to register custom filters or for a developer building on HDF5 to compile a custom filter into a customized HDF5 distribution.</p>
@@ -806,7 +806,7 @@ New and Changed Functions and Subroutines</h3>
 </ul>
 <h4>In the Fortran subroutines</h4>
 <ul>
-<li><a class="el" href="group___f_h5_p.html#ga00ebfa0049995feca79a60353ccdaede" title="Adds an external file to the list of external files.">h5p.h5pset_external_f</a> and <a class="el" href="group___f_h5_p.html#ga126f1cef1ac023caf94d4db8f502b4e9" title="Returns information about an external file.">h5p.h5pget_external_f</a> - the type of the offset parameter has changed to INTEGER(KIND=OFF_T) to support 8-byte integers, matching the C type definition of off_t. </li>
+<li><a class="el" href="group___f_h5_p.html#ga00ebfa0049995feca79a60353ccdaede">h5p::h5pset_external_f</a> and <a class="el" href="group___f_h5_p.html#ga126f1cef1ac023caf94d4db8f502b4e9">h5p::h5pget_external_f</a> - the type of the offset parameter has changed to INTEGER(KIND=OFF_T) to support 8-byte integers, matching the C type definition of off_t. </li>
 <li>The HDF5 Library now supports data conversion from enumeration to integer and floating-point numeric datatypes.</li>
 </ul>
 <h4>Command-line Tools with Changed Behavior</h4>
@@ -830,7 +830,7 @@ New and Changed Functions and Subroutines</h3>
 <li>H5Pget_mpio_no_collective_cause</li>
 </ul>
 <p><b>The following new Fortran subroutine has been added</b>: </p><ul>
-<li><a class="el" href="group___f_h5_p.html#gaafd8d84fc5b061be3dc0fb3d6278ce19" title="Retrieves the type of I/O that HDF5 actually performed on the last parallel I/O call....">h5p.h5pget_mpio_actual_io_mode_f</a></li>
+<li><a class="el" href="group___f_h5_p.html#gaafd8d84fc5b061be3dc0fb3d6278ce19">h5p::h5pget_mpio_actual_io_mode_f</a></li>
 </ul>
 <p>The syntax of the following high-level C function has changed: </p><ul>
 <li>H5TBAget_fill - This function's return type has been changed to h5tri_t. A return value of 1 indicates that a fill value is present, 0 indicates that no fill value is present, and a negative value indicates an error. (The former return type was herr_t.) Note that H5TBAget_fill and a companion function H5TBAget_title, both in the HDF5 Table (H5TB) high-level API, are undocumented. These functions will be added to the <a class="el" href="_r_m.html">HDF5 Reference Manual</a> shortly after HDF5 Release 1.8.10.</li>
@@ -843,7 +843,7 @@ Release 1.8.9 of May 2012 versus Release 1.8.8</h2>
 New and Changed Functions</h3>
 <p>A new high level C function and Fortran subroutine were added to HDF5 Lite (H5LT) to determine whether an HDF5 path is correct and resolves to a valid HDF5 object: </p><ul>
 <li>h5LTpath_valid </li>
-<li><a class="el" href="group___f_h5_l_t.html#gaaec8047e22dda2e0e56a23bfd684e053" title="Determines whether an HDF5 path is valid and, optionally, whether the path resolves to an HDF5 object...">h5lt.h5ltpath_valid_f</a></li>
+<li><code>h5ltpath_valid_f</code></li>
 </ul>
 <p>The new file image operations feature consists of the following functions and their associated callbacks, struct, and ENUM. This feature enables an application to load a file into memory (as a file image) and to operate on that file image without the overhead of disk I/O. This feature provides the following functions: </p><ul>
 <li><a class="el" href="group___h5_l_t.html#gae2834cca05d6c4787f51933cc521f8fb" title="Opens an HDF5 file image in memory.">H5LTopen_file_image</a> </li>
@@ -881,15 +881,15 @@ New and Changed Functions</h3>
 </ul>
 <h4>New Fortran Subroutines</h4>
 <p>The following Fortran subroutines have been added in this release: </p><ul>
-<li><a class="el" href="group___f_h5_l_t.html#gaaec8047e22dda2e0e56a23bfd684e053" title="Determines whether an HDF5 path is valid and, optionally, whether the path resolves to an HDF5 object...">h5lt.h5ltpath_valid_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#gaa207f2836dfd29d04c38f58607d5b575" title="Copies an object in an HDF5 file.">h5o.h5ocopy_f</a> </li>
+<li><code>h5ltpath_valid_f</code> </li>
+<li><a class="el" href="group___f_h5_o.html#gaa207f2836dfd29d04c38f58607d5b575">h5o::h5ocopy_f</a> </li>
 <li>h5fset_mpi_atomicity_f </li>
 <li>h5fget_mpi_atomicity_f</li>
 </ul>
 <p>Where a subroutine is part of a new HDF5 feature, that feature is described above.</p>
 <h4>Fortran Subroutine with Changed Behavior</h4>
 <p>The content of the buffer returned by the following Fortran subroutine has changed as noted: </p><ul>
-<li><a class="el" href="group___f_h5_l_t.html#ga6422c7066a9e5f2e96a0f64bc024628d" title="Reads an attribute from disk.">h5lt.h5ltget_attribute_string_f</a> - If the returned buffer requires padding, <a class="el" href="group___f_h5_l_t.html#ga6422c7066a9e5f2e96a0f64bc024628d" title="Reads an attribute from disk.">h5lt.h5ltget_attribute_string_f</a> now employs space padding; this buffer was previously returned with a C NULL terminator.</li>
+<li><code>h5ltget_attribute_string_f</code> - If the returned buffer requires padding, <code>h5ltget_attribute_string_f</code> now employs space padding; this buffer was previously returned with a C NULL terminator.</li>
 </ul>
 <h4>Command-line Utilities with New <a class="el" href="struct_options.html">Options</a> and/or Changed Behavior</h4>
 <p><a class="el" href="_h5_t_o_o_l__r_p__u_g.html#sec_cltools_h5repack">h5repack</a> has one new option and improved performance under certain circumstances: </p><ul>
@@ -927,55 +927,55 @@ New C Functions</h3>
 </ul>
 <h4>New Fortran 2003-only subroutines</h4>
 <p>New subroutines available only in Fortran 2003 environments: </p><ul>
-<li><a class="el" href="group___f_h5_d.html#gad0d33b3355bf0337ae261d207cde9aa5" title="Reclaims VL datatype memory buffers.">h5d.h5dvlen_reclaim_f</a> </li>
-<li><a class="el" href="group___f_h5_e.html#gae085627dd12406d957a1a200aed188e6" title="Returns settings for automatic error stack traversal function and its data.">h5e.h5eset_auto_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gaefb80ce5f9684adc388db149145a56a9" title="Iterates through links in a group.">h5l.h5literate_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gad003be2bb372d942d6da17786d6f3780" title="$ SUBROUTINE h5lget_val_by_idx_f(loc_id, group_name, index_field, order, n, &amp; $ f_corder_valid,...">h5l.h5literate_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga1aa4f84b78f029f048593b1ec0757a63" title="Recursively visits all objects starting from a specified object.">h5o.h5ovisit_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga40081a5f47dc7900a795c0df62791ff7" title="Retrieves the metadata for an object, identifying the object by location and relative name.">h5o.h5oget_info_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#ga26953ceb53421180eaceaedcb9909bbf" title="Converts data from between specified datatypes.">h5t.h5tconvert_f</a></li>
+<li><a class="el" href="group___f_h5_d.html#gad0d33b3355bf0337ae261d207cde9aa5">h5d::h5dvlen_reclaim_f</a> </li>
+<li><a class="el" href="group___f_h5_e.html#gae085627dd12406d957a1a200aed188e6">h5e::h5eset_auto_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gaefb80ce5f9684adc388db149145a56a9">h5l::h5literate_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gad003be2bb372d942d6da17786d6f3780">h5l::h5literate_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga1aa4f84b78f029f048593b1ec0757a63">h5o::h5ovisit_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga40081a5f47dc7900a795c0df62791ff7">h5o::h5oget_info_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#ga26953ceb53421180eaceaedcb9909bbf">h5t::h5tconvert_f</a></li>
 </ul>
 <h4>Subroutines with Fortran 90 versions and extended features in Fortran 2003 environments</h4>
 <p>Subroutines in this section have extended support in Fortran 2003 environments, but are new or unchanged in Fortran 90 environments.</p>
 <p>All existing Fortran 90 subroutines, including those not mentioned below, are available in both Fortran 90 and Fortran 2003 environments.</p>
 <p>Subroutines with support for the derived type C_PTR in Fortran 2003 environments: </p><ul>
-<li><a class="el" href="group___f_h5_p.html#ga39ade37224835f58e7e1673241357ab6" title="Queries the value of a property.">h5p.h5pget_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gafcbc6758d443c504f67b8e84a42fae49" title="Gets fill value for a dataset creation property list.">h5p.h5pget_fill_value_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gaa3ffcdaea90a048f2e4616f111102063" title="Registers a temporary property with a property list class.">h5p.h5pinsert_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga4c50326f6043256ec5736e669c9fe141" title="Registers a permanent property with a property list class.">h5p.h5pregister_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gae21a330f2222f0141dea5bf1ebb9f56b" title="Sets a property list value.">h5p.h5pset_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gaf8ca56e61c98f8beb7d3346f8f8b8b77" title="Sets fill value for a dataset creation property list.">h5p.h5pset_fill_value_f</a> </li>
-<li><a class="el" href="group___f_h5_r.html#gab353c178fef510803be41898fb1cc4fc" title="Creates a reference.">h5r.h5rcreate_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga39ade37224835f58e7e1673241357ab6">h5p::h5pget_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gafcbc6758d443c504f67b8e84a42fae49">h5p::h5pget_fill_value_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gaa3ffcdaea90a048f2e4616f111102063">h5p::h5pinsert_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga4c50326f6043256ec5736e669c9fe141">h5p::h5pregister_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gae21a330f2222f0141dea5bf1ebb9f56b">h5p::h5pset_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gaf8ca56e61c98f8beb7d3346f8f8b8b77">h5p::h5pset_fill_value_f</a> </li>
+<li><a class="el" href="group___f_h5_r.html#gab353c178fef510803be41898fb1cc4fc">h5r::h5rcreate_f</a> </li>
 <li>h5rdereference_f </li>
-<li><a class="el" href="group___f_h5_r.html#gaa74e6c3a73a025cd4872990bbeba2871" title="Retrieves a name of a referenced object.">h5r.h5rget_name_f</a> </li>
-<li><a class="el" href="interfaceh5r_1_1h5rget__object__type__f.html">h5r.h5rget_object_type_f</a></li>
+<li><a class="el" href="group___f_h5_r.html#gaa74e6c3a73a025cd4872990bbeba2871">h5r::h5rget_name_f</a> </li>
+<li><a class="el" href="interfaceh5r_1_1h5rget__object__type__f.html">h5r::h5rget_object_type_f</a></li>
 </ul>
 <p>Subroutines with support for the derived type C_PTR and a changed signature in Fortran 2003 environments: </p><ul>
-<li><a class="el" href="group___f_h5_a.html#gafa636328909031f7c90f483eb27f4740" title="Reads an attribute.">h5a.h5aread_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga9fb50a131f3a2852ccaf0d202429f40c" title="Writes data to an attribute.">h5a.h5awrite_f</a> </li>
-<li><a class="el" href="group___f_h5_d.html#ga66251041236aa279bf30a1bb8070a837" title="Reads raw data from a dataset into a buffer (Passes Pointer).">h5d.h5dread_f</a> </li>
-<li><a class="el" href="group___f_h5_d.html#ga4451bc359e514ad419b4c17b6fba0067" title="Writes raw data from a buffer to a dataset.">h5d.h5dwrite_f</a></li>
+<li><a class="el" href="group___f_h5_a.html#gafa636328909031f7c90f483eb27f4740">h5a::h5aread_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga9fb50a131f3a2852ccaf0d202429f40c">h5a::h5awrite_f</a> </li>
+<li><a class="el" href="group___f_h5_d.html#ga66251041236aa279bf30a1bb8070a837">h5d::h5dread_f</a> </li>
+<li><a class="el" href="group___f_h5_d.html#ga4451bc359e514ad419b4c17b6fba0067">h5d::h5dwrite_f</a></li>
 </ul>
 <p>Subroutine with additional optional parameters in Fortran 2003 environments: </p><ul>
-<li><a class="el" href="group___f_h5_p.html#ga66caa74772fb509f8c33e4b433465013" title="Create a new property list class.">h5p.h5pcreate_class_f</a></li>
+<li><a class="el" href="group___f_h5_p.html#ga66caa74772fb509f8c33e4b433465013">h5p::h5pcreate_class_f</a></li>
 </ul>
 <h4>New and updated Fortran 90 subroutines</h4>
 <p>New Fortran 90 subroutines: </p><ul>
-<li><a class="el" href="group___f_h5_p.html#gae06eb2278fc69db42df2efb7626c084d" title="Sets up the use of the N-Bit filter.">h5p.h5pset_nbit_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga7682b83b8c9d6955a93eab8847986352" title="Sets up the use of the scale-offset filter.">h5p.h5pset_scaleoffset_f</a></li>
+<li><a class="el" href="group___f_h5_p.html#gae06eb2278fc69db42df2efb7626c084d">h5p::h5pset_nbit_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga7682b83b8c9d6955a93eab8847986352">h5p::h5pset_scaleoffset_f</a></li>
 </ul>
 <p>Updated Fortran 90 subroutines: </p><ul>
-<li><a class="el" href="group___f_h5.html#ga3ca54ba860cf80a39bcaef71484f5baf" title="Initializes HDF5 Fortran interface.">h5lib.h5open_f</a> </li>
-<li><a class="el" href="group___f_h5.html#gaaae21753ce0b3ef8eeb85720ac705d88" title="Closes HDF5 Fortran interface.">h5lib.h5close_f</a> - has been modified in this release to close only the HDF5 Fortran Library interface; it no longer closes the underlying HDF5 Library. </li>
-<li><a class="el" href="group___f_h5.html#ga52f34ed77742a854b8ac701a580c2064" title="Verifies that library versions are consistent.">h5lib.h5check_version_f</a> </li>
-<li><a class="el" href="group___f_h5.html#ga93f6117c7d768224ae63c0e380168c3b" title="Returns the HDF5 LIbrary release number.">h5lib.h5get_libversion_f</a> </li>
-<li><a class="el" href="group___f_h5.html#ga317ffcf96e04bfdcdce23e7049c414bf" title="Garbage collects on all free-lists of all types.">h5lib.h5garbage_collect_f</a> </li>
-<li><a class="el" href="group___f_h5.html#ga1c43bfc696f18af3c90eed2cdf65ec45" title="Instructs library not to install atexit cleanup routine.">h5lib.h5dont_atexit_f</a></li>
+<li><a class="el" href="group___f_h5.html#ga3ca54ba860cf80a39bcaef71484f5baf">h5lib::h5open_f</a> </li>
+<li><code>h5close_f</code> - has been modified in this release to close only the HDF5 Fortran Library interface; it no longer closes the underlying HDF5 Library. </li>
+<li><code>h5check_version_f</code> </li>
+<li><a class="el" href="group___f_h5.html#ga93f6117c7d768224ae63c0e380168c3b">h5lib::h5get_libversion_f</a> </li>
+<li><a class="el" href="group___f_h5.html#ga317ffcf96e04bfdcdce23e7049c414bf">h5lib::h5garbage_collect_f</a> </li>
+<li><a class="el" href="group___f_h5.html#ga1c43bfc696f18af3c90eed2cdf65ec45">h5lib::h5dont_atexit_f</a></li>
 </ul>
 <h4>New Fortran utility functions and derived types</h4>
 <p>New Fortran utility functions: </p><ul>
-<li><a class="el" href="group___f_h5.html#ga01e3a81f299b9c9cb4bc088bab795412" title="Computes the offset in memory.">h5lib.h5offsetof</a> Available only in Fortran 2003 environments. </li>
-<li><a class="el" href="group___f_h5.html#gae0bc892d7536ce3994d3dfcd26ae0a33" title="Converts the KIND to the correct HDF type.">h5lib.h5kind_to_type</a> Available in either Fortran environment.</li>
+<li><code>h5offsetof</code> Available only in Fortran 2003 environments. </li>
+<li><code>h5kind_to_type</code> Available in either Fortran environment.</li>
 </ul>
 <p>New Fortran derived types in Fortran 2003 environments: </p><ul>
 <li><a class="el" href="structhvl__t.html">hvl_t</a> Described in New Features. </li>
@@ -983,15 +983,15 @@ New C Functions</h3>
 </ul>
 <h4>New high level Fortran interface</h4>
 <p>New Fortran subroutines in the HDF5 Dimension Scale high-level interface, H5DS: </p><ul>
-<li><a class="el" href="group___f_h5_d_s.html#gaeb5d3e43c9934bb2fe7e3dbdec534417" title="Convert dataset dsid to a dimension scale, with optional name, dimname.">h5ds.h5dsset_scale_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#ga50588af3875bff680ae903a55a3f0cdf" title="Attach dimension scale dsid to dimension idx of dataset did.">h5ds.h5dsattach_scale_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#ga15843c184487bf78bd73eef0c4693c5e" title="Detach dimension scale dsid from the dimension idx of dataset did.">h5ds.h5dsdetach_scale_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#ga19cad5f337c36e2ac26bd5f3809e6567" title="Report if dimension scale dsid is currently attached to dimension idx of dataset did.">h5ds.h5dsis_attached_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#ga6640937911372482b872e03b80fbad88" title="Determines whether did is a Dimension Scale.">h5ds.h5dsis_scale_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#ga7f9cb5b5f8f5eb1e1b3c069038a1674d" title="Set label for the dimension idx of did to the value label.">h5ds.h5dsset_label_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#ga12ed0456a8ac947465dd2a427eff6917" title="Read the label for dimension idx of did into buffer label.">h5ds.h5dsget_label_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#gaeb9f29853c60e6ee68846cfc22167c3b" title="Read the name of scale did into buffer name.">h5ds.h5dsget_scale_name_f</a> </li>
-<li><a class="el" href="group___f_h5_d_s.html#ga229397f9f94eb63f1491863a3042cdc4" title="Determines how many Dimension Scales are attached to dimension idx of did.">h5ds.h5dsget_num_scales_f</a></li>
+<li><code>h5dsset_scale_f</code> </li>
+<li><code>h5dsattach_scale_f</code> </li>
+<li><code>h5dsdetach_scale_f</code> </li>
+<li><code>h5dsis_attached_f</code> </li>
+<li><code>h5dsis_scale_f</code> </li>
+<li><code>h5dsset_label_f</code> </li>
+<li><code>h5dsget_label_f</code> </li>
+<li><code>h5dsget_scale_name_f</code> </li>
+<li><code>h5dsget_num_scales_f</code></li>
 </ul>
 <p>These subtroutines are available in both Fortran 90 and Fortran 2003 environments.</p>
 <h4>C Functions with Changed Capability</h4>
@@ -1065,15 +1065,15 @@ New C Functions and Macros</h3>
 </ul>
 <h4>Fortran Subroutines with Changed Capability</h4>
 <p>Several <code>h5ltmake_dataset*_f</code> and <code>h5ltread_dataset*_f</code> subroutines have been modified to allow them to create or read arrays of up to seven dimensions. They had previously been limited to three dimensions. </p><ul>
-<li><a class="el" href="interfaceh5lt_1_1h5ltmake__dataset__f.html">h5lt.h5ltmake_dataset_f</a> </li>
+<li><code>h5ltmake_dataset_f</code> </li>
 <li>.h5ltmake_dataset_int_f </li>
 <li>.h5ltmake_dataset_float_f </li>
 <li>h5ltmake_dataset_double_f </li>
-<li><a class="el" href="interfaceh5lt_1_1h5ltread__dataset__f.html">h5lt.h5ltread_dataset_f</a> </li>
+<li><code>h5ltread_dataset_f</code> </li>
 <li>h5ltread_dataset_int_f </li>
 <li>h5ltread_dataset_float_f </li>
 <li>h5ltread_dataset_double_f </li>
-<li><a class="el" href="group___f_h5_t_b.html#ga4f66143082feb48482071385d9e69cd2" title="Gets information about a table.">h5tb.h5tbget_field_info_f</a> has a new maxlen_out parameter. This parameter is optional.</li>
+<li><code>h5tbget_field_info_f</code> has a new maxlen_out parameter. This parameter is optional.</li>
 </ul>
 <h4>Command-line Utilities with New <a class="el" href="struct_options.html">Options</a></h4>
 <p><a class="el" href="_h5_t_o_o_l__d_f__u_g.html#sec_cltools_h5diff">h5diff</a> has a new verbose with levels option to display additional attribute information: </p><ul>
@@ -1183,8 +1183,8 @@ New C Function</h3>
 </ul>
 <h4>Fortran Subroutines with Changed Interface</h4>
 <p>The link type parameter values associated with the following Fortran subroutines have changed in this release: </p><ul>
-<li><a class="el" href="group___f_h5_l.html#gaeac9913b7460534637eb563bb24eeb3e" title="Returns information about a link.">h5l.h5lget_info_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gaf01b68f47bbe14f84531b70b479b9ed3" title="Retrieves metadata for a link in a group, according to the order within a field or index.">h5l.h5lget_info_by_idx_f</a></li>
+<li><a class="el" href="group___f_h5_l.html#gaeac9913b7460534637eb563bb24eeb3e">h5l::h5lget_info_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gaf01b68f47bbe14f84531b70b479b9ed3">h5l::h5lget_info_by_idx_f</a></li>
 </ul>
 <p>Valid values for the parameter link_type have changed to the following: </p><ul>
 <li>H5L_TYPE_HARD_F </li>
@@ -1222,8 +1222,8 @@ New and Changed Functions</h3>
 <p>The function has also been changed to suppress the warning message entirely if <code>$HDF5_DISABLE_VERSION_CHECK</code> is set to 2 or higher.</p>
 <h4>Fortran Subroutines with Changed Syntax</h4>
 <p>The following Fortran subroutines have changed syntax in this release: </p><ul>
-<li><a class="el" href="group___f_h5_l.html#gaeac9913b7460534637eb563bb24eeb3e" title="Returns information about a link.">h5l.h5lget_info_f</a> - The type of the parameter address has changed from INTEGER to INTEGER(HADDR_T). (This note added on 13 January 2010.) </li>
-<li><a class="el" href="group___f_h5_l.html#gaf01b68f47bbe14f84531b70b479b9ed3" title="Retrieves metadata for a link in a group, according to the order within a field or index.">h5l.h5lget_info_by_idx_f</a> - <code>h5lget_info_by_idx_f (loc_id, group_name, index_field, order, n, &amp;link_type, f_corder_valid, corder, cset, address, val_size, &amp;hdferr, lapl_id)</code> - The parameters link_type, address, and val_size have been added; the parameter data_size has been removed.</li>
+<li><a class="el" href="group___f_h5_l.html#gaeac9913b7460534637eb563bb24eeb3e">h5l::h5lget_info_f</a> - The type of the parameter address has changed from INTEGER to INTEGER(HADDR_T). (This note added on 13 January 2010.) </li>
+<li><a class="el" href="group___f_h5_l.html#gaf01b68f47bbe14f84531b70b479b9ed3">h5l::h5lget_info_by_idx_f</a> - <code>h5lget_info_by_idx_f (loc_id, group_name, index_field, order, n, &amp;link_type, f_corder_valid, corder, cset, address, val_size, &amp;hdferr, lapl_id)</code> - The parameters link_type, address, and val_size have been added; the parameter data_size has been removed.</li>
 </ul>
 <h4>Tools with Changed Interface or Behavior</h4>
 <p><a class="el" href="_h5_t_o_o_l__d_f__u_g.html#sec_cltools_h5diff">h5diff</a> has one new option: </p><ul>
@@ -1258,10 +1258,10 @@ New Functions</h3>
 </ul>
 <h4>Fortran Subroutines</h4>
 <p>The following subroutines are new in this release: </p><ul>
-<li><a class="el" href="group___f_h5_d.html#ga9d4a246f7458d218f797da2b18e40b51" title="Returns a copy of the dataset creation property list.">h5d.h5dget_access_plist_f</a> </li>
-<li><a class="el" href="group___f_h5_i.html#ga78cf3465aa41ed52bdbb9d80fa54d70c" title="Check if an ID is valid without producing an error message.">h5i.h5iis_valid_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gaeb686e07c8239a6dc5dbc4722f563a85" title="Set the number of objects in the meta data cache and the maximum number of chunks and bytes in the ra...">h5p.h5pset_chunk_cache_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga1829cd90f140fb049bb2ea2625adb88c" title="Retrieves the raw data chunk cache parameters.">h5p.h5pget_chunk_cache_f</a></li>
+<li><a class="el" href="group___f_h5_d.html#ga9d4a246f7458d218f797da2b18e40b51">h5d::h5dget_access_plist_f</a> </li>
+<li><a class="el" href="group___f_h5_i.html#ga78cf3465aa41ed52bdbb9d80fa54d70c">h5i::h5iis_valid_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gaeb686e07c8239a6dc5dbc4722f563a85">h5p::h5pset_chunk_cache_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga1829cd90f140fb049bb2ea2625adb88c">h5p::h5pget_chunk_cache_f</a></li>
 </ul>
 <h4>Function with Changed Behavior</h4>
 <ul>
@@ -1292,7 +1292,7 @@ New Functions</h3>
 </ul>
 <h4>Fortran Subroutine</h4>
 <p>The following subroutine is new in this release: </p><ul>
-<li><a class="el" href="group___f_h5_t.html#ga3e1a8171836aa1b9fd77b5e79c2c5587" title="Returns the native datatype of a specified datatype.">h5t.h5tget_native_type_f</a></li>
+<li><a class="el" href="group___f_h5_t.html#ga3e1a8171836aa1b9fd77b5e79c2c5587">h5t::h5tget_native_type_f</a></li>
 </ul>
 <h4>New C++ Wrappers</h4>
 <p>A number of C++ wrappers were added/removed. See RELEASE.txt for details.</p>
@@ -1305,9 +1305,9 @@ New Functions</h3>
 </ul>
 <h4>Changed Fortran Subroutines</h4>
 <p>The optional parameter mounted has been added to the following subroutines: </p><ul>
-<li><a class="el" href="group___f_h5_g.html#ga342819ce799f2124195507d73f359e81" title="Retrieves information about a group.">h5g.h5gget_info_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#ga11c96cfd376734b5c32b021b2321cf65" title="Retrieves information about a group, according to the group&#39;s position within an index.">h5g.h5gget_info_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#ga2f07d9a9eea89d2a9b4be58bb4bb5bea" title="Retrieves information about a group by its name.">h5g.h5gget_info_by_name_f</a></li>
+<li><a class="el" href="group___f_h5_g.html#ga342819ce799f2124195507d73f359e81">h5g::h5gget_info_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#ga11c96cfd376734b5c32b021b2321cf65">h5g::h5gget_info_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#ga2f07d9a9eea89d2a9b4be58bb4bb5bea">h5g::h5gget_info_by_name_f</a></li>
 </ul>
 <p><b>Changed Data Structure</b> </p><ul>
 <li><a class="el" href="struct_h5_g__info__t.html">H5G_info_t</a> - A mounted filed has been added to the <a class="el" href="struct_h5_g__info__t.html">H5G_info_t</a> struct.</li>
@@ -1369,108 +1369,108 @@ New Functions and Tools</h3>
 <p>There are no new C functions for Release 1.8.1.</p>
 <h4>Fortran subroutines</h4>
 <p>The following Fortran subroutines are new for Release 1.8.1 and are documented in the HDF5 Reference Manual. <b>H5A</b> </p><ul>
-<li><a class="el" href="group___f_h5_a.html#gac0c12363a621529d8933f6d828a6bc35" title="Creates a dataset as an attribute of a group, dataset, or named datatype.">h5a.h5acreate_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga265e4038024d38eee97803f4df05e3a8" title="Creates an attribute attached to a specified object.">h5a.h5acreate_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga02751272e96370944f347d4f86ba182c" title="Deletes an attribute from an object according to index order.">h5a.h5adelete_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gabf7d68203abbd453cd491abb118ca87c" title="Removes an attribute from a specified location.">h5a.h5adelete_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gafa106072a38e8fa36f4e93a45bec4fb8" title="Determines whether an attribute with a given name exists on an object.">h5a.h5aexists_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gabe492efdf3c22fb50600f9028ec25b35" title="Determines whether an attribute with a given name exists on an object.">h5a.h5aexists_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gacbfa8d76d901157b87f918f50ee9c301" title="Gets an attribute creation property list identifier.">h5a.h5aget_create_plist_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga0884c27021d591f086a718619192801b" title="Retrieves attribute information, by attribute identifier.">h5a.h5aget_info_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga421b7973e5fd200a375c7c1d7a03ab84" title="Retrieves attribute information by attribute index position.">h5a.h5aget_info_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gaccce4ff6dcc0dee559fad1e3fb86e995" title="Retrieves attribute information, by attribute name.">h5a.h5aget_info_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gab0064f6051c4fe5977d0a6a234c10b14" title="Gets an attribute name, by attribute index position.">h5a.h5aget_name_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga862bbe19801777c48a07637380a4f125" title="Returns the amount of storage required for an attribute.">h5a.h5aget_storage_size_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gad4c72cade00515878981f64efc4d779b" title="Opens an attribute for an object specified by object identifier and attribute name.">h5a.h5aopen_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga1124c0954bc9a5193a4b47900a85b757" title="Opens an existing attribute that is attached to an object specified by location and name.">h5a.h5aopen_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gad24e550d0fd5140a60874780f0bc5d85" title="Opens an attribute for an object by object name and attribute name.">h5a.h5aopen_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#gaa126fda0883a23bc08019d3c25794b6c" title="Renames an attribute.">h5a.h5arename_f</a> </li>
-<li><a class="el" href="group___f_h5_a.html#ga658def0a8d88a0d7660b28ac5d663cde" title="Renames an attribute.">h5a.h5arename_by_name_f</a></li>
+<li><a class="el" href="group___f_h5_a.html#gac0c12363a621529d8933f6d828a6bc35">h5a::h5acreate_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga265e4038024d38eee97803f4df05e3a8">h5a::h5acreate_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga02751272e96370944f347d4f86ba182c">h5a::h5adelete_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gabf7d68203abbd453cd491abb118ca87c">h5a::h5adelete_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gafa106072a38e8fa36f4e93a45bec4fb8">h5a::h5aexists_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gabe492efdf3c22fb50600f9028ec25b35">h5a::h5aexists_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gacbfa8d76d901157b87f918f50ee9c301">h5a::h5aget_create_plist_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga0884c27021d591f086a718619192801b">h5a::h5aget_info_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga421b7973e5fd200a375c7c1d7a03ab84">h5a::h5aget_info_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gaccce4ff6dcc0dee559fad1e3fb86e995">h5a::h5aget_info_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gab0064f6051c4fe5977d0a6a234c10b14">h5a::h5aget_name_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga862bbe19801777c48a07637380a4f125">h5a::h5aget_storage_size_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gad4c72cade00515878981f64efc4d779b">h5a::h5aopen_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga1124c0954bc9a5193a4b47900a85b757">h5a::h5aopen_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gad24e550d0fd5140a60874780f0bc5d85">h5a::h5aopen_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#gaa126fda0883a23bc08019d3c25794b6c">h5a::h5arename_f</a> </li>
+<li><a class="el" href="group___f_h5_a.html#ga658def0a8d88a0d7660b28ac5d663cde">h5a::h5arename_by_name_f</a></li>
 </ul>
 <p><b>H5D</b> </p><ul>
-<li><a class="el" href="group___f_h5_d.html#ga6c572709fa07bd0b8d2fb7d07ecd6073" title="Creates a dataset in a file without linking it into the file structure.">h5d.h5dcreate_anon_f</a> </li>
-<li><a class="el" href="group___f_h5_d.html#ga5422721017b75f11b6b018a09fa24797" title="Creates a dataset at the specified location.">h5d.h5dcreate_f</a> </li>
-<li><a class="el" href="group___f_h5_d.html#ga56db335650709fe67bbfbc5a46ff4abf" title="Opens an existing dataset.">h5d.h5dopen_f</a> </li>
-<li><a class="el" href="group___f_h5_d.html#ga88da228859a8e29deed4d77cf88df5f2" title="Extends a dataset with unlimited dimension.">h5d.h5dset_extent_f</a></li>
+<li><a class="el" href="group___f_h5_d.html#ga6c572709fa07bd0b8d2fb7d07ecd6073">h5d::h5dcreate_anon_f</a> </li>
+<li><a class="el" href="group___f_h5_d.html#ga5422721017b75f11b6b018a09fa24797">h5d::h5dcreate_f</a> </li>
+<li><a class="el" href="group___f_h5_d.html#ga56db335650709fe67bbfbc5a46ff4abf">h5d::h5dopen_f</a> </li>
+<li><code>h5dset_extent_f</code></li>
 </ul>
 <p><b>H5G</b> </p><ul>
-<li><a class="el" href="group___f_h5_g.html#gad6f5a657141854976db7d3626e46d65f" title="Creates a new empty group without linking it into the file structure.">h5g.h5gcreate_anon_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#ga46671f95224d65f76bd160172d780b5f" title="Creates a new group.">h5g.h5gcreate_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#gacba3215c2be6f7613f18bd5a3238628c" title="Gets a group creation property list identifier.">h5g.h5gget_create_plist_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#ga342819ce799f2124195507d73f359e81" title="Retrieves information about a group.">h5g.h5gget_info_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#ga11c96cfd376734b5c32b021b2321cf65" title="Retrieves information about a group, according to the group&#39;s position within an index.">h5g.h5gget_info_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#ga2f07d9a9eea89d2a9b4be58bb4bb5bea" title="Retrieves information about a group by its name.">h5g.h5gget_info_by_name_f</a> </li>
-<li><a class="el" href="group___f_h5_g.html#ga1ef9a46fd72dd543eeabf9fc33a5fe63" title="Opens an existing group.">h5g.h5gopen_f</a></li>
+<li><a class="el" href="group___f_h5_g.html#gad6f5a657141854976db7d3626e46d65f">h5g::h5gcreate_anon_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#ga46671f95224d65f76bd160172d780b5f">h5g::h5gcreate_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#gacba3215c2be6f7613f18bd5a3238628c">h5g::h5gget_create_plist_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#ga342819ce799f2124195507d73f359e81">h5g::h5gget_info_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#ga11c96cfd376734b5c32b021b2321cf65">h5g::h5gget_info_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#ga2f07d9a9eea89d2a9b4be58bb4bb5bea">h5g::h5gget_info_by_name_f</a> </li>
+<li><a class="el" href="group___f_h5_g.html#ga1ef9a46fd72dd543eeabf9fc33a5fe63">h5g::h5gopen_f</a></li>
 </ul>
 <p><b>H5L</b> </p><ul>
-<li><a class="el" href="group___f_h5_l.html#gab5d4f60309eb04d7cd9686b6f0f8c057" title="Copies a link from one location to another.">h5l.h5lcopy_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gad796ff7a29948254e29b8618d27b7bef" title="Creates a soft link to an object in a different file.">h5l.h5lcreate_external_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gadf5051568e480d2e29dbbed2cfc35f8e" title="Creates a hard link to an object.">h5l.h5lcreate_hard_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#ga28f158a99ae9b37f26ec0c828e063a72" title="Creates a soft link to an object.">h5l.h5lcreate_soft_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gae0e714ac5b2938b80356217e1803d7d4" title="Removes a link from a group.">h5l.h5ldelete_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gaae71b9285517b3ec5afb9ec8db490c3b" title="Removes the nth link in a group.">h5l.h5ldelete_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#ga17d8d5151bd64ea2ea18a792a40efaeb" title="Check if a link with a particular name exists in a group.">h5l.h5lexists_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gaeac9913b7460534637eb563bb24eeb3e" title="Returns information about a link.">h5l.h5lget_info_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gaf01b68f47bbe14f84531b70b479b9ed3" title="Retrieves metadata for a link in a group, according to the order within a field or index.">h5l.h5lget_info_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gae241b07a53f952fd6f3e74c255b8ca2a" title="Retrieves name of the nth link in a group, according to the order within a specified field or index.">h5l.h5lget_name_by_idx_f</a> </li>
-<li><a class="el" href="group___f_h5_l.html#gadfda005cb049ccfff51e109a5e7b899a" title="Renames a link within an HDF5 file.">h5l.h5lmove_f</a></li>
+<li><a class="el" href="group___f_h5_l.html#gab5d4f60309eb04d7cd9686b6f0f8c057">h5l::h5lcopy_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gad796ff7a29948254e29b8618d27b7bef">h5l::h5lcreate_external_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gadf5051568e480d2e29dbbed2cfc35f8e">h5l::h5lcreate_hard_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#ga28f158a99ae9b37f26ec0c828e063a72">h5l::h5lcreate_soft_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gae0e714ac5b2938b80356217e1803d7d4">h5l::h5ldelete_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gaae71b9285517b3ec5afb9ec8db490c3b">h5l::h5ldelete_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#ga17d8d5151bd64ea2ea18a792a40efaeb">h5l::h5lexists_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gaeac9913b7460534637eb563bb24eeb3e">h5l::h5lget_info_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gaf01b68f47bbe14f84531b70b479b9ed3">h5l::h5lget_info_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gae241b07a53f952fd6f3e74c255b8ca2a">h5l::h5lget_name_by_idx_f</a> </li>
+<li><a class="el" href="group___f_h5_l.html#gadfda005cb049ccfff51e109a5e7b899a">h5l::h5lmove_f</a></li>
 </ul>
 <p><b>H5O</b> </p><ul>
-<li><a class="el" href="group___f_h5_o.html#gab3c4d50db730be81530db28c45180734" title="Creates a hard link to an object in an HDF5 file.">h5o.h5olink_f</a> </li>
-<li><a class="el" href="group___f_h5_o.html#ga47bfa4e336afe83960d397cd82882f6b" title="Opens an object in an HDF5 file by location identifier and path name.">h5o.h5oopen_f</a></li>
+<li><a class="el" href="group___f_h5_o.html#gab3c4d50db730be81530db28c45180734">h5o::h5olink_f</a> </li>
+<li><a class="el" href="group___f_h5_o.html#ga47bfa4e336afe83960d397cd82882f6b">h5o::h5oopen_f</a></li>
 </ul>
 <p><b>H5P</b> </p><ul>
-<li><a class="el" href="group___f_h5_p.html#gaab6384bae4be67418f83eed124565a6e" title="Retrieves tracking and indexing settings for attribute creation order.">h5p.h5pget_attr_creation_order_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga898360cf5dac85558cf089b554413c1b" title="Retrieves attribute storage phase change thresholds.">h5p.h5pget_attr_phase_change_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga08e0eee48eda994d767ff5abb38513f2" title="Retrieves the character encoding used to create a string.">h5p.h5pget_char_encoding_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gae3d1540a7b89533d3f1157d0a04462f6" title="Retrieves the properties to be used when an object is copied.">h5p.h5pget_copy_object_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga14b4e707d341e5e3d12e7ae6690d89ba" title="Determines whether property is set to enable creating missing intermediate groups.">h5p.h5pget_create_inter_group_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga66078098350a2f9aa3b3251b7199c0c4" title="Retrieves a data transform expression.">h5p.h5pget_data_transform_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gaab6384bae4be67418f83eed124565a6e">h5p::h5pget_attr_creation_order_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga898360cf5dac85558cf089b554413c1b">h5p::h5pget_attr_phase_change_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga08e0eee48eda994d767ff5abb38513f2">h5p::h5pget_char_encoding_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gae3d1540a7b89533d3f1157d0a04462f6">h5p::h5pget_copy_object_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga14b4e707d341e5e3d12e7ae6690d89ba">h5p::h5pget_create_inter_group_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga66078098350a2f9aa3b3251b7199c0c4">h5p::h5pget_data_transform_f</a> </li>
 <li>h5pget_elink_prefix_f </li>
-<li><a class="el" href="group___f_h5_p.html#gac1c28ede7450679e5a324fbcacfe09d4" title="Queries data required to estimate required local heap or object header size.">h5p.h5pget_est_link_info_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga4be90e73f9f4ef2e8c6a76d9c5d57f37" title="Gets up use of the direct I/O driver.">h5p.h5pget_fapl_direct_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga537e7878891216492ad27c3d12c249ba" title="Queries whether link creation order is tracked and/or indexed in a group.">h5p.h5pget_link_creation_order_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga778c5fda4b49f698cc8085d212aab777" title="Queries the settings for conversion between compact and dense groups.">h5p.h5pget_link_phase_change_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga9b982ccecb08050b823475d274fc0e12" title="Queries the local heap size hint for original-style groups.">h5p.h5pget_local_heap_size_hint_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga96f461f4dd26ceea31a83da6c15b2e82" title="Gets maximum number of soft or user-defined link traversals.">h5p.h5pget_nlinks_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga719f25df011c708219a6e5c60ed29104" title="Returns whether times are tracked for an object.">h5p.h5pget_obj_track_times_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gac1c28ede7450679e5a324fbcacfe09d4">h5p::h5pget_est_link_info_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga4be90e73f9f4ef2e8c6a76d9c5d57f37">h5p::h5pget_fapl_direct_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga537e7878891216492ad27c3d12c249ba">h5p::h5pget_link_creation_order_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga778c5fda4b49f698cc8085d212aab777">h5p::h5pget_link_phase_change_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga9b982ccecb08050b823475d274fc0e12">h5p::h5pget_local_heap_size_hint_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga96f461f4dd26ceea31a83da6c15b2e82">h5p::h5pget_nlinks_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga719f25df011c708219a6e5c60ed29104">h5p::h5pget_obj_track_times_f</a> </li>
 <li>h5pget_shared_mesg_index_f </li>
 <li>h5pget_shared_mesg_nindexes_f </li>
-<li><a class="el" href="group___f_h5_p.html#ga58a3d79ad10224cc019588c84c8a03a8" title="Sets tracking and indexing of attribute creation order.">h5p.h5pset_attr_creation_order_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga6127da2607e623c9352f82c939a85f48" title="Sets attribute storage phase change thresholds.">h5p.h5pset_attr_phase_change_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga653399f7da55bcf4a507950ac0ad57cf" title="Sets the character encoding used to encode a string.">h5p.h5pset_char_encoding_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga93a7d5dc1ae304c81e0e2dee4471bc26" title="Sets properties to be used when an object is copied.">h5p.h5pset_copy_object_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga7f239d19167ca33a90b594bb3ab8cb0d" title="Specifies in property list whether to create missing intermediate groups.">h5p.h5pset_create_inter_group_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga618599a62bed0e04df35b7035f6b1fcc" title="Sets a data transform expression.">h5p.h5pset_data_transform_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga58a3d79ad10224cc019588c84c8a03a8">h5p::h5pset_attr_creation_order_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga6127da2607e623c9352f82c939a85f48">h5p::h5pset_attr_phase_change_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga653399f7da55bcf4a507950ac0ad57cf">h5p::h5pset_char_encoding_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga93a7d5dc1ae304c81e0e2dee4471bc26">h5p::h5pset_copy_object_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga7f239d19167ca33a90b594bb3ab8cb0d">h5p::h5pset_create_inter_group_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga618599a62bed0e04df35b7035f6b1fcc">h5p::h5pset_data_transform_f</a> </li>
 <li>h5pset_elink_prefix_f </li>
-<li><a class="el" href="group___f_h5_p.html#gac5d116ed87b026b6c18ace741a6fbb47" title="Sets estimated number of links and length of link names in a group.">h5p.h5pset_est_link_info_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga695a2c8c2466b386b3b5c1c54070f1ea" title="Sets up use of the direct I/O driver.">h5p.h5pset_fapl_direct_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gaf6d7d6a0d54eb6a0abf298596c8649aa" title="Sets bounds on library versions, and indirectly format versions, to be used when creating objects.">h5p.h5pset_libver_bounds_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga2a4d5601a4010ad5cf81cda9ab53294e" title="Sets creation order tracking and indexing for links in a group.">h5p.h5pset_link_creation_order_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga85c7236cabc3bfe84e5899d6a65aa8a1" title="Sets the parameters for conversion between compact and dense groups.">h5p.h5pset_link_phase_change_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga49b408f5ae0c71a4672f513d8dcbb912" title="Sets the local heap size hint for original-style groups.">h5p.h5pset_local_heap_size_hint_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga62bf4aa9a883f7ee9e0eee5100447933" title="Set whether the birth, access, modification &amp; change times for an object are stored.">h5p.h5pset_obj_track_times_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gae06eb2278fc69db42df2efb7626c084d" title="Sets up the use of the N-Bit filter.">h5p.h5pset_nbit_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gac61734ce0997691df0c808ad5f107029" title="Sets maximum number of soft or user-defined link traversals.">h5p.h5pset_nlinks_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga7682b83b8c9d6955a93eab8847986352" title="Sets up the use of the scale-offset filter.">h5p.h5pset_scaleoffset_f</a></li>
+<li><a class="el" href="group___f_h5_p.html#gac5d116ed87b026b6c18ace741a6fbb47">h5p::h5pset_est_link_info_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga695a2c8c2466b386b3b5c1c54070f1ea">h5p::h5pset_fapl_direct_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gaf6d7d6a0d54eb6a0abf298596c8649aa">h5p::h5pset_libver_bounds_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga2a4d5601a4010ad5cf81cda9ab53294e">h5p::h5pset_link_creation_order_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga85c7236cabc3bfe84e5899d6a65aa8a1">h5p::h5pset_link_phase_change_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga49b408f5ae0c71a4672f513d8dcbb912">h5p::h5pset_local_heap_size_hint_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga62bf4aa9a883f7ee9e0eee5100447933">h5p::h5pset_obj_track_times_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gae06eb2278fc69db42df2efb7626c084d">h5p::h5pset_nbit_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gac61734ce0997691df0c808ad5f107029">h5p::h5pset_nlinks_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga7682b83b8c9d6955a93eab8847986352">h5p::h5pset_scaleoffset_f</a></li>
 </ul>
 <p><b>H5R</b> </p><ul>
-<li><a class="el" href="group___f_h5_r.html#gaa74e6c3a73a025cd4872990bbeba2871" title="Retrieves a name of a referenced object.">h5r.h5rget_name_f</a></li>
+<li><a class="el" href="group___f_h5_r.html#gaa74e6c3a73a025cd4872990bbeba2871">h5r::h5rget_name_f</a></li>
 </ul>
 <p><b>H5S</b> </p><ul>
-<li><a class="el" href="group___f_h5_s.html#ga518e04a1fac336142703cf73c0ba8f37" title="Decode a binary object description of data space and return a new object handle.">h5s.h5sdecode_f</a> </li>
-<li><a class="el" href="group___f_h5_s.html#ga44ed6832edd798d9a0f2bc1e58c4cfb0" title="Encode a data space object description into a binary buffer.">h5s.h5sencode_f</a> </li>
-<li><a class="el" href="group___f_h5_s.html#gaa16eb229a4a02aca05eb256878ff3140" title="Determines whether two dataspace extents are equal.">h5s.h5sextent_equal_f</a></li>
+<li><a class="el" href="group___f_h5_s.html#ga518e04a1fac336142703cf73c0ba8f37">h5s::h5sdecode_f</a> </li>
+<li><a class="el" href="group___f_h5_s.html#ga44ed6832edd798d9a0f2bc1e58c4cfb0">h5s::h5sencode_f</a> </li>
+<li><a class="el" href="group___f_h5_s.html#gaa16eb229a4a02aca05eb256878ff3140">h5s::h5sextent_equal_f</a></li>
 </ul>
 <p><b>H5T</b> </p><ul>
-<li><a class="el" href="group___f_h5_t.html#ga00d99ba34eae60086c3ed55e5c3eae77" title="Commits a transient datatype to a file, creating a new named datatype, but does not link it into the ...">h5t.h5tcommit_anon_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#gaad143bb7a4d20aa782afc295f48ec3d1" title="Commits a transient datatype to a file, creating a new named datatype.">h5t.h5tcommit_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#gaa2653e1487b16e799f103180c6ab6a53" title="Determines whether a datatype is a named type or a transient type.">h5t.h5tcommitted_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#ga358da31d4edb18f227d623cd7fa607ac" title="Check whether the library&#39;s default conversion is hard conversion.">h5t.h5tcompiler_conv_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#ga997e80f6500db70dbd3a930c6b0000e0" title="Decode a binary object description of data type and return a new object handle.">h5t.h5tdecode_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#gab845d70c03fd4227117df247a80fbd15" title="Encode a data type object description into a binary buffer.">h5t.h5tencode_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#ga5729c7c237c47f100aa44d79a9d2c8b3" title="Returns a copy of a datatype creation property list.">h5t.h5tget_create_plist_f</a> </li>
-<li><a class="el" href="group___f_h5_t.html#ga20396ed9718ad2fab8c51c3570ef033c" title="Opens named datatype.">h5t.h5topen_f</a></li>
+<li><a class="el" href="group___f_h5_t.html#ga00d99ba34eae60086c3ed55e5c3eae77">h5t::h5tcommit_anon_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#gaad143bb7a4d20aa782afc295f48ec3d1">h5t::h5tcommit_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#gaa2653e1487b16e799f103180c6ab6a53">h5t::h5tcommitted_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#ga358da31d4edb18f227d623cd7fa607ac">h5t::h5tcompiler_conv_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#ga997e80f6500db70dbd3a930c6b0000e0">h5t::h5tdecode_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#gab845d70c03fd4227117df247a80fbd15">h5t::h5tencode_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#ga5729c7c237c47f100aa44d79a9d2c8b3">h5t::h5tget_create_plist_f</a> </li>
+<li><a class="el" href="group___f_h5_t.html#ga20396ed9718ad2fab8c51c3570ef033c">h5t::h5topen_f</a></li>
 </ul>
 <h4>C++ wrappers</h4>
 <p>There are no new C++ wrappers for Release 1.8.1.</p>
@@ -1962,13 +1962,13 @@ New Functions and Tools</h3>
 </li>
 </ul>
 <p>Fortran90 subroutines: </p><ul>
-<li><a class="el" href="group___f_h5_p.html#ga36c7ca2cad2f3a686e9da698d981dbb9" title="Returns information about a filter in a pipeline.">h5p.h5pget_filter_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga9b94b597f5e46515102fb04bf99bff01" title="Returns information about a filter in a pipeline.">h5p.h5pget_filter_by_id_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gaeaec8180ed6a4c4e83c855a5dadae046" title="Adds a filter to the filter pipeline.">h5p.h5pmodify_filter_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#ga933ef30f4f10ae80d678a0227fbdeee8" title="Delete one or more filters from the filter pipeline.">h5p.h5premove_filter_f</a> </li>
-<li><a class="el" href="group___f_h5_p.html#gaca0a7b286f25678ae5c4b4ba60818332" title="Adds a filter to the filter pipeline.">h5p.h5pset_filter_f</a> </li>
-<li><a class="el" href="group___f_h5_z.html#ga7b2082394884329ff069cd46692c8396" title="Queries if filter is available.">h5z.h5zfilter_avail_f</a> </li>
-<li><a class="el" href="group___f_h5_z.html#gab7260b0eb08e43e64dd1bc3148fa66a0" title="Queries if filter has its encoder and/or decoder available.">h5z.h5zget_filter_info_f</a> - Two new filter identifiers are available for the filter or filter_id parameters:<ul>
+<li><a class="el" href="group___f_h5_p.html#ga36c7ca2cad2f3a686e9da698d981dbb9">h5p::h5pget_filter_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga9b94b597f5e46515102fb04bf99bff01">h5p::h5pget_filter_by_id_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gaeaec8180ed6a4c4e83c855a5dadae046">h5p::h5pmodify_filter_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#ga933ef30f4f10ae80d678a0227fbdeee8">h5p::h5premove_filter_f</a> </li>
+<li><a class="el" href="group___f_h5_p.html#gaca0a7b286f25678ae5c4b4ba60818332">h5p::h5pset_filter_f</a> </li>
+<li><a class="el" href="group___f_h5_z.html#ga7b2082394884329ff069cd46692c8396">h5z::h5zfilter_avail_f</a> </li>
+<li><a class="el" href="group___f_h5_z.html#gab7260b0eb08e43e64dd1bc3148fa66a0">h5z::h5zget_filter_info_f</a> - Two new filter identifiers are available for the filter or filter_id parameters:<ul>
 <li>
 H5Z_FILTER_NBIT_F </li>
 <li>
