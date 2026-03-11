@@ -15,10 +15,10 @@ jobs:
         uses: actions/checkout@v6.0.0
       - name: test
         run: |
-          ls /opt/homebrew/bin/flang*
-          export FC=/opt/homebrew/bin/flang-22
-          export CC=/opt/homebrew/Cellar/llvm/22.1.0/bin/clang
-          export CXX=/opt/homebrew/Cellar/llvm/22.1.0/bin/clang++
+          ls /usr/local/bin/flang*
+          export FC=/usr/local/bin/flang-22
+          export CC=/usr/local/Cellar/llvm/22.1.0/bin/clang
+          export CXX=/usr/local/Cellar/llvm/22.1.0/bin/clang++
           mkdir build
           cd build
           cmake -G Ninja \
