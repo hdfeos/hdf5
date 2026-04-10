@@ -473,29 +473,27 @@ if (NOT CYGWIN)
   endif ()
 endif ()
 
-if (TEST_CACHE_IMAGE)
-  #-- Adding test for cache_image
-  add_test (
-      NAME H5TEST-cache_image-clear-objects
-      COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-  )
-  set_tests_properties (H5TEST-cache_image-clear-objects PROPERTIES FIXTURES_SETUP clear_cache_image)
-  add_test (
-      NAME H5TEST-cache_image-clean-objects
-      COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-  )
-  set_tests_properties (H5TEST-cache_image-clean-objects PROPERTIES FIXTURES_CLEANUP clear_cache_image)
-  add_test (NAME H5TEST-cache_image COMMAND $<TARGET_FILE:cache_image>)
-  set_tests_properties (H5TEST-cache_image PROPERTIES
-      FIXTURES_REQUIRED clear_cache_image
-      ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
-      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
-  )
-  if ("H5TEST-cache_image" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
-    set_tests_properties (H5TEST-cache_image PROPERTIES DISABLED true)
-  endif ()
+#-- Adding test for cache_image
+add_test (
+    NAME H5TEST-cache_image-clear-objects
+    COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
+    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+)
+set_tests_properties (H5TEST-cache_image-clear-objects PROPERTIES FIXTURES_SETUP clear_cache_image)
+add_test (
+    NAME H5TEST-cache_image-clean-objects
+    COMMAND ${CMAKE_COMMAND} -E remove cache_image_test.h5
+    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+)
+set_tests_properties (H5TEST-cache_image-clean-objects PROPERTIES FIXTURES_CLEANUP clear_cache_image)
+add_test (NAME H5TEST-cache_image COMMAND $<TARGET_FILE:cache_image>)
+set_tests_properties (H5TEST-cache_image PROPERTIES
+    FIXTURES_REQUIRED clear_cache_image
+    ENVIRONMENT "srcdir=${HDF5_TEST_BINARY_DIR}/H5TEST"
+    WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+)
+if ("H5TEST-cache_image" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
+  set_tests_properties (H5TEST-cache_image PROPERTIES DISABLED true)
 endif ()
 
 #-- Adding test for external_env
@@ -917,6 +915,20 @@ if ("H5TEST-error_test" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
   set_tests_properties (H5TEST-error_test PROPERTIES DISABLED true)
 endif ()
 
+#-- Adding tests for API version defaulting
+#   API_VERSION_TEST_NUMBERS is defined in CMakeLists.txt and already in scope
+foreach (api_num IN LISTS API_VERSION_TEST_NUMBERS)
+  add_test (NAME H5TEST-tapi_version_default_v${api_num}
+      COMMAND $<TARGET_FILE:tapi_version_default_v${api_num}>
+  )
+  set_tests_properties (H5TEST-tapi_version_default_v${api_num} PROPERTIES
+      WORKING_DIRECTORY ${HDF5_TEST_BINARY_DIR}/H5TEST
+  )
+  if ("H5TEST-tapi_version_default_v${api_num}" MATCHES "${HDF5_DISABLE_TESTS_REGEX}")
+    set_tests_properties (H5TEST-tapi_version_default_v${api_num} PROPERTIES DISABLED true)
+  endif ()
+endforeach ()
+
 #-- Adding test for links_env
 add_test (NAME H5TEST-links_env-clear-objects
     COMMAND ${CMAKE_COMMAND} -E remove
@@ -1000,11 +1012,13 @@ if (BUILD_SHARED_LIBS)
 endif ()
 
 option (HDF5_TEST_SHELL_SCRIPTS "Enable shell script tests" ON)
+mark_as_advanced (HDF5_TEST_SHELL_SCRIPTS)
 if (HDF5_TEST_SHELL_SCRIPTS)
   include (ShellTests.cmake)
 endif()
 
 option (ENABLE_EXTENDED_TESTS "Enable extended tests" OFF)
+mark_as_advanced (ENABLE_EXTENDED_TESTS)
 if (ENABLE_EXTENDED_TESTS)
 ##############################################################################
 ###    S W M R  T E S T S

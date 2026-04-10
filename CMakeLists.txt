@@ -328,7 +328,8 @@ set (HDF5_JAVA_JSRC_DIR            ${HDF5_SOURCE_DIR}/java/jsrc)
 set (HDF5_JAVA_LOGGING_JAR         ${HDF5_SOURCE_DIR}/java/lib/slf4j-api-2.0.16.jar)
 set (HDF5_JAVA_LOGGING_NOP_JAR     ${HDF5_SOURCE_DIR}/java/lib/ext/slf4j-nop-2.0.16.jar)
 set (HDF5_JAVA_LOGGING_SIMPLE_JAR  ${HDF5_SOURCE_DIR}/java/lib/ext/slf4j-simple-2.0.16.jar)
-set (HDF5_DOXYGEN_DIR              ${HDF5_SOURCE_DIR}/doxygen)
+set (HDF5_DOCS_DIR                 ${HDF5_SOURCE_DIR}/docs)
+set (HDF5_DOXYGEN_DIR              ${HDF5_DOCS_DIR}/doxygen)
 
 set (HDF5_SRC_INCLUDE_DIRS ${HDF5_SRC_DIR})
 
@@ -436,17 +437,6 @@ if (H5_HL_F_SOVERS_EXISTS)
   math (EXPR H5_HL_F_SOVERS_MAJOR ${H5_HL_F_SOVERS_INTERFACE}-${H5_HL_F_SOVERS_RELEASE})
   message (VERBOSE "SOVERSION_HL_F: ${H5_HL_F_SOVERS_MAJOR}.${H5_HL_F_SOVERS_RELEASE}.${H5_HL_F_SOVERS_MINOR}")
 endif ()
-string (REGEX MATCH ".*LT_JAVA_VERS_INTERFACE[ \t]+=[ \t]+([0-9]*).*$" H5_JAVA_SOVERS_EXISTS ${_lt_vers_am_contents})
-if(H5_JAVA_SOVERS_EXISTS)
-  string (REGEX REPLACE ".*LT_JAVA_VERS_INTERFACE[ \t]+=[ \t]+([0-9]*).*$"
-      "\\1" H5_JAVA_SOVERS_INTERFACE ${_lt_vers_am_contents})
-  string (REGEX REPLACE ".*LT_JAVA_VERS_REVISION[ \t]+=[ \t]+([0-9]*).*$"
-      "\\1" H5_JAVA_SOVERS_MINOR ${_lt_vers_am_contents})
-  string (REGEX REPLACE ".*LT_JAVA_VERS_AGE[ \t]+=[ \t]+([0-9]*).*$"
-      "\\1" H5_JAVA_SOVERS_RELEASE ${_lt_vers_am_contents})
-  math (EXPR H5_JAVA_SOVERS_MAJOR ${H5_JAVA_SOVERS_INTERFACE}-${H5_JAVA_SOVERS_RELEASE})
-  message (VERBOSE "SOVERSION_JAVA: ${H5_JAVA_SOVERS_MAJOR}.${H5_JAVA_SOVERS_RELEASE}.${H5_JAVA_SOVERS_MINOR}")
-endif ()
 
 #-----------------------------------------------------------------------------
 # Basic HDF5 stuff here
@@ -507,13 +497,6 @@ else ()
   set (HDF5_HL_F_PACKAGE_SOVERSION "${H5_LIB_SOVERS_MAJOR}.${H5_LIB_SOVERS_RELEASE}.${H5_LIB_SOVERS_MINOR}")
   set (HDF5_HL_F_PACKAGE_SOVERSION_MAJOR "${H5_LIB_SOVERS_MAJOR}")
 endif ()
-if (H5_JAVA_SOVERS_EXISTS)
-  set (HDF5_JAVA_PACKAGE_SOVERSION "${H5_JAVA_SOVERS_MAJOR}.${H5_JAVA_SOVERS_RELEASE}.${H5_JAVA_SOVERS_MINOR}")
-  set (HDF5_JAVA_PACKAGE_SOVERSION_MAJOR "${H5_JAVA_SOVERS_MAJOR}")
-else ()
-  set (HDF5_JAVA_PACKAGE_SOVERSION "${H5_LIB_SOVERS_MAJOR}.${H5_LIB_SOVERS_RELEASE}.${H5_LIB_SOVERS_MINOR}")
-  set (HDF5_JAVA_PACKAGE_SOVERSION_MAJOR "${H5_LIB_SOVERS_MAJOR}")
-endif ()
 set (HDF5_PACKAGE_STRING "${HDF5_PACKAGE_NAME} ${HDF5_PACKAGE_VERSION_STRING}")
 set (HDF5_PACKAGE_TARNAME "${HDF5_PACKAGE}${HDF_PACKAGE_EXT}")
 set (HDF5_PACKAGE_URL "https://www.hdfgroup.org")
@@ -549,8 +532,6 @@ include (${HDF_CONFIG_DIR}/HDFMacros.cmake)
 
 HDF_DIR_PATHS(${HDF5_PACKAGE_NAME})
 
-include (${HDF_RESOURCES_DIR}/HDFLibMacros.cmake)
-include (${HDF_RESOURCES_DIR}/HDF5PluginMacros.cmake)
 include (${HDF_CONFIG_DIR}/HDF5Macros.cmake)
 
 #-----------------------------------------------------------------------------
@@ -729,7 +710,7 @@ endif ()
 #-----------------------------------------------------------------------------
 if (${HDF_CFG_NAME} MATCHES "Debug" OR ${HDF_CFG_NAME} MATCHES "Developer")
   # Enable instrumenting of the library's internal operations
-  cmake_dependent_option (HDF5_ENABLE_INSTRUMENT "Instrument The library" OFF HDF5_ENABLE_TRACE OFF)
+  cmake_dependent_option (HDF5_ENABLE_INSTRUMENT "Instrument the library" OFF HDF5_ENABLE_PARALLEL OFF)
 
   # Instrumenting is enabled by default for parallel debug builds
   if (HDF5_ENABLE_PARALLEL)
@@ -959,11 +940,18 @@ include (UserMacros.cmake)
 include (config/CacheURLs.cmake)
 
 #-----------------------------------------------------------------------------
-# Include filter (zlib, szip, etc.) macros
+# Include filter (zlib, szip, etc.) support
 #-----------------------------------------------------------------------------
-if (HDF5_ENABLE_ZLIB_SUPPORT OR HDF5_ENABLE_SZIP_SUPPORT)
-  include (CMakeFilters.cmake)
-endif ()
+unset (SETTINGS_EXTERNAL_FILTERS)
+include (${HDF_CONFIG_DIR}/HDF5UseZLIB.cmake)
+include (${HDF_CONFIG_DIR}/HDF5UseLibaec.cmake)
+
+# Process list of filters for libhdf5.settings (and the H5build_settings string)
+list (REMOVE_DUPLICATES SETTINGS_EXTERNAL_FILTERS)
+string (REPLACE ";" " " SETTINGS_EXTERNAL_FILTERS "${SETTINGS_EXTERNAL_FILTERS}")
+
+# Print out compression libraries linked for debugging
+message (VERBOSE "LINK_COMP_LIBS=${LINK_COMP_LIBS}")
 
 #-----------------------------------------------------------------------------
 # Include external VOL connectors
@@ -1096,6 +1084,7 @@ else ()
   set (_HDF5_H5CC_C_COMPILER ${CMAKE_C_COMPILER})
 endif ()
 set (HDF5_H5CC_C_COMPILER ${_HDF5_H5CC_C_COMPILER} CACHE STRING "C compiler to use in h5cc")
+mark_as_advanced (HDF5_H5CC_C_COMPILER)
 
 #-----------------------------------------------------------------------------
 # Java implementation detection for version value
@@ -1163,7 +1152,7 @@ if (HDF5_BUILD_DOC AND EXISTS "${HDF5_DOXYGEN_DIR}" AND IS_DIRECTORY "${HDF5_DOX
     # the case where Doxygen is not found or HDF5_BUILD_DOC is OFF.
     add_custom_target (doxygen)
 
-    add_subdirectory (doxygen)
+    add_subdirectory (docs/doxygen)
   else ()
     message (WARNING "Doxygen needs to be installed to generate the doxygen documentation")
   endif ()
@@ -1173,17 +1162,6 @@ endif ()
 # Add the HDF5 Library Target to the build
 #-----------------------------------------------------------------------------
 add_subdirectory (src)
-
-if (HDF5_ALLOW_EXTERNAL_SUPPORT MATCHES "GIT" OR HDF5_ALLOW_EXTERNAL_SUPPORT MATCHES "TGZ")
-  if ((H5_ZLIB_FOUND AND ZLIB_USE_EXTERNAL) OR (H5_SZIP_FOUND AND SZIP_USE_EXTERNAL))
-    if (BUILD_STATIC_LIBS)
-      add_dependencies (${HDF5_LIB_TARGET} ${LINK_COMP_LIBS})
-    endif ()
-    if (BUILD_SHARED_LIBS)
-      add_dependencies (${HDF5_LIBSH_TARGET} ${LINK_COMP_LIBS})
-    endif ()
-  endif ()
-endif ()
 
 #-----------------------------------------------------------------------------
 # Dashboard and Testing Settings
@@ -1242,9 +1220,9 @@ if (HDF5_ENABLE_PLUGIN_SUPPORT)
   else ()
     include (CMakePlugins.cmake)
 
-    if (HDF5_PACKAGE_EXTLIBS AND NOT HDF5_NO_PACKAGES AND PLUGIN_FOUND)
-      PACKAGE_PLUGIN_LIBRARY (${HDF5_ALLOW_EXTERNAL_SUPPORT})
-    endif ()
+#    if (HDF5_PACKAGE_EXTLIBS AND NOT HDF5_NO_PACKAGES AND HDF5_PLUGINS_FOUND)
+#      PACKAGE_PLUGIN_LIBRARY (${HDF5_ALLOW_EXTERNAL_SUPPORT})
+#    endif ()
   endif ()
 endif ()
 
@@ -1439,4 +1417,47 @@ if (NOT TARGET doxygen)
   )
 endif ()
 
+#-----------------------------------------------------------------------------
+# Set LINK_LIBS_SETTINGS: linker-flag-formatted version of LINK_LIBS +
+# LINK_COMP_LIBS for the libhdf5.settings file.
+#-----------------------------------------------------------------------------
+include (${HDF_CONFIG_DIR}/HDF5Pkgconfig.cmake)
+
+set (LINK_LIBS_SETTINGS "")
+foreach (_lib IN LISTS LINK_LIBS LINK_COMP_LIBS)
+  unset (_lib_flags)
+  unset (_lib_cflags)
+  unset (_lib_skipped)
+  extract_lib_pkgconfig_info ("${_lib}" _lib_flags _lib_cflags _lib_skipped)
+  if (NOT _lib_skipped AND _lib_flags)
+    if (MSVC)
+      foreach (_flag IN LISTS _lib_flags)
+        if (_flag MATCHES "^-l")
+          string (REGEX REPLACE "^-l" "" _clean_flag "${_flag}")
+          list (APPEND LINK_LIBS_SETTINGS "${_clean_flag}")
+        elseif (IS_ABSOLUTE "${_flag}")
+          cmake_path (GET _flag STEM _clean_flag)
+          list (APPEND LINK_LIBS_SETTINGS "${_clean_flag}")
+        elseif (NOT _flag MATCHES "^-L")
+          # Append as-is if it's not a library path (-L)
+          list (APPEND LINK_LIBS_SETTINGS "${_flag}")
+        endif ()
+      endforeach ()
+    else ()
+      # Standard behavior for non-MSVC platforms (use pkg-config formatted flags).
+      list (APPEND LINK_LIBS_SETTINGS ${_lib_flags})
+    endif ()
+  endif ()
+endforeach ()
+list (REMOVE_DUPLICATES LINK_LIBS_SETTINGS)
+
+#-----------------------------------------------------------------------------
+# Installation
+#-----------------------------------------------------------------------------
 include (CMakeInstallation.cmake)
+
+#-----------------------------------------------------------------------------
+# Hide some miscellaneous CMake variables from the default GUI
+#-----------------------------------------------------------------------------
+mark_as_advanced (FETCHCONTENT_BASE_DIR FETCHCONTENT_FULLY_DISCONNECTED FETCHCONTENT_QUIET FETCHCONTENT_UPDATES_DISCONNECTED)
+

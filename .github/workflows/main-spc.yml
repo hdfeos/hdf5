@@ -29,7 +29,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -91,7 +91,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -148,7 +148,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -205,7 +205,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -260,7 +260,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -315,7 +315,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -371,7 +371,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -421,7 +421,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -458,6 +458,7 @@ jobs:
             -DHDF5_ENABLE_ZLIB_SUPPORT:BOOL=ON \
             -DZLIB_USE_LOCALCONTENT:BOOL=OFF \
             -DZLIB_USE_EXTERNAL:BOOL=OFF \
+            -DHDF5_USE_ZLIB_STATIC:BOOL=OFF \
             -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
             -DHDF5_ENABLE_SZIP_ENCODING:BOOL=OFF \
             -DLIBAEC_USE_LOCALCONTENT:BOOL=OFF \
@@ -481,7 +482,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -537,7 +538,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -571,8 +572,8 @@ jobs:
             -DHDF5_ENABLE_MIRROR_VFD:BOOL=ON \
             -DHDF5_ENABLE_DIRECT_VFD:BOOL=ON \
             -DHDF5_ENABLE_ZLIB_SUPPORT:BOOL=OFF \
-            -DHDF5_ENABLE_SZIP_SUPPORT:=BOOL=OFF \
-            -DHDF5_ENABLE_SZIP_ENCODING:=BOOL=OFF \
+            -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
+            -DHDF5_ENABLE_SZIP_ENCODING:BOOL=OFF \
             $GITHUB_WORKSPACE
         shell: bash
 
@@ -593,7 +594,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
@@ -644,7 +645,7 @@ jobs:
       # SETUP
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Doxygen
         uses: ./.github/actions/setup-doxygen
