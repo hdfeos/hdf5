@@ -49,7 +49,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-03-11</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-04-10</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -143,125 +143,7 @@ $(document).ready(function(){initNavTree('group___h5_i.html',''); initResizable(
 <p>Identifiers defined by the HDF5 library can be used to retrieve information such as path names and reference counts, and their validity can be checked.</p>
 <p>Identifiers can be updated by manipulating their reference counts.</p>
 <p>Unused identifiers should be reclaimed by closing the associated item, e.g., HDF5 object, or decrementing the reference count to 0.</p>
-<dl class="section note"><dt>Note</dt><dd>Identifiers (of type <a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a>) are run-time auxiliaries and not persisted in the file.</dd></dl>
-<table class="doxtable">
-<tr>
-<th>Create</th><th>Read </th></tr>
-<tr valign="top">
-<td><div class="fragment"><div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    {</div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">__label__</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>        <a class="code hl_typedef" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>;</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span> </div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        <span class="comment">// create an ID of a pre-defined ID type</span></div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>        <span class="keywordflow">if</span> ((<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a> = <a class="code hl_function" href="group___p_l_c_r.html#gaf1b11da01d4d45d788c45f8bc5f0cbfa">H5Pcreate</a>(<a class="code hl_define" href="_h5_ppublic_8h.html#a6f9c8a5aba72c0445fff384bf418a80d">H5P_DATASET_XFER</a>)) == <a class="code hl_define" href="_h5_ipublic_8h.html#a01eab13dccc91afd6909d74dccb780ba">H5I_INVALID_HID</a>) {</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ret_val</a> = <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">EXIT_FAILURE</a>;</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>            <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        }</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="comment">// we can reliably predict the ID type</span></div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">assert</a>(<a class="code hl_function" href="group___h5_i.html#ga4941435d4d64de3d7095d2316f415f2d">H5Iget_type</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>) == <a class="code hl_enumvalue" href="_h5_ipublic_8h.html#a13afe14178faf81b89fa2167e7ab832bab6161706783d4bca26a889f1ac0cf91a">H5I_GENPROP_LST</a>);</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">printf</a>(<span class="stringliteral">&quot;%d\n&quot;</span>, <a class="code hl_function" href="group___h5_i.html#ga4941435d4d64de3d7095d2316f415f2d">H5Iget_type</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>));</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        <a class="code hl_function" href="group___p_l_c_r.html#ga5dce61149211d3ef319452aa598887fb">H5Pclose</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>);</div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>:;</div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    }</div>
-<div class="ttc" id="a_h5_ipublic_8h_html_a0045db7ff9c22ad35db6ae91662e1943"><div class="ttname"><a href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a></div><div class="ttdeci">int64_t hid_t</div><div class="ttdef"><b>Definition</b> H5Ipublic.h:60</div></div>
-<div class="ttc" id="a_h5_ipublic_8h_html_a01eab13dccc91afd6909d74dccb780ba"><div class="ttname"><a href="_h5_ipublic_8h.html#a01eab13dccc91afd6909d74dccb780ba">H5I_INVALID_HID</a></div><div class="ttdeci">#define H5I_INVALID_HID</div><div class="ttdef"><b>Definition</b> H5Ipublic.h:71</div></div>
-<div class="ttc" id="a_h5_ipublic_8h_html_a13afe14178faf81b89fa2167e7ab832bab6161706783d4bca26a889f1ac0cf91a"><div class="ttname"><a href="_h5_ipublic_8h.html#a13afe14178faf81b89fa2167e7ab832bab6161706783d4bca26a889f1ac0cf91a">H5I_GENPROP_LST</a></div><div class="ttdeci">@ H5I_GENPROP_LST</div><div class="ttdef"><b>Definition</b> H5Ipublic.h:47</div></div>
-<div class="ttc" id="a_h5_ppublic_8h_html_a6f9c8a5aba72c0445fff384bf418a80d"><div class="ttname"><a href="_h5_ppublic_8h.html#a6f9c8a5aba72c0445fff384bf418a80d">H5P_DATASET_XFER</a></div><div class="ttdeci">#define H5P_DATASET_XFER</div><div class="ttdef"><b>Definition</b> H5Ppublic.h:68</div></div>
-<div class="ttc" id="agroup___h5_i_html_ga4941435d4d64de3d7095d2316f415f2d"><div class="ttname"><a href="group___h5_i.html#ga4941435d4d64de3d7095d2316f415f2d">H5Iget_type</a></div><div class="ttdeci">H5I_type_t H5Iget_type(hid_t id)</div><div class="ttdoc">Retrieves the type of an object.</div></div>
-<div class="ttc" id="agroup___p_l_c_r_html_ga5dce61149211d3ef319452aa598887fb"><div class="ttname"><a href="group___p_l_c_r.html#ga5dce61149211d3ef319452aa598887fb">H5Pclose</a></div><div class="ttdeci">herr_t H5Pclose(hid_t plist_id)</div><div class="ttdoc">Terminates access to a property list.</div></div>
-<div class="ttc" id="agroup___p_l_c_r_html_gaf1b11da01d4d45d788c45f8bc5f0cbfa"><div class="ttname"><a href="group___p_l_c_r.html#gaf1b11da01d4d45d788c45f8bc5f0cbfa">H5Pcreate</a></div><div class="ttdeci">hid_t H5Pcreate(hid_t cls_id)</div><div class="ttdoc">Creates a new property list as an instance of a property list class.</div></div>
-<div class="ttc" id="ah5repack_8h_html_a314b5651a0aa5175d64605dbc83e094e"><div class="ttname"><a href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">h5repack</a></div><div class="ttdeci">int h5repack(const char *infile, const char *outfile, pack_opt_t *options)</div></div>
-</div><!-- fragment -->  </td><td><div class="fragment"><div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>    {</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">__label__</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>        <a class="code hl_typedef" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>;</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span> </div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        <span class="comment">// create an ID of a pre-defined ID type</span></div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="keywordflow">if</span> ((<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a> = <a class="code hl_function" href="group___p_l_c_r.html#gaf1b11da01d4d45d788c45f8bc5f0cbfa">H5Pcreate</a>(<a class="code hl_define" href="_h5_ppublic_8h.html#a6f9c8a5aba72c0445fff384bf418a80d">H5P_DATASET_XFER</a>)) == <a class="code hl_define" href="_h5_ipublic_8h.html#a01eab13dccc91afd6909d74dccb780ba">H5I_INVALID_HID</a>) {</div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ret_val</a> = <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">EXIT_FAILURE</a>;</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>            <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        }</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span> </div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        <span class="comment">// this better be valid</span></div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">assert</a>(<a class="code hl_function" href="group___h5_i.html#ga20eb10c559d9ed5ba6f77b31d6a3ba9a">H5Iis_valid</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>) &gt; 0);</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        <span class="comment">// this ID is NOT associated with any HDF5 file;</span></div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>        <span class="comment">// see the error message</span></div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">assert</a>(<a class="code hl_function" href="group___h5_i.html#ga6ce32e88051e4cdf7d02439d86e5e042">H5Iget_file_id</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>) == <a class="code hl_define" href="_h5_ipublic_8h.html#a01eab13dccc91afd6909d74dccb780ba">H5I_INVALID_HID</a>);</div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        <a class="code hl_function" href="group___p_l_c_r.html#ga5dce61149211d3ef319452aa598887fb">H5Pclose</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>);</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>:;</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    }</div>
-<div class="ttc" id="agroup___h5_i_html_ga20eb10c559d9ed5ba6f77b31d6a3ba9a"><div class="ttname"><a href="group___h5_i.html#ga20eb10c559d9ed5ba6f77b31d6a3ba9a">H5Iis_valid</a></div><div class="ttdeci">htri_t H5Iis_valid(hid_t id)</div><div class="ttdoc">Determines whether an identifier is valid.</div></div>
-<div class="ttc" id="agroup___h5_i_html_ga6ce32e88051e4cdf7d02439d86e5e042"><div class="ttname"><a href="group___h5_i.html#ga6ce32e88051e4cdf7d02439d86e5e042">H5Iget_file_id</a></div><div class="ttdeci">hid_t H5Iget_file_id(hid_t id)</div><div class="ttdoc">Retrieves an identifier for the file containing the specified object.</div></div>
-</div><!-- fragment -->  </td></tr>
-<tr>
-<th>Update</th><th>Delete </th></tr>
-<tr valign="top">
-<td><div class="fragment"><div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    {</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">__label__</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_rc</a>, <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        <a class="code hl_typedef" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>;</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>        <span class="keywordtype">int</span>   rc;</div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span> </div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <span class="comment">// create an ID of a pre-defined ID type</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        <span class="keywordflow">if</span> ((<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a> = <a class="code hl_function" href="group___p_l_c_r.html#gaf1b11da01d4d45d788c45f8bc5f0cbfa">H5Pcreate</a>(<a class="code hl_define" href="_h5_ppublic_8h.html#a6f9c8a5aba72c0445fff384bf418a80d">H5P_DATASET_XFER</a>)) == <a class="code hl_define" href="_h5_ipublic_8h.html#a01eab13dccc91afd6909d74dccb780ba">H5I_INVALID_HID</a>) {</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ret_val</a> = <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">EXIT_FAILURE</a>;</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>            <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        }</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span> </div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        <span class="comment">// retrieve the IDs reference count</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        <span class="keywordflow">if</span> ((rc = <a class="code hl_function" href="group___h5_i.html#gac9638ade14cc75b7b125b3723f319c81">H5Iget_ref</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>)) &lt; 0) {</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ret_val</a> = <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">EXIT_FAILURE</a>;</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_rc</a>;</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        }</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">printf</a>(<span class="stringliteral">&quot;Reference count: %d\n&quot;</span>, rc);</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span> </div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        <span class="comment">// bump its reference count (by 1)</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordflow">if</span> ((rc = <a class="code hl_function" href="group___h5_i.html#ga3fd0c157704573965cafd6e1aa7f368f">H5Iinc_ref</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>)) &lt; 0) {</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ret_val</a> = <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">EXIT_FAILURE</a>;</div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>            <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_rc</a>;</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        }</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">printf</a>(<span class="stringliteral">&quot;Reference count: %d\n&quot;</span>, rc);</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_rc</a>:</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>        <a class="code hl_function" href="group___p_l_c_r.html#ga5dce61149211d3ef319452aa598887fb">H5Pclose</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>);</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>:;</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    }</div>
-<div class="ttc" id="agroup___h5_i_html_ga3fd0c157704573965cafd6e1aa7f368f"><div class="ttname"><a href="group___h5_i.html#ga3fd0c157704573965cafd6e1aa7f368f">H5Iinc_ref</a></div><div class="ttdeci">int H5Iinc_ref(hid_t id)</div><div class="ttdoc">Increments the reference count for an object.</div></div>
-<div class="ttc" id="agroup___h5_i_html_gac9638ade14cc75b7b125b3723f319c81"><div class="ttname"><a href="group___h5_i.html#gac9638ade14cc75b7b125b3723f319c81">H5Iget_ref</a></div><div class="ttdeci">int H5Iget_ref(hid_t id)</div><div class="ttdoc">Retrieves the reference count for an object.</div></div>
-</div><!-- fragment -->  </td><td><div class="fragment"><div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>    {</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">__label__</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_rc</a>, <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <a class="code hl_typedef" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>;</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        <span class="keywordtype">int</span>   rc;</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span> </div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>        <span class="comment">// create an ID of a pre-defined ID type</span></div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        <span class="keywordflow">if</span> ((<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a> = <a class="code hl_function" href="group___p_l_c_r.html#gaf1b11da01d4d45d788c45f8bc5f0cbfa">H5Pcreate</a>(<a class="code hl_define" href="_h5_ppublic_8h.html#a6f9c8a5aba72c0445fff384bf418a80d">H5P_DATASET_XFER</a>)) == <a class="code hl_define" href="_h5_ipublic_8h.html#a01eab13dccc91afd6909d74dccb780ba">H5I_INVALID_HID</a>) {</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ret_val</a> = <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">EXIT_FAILURE</a>;</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>            <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        }</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span> </div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        <span class="comment">// decrease its reference count (from 1) to 0</span></div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>        <span class="keywordflow">if</span> ((rc = <a class="code hl_function" href="group___h5_i.html#gaea2aa78caea892edf2a6a6ac70486ed9">H5Idec_ref</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>)) &lt; 0) {</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>            <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">ret_val</a> = <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">EXIT_FAILURE</a>;</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>            <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_rc</a>;</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        }</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">printf</a>(<span class="stringliteral">&quot;Reference count: %d\n&quot;</span>, rc);</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>        <span class="comment">// at this point, the ID is no longer valid</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">assert</a>(<a class="code hl_function" href="group___h5_i.html#ga20eb10c559d9ed5ba6f77b31d6a3ba9a">H5Iis_valid</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>) == 0);</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        <span class="comment">// dropping the ref. count to 0 has the side-effect of closing</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        <span class="comment">// the associated item, and calling H5Pclose would create an error</span></div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>        <span class="keywordflow">goto</span> <a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>;</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span> </div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_rc</a>:</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        <a class="code hl_function" href="group___p_l_c_r.html#ga5dce61149211d3ef319452aa598887fb">H5Pclose</a>(<a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">dcpl</a>);</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><a class="code hl_function" href="h5repack_8h.html#a314b5651a0aa5175d64605dbc83e094e">fail_dcpl</a>:;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    }</div>
-<div class="ttc" id="agroup___h5_i_html_gaea2aa78caea892edf2a6a6ac70486ed9"><div class="ttname"><a href="group___h5_i.html#gaea2aa78caea892edf2a6a6ac70486ed9">H5Idec_ref</a></div><div class="ttdeci">int H5Idec_ref(hid_t id)</div><div class="ttdoc">Decrements the reference count for an object.</div></div>
-</div><!-- fragment -->   </td></tr>
-</table>
+<dl class="section note"><dt>Note</dt><dd>Identifiers (of type <a class="el" href="_h5_ipublic_8h.html#a0045db7ff9c22ad35db6ae91662e1943">hid_t</a>) are run-time auxiliaries and not persisted in the file. </dd></dl>
 <div id="dynsection-0" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
   <img id="dynsection-0-trigger" src="closed.png" alt="+"/> Collaboration diagram for Identifiers (H5I):</div>
 <div id="dynsection-0-summary" class="dynsummary" style="display:block;">

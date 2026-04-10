@@ -38,7 +38,7 @@ var searchData=
   ['converting_20hdf5_20files_35',['Command-line Tools For Converting HDF5 Files',['../_view_tools_convert.html',1,'']]],
   ['cookbook_36',['Cookbook',['../_cookbook.html',1,'']]],
   ['copying_20committed_20datatypes_20with_20h5ocopy_37',['Copying Committed Datatypes with H5Ocopy',['../copying_committed.html',1,'']]],
-  ['core_5fmenu_38',['core_menu',['../md_doxygen_2examples_2menus_2core__menu.html',1,'']]],
+  ['core_5fmenu_38',['core_menu',['../md_docs_2doxygen_2examples_2menus_2core__menu.html',1,'']]],
   ['creating_20a_20dataset_39',['Creating a Dataset',['../_l_b_dset_create.html',1,'LearnBasics']]],
   ['creating_20an_20attribute_40',['Creating an Attribute',['../_l_b_attr_create.html',1,'LearnBasics']]],
   ['creating_20an_20group_41',['Creating an Group',['../_l_b_grp_create.html',1,'LearnBasics']]],
