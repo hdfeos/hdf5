@@ -58,7 +58,7 @@ jobs:
       inputs.java_implementation == 'jni'
     steps:
       - name: Checkout HDF5 repository (contains HDF5Examples)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Set up Java 21 for JNI
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
@@ -305,7 +305,7 @@ jobs:
 
       - name: Upload test artifacts (JNI)
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: jni-test-results-${{ inputs.version }}
           path: |
@@ -319,7 +319,7 @@ jobs:
       inputs.java_implementation == 'ffm'
     steps:
       - name: Checkout HDF5 repository (contains HDF5Examples)
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Set up Java 25 for FFM
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
@@ -566,7 +566,7 @@ jobs:
 
       - name: Upload test artifacts (FFM)
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: ffm-test-results-${{ inputs.version }}
           path: |

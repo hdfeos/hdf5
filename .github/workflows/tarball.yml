@@ -48,7 +48,7 @@ jobs:
       branch_ref: ${{ steps.get-branch-name.outputs.BRANCH_REF }}
       branch_sha: ${{ steps.get-branch-sha.outputs.BRANCH_SHA }}
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
     - name: Get branch name
       id: get-branch-name
@@ -70,7 +70,7 @@ jobs:
 
     - name: Check for changed source
       id: check-new-commits
-      uses: adriangl/check-new-commits-action@e6471f4fda990ebdb3bf44726371e1ad45ac4d37 # v1
+      uses: adriangl/check-new-commits-action@dedf5c6983190ab27db843cde2965221459cdc6a # v2.0.1
       with:
         seconds: 86400 # One day in seconds
         branch: '${{ steps.get-branch-name.outputs.branch_ref }}'
@@ -92,7 +92,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Get Sources
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           path: hdfsrc
           ref: '${{needs.check_commits.outputs.branch_ref }}'
@@ -168,14 +168,14 @@ jobs:
 
       # Save files created by release script
       - name: Save tgz-tarball
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: tgz-tarball
               path: ${{ steps.set-file-base.outputs.FILE_BASE }}.tar.gz
               if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 
       - name: Save zip-tarball
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: zip-tarball
               path: ${{ steps.set-file-base.outputs.FILE_BASE }}.zip
@@ -183,7 +183,7 @@ jobs:
 
       - name: Save tgz-tarball-nover
         if: ${{ (inputs.use_environ == 'release') }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: tgz-tarball-nover
               path: hdf5.tar.gz
@@ -191,7 +191,7 @@ jobs:
 
       - name: Save zip-tarball-nover
         if: ${{ (inputs.use_environ == 'release') }}
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: zip-tarball-nover
               path: hdf5.zip
@@ -207,7 +207,7 @@ jobs:
               ls $GITHUB_WORKSPACE
 
       - name: Upload description.txt
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
               name: description.txt
               path: ./description.txt

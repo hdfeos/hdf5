@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Actions
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           sparse-checkout: .github/actions
 
@@ -80,7 +80,7 @@ jobs:
           echo "FC=${{ runner.workspace }}/openmpi/bin/mpif90" >> $GITHUB_ENV
 
       - name: Install CMake
-        uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # latest
+        uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -160,7 +160,7 @@ jobs:
 
       # Save log files created by CTest script
       - name: Save log (OpenMPI)
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: openmpi-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
@@ -171,7 +171,7 @@ jobs:
     name: "Parallel Mpich GCC-${{ inputs.build_mode }}"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       - name: Install Linux Dependencies (MPICH)
         run: |
@@ -197,7 +197,7 @@ jobs:
           echo "FC=${{ runner.workspace }}/mpich/bin/mpif90" >> $GITHUB_ENV
 
       - name: Install CMake
-        uses: lukka/get-cmake@ea83089aa35e08e459464341fe24ad024ee2466f # latest
+        uses: lukka/get-cmake@591817e96fcad43505fb4eae36172462abb3a42e # latest
         with:
             cmakeVersion: ${{ inputs.cmake_version }}
             ninjaVersion: latest
@@ -277,7 +277,7 @@ jobs:
 
       # Save log files created by CTest script
       - name: Save log (MPICH)
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v5
         with:
           name: mpich-log
           path: ${{ runner.workspace }}/hdf5/hdf5.log
