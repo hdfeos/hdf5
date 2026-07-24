@@ -20,13 +20,13 @@ jobs:
     name: "nvhpc ${{ inputs.build_mode }}"
     runs-on: ubuntu-latest
     env:
-      CUDAVERDOT: "13.1"
-      NVERDOT: "26.3"
-      NVERDASH: "26-3"
+      CUDAVERDOT: "13.2"
+      NVERDOT: "26.5"
+      NVERDASH: "26-5"
 
     steps:
       - name: Get Sources
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # v1.3.1
