@@ -33,14 +33,15 @@ jobs:
           sudo port select --set mpi mpich-clang17-fortran
       - name: test
         run: |
-          env
+          export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+          which mpicc mpifort
           mkdir build
           cd build
           cmake -G Ninja \
             -DBUILDNAME="ninja/mpich-4.3/clang-17/f/j/hl/aw/-ts/sf/np=3" \
             -DCTEST_DROP_SITE_INIT=my.cdash.org \
-            -DCMAKE_C_COMPILER=mpicc-mpich-clang \
-            -DCMAKE_Fortran_COMPILER=mpifort-mpich-clang \
+            -DCMAKE_C_COMPILER=mpicc \
+            -DCMAKE_Fortran_COMPILER=mpifort \
             -DHDF5_BUILD_JAVA:BOOL=ON \
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
             -DHDF5_BUILD_HL_LIB:BOOL=ON \

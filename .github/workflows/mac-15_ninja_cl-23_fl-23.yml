@@ -19,9 +19,19 @@ jobs:
           export FC=$(brew --prefix flang)/bin/flang
           export CC=$(brew --prefix llvm)/bin/clang
           export CXX=$(brew --prefix llvm)/bin/clang++
+          # CMake has no Darwin-LLVMFlang-Fortran rules, so it passes the
+          # macOS dylib flags (-install_name, -current_version,
+          # -compatibility_version) straight to flang, which rejects them.
+          # Pass them through to the linker with -Wl instead.
+          cat > "$RUNNER_TEMP/flang-darwin.cmake" <<'CMK'
+          set(CMAKE_Fortran_OSX_COMPATIBILITY_VERSION_FLAG "-Wl,-compatibility_version,")
+          set(CMAKE_Fortran_OSX_CURRENT_VERSION_FLAG "-Wl,-current_version,")
+          set(CMAKE_Fortran_CREATE_SHARED_LIBRARY "<CMAKE_Fortran_COMPILER> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> -o <TARGET> -Wl,-install_name,<TARGET_INSTALLNAME_DIR><TARGET_SONAME> <OBJECTS> <LINK_LIBRARIES>")
+          CMK
           mkdir build
           cd build
           cmake -G Ninja \
+            -DCMAKE_USER_MAKE_RULES_OVERRIDE_Fortran="$RUNNER_TEMP/flang-darwin.cmake" \
             -DSITE:STRING=mac-15 \
             -DBUILDNAME:STRING="ninja/cl-23/fl-23" \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
