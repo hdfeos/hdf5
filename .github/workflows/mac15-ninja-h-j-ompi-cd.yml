@@ -1,4 +1,4 @@
-name: mac14 ninja h j ompi cd
+name: mac15 ninja h j ompi cd
 
 on:
   workflow_dispatch:
@@ -7,8 +7,8 @@ on:
 
 jobs:
   build:
-    name: "mac14 ninja h j ompi cd"
-    runs-on: macos-14
+    name: "mac15 ninja h j ompi cd"
+    runs-on: macos-15
     steps:
     - name: install
       run: brew install ninja openmpi libaec
@@ -29,7 +29,7 @@ jobs:
         -D HDF5_ENABLE_PARALLEL:BOOL=ON \
         -D HDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
         -D MPIEXEC_MAX_NUMPROCS:STRING=2 \
-        -D SITE:STRING="mac-14" \
+        -D SITE:STRING="mac15" \
         ..
         ctest -T Build  -j
         ctest -T Test  -j

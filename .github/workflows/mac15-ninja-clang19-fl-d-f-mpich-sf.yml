@@ -1,4 +1,4 @@
-name: mac-14 ninja mpich clang-19 fl d f sf
+name: mac15 ninja mpich clang-19 fl d f sf
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
 
 jobs:
   build:
-    name: mac14 ninja mpich clang flang d sf
-    runs-on: macos-14
+    name: mac15 ninja mpich clang flang d sf
+    runs-on: macos-15
     steps:
       - name: checkout
         uses: actions/checkout@v4

@@ -12,10 +12,10 @@ jobs:
       - name: ninja
         uses: lukka/get-cmake@latest
       - name: oneapi
-        uses: awvwgk/setup-fortran@main
+        uses: fortran-lang/setup-fortran@main
         with:
           compiler: intel
-          version: '2025.0'
+          version: '2026.1'
       - name: mpi
         uses: mpi4py/setup-mpi@v1
         with:

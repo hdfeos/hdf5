@@ -9,6 +9,8 @@ name: hdfeos5 dev
 # HDF-EOS5 compatibility regressions on a daily cadence. See issue #6495.
 on:
   workflow_dispatch:
+  push:
+    branches: develop
   schedule:
     - cron: "30 0 * * *"
 

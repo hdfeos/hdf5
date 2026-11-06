@@ -1,4 +1,4 @@
-name: mac14 xcode16 d -sz s3
+name: mac15 xcode16 d -sz s3
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Generate Xcode project
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -28,7 +28,7 @@ jobs:
           -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
           -D HDF5_ENABLE_ROS3_VFD:BOOL=ON \
           -D HDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF \
-          -D SITE:STRING="mac-14" \
+          -D SITE:STRING="mac15" \
           -G Xcode \
           ..
 #          ctest -D Experimental -C Debug

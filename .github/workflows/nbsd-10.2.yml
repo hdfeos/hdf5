@@ -1,4 +1,4 @@
-name: nbsd 9.3
+name: nbsd 10.2
 
 on:
   push:
@@ -14,13 +14,13 @@ jobs:
         os:
           - name: netbsd
             architecture: x86-64
-            version: '9.3'
+            version: '10.2'
             host: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: ${{ matrix.os.name }}
-        uses: cross-platform-actions/action@v0.29.0
+        uses: cross-platform-actions/action@v1.7.0
         env:
           FOO: A
           BAR: B
@@ -41,6 +41,6 @@ jobs:
             cmake \
             -D BUILD_SHARED_LIBS:BOOL=OFF \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
-            -D SITE:STRING="nbsd-9.3" ..
+            -D SITE:STRING="nbsd-10.2" ..
             ctest -T Build
             ctest -R Release -T Test

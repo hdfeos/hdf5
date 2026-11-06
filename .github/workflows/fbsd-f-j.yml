@@ -15,14 +15,14 @@ jobs:
         os:
           - name: freebsd
             architecture: x86-64
-            version: '14.3'
+            version: '14.5'
             host: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: ${{ matrix.os.name }}
-        uses: cross-platform-actions/action@master
+        uses: cross-platform-actions/action@v1.7.0
         env:
           FOO: A
           BAR: B
@@ -50,5 +50,5 @@ jobs:
             -D HDF5_BUILD_FORTRAN:BOOL=ON \
             -D HDF5_BUILD_JAVA:BOOL=ON \
             -D CTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
-            -D SITE:STRING="fbsd-14.3" ..
+            -D SITE:STRING="fbsd-14.5" ..
 #            ctest -D Experimental

@@ -2,6 +2,9 @@ name: hdf5 dev MSys2 CI
 
 # Triggers the workflow on a call from another workflow
 on:
+  workflow_dispatch:
+  push:
+    branches: develop
   workflow_call:
     inputs:
       build_mode:
@@ -29,7 +32,7 @@ jobs:
           - { icon: '🟨', sys: ucrt64  }
           - { icon: '🟧', sys: clang64 }
           - { icon: '🟪', sys: clangarm64 }
-    name: ${{ matrix.icon }} MSYS2-${{ matrix.sys }}-${{ inputs.build_mode }}
+    name: ${{ matrix.icon }} MSYS2-${{ matrix.sys }}-${{ inputs.build_mode || 'Release' }}
     defaults:
       run:
         shell: msys2 {0}
@@ -64,7 +67,7 @@ jobs:
           cd "${{ runner.workspace }}/build"
           cmake -C $GITHUB_WORKSPACE/config/cmake/cacheinit.cmake \
             -G Ninja \
-            -DCMAKE_BUILD_TYPE=${{ inputs.build_mode }} \
+            -DCMAKE_BUILD_TYPE=${{ inputs.build_mode || 'Release' }} \
             -DCMAKE_TOOLCHAIN_FILE="" \
             -DHDF5_GENERATE_HEADERS:BOOL=OFF \
             -DBUILD_SHARED_LIBS:BOOL=ON \
@@ -78,16 +81,16 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build . --parallel 2 --config ${{ inputs.build_mode }}
+          cmake --build . --parallel 2 --config ${{ inputs.build_mode || 'Release' }}
         working-directory: ${{ runner.workspace }}/build
 
       - name: Run Tests
         run: |
-          ctest . --parallel 2 -C ${{ inputs.build_mode }} -E "dt_arith|err_compat"
+          ctest . --parallel 2 -C ${{ inputs.build_mode || 'Release' }} -E "dt_arith|err_compat"
         working-directory: ${{ runner.workspace }}/build
 
       - name: Run Expected to Fail Tests
         run: |
-          ctest . --parallel 2 -C ${{ inputs.build_mode }} -R "dt_arith|err_compat"
+          ctest . --parallel 2 -C ${{ inputs.build_mode || 'Release' }} -R "dt_arith|err_compat"
         working-directory: ${{ runner.workspace }}/build
         continue-on-error: true
