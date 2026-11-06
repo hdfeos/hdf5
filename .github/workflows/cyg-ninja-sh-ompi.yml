@@ -33,5 +33,5 @@ jobs:
            -DSITE:STRING=cyg \
            ..
           ctest -C Release -T Build
-          ctest -C Release -T Test
+          ctest -C Release -T Test --output-on-failure
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
