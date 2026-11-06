@@ -46,7 +46,9 @@ jobs:
             # t_bigio and t_2Gio allocate more than 2 GiB, but OpenBSD's login
             # classes cap the data segment. Lift the datasize limits in
             # login.conf and run the tests in a fresh login shell.
+            # PMIx's shared-memory dstore (gds ds12) fails to init its pthread
+            # lock there and ph5diff segfaults intermittently; use gds=hash.
             sudo sed -i -E 's/datasize(-max|-cur)?=[^:]*/datasize\1=infinity/g' /etc/login.conf
             grep datasize /etc/login.conf | sort -u
             if [ -f /etc/login.conf.db ]; then sudo cap_mkdb /etc/login.conf; fi
-            sudo su -l runner -c "cd $PWD && ulimit -d \$(ulimit -H -d) && echo datasize=\$(ulimit -d) && OMPI_MCA_io=^ompio ctest -T Test --output-on-failure"
+            sudo su -l runner -c "cd $PWD && ulimit -d \$(ulimit -H -d) && echo datasize=\$(ulimit -d) && PMIX_MCA_gds=hash OMPI_MCA_io=^ompio ctest -T Test --output-on-failure"
