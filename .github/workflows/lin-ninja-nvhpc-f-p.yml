@@ -61,5 +61,5 @@ jobs:
             -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" \
             -DSITE="ubu-24" \
             -DBUILDNAME="ninja/nvhpc/f/p" ..
-          ctest -T Build
+          cmake --build . -- -k 0
           ctest -C Release -T Test
