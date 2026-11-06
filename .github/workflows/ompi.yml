@@ -40,4 +40,8 @@ jobs:
             -DSITE:STRING=obsd \
             ..
             ctest -T Build
-            ctest -T Test
+            # testphdf5 fails under Open MPI's default ompio here (as on
+            # Cygwin); use ROMIO for MPI-IO and show failing test output.
+            ompi_info | grep "MCA io" || true
+            export OMPI_MCA_io=^ompio
+            ctest -T Test --output-on-failure
