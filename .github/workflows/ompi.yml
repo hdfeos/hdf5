@@ -43,9 +43,10 @@ jobs:
             # testphdf5 fails under Open MPI's default ompio here (as on
             # Cygwin); use ROMIO for MPI-IO and show failing test output.
             ompi_info | grep "MCA io" || true
-            # t_bigio and t_2Gio allocate more than 2 GiB, but OpenBSD's default
-            # login class caps the data segment at 1.5 GiB. Move runner to the
-            # staff class (datasize-max=infinity) and run the tests in a fresh
-            # login shell with the limit raised.
-            sudo usermod -L staff runner
+            # t_bigio and t_2Gio allocate more than 2 GiB, but OpenBSD's login
+            # classes cap the data segment. Lift the datasize limits in
+            # login.conf and run the tests in a fresh login shell.
+            sudo sed -i -E 's/datasize(-max|-cur)?=[^:]*/datasize\1=infinity/g' /etc/login.conf
+            grep datasize /etc/login.conf | sort -u
+            if [ -f /etc/login.conf.db ]; then sudo cap_mkdb /etc/login.conf; fi
             sudo su -l runner -c "cd $PWD && ulimit -d unlimited && echo datasize=\$(ulimit -d) && OMPI_MCA_io=^ompio ctest -T Test --output-on-failure"
