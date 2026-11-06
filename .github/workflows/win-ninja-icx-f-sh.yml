@@ -11,24 +11,25 @@ jobs:
     steps:
       - name: ninja
         uses: lukka/get-cmake@latest
-      - name: icx ifx
-        uses: fortran-lang/setup-fortran@main
-        with:
-          compiler: intel
-          version: '2026.1'
-      - name: checkout
-        uses: actions/checkout@v4
-      - name: set
+      - name: msvc
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: install oneAPI icx ifx
         shell: cmd
         run: |
-          "C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
+          curl.exe -L --retry 5 --retry-delay 5 --output %TEMP%\oneapi.exe --url https://registrationcenter-download.intel.com/akdlm/IRC_NAS/728c4418-1b40-47a9-ad51-31530fb27c94/intel-oneapi-toolkit-2026.2.0.661_offline.exe
+          start /b /wait %TEMP%\oneapi.exe -s -x -f %TEMP%\oneapi_extracted --log extract.log
+          %TEMP%\oneapi_extracted\bootstrapper.exe -s --action install --components=intel.oneapi.win.cpp-dpcpp-common:intel.oneapi.win.ifort-compiler --eula=accept -p=NEED_VS2017_INTEGRATION=0 -p=NEED_VS2019_INTEGRATION=0 -p=NEED_VS2022_INTEGRATION=0 --log-dir=.
+          if errorlevel 1 exit /b 1
+          rd /s/q %TEMP%\oneapi_extracted
+      - name: checkout
+        uses: actions/checkout@v4
       - name: test -sh
         shell: cmd
         run: |
-          cd hdf5
+          call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
           mkdir build
           cd build
-          cmake -G Ninja -DCMAKE_C_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/latest/bin/icx.exe" -DCMAKE_Fortran_COMPILER="C:/Program Files (x86)/Intel/oneAPI/compiler/latest/bin/ifx.exe"  -DBUILD_SHARED_LIBS:BOOL=OFF  -DHDF5_BUILD_FORTRAN:BOOL=ON -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF ..
+          cmake -G Ninja -DCMAKE_C_COMPILER=icx -DCMAKE_Fortran_COMPILER=ifx  -DBUILD_SHARED_LIBS:BOOL=OFF  -DHDF5_BUILD_FORTRAN:BOOL=ON -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF -DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF ..
           ninja
           ninja test
 

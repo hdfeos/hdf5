@@ -13,11 +13,11 @@ jobs:
         uses: actions/checkout@v4
       - name: get
         run: |
-          curl -O -L  https://github.com/macports/macports-base/releases/download/v2.11.5/MacPorts-2.11.5-14-Sonoma.pkg
+          curl -O -L  https://github.com/macports/macports-base/releases/download/v2.12.7/MacPorts-2.12.7-15-Sequoia.pkg
       - name: install
         run: |
           brew install flang
-          sudo installer -pkg MacPorts-2.11.5-14-Sonoma.pkg -target /
+          sudo installer -pkg MacPorts-2.12.7-15-Sequoia.pkg -target /
       - name: update
         run: |
           export PATH=/opt/local/bin:/opt/local/sbin:$PATH
