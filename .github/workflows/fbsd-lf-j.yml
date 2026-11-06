@@ -50,7 +50,7 @@ jobs:
             cmake \
             -DBUILDNAME:STRING=lf.j \
             -DBUILD_SHARED_LIBS:BOOL=ON \
-            -DCMAKE_Fortran_FLAGS="--backend=llvm -fPIC" \
+            -DCMAKE_Fortran_FLAGS="--backend=llvm --separate-compilation -fPIC" \
             -DHDF5_BUILD_FORTRAN:BOOL=ON \
             -DHDF5_BUILD_JAVA:BOOL=ON \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \

@@ -46,6 +46,8 @@ jobs:
           FCFLAGS: -fPIC
         run: |
           export NVHPCSDK=/opt/nvidia/hpc_sdk
+          # HPC-X UCX warnings otherwise pollute ph5diff output comparisons
+          export UCX_WARN_UNUSED_ENV_VARS=n
           export OMPI_CXX=/opt/nvidia/hpc_sdk/Linux_x86_64/26.9/compilers/bin/nvc++
           export OMPI_CC=/opt/nvidia/hpc_sdk/Linux_x86_64/26.9/compilers/bin/nvc
           export OMPI_FC=/opt/nvidia/hpc_sdk/Linux_x86_64/26.9/compilers/bin/nvfortran
@@ -62,4 +64,4 @@ jobs:
             -DSITE="ubu-24" \
             -DBUILDNAME="ninja/nvhpc/f/p" ..
           cmake --build . -- -k 0
-          ctest -C Release -T Test
+          ctest -C Release -T Test --output-on-failure
