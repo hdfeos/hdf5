@@ -1,5 +1,7 @@
 <map id="java/src&#45;jni/hdf/hdf5lib/HDFNativeData.java" name="java/src&#45;jni/hdf/hdf5lib/HDFNativeData.java">
-<area shape="rect" id="Node000001" title=" " alt="" coords="25,5,193,45"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,93,212,133"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="111,46,111,79,106,79,106,46"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="139,5,306,50"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,98,211,143"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="198,49,149,91,146,86,193,51"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="235,98,440,143"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="251,48,301,88,296,88,249,53"/>
 </map>

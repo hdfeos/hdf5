@@ -1,5 +1,5 @@
 <map id="AttributeIException" name="AttributeIException">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,79,152,104"/>
-<area shape="rect" id="Node000002" href="$class_h5_1_1_exception.html" title="Exception provides wrappers of HDF5 error handling functions." alt="" coords="35,5,122,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="81,44,81,79,76,79,76,44"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,81,152,109"/>
+<area shape="rect" id="Node000002" href="$class_h5_1_1_exception.html" title="Exception provides wrappers of HDF5 error handling functions." alt="" coords="36,5,121,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="80,47,81,81,76,80,77,51"/>
 </map>

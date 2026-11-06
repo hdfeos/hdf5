@@ -1,9 +1,7 @@
 <map id="H5VL_link_iterate_args_t" name="H5VL_link_iterate_args_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="19,181,203,207"/>
-<area shape="rect" id="Node000002" href="$struct_h5_l__info2__t.html" title="Information struct for links." alt="" coords="62,93,161,119"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="114,133,114,181,109,181,109,133"/>
-<area shape="rect" id="Node000003" href="$struct_h5_o__token__t.html" title=" " alt="" coords="5,5,111,31"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="75,41,106,91,102,94,70,44"/>
-<area shape="rect" id="Node000004" title=" " alt="" coords="135,5,195,31"/>
-<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="154,44,138,71,122,94,117,92,133,68,149,42"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,207,189,234"/>
+<area shape="rect" id="Node000002" href="$struct_h5_l__info2__t.html" title="Information struct for links." alt="" coords="48,106,146,134"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="99,148,100,207,94,205,95,151"/>
+<area shape="rect" id="Node000003" href="$struct_h5_o__token__t.html" title=" " alt="" coords="45,5,149,33"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="98,46,100,106,94,105,96,51"/>
 </map>

@@ -1,27 +1,27 @@
 <map id="Exception" name="Exception">
-<area shape="rect" id="Node000001" title="Exception provides wrappers of HDF5 error handling functions." alt="" coords="5,277,92,303"/>
-<area shape="rect" id="Node000002" href="$class_h5_1_1_attribute_i_exception.html" title=" " alt="" coords="153,5,300,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="49,263,56,215,71,155,97,94,116,65,138,40,155,29,158,33,142,44,120,68,102,96,76,157,61,216,55,264"/>
-<area shape="rect" id="Node000003" href="$class_h5_1_1_data_set_i_exception.html" title=" " alt="" coords="155,55,298,80"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="52,263,61,225,78,178,103,130,138,89,156,78,159,82,142,93,108,133,83,180,67,226,57,265"/>
-<area shape="rect" id="Node000004" href="$class_h5_1_1_data_space_i_exception.html" title=" " alt="" coords="147,104,307,129"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="56,263,86,201,109,167,138,139,159,127,161,132,142,143,113,171,91,203,61,265"/>
-<area shape="rect" id="Node000005" href="$class_h5_1_1_data_type_i_exception.html" title=" " alt="" coords="151,153,302,179"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="64,264,95,225,116,205,139,188,163,176,165,181,141,192,119,209,99,228,68,267"/>
-<area shape="rect" id="Node000006" href="$class_h5_1_1_file_i_exception.html" title=" " alt="" coords="170,203,283,228"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="80,268,139,237,171,226,173,231,141,242,82,273"/>
-<area shape="rect" id="Node000007" href="$class_h5_1_1_group_i_exception.html" title=" " alt="" coords="162,252,291,277"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="106,279,161,271,162,276,107,285"/>
-<area shape="rect" id="Node000008" href="$class_h5_1_1_id_component_exception.html" title=" " alt="" coords="140,301,313,327"/>
-<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="106,295,140,300,140,305,105,300"/>
-<area shape="rect" id="Node000009" href="$class_h5_1_1_library_i_exception.html" title=" " alt="" coords="159,351,294,376"/>
-<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="84,307,141,336,177,348,176,353,139,340,82,312"/>
-<area shape="rect" id="Node000010" href="$class_h5_1_1_location_exception.html" title=" " alt="" coords="156,400,297,425"/>
-<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="68,312,100,350,141,385,168,398,166,402,139,390,96,354,64,316"/>
-<area shape="rect" id="Node000011" href="$class_h5_1_1_obj_header_i_exception.html" title=" " alt="" coords="147,449,306,475"/>
-<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="61,314,91,375,114,407,142,435,164,447,161,452,138,439,110,411,87,378,57,317"/>
-<area shape="rect" id="Node000012" href="$class_h5_1_1_prop_list_i_exception.html" title=" " alt="" coords="155,499,298,524"/>
-<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="57,316,67,353,84,399,108,445,142,484,162,496,159,501,138,488,104,448,79,401,62,355,52,317"/>
-<area shape="rect" id="Node000013" href="$class_h5_1_1_reference_exception.html" title=" " alt="" coords="151,548,303,573"/>
-<area shape="poly" id="edge12_Node000001_Node000013" title=" " alt="" coords="55,316,62,363,77,421,102,482,120,509,142,533,160,546,158,550,138,537,116,512,98,484,72,423,56,364,49,317"/>
+<area shape="rect" id="Node000001" title="Exception provides wrappers of HDF5 error handling functions." alt="" coords="5,292,91,320"/>
+<area shape="rect" id="Node000002" href="$class_h5_1_1_attribute_i_exception.html" title=" " alt="" coords="152,5,298,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="48,276,55,227,70,164,96,100,114,70,137,44,158,31,155,36,140,48,118,73,100,102,75,166,60,227,54,277"/>
+<area shape="rect" id="Node000003" href="$class_h5_1_1_data_set_i_exception.html" title=" " alt="" coords="154,57,296,85"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="51,276,61,235,77,187,102,138,137,96,159,83,156,88,140,100,106,141,82,189,66,237,57,277"/>
+<area shape="rect" id="Node000004" href="$class_h5_1_1_data_space_i_exception.html" title=" " alt="" coords="145,109,304,137"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="56,276,85,212,108,177,137,148,161,135,158,140,140,152,112,181,90,214,61,278"/>
+<area shape="rect" id="Node000005" href="$class_h5_1_1_data_type_i_exception.html" title=" " alt="" coords="150,161,300,189"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="64,278,95,237,137,200,165,187,161,192,140,204,99,241,68,280"/>
+<area shape="rect" id="Node000006" href="$class_h5_1_1_file_i_exception.html" title=" " alt="" coords="169,213,281,241"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="82,282,138,251,173,240,169,244,140,256,86,285"/>
+<area shape="rect" id="Node000007" href="$class_h5_1_1_group_i_exception.html" title=" " alt="" coords="161,265,289,293"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="104,295,162,287,158,291,107,299"/>
+<area shape="rect" id="Node000008" href="$class_h5_1_1_id_component_exception.html" title=" " alt="" coords="139,317,311,345"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="105,312,140,317,136,320,107,316"/>
+<area shape="rect" id="Node000009" href="$class_h5_1_1_library_i_exception.html" title=" " alt="" coords="158,369,292,397"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="84,325,140,354,174,368,169,370,138,359,85,330"/>
+<area shape="rect" id="Node000010" href="$class_h5_1_1_location_exception.html" title=" " alt="" coords="155,421,295,449"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="66,330,99,370,140,406,166,420,161,422,137,411,95,373,66,335"/>
+<area shape="rect" id="Node000011" href="$class_h5_1_1_obj_header_i_exception.html" title=" " alt="" coords="146,473,304,501"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="59,332,90,397,112,430,140,458,162,472,157,473,137,463,108,433,85,399,58,337"/>
+<area shape="rect" id="Node000012" href="$class_h5_1_1_prop_list_i_exception.html" title=" " alt="" coords="154,525,296,553"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="54,333,66,374,82,422,107,469,140,511,160,525,155,525,137,514,102,472,77,424,61,376,54,338"/>
+<area shape="rect" id="Node000013" href="$class_h5_1_1_reference_exception.html" title=" " alt="" coords="149,577,300,605"/>
+<area shape="poly" id="edge12_Node000001_Node000013" title=" " alt="" coords="51,332,60,384,75,445,101,508,119,537,140,563,159,577,154,577,137,566,114,540,96,511,70,447,55,385,51,338"/>
 </map>

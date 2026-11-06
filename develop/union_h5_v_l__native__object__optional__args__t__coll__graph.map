@@ -1,15 +1,13 @@
 <map id="H5VL_native_object_optional_args_t" name="H5VL_native_object_optional_args_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="92,313,243,353"/>
-<area shape="rect" id="Node000002" href="$struct_h5_v_l__native__object__get__comment__t.html" title=" " alt="" coords="5,211,156,251"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="101,261,120,288,145,311,141,315,116,291,96,264"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="51,108,111,133"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="83,147,83,210,78,210,78,147"/>
-<area shape="rect" id="Node000004" href="$struct_h5_v_l__native__object__get__native__info__t.html" title=" " alt="" coords="180,211,331,251"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="237,263,215,291,191,315,187,311,211,288,233,260"/>
-<area shape="rect" id="Node000005" href="$struct_h5_o__native__info__t.html" title=" " alt="" coords="184,108,327,133"/>
-<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="258,147,258,210,253,210,253,147"/>
-<area shape="rect" id="Node000006" href="$struct_h5_o__hdr__info__t.html" title=" " alt="" coords="126,5,249,31"/>
-<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="205,41,250,106,245,109,201,44"/>
-<area shape="rect" id="Node000007" href="$struct_h5__ih__info__t.html" title=" " alt="" coords="273,5,376,31"/>
-<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="311,44,265,110,261,106,307,41"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="69,347,220,391"/>
+<area shape="rect" id="Node000002" href="$struct_h5_v_l__native__object__get__comment__t.html" title=" " alt="" coords="5,229,156,274"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,286,107,321,125,346,120,346,103,324,89,291"/>
+<area shape="rect" id="Node000003" href="$struct_h5_v_l__native__object__get__native__info__t.html" title=" " alt="" coords="180,229,330,274"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="235,285,205,325,177,349,174,344,201,321,231,288"/>
+<area shape="rect" id="Node000004" href="$struct_h5_o__native__info__t.html" title=" " alt="" coords="184,128,326,156"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="257,170,258,229,253,227,254,174"/>
+<area shape="rect" id="Node000005" href="$struct_h5_o__hdr__info__t.html" title=" " alt="" coords="126,5,248,33"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="203,44,250,127,245,128,201,49"/>
+<area shape="rect" id="Node000006" href="$struct_h5__ih__info__t.html" title=" " alt="" coords="272,5,374,33"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="310,44,265,129,260,126,307,49"/>
 </map>

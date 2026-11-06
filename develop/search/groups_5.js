@@ -6,11 +6,11 @@ var searchData=
   ['file_20creation_20properties_3',['File Creation Properties',['../group___f_c_p_l.html',1,'']]],
   ['file_20driver_20features_4',['Virtual File Driver Features',['../group___h5_v_f_d.html',1,'']]],
   ['file_20drivers_20h5fd_5',['File Drivers (H5FD)',['../group___h5_f_d.html',1,'']]],
-  ['file_20h5f_20interface_6',['file h5f interface',['../group___f_h5_f.html',1,'Fortran File (H5F) Interface'],['../group___j_h5_f.html',1,'Java File (H5F) Interface']]],
+  ['file_20h5f_20interface_6',['File H5F Interface',['../group___f_h5_f.html',1,'Fortran File (H5F) Interface'],['../group___j_h5_f.html',1,'Java File (H5F) Interface']]],
   ['file_20mount_20properties_7',['File Mount Properties',['../group___f_m_p_l.html',1,'']]],
   ['files_20h5f_8',['Files (H5F)',['../group___h5_f.html',1,'']]],
-  ['filter_9',['filter',['../group___f_l_e_t_c_h_e_r32.html',1,'Checksum Filter'],['../group___n_b_i_t.html',1,'N-bit Filter'],['../group___s_c_a_l_e_o_f_f_s_e_t.html',1,'Scale-Offset Filter'],['../group___s_h_u_f_f_l_e.html',1,'Shuffle Filter'],['../group___s_z_i_p.html',1,'Szip Filter']]],
-  ['filter_20h5z_20interface_10',['filter h5z interface',['../group___f_h5_z.html',1,'Fortran Filter (H5Z) Interface'],['../group___j_h5_z.html',1,'Java Filter (H5Z) Interface']]],
+  ['filter_9',['Filter',['../group___f_l_e_t_c_h_e_r32.html',1,'Checksum Filter'],['../group___n_b_i_t.html',1,'N-bit Filter'],['../group___s_c_a_l_e_o_f_f_s_e_t.html',1,'Scale-Offset Filter'],['../group___s_h_u_f_f_l_e.html',1,'Shuffle Filter'],['../group___s_z_i_p.html',1,'Szip Filter']]],
+  ['filter_20h5z_20interface_10',['Filter H5Z Interface',['../group___f_h5_z.html',1,'Fortran Filter (H5Z) Interface'],['../group___j_h5_z.html',1,'Java Filter (H5Z) Interface']]],
   ['filters_11',['Predefined Filters',['../group___h5_z_p_r_e.html',1,'']]],
   ['filters_20h5z_12',['Filters (H5Z)',['../group___h5_z.html',1,'']]],
   ['floating_20point_20datatypes_13',['Alternative Floating Point Datatypes',['../group___p_d_t_a_l_t_f_l_o_a_t.html',1,'']]],
@@ -36,5 +36,5 @@ var searchData=
   ['fortran_20vfd_20h5vfd_20interface_33',['Fortran VFD (H5VFD) Interface',['../group___f_h5_v_f_d.html',1,'']]],
   ['fortran_20vol_20h5vl_20interface_34',['Fortran VOL (H5VL) Interface',['../group___f_h5_v_l.html',1,'']]],
   ['function_35',['Conversion Function',['../group___c_o_n_v.html',1,'']]],
-  ['functions_36',['functions',['../group___h5_l_a.html',1,'Advanced Link Functions'],['../group___a_s_y_n_c.html',1,'Asynchronous Functions']]]
+  ['functions_36',['Functions',['../group___h5_l_a.html',1,'Advanced Link Functions'],['../group___a_s_y_n_c.html',1,'Asynchronous Functions']]]
 ];

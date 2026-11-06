@@ -1,6 +1,6 @@
 <map id="named_dt_t" name="named_dt_t">
-<area shape="rect" id="Node000001" title=" " alt="" coords="9,93,107,119"/>
-<area shape="poly" id="edge2_Node000001_Node000001" title=" " alt="" coords="122,97,134,106,126,114,108,117,107,111,123,109,129,106,119,102"/>
-<area shape="rect" id="Node000002" href="$struct_h5_o__token__t.html" title=" " alt="" coords="5,5,111,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="61,45,61,93,55,93,55,45"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="8,106,107,134"/>
+<area shape="poly" id="edge2_Node000001_Node000001" title=" " alt="" coords="123,110,133,120,125,129,107,132,107,127,123,124,128,120,121,115"/>
+<area shape="rect" id="Node000002" href="$struct_h5_o__token__t.html" title=" " alt="" coords="5,5,110,33"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="60,47,60,106,55,105,55,50"/>
 </map>

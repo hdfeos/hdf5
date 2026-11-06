@@ -1,11 +1,11 @@
 <map id="src/H5Gpublic.h" name="src/H5Gpublic.h">
-<area shape="rect" id="Node000001" title=" " alt="" coords="105,5,229,31"/>
-<area shape="rect" id="Node000002" href="$_h5_rpublic_8h.html" title=" " alt="" coords="106,79,229,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="170,44,170,79,165,79,165,44"/>
-<area shape="rect" id="Node000003" href="$_h5_v_lconnector_8h.html" title=" " alt="" coords="90,152,245,177"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="170,118,170,152,165,152,165,118"/>
-<area shape="rect" id="Node000004" href="$_h5_mpublic_8h.html" title=" " alt="" coords="5,225,132,251"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="142,187,86,227,83,223,139,183"/>
-<area shape="rect" id="Node000005" href="$_h5_v_lconnector__passthru_8h.html" title=" " alt="" coords="157,225,375,251"/>
-<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="196,183,251,223,248,227,192,187"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="104,5,227,33"/>
+<area shape="rect" id="Node000002" href="$_h5_rpublic_8h.html" title=" " alt="" coords="104,81,226,109"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="166,46,168,81,163,80,164,51"/>
+<area shape="rect" id="Node000003" href="$_h5_v_lconnector_8h.html" title=" " alt="" coords="89,157,242,184"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="167,122,168,157,163,155,164,127"/>
+<area shape="rect" id="Node000004" href="$_h5_mpublic_8h.html" title=" " alt="" coords="5,232,131,260"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="139,193,87,234,84,230,133,194"/>
+<area shape="rect" id="Node000005" href="$_h5_v_lconnector__passthru_8h.html" title=" " alt="" coords="155,232,373,260"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="196,191,249,232,244,232,194,196"/>
 </map>
