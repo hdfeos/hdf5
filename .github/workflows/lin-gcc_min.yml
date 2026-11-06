@@ -13,7 +13,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y mingw-w64 mingw-w64-tools wine64
+          sudo apt install -y mingw-w64 mingw-w64-tools wine64 winbind
       - name: Get Source
         uses: actions/checkout@v4.1.1
       - name: Test HDF5
@@ -21,6 +21,7 @@ jobs:
           mkdir build
           cd build
           cmake --toolchain ../config/toolchain/mingw64.cmake \
+          -DCMAKE_CROSSCOMPILING_EMULATOR:PATH=$GITHUB_WORKSPACE/config/toolchain/mingw-w64-x86-64-wine.sh \
           -DBUILDNAME:STRING=gcc_min \
           -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
           -DSITE:STRING=lin \
