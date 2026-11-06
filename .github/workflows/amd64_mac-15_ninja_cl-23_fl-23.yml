@@ -1,29 +1,29 @@
-name: mac-15 ninja cl-22 fl-22
+name: amd64 mac-15 ninja cl-23 fl-23
 
 on:
   push:
     branches: develop
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-15-intel
     steps:
       - name: install
         run: |
           brew update
-          brew install flang
+          brew install flang llvm
       - name: checkout
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@v6.0.0
       - name: test
         run: |
-          ls /opt/homebrew/bin/flang*
-          export FC=/opt/homebrew/bin/flang-22
-          export CC=/opt/homebrew/Cellar/llvm/22.1.0/bin/clang
-          export CXX=/opt/homebrew/Cellar/llvm/22.1.0/bin/clang++
+          ls /usr/local/bin/flang*
+          export FC=$(brew --prefix flang)/bin/flang
+          export CC=$(brew --prefix llvm)/bin/clang
+          export CXX=$(brew --prefix llvm)/bin/clang++
           mkdir build
           cd build
           cmake -G Ninja \
-            -DSITE:STRING=mac-15 \
-            -DBUILDNAME:STRING="ninja/cl-22/fl-22" \
+            -DSITE:STRING=mac-15.x86_64 \
+            -DBUILDNAME:STRING="ninja/cl-23/fl-23" \
             -DCTEST_DROP_SITE_INIT:STRING="my.cdash.org" \
             -DCTEST_DROP_LOCATION_INIT="/submit.php?project=HDF5" \
             -DHDF5_BUILD_FORTRAN=ON \

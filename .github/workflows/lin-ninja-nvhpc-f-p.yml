@@ -41,8 +41,8 @@ jobs:
         uses: actions/checkout@v5
       - name: Test HDF5
         env:
-          FC: nvfortran
-          CC: nvc
+          FC: mpifort
+          CC: mpicc
           FCFLAGS: -fPIC
         run: |
           export NVHPCSDK=/opt/nvidia/hpc_sdk

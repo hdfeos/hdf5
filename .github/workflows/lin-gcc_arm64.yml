@@ -16,17 +16,12 @@ jobs:
     - name: Get Sources
       uses: actions/checkout@v4.1.1
     - name: Build and Test
+      env:
+        QEMU_LD_PREFIX: /usr/aarch64-linux-gnu
       run: |
-        echo $PWD
-        wget https://musl.cc/aarch64-linux-musl-cross.tgz
-        tar -xvzf aarch64-linux-musl-cross.tgz      
-        ./aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc --version
-        ls ./aarch64-linux-musl-cross/bin/
-        sudo cp -r ./aarch64-linux-musl-cross/aarch64-linux-musl/lib/* /lib/
-        ls /lib/
-        ls
+        aarch64-linux-gnu-gcc --version
         mkdir build
         cd build
-        cmake -DCMAKE_C_COMPILER=/home/runner/work/hdf5/hdf5/aarch64-linux-musl-cross/bin/aarch64-linux-musl-gcc -DCMAKE_AR=/home/runner/work/hdf5/hdf5/aarch64-linux-musl-cross/bin/aarch64-linux-musl-ar -DCMAKE_SYSTEM_PROCESSOR=arm -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF ..        
-        make
+        cmake -DCMAKE_C_COMPILER=aarch64-linux-gnu-gcc -DCMAKE_AR=/usr/bin/aarch64-linux-gnu-ar -DCMAKE_SYSTEM_PROCESSOR=aarch64 -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF ..
+        make -j4
         make test
