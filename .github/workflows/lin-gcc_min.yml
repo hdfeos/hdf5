@@ -13,7 +13,12 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt update
-          sudo apt install -y mingw-w64 mingw-w64-tools wine64 winbind
+          sudo apt install -y mingw-w64 mingw-w64-tools wine64 winbind wine-binfmt binfmt-support
+          # Most tests run the .exe directly (add_test COMMAND $<TARGET_FILE:...>
+          # does not get the cross-compiling emulator), so register Wine with
+          # binfmt_misc; ubuntu-26.04 no longer does this with wine64 alone.
+          sudo update-binfmts --import /usr/share/binfmts/wine || true
+          update-binfmts --display wine || true
       - name: Get Source
         uses: actions/checkout@v4.1.1
       - name: Test HDF5
