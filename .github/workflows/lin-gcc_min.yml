@@ -26,4 +26,10 @@ jobs:
           -DSITE:STRING=lin \
            ..
           ctest -T Build
+          # Shared-library tests run under Wine and need MinGW's runtime DLLs
+          # (libgcc, libstdc++, libwinpthread) on Wine's search path.
+          export WINEPATH="$(dirname "$(x86_64-w64-mingw32-gcc -print-libgcc-file-name)");/usr/x86_64-w64-mingw32/lib"
+          export WINEDEBUG=-all
+          echo "WINEPATH=$WINEPATH"
+          ctest -R "^H5TEST-testhdf5-base$" --output-on-failure || true
           ctest -T Test

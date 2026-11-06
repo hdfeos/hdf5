@@ -33,5 +33,9 @@ jobs:
            -DSITE:STRING=cyg \
            ..
           ctest -C Release -T Build
+          # MPI_File_open fails with MPI_ERR_OTHER under Open MPI's ompio on
+          # Cygwin; use ROMIO for MPI-IO instead.
+          ompi_info | grep "MCA io" || true
+          export OMPI_MCA_io=^ompio
           ctest -C Release -T Test --output-on-failure
         shell: C:\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
