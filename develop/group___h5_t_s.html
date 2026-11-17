@@ -47,7 +47,7 @@
  <tr id="projectrow">
   <td id="projectlogo"><img alt="Logo" src="HDFG-logo.png"/></td>
   <td id="projectalign">
-   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-11-06</span>
+   <div id="projectname">HDF5<span id="projectnumber">&#160;Last Updated on 2026-11-17</span>
    </div>
    <div id="projectbrief">The HDF5 Field Guide</div>
   </td>
@@ -168,7 +168,7 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd>Returns a non-negative value if successful; otherwise, returns a negative value.</dd></dl>
 <p><a class="el" href="#ga820be65780a76c15f23a17252c237d09" title="Sets the number of internal threads to use for internal multithreading.">H5TSset_internal_threads()</a> directs the HDF5 library to us <code class="param">num_threads</code> threads to accelerate parallelizable operations.</p>
 <p>This is currently only used to accelerate read operations for chunked datasets that either have data filters applied or for which the chunks are small enough to fit in cache. In this case, the library parallelizes the reads from disk, the data filter operations, and the memory scatter operation. However, all of these operations are currently protected by a mutex so no performance gain is expected and this feature is purely experimental. These mutexes will be relaxed in the future to enable performance acceleration.</p>
-<p>Currently, the library will immediately create <code class="param">num_threads</code> threads and retain them until this function is called again. Calling this function with <code class="param">num_threads</code> set to <code>0</code> will terminate these threads and disable internal multithreading.</p>
+<p>Currently, the library will immediately create <code class="param">num_threads</code> threads and retain them until this function is called again. Calling this function with <code class="param">num_threads</code> set to <code>0</code> or <code>1</code> will terminate these threads and disable internal multithreading.</p>
 <p>This is currently only used to accelerate raw data reads of chunked datasets. This will occur when the following conditions are met: </p><ul>
 <li>This function must be called with <code class="param">num_threads</code> &gt; <code>0</code> . </li>
 <li><a class="el" href="group___d_x_p_l.html#ga137c71367b2b24d05c4820b99708f4d0" title="Allows the library to use internal multithreading to accelerate I/O.">H5Pset_io_threads()</a> must not be called with <code>threads_enabled</code> set to <code>false</code> . </li>
@@ -183,7 +183,7 @@ Functions</h2></td></tr>
 <dl class="section note"><dt>Note</dt><dd>This function is only present when the library is built with thread support, i.e. when <code>H5_HAVE_THREADS</code> is defined. This is the usual case; the exceptions are builds without a threading package and static libraries on Windows.</dd>
 <dd>
 Use of this function may increase memory usage during concurrent operations due to the need to maintain state for each thread simultaneously.</dd></dl>
-<dl class="section warning"><dt>Warning</dt><dd>Errors that are printed inside the threaded area, for example by the data filters, do not currently respect non-default error settings, and print their errors to stderr upon thread completion.</dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>Errors that are printed inside the threaded area, for example by the data filters, do not currently respect non-default error settings, except that if errors are disabled on the parent thread, for example by <a class="el" href="_h5_epublic_8h.html#aec70809990a203fe2e6b044437f74551">H5E_BEGIN_TRY</a> or <a class="el" href="group___h5_e.html#ga4c0064d86c4ce9b0ddef832dcc4158ed" title="Pause pushing errors on an error stack">H5Epause_stack()</a>, they will also be disabled in the child threads.</dd></dl>
 <dl class="section since"><dt>Since</dt><dd>2.3.0 </dd></dl>
 
 </div>
