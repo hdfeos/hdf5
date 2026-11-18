@@ -1,6 +1,7 @@
 name: lin ompi-5.0.8 aocc-5.0.0
 
 on:
+  workflow_dispatch:
   push:
     branches: develop
 
@@ -17,7 +18,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y libaec-dev ninja-build \
-          doxygen libncurses-dev libquadmath0 libstdc++6 libxml2 \
+          doxygen libncurses-dev libquadmath0 libstdc++6 libxml2-dev \
           zlib1g-dev libcurl4-openssl-dev libjpeg-dev wget curl bzip2 \
           m4 flex bison cmake libzip-dev openssl build-essential
 
@@ -41,7 +42,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-openmpi-5_0_8-cache
 
       - name: Install OpenMPI 5.0.8
-        if: ${{ steps.cache-openmpi-4_1_6.outputs.cache-hit != 'true' }}
+        if: ${{ steps.cache-openmpi-5_0_8.outputs.cache-hit != 'true' }}
         run: |
           export LD_LIBRARY_PATH=/home/runner/work/hdf5/hdf5/aocc-compiler-5.0.0/lib:/usr/local/lib
           wget https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-5.0.8.tar.gz
