@@ -25,7 +25,7 @@ jobs:
       - name: Install AOCC 5.0.0
         shell: bash
         run: |
-          wget https://download.amd.com/developer/eula/aocc/aocc-5-0/aocc-compiler-5.0.0.tar
+          for i in 1 2 3 4 5; do curl -fL --retry 5 --retry-delay 10 --retry-all-errors -o aocc-compiler-5.0.0.tar https://download.amd.com/developer/eula/aocc/aocc-5-0/aocc-compiler-5.0.0.tar && break; sleep 30; done
           tar -xvf aocc-compiler-5.0.0.tar
           cd aocc-compiler-5.0.0
           bash install.sh
